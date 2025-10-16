@@ -1,0 +1,179 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+
+// Controllers
+use App\Http\Controllers\Api\Caja\CajasController;
+use App\Http\Controllers\Api\Caja\PrecorteController;
+use App\Http\Controllers\Api\Caja\PostcorteController;
+use App\Http\Controllers\Api\Caja\SesionesController;
+use App\Http\Controllers\Api\Caja\ConciliacionController;
+use App\Http\Controllers\Api\Caja\FormasPagoController;
+use App\Http\Controllers\Api\Caja\AuthController;
+use App\Http\Controllers\Api\Caja\HealthController;
+
+use App\Http\Controllers\Api\Unidades\UnidadController;
+use App\Http\Controllers\Api\Unidades\ConversionController;
+
+use App\Http\Controllers\Api\Inventory\ItemController;
+use App\Http\Controllers\Api\Inventory\StockController;
+use App\Http\Controllers\Api\Inventory\VendorController;
+
+/*
+|--------------------------------------------------------------------------
+| Health Check
+|--------------------------------------------------------------------------
+*/
+Route::get('/ping', fn () => response()->json(['ok' => true, 'timestamp' => now()]));
+Route::get('/health', [HealthController::class, 'check']);
+
+/*
+|--------------------------------------------------------------------------
+| Authentication (sin middleware para desarrollo)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('auth')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/login', [AuthController::class, 'loginHelp']); // Para HEAD/OPTIONS
+});
+
+/*
+|--------------------------------------------------------------------------
+| MÓDULO: CAJA
+|--------------------------------------------------------------------------
+*/
+Route::prefix('caja')->group(function () {
+    
+    // === Cajas ===
+    Route::get('/cajas', [CajasController::class, 'index']);
+    
+    // === Sesiones ===
+    Route::get('/sesiones/activa', [SesionesController::class, 'getActiva']);
+    
+    // === Precortes ===
+    Route::prefix('precortes')->group(function () {
+        // Preflight - verificar tickets abiertos
+        Route::match(['get', 'post'], '/preflight/{sesion_id?}', [PrecorteController::class, 'preflight']);
+        
+        // CRUD principal
+        Route::post('/', [PrecorteController::class, 'create']);
+        Route::get('/{id}', [PrecorteController::class, 'show']);
+        Route::post('/{id}', [PrecorteController::class, 'update']);
+        
+        // Acciones específicas
+        Route::get('/{id}/totales', [PrecorteController::class, 'totales']);
+        Route::get('/{id}/status', [PrecorteController::class, 'status']);
+        Route::post('/{id}/enviar', [PrecorteController::class, 'enviar']);
+        
+        // Totales por sesión
+        Route::get('/sesion/{sesion_id}/totales', [PrecorteController::class, 'totalesPorSesion']);
+    });
+    
+    // === Postcortes ===
+    Route::prefix('postcortes')->group(function () {
+        Route::post('/', [PostcorteController::class, 'create']);
+        Route::get('/{id}', [PostcorteController::class, 'show']);
+        Route::post('/{id}', [PostcorteController::class, 'update']);
+        Route::get('/{id}/detalle', [PostcorteController::class, 'detalle']);
+    });
+    
+    // === Conciliación ===
+    Route::get('/conciliacion/{sesion_id}', [ConciliacionController::class, 'getBySesion']);
+    
+    // === Formas de Pago ===
+    Route::get('/formas-pago', [FormasPagoController::class, 'index']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| MÓDULO: UNIDADES
+|--------------------------------------------------------------------------
+*/
+Route::prefix('unidades')->group(function () {
+    Route::get('/', [UnidadController::class, 'index']);
+    Route::get('/{id}', [UnidadController::class, 'show']);
+    Route::post('/', [UnidadController::class, 'store']);
+    Route::put('/{id}', [UnidadController::class, 'update']);
+    Route::delete('/{id}', [UnidadController::class, 'destroy']);
+    
+    // Conversiones
+    Route::prefix('conversiones')->group(function () {
+        Route::get('/', [ConversionController::class, 'index']);
+        Route::post('/', [ConversionController::class, 'store']);
+        Route::put('/{id}', [ConversionController::class, 'update']);
+        Route::delete('/{id}', [ConversionController::class, 'destroy']);
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| MÓDULO: INVENTORY
+|--------------------------------------------------------------------------
+*/
+Route::prefix('inventory')->group(function () {
+    // Items
+    Route::prefix('items')->group(function () {
+        Route::get('/', [ItemController::class, 'index']);
+        Route::get('/{id}', [ItemController::class, 'show']);
+        Route::post('/', [ItemController::class, 'store']);
+        Route::put('/{id}', [ItemController::class, 'update']);
+        Route::delete('/{id}', [ItemController::class, 'destroy']);
+        
+        // Relacionados con items
+        Route::get('/{id}/kardex', [StockController::class, 'kardex']);
+        Route::get('/{id}/batches', [StockController::class, 'batches']);
+        Route::get('/{id}/vendors', [VendorController::class, 'byItem']);
+        Route::post('/{id}/vendors', [VendorController::class, 'attach']);
+    });
+    
+    // Stock
+    Route::get('/stock', [StockController::class, 'stockByItem']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| ENDPOINTS LEGACY (Compatibilidad temporal - DEPRECADOS)
+|--------------------------------------------------------------------------
+| Estos endpoints mantienen compatibilidad con el sistema anterior
+| Deberían ser removidos una vez que el frontend se actualice
+*/
+Route::prefix('legacy')->group(function () {
+    
+    // Rutas estilo Slim PHP original (.php en URL)
+    Route::get('/caja/cajas.php', [CajasController::class, 'index']);
+    Route::post('/caja/precorte_create.php', [PrecorteController::class, 'createLegacy']);
+    Route::post('/caja/precorte_update.php', [PrecorteController::class, 'updateLegacy']);
+    Route::get('/caja/precorte_totales.php', [PrecorteController::class, 'resumenLegacy']);
+    Route::get('/caja/precorte_status.php', [PrecorteController::class, 'statusLegacy']);
+    Route::get('/caja/formas_pago', [FormasPagoController::class, 'listar']);
+    
+    // Rutas sprecorte (compatibilidad con wizard)
+    Route::prefix('sprecorte')->group(function () {
+        Route::match(['get', 'post'], '/preflight/{sesion_id?}', [PrecorteController::class, 'preflight']);
+        Route::match(['get', 'post'], '/totales/{id?}', [PrecorteController::class, 'resumenLegacy']);
+        Route::match(['get', 'post'], '/totales/sesion/{sesion_id?}', [PrecorteController::class, 'totalesPorSesion']);
+        Route::match(['get', 'post'], '/create/{id?}', [PrecorteController::class, 'createLegacy']);
+        Route::match(['get', 'post'], '/update/{id?}', [PrecorteController::class, 'updateLegacy']);
+    });
+    
+    // Rutas flexibles con parámetros opcionales
+    Route::post('/precortes[/{id}]', [PrecorteController::class, 'createOrUpdateLegacy'])
+        ->where('id', '[0-9]+');
+    Route::post('/postcortes[/{id}]', [PostcorteController::class, 'createOrUpdateLegacy'])
+        ->where('id', '[0-9]+');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Fallback - 404 JSON
+|--------------------------------------------------------------------------
+*/
+Route::fallback(function () {
+    return response()->json([
+        'ok' => false,
+        'error' => 'endpoint_not_found',
+        'message' => 'El endpoint solicitado no existe',
+        'timestamp' => now()->toIso8601String()
+    ], 404);
+});
