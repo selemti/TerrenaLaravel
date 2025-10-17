@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/xampp3/htdocs/terrena/**)",
+      "Bash(php artisan:*)",
+      "Bash(php artisan config:clear:*)",
+      "Bash(sudo systemctl stop:*)",
+      "Bash(sudo systemctl disable:*)",
+      "Bash(netstat:*)",
+      "Bash(ss:*)",
+      "Read(//c/xampp3/apache/logs/**)",
+      "Bash(php -r:*)",
+      "Bash(php -S:*)",
+      "Read(//c/xampp3/apache/conf/**)",
+      "Read(//c/xampp3/php/**)",
+      "Bash(cat:*)",
+      "Read(//c/xampp3/htdocs/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

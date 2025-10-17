@@ -66,13 +66,16 @@ class CajaController extends Controller
             $conciliadas = $cajas->where('precorte_listo', true)->where('postcorte_pendiente', false)->count();
             $difProm = 0; // Placeholder; calcula promedio de diffs si tienes datos en BD (e.g., avg de precorte.diferencia)
 
-            // Anulaciones para partial (query simple de Floreant; ajusta tabla/tipos si es necesario)
+            // Anulaciones temporalmente deshabilitadas (TODO: configurar conexión a Floreant)
+            $anulaciones = [];
+            /*
             $anulaciones = DB::table('transaction')  // Asumiendo 'transaction' en Floreant para anulaciones
                 ->whereIn('type', ['VOID', 'CANCEL', 'REFUND'])  // Tipos comunes de anulaciones/devoluciones
                 ->orderBy('created_date', 'desc')
                 ->limit(5)
                 ->get(['id as ticket_id', 'type as transaction_type', 'created_date as transaction_time', 'total as amount'])
                 ->toArray();
+            */
 
             // Variable para active en el layout (para highlighting del menú)
             $active = 'cortes';  // Identificador para el menú de "Cortes de Caja"

@@ -98,7 +98,7 @@ Route::get('/recipes/editor/{id?}', RecipeEditorLW::class)->name('rec.editor');
 |  KDS / Caja / Reportes / Admin
 |========================================================================= */
 Route::get('/kds', KdsBoard::class)->name('kds.board');
-Route::view('/caja/cortes', 'caja.cortes')->name('caja.cortes');
+Route::get('/caja/cortes', [App\Http\Controllers\Api\Caja\CajaController::class, 'index'])->name('caja.cortes');
 Route::view('/reportes', 'placeholder', ['title'=>'Reportes'])->name('reportes');
 Route::view('/admin',    'placeholder', ['title'=>'Configuración'])->name('admin');
 
