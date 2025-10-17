@@ -1,0 +1,1199 @@
+información técnica:
+
+PS C:\xampp3\htdocs\TerrenaLaravel> # Desde la raíz del proyecto Laravel
+PS C:\xampp3\htdocs\TerrenaLaravel> php artisan about
+
+  Environment ......................................................................................................................................
+  Application Name ....................................................................................................................... TerrenaUI
+  Laravel Version .......................................................................................................................... 12.34.0
+  PHP Version ............................................................................................................................... 8.2.12
+  Composer Version ........................................................................................................................... 2.8.9
+  Environment ................................................................................................................................ local
+  Debug Mode ............................................................................................................................... ENABLED
+  URL ..................................................................................................................... localhost/TerrenaLaravel
+  Maintenance Mode ............................................................................................................................. OFF
+  Timezone ..................................................................................................................................... UTC
+  Locale ........................................................................................................................................ es
+
+  Cache ............................................................................................................................................
+  Config ................................................................................................................................ NOT CACHED
+  Events ................................................................................................................................ NOT CACHED
+  Routes ................................................................................................................................ NOT CACHED
+  Views ..................................................................................................................................... CACHED
+
+  Drivers ..........................................................................................................................................
+  Broadcasting ................................................................................................................................. log
+  Cache ....................................................................................................................................... file
+  Database ................................................................................................................................... pgsql
+  Logs .............................................................................................................................. stack / single
+  Mail ......................................................................................................................................... log
+  Queue ....................................................................................................................................... sync
+  Session ................................................................................................................................. database
+
+  Storage ..........................................................................................................................................
+  C:\xampp3\htdocs\TerrenaLaravel\public\storage ............................................................................................ LINKED
+
+  Livewire .........................................................................................................................................
+  Livewire ........................................................................................................................... v3.7.0-beta.1
+
+  Spatie Permissions ...............................................................................................................................
+  Features Enabled ......................................................................................................................... Default
+  Version ................................................................................................................................... 6.21.0
+
+PS C:\xampp3\htdocs\TerrenaLaravel> # O específicamente:
+PS C:\xampp3\htdocs\TerrenaLaravel> php --version
+PHP 8.2.12 (cli) (built: Oct 24 2023 21:15:15) (ZTS Visual C++ 2019 x64)
+Copyright (c) The PHP Group
+Zend Engine v4.2.12, Copyright (c) Zend Technologies
+PS C:\xampp3\htdocs\TerrenaLaravel> composer show laravel/framework
+name     : laravel/framework
+descrip. : The Laravel Framework.
+keywords : framework, laravel
+versions : * v12.34.0
+released : 2025-10-14, this week
+type     : library
+license  : MIT License (MIT) (OSI approved) https://spdx.org/licenses/MIT.html#licenseText
+homepage : https://laravel.com
+source   : [git] https://github.com/laravel/framework.git f9ec5a5d88bc8c468f17b59f88e05c8ac3c8d687
+dist     : [zip] https://api.github.com/repos/laravel/framework/zipball/f9ec5a5d88bc8c468f17b59f88e05c8ac3c8d687 f9ec5a5d88bc8c468f17b59f88e05c8ac3c8d687
+path     : C:\xampp3\htdocs\TerrenaLaravel\vendor\laravel\framework
+names    : laravel/framework, psr/container-implementation, psr/log-implementation, psr/simple-cache-implementation, illuminate/auth, illuminate/broadcasting, illuminate/bus, illuminate/cache, illuminate/collections, illuminate/concurrency, illuminate/conditionable, illuminate/config, illuminate/console, illuminate/container, illuminate/contracts, illuminate/cookie, illuminate/database, illuminate/encryption, illuminate/events, illuminate/filesystem, illuminate/hashing, illuminate/http, illuminate/json-schema, illuminate/log, illuminate/macroable, illuminate/mail, illuminate/notifications, illuminate/pagination, illuminate/pipeline, illuminate/process, illuminate/queue, illuminate/redis, illuminate/routing, illuminate/session, illuminate/support, illuminate/testing, illuminate/translation, illuminate/validation, illuminate/view, spatie/once
+
+support
+issues : https://github.com/laravel/framework/issues
+source : https://github.com/laravel/framework
+
+autoload
+files
+psr-4
+Illuminate\ => src/Illuminate/
+Illuminate\Support\ => src/Illuminate/Macroable/, src/Illuminate/Collections/, src/Illuminate/Conditionable/
+
+requires
+brick/math ^0.11|^0.12|^0.13|^0.14
+composer-runtime-api ^2.2
+doctrine/inflector ^2.0.5
+dragonmantank/cron-expression ^3.4
+egulias/email-validator ^3.2.1|^4.0
+ext-ctype *
+ext-filter *
+ext-hash *
+ext-mbstring *
+ext-openssl *
+ext-session *
+ext-tokenizer *
+fruitcake/php-cors ^1.3
+guzzlehttp/guzzle ^7.8.2
+guzzlehttp/uri-template ^1.0
+laravel/prompts ^0.3.0
+laravel/serializable-closure ^1.3|^2.0
+league/commonmark ^2.7
+league/flysystem ^3.25.1
+league/flysystem-local ^3.25.1
+league/uri ^7.5.1
+monolog/monolog ^3.0
+nesbot/carbon ^3.8.4
+nunomaduro/termwind ^2.0
+php ^8.2
+psr/container ^1.1.1|^2.0.1
+psr/log ^1.0|^2.0|^3.0
+psr/simple-cache ^1.0|^2.0|^3.0
+ramsey/uuid ^4.7
+symfony/console ^7.2.0
+symfony/error-handler ^7.2.0
+symfony/finder ^7.2.0
+symfony/http-foundation ^7.2.0
+symfony/http-kernel ^7.2.0
+symfony/mailer ^7.2.0
+symfony/mime ^7.2.0
+symfony/polyfill-php83 ^1.33
+symfony/polyfill-php84 ^1.33
+symfony/polyfill-php85 ^1.33
+symfony/process ^7.2.0
+symfony/routing ^7.2.0
+symfony/uid ^7.2.0
+symfony/var-dumper ^7.2.0
+tijsverkoyen/css-to-inline-styles ^2.2.5
+vlucas/phpdotenv ^5.6.1
+voku/portable-ascii ^2.0.2
+
+requires (dev)
+ably/ably-php ^1.0
+aws/aws-sdk-php ^3.322.9
+ext-gmp *
+fakerphp/faker ^1.24
+guzzlehttp/promises ^2.0.3
+guzzlehttp/psr7 ^2.4
+laravel/pint ^1.18
+league/flysystem-aws-s3-v3 ^3.25.1
+league/flysystem-ftp ^3.25.1
+league/flysystem-path-prefixing ^3.25.1
+league/flysystem-read-only ^3.25.1
+league/flysystem-sftp-v3 ^3.25.1
+mockery/mockery ^1.6.10
+opis/json-schema ^2.4.1
+orchestra/testbench-core ^10.7.0
+pda/pheanstalk ^5.0.6|^7.0.0
+php-http/discovery ^1.15
+phpstan/phpstan ^2.0
+phpunit/phpunit ^10.5.35|^11.5.3|^12.0.1
+predis/predis ^2.3|^3.0
+resend/resend-php ^0.10.0
+symfony/cache ^7.2.0
+symfony/http-client ^7.2.0
+symfony/psr-http-message-bridge ^7.2.0
+symfony/translation ^7.2.0
+
+suggests
+ably/ably-php Required to use the Ably broadcast driver (^1.0).
+aws/aws-sdk-php Required to use the SQS queue driver, DynamoDb failed job storage, and SES mail driver (^3.322.9).
+brianium/paratest Required to run tests in parallel (^7.0|^8.0).
+ext-apcu Required to use the APC cache driver.
+ext-fileinfo Required to use the Filesystem class.
+ext-ftp Required to use the Flysystem FTP driver.
+ext-gd Required to use Illuminate\Http\Testing\FileFactory::image().
+ext-memcached Required to use the memcache cache driver.
+ext-pcntl Required to use all features of the queue worker and console signal trapping.
+ext-pdo Required to use all database features.
+ext-posix Required to use all features of the queue worker.
+ext-redis Required to use the Redis cache and queue drivers (^4.0|^5.0|^6.0).
+fakerphp/faker Required to generate fake data using the fake() helper (^1.23).
+filp/whoops Required for friendly error pages in development (^2.14.3).
+laravel/tinker Required to use the tinker console command (^2.0).
+league/flysystem-aws-s3-v3 Required to use the Flysystem S3 driver (^3.25.1).
+league/flysystem-ftp Required to use the Flysystem FTP driver (^3.25.1).
+league/flysystem-path-prefixing Required to use the scoped driver (^3.25.1).
+league/flysystem-read-only Required to use read-only disks (^3.25.1)
+league/flysystem-sftp-v3 Required to use the Flysystem SFTP driver (^3.25.1).
+mockery/mockery Required to use mocking (^1.6).
+pda/pheanstalk Required to use the beanstalk queue driver (^5.0).
+php-http/discovery Required to use PSR-7 bridging features (^1.15).
+phpunit/phpunit Required to use assertions and run tests (^10.5.35|^11.5.3|^12.0.1).
+predis/predis Required to use the predis connector (^2.3|^3.0).
+psr/http-message Required to allow Storage::put to accept a StreamInterface (^1.0).
+pusher/pusher-php-server Required to use the Pusher broadcast driver (^6.0|^7.0).
+resend/resend-php Required to enable support for the Resend mail transport (^0.10.0).
+symfony/cache Required to PSR-6 cache bridge (^7.2).
+symfony/filesystem Required to enable support for relative symbolic links (^7.2).
+symfony/http-client Required to enable support for the Symfony API mail transports (^7.2).
+symfony/mailgun-mailer Required to enable support for the Mailgun mail transport (^7.2).
+symfony/postmark-mailer Required to enable support for the Postmark mail transport (^7.2).
+symfony/psr-http-message-bridge Required to use PSR-7 bridging features (^7.2).
+
+provides
+psr/container-implementation 1.1|2.0
+psr/log-implementation 1.0|2.0|3.0
+psr/simple-cache-implementation 1.0|2.0|3.0
+
+conflicts
+tightenco/collect <5.5.33
+
+replaces
+illuminate/auth self.version
+illuminate/broadcasting self.version
+illuminate/bus self.version
+illuminate/cache self.version
+illuminate/collections self.version
+illuminate/concurrency self.version
+illuminate/conditionable self.version
+illuminate/config self.version
+illuminate/console self.version
+illuminate/container self.version
+illuminate/contracts self.version
+illuminate/cookie self.version
+illuminate/database self.version
+illuminate/encryption self.version
+illuminate/events self.version
+illuminate/filesystem self.version
+illuminate/hashing self.version
+illuminate/http self.version
+illuminate/json-schema self.version
+illuminate/log self.version
+illuminate/macroable self.version
+illuminate/mail self.version
+illuminate/notifications self.version
+illuminate/pagination self.version
+illuminate/pipeline self.version
+illuminate/process self.version
+illuminate/queue self.version
+illuminate/redis self.version
+illuminate/routing self.version
+illuminate/session self.version
+illuminate/support self.version
+illuminate/testing self.version
+illuminate/translation self.version
+illuminate/validation self.version
+illuminate/view self.version
+spatie/once *
+PS C:\xampp3\htdocs\TerrenaLaravel> # Backend
+PS C:\xampp3\htdocs\TerrenaLaravel> cat composer.json
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "laravel/laravel",
+    "type": "project",
+    "description": "The skeleton application for the Laravel framework.",
+    "keywords": ["laravel", "framework"],
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "darkaonline/l5-swagger": "^9.0",
+        "laravel/framework": "^12.0",
+        "laravel/tinker": "^2.10.1",
+        "livewire/livewire": "3.7.0-beta.1",
+        "spatie/laravel-permission": "^6.21",
+        "tymon/jwt-auth": "^2.2"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "laravel/breeze": "^2.3",
+        "laravel/pail": "^1.2.2",
+        "laravel/pint": "^1.24",
+        "laravel/sail": "^1.41",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "phpunit/phpunit": "^11.5.3"
+    },
+    "autoload": {
+                                "psr-4": {
+                                                "App\\": "app/",
+                                                "Database\\Factories\\": "database/factories/",
+                                                "Database\\Seeders\\": "database/seeders/",
+                                                "App\\Models\\Caja\\": "app/Models/Caja/",
+                                                "App\\Http\\Controllers\\Api\\Caja\\": "app/Http/Controllers/Api/Caja/"
+                                },
+                                "autoload": {
+                                                "files": [
+                                                                "app/Helpers/CajaHelper.php"
+                                                ]
+                                }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi",
+            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
+            "@php artisan migrate --graceful --ansi"
+        ],
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+        ],
+        "test": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
+PS C:\xampp3\htdocs\TerrenaLaravel> # Frontend (si existe)
+PS C:\xampp3\htdocs\TerrenaLaravel> cat package.json
+{
+    "$schema": "https://json.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
+    "devDependencies": {
+        "@tailwindcss/forms": "^0.5.2",
+        "@tailwindcss/vite": "^4.0.0",
+        "alpinejs": "^3.4.2",
+        "autoprefixer": "^10.4.2",
+        "axios": "^1.11.0",
+        "concurrently": "^9.0.1",
+        "laravel-vite-plugin": "^2.0.0",
+        "postcss": "^8.4.31",
+        "tailwindcss": "^3.1.0",
+        "vite": "^7.0.4"
+    },
+    "dependencies": {
+        "@popperjs/core": "^2.11.8",
+        "alpinejs": "^3.15.0",
+        "bootstrap": "^5.3.8",
+        "cleave.js": "^1.6.0"
+    }
+}
+PS C:\xampp3\htdocs\TerrenaLaravel> # Listar controladores
+PS C:\xampp3\htdocs\TerrenaLaravel> Get-ChildItem app/Http/Controllers/
+
+
+    Directorio: C:\xampp3\htdocs\TerrenaLaravel\app\Http\Controllers
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----     16/10/2025  12:22 p. m.                Api
+d-----     16/10/2025  12:22 p. m.                Auth
+-a----     29/08/2025  10:40 a. m.             77 Controller.php
+-a----     26/09/2025  02:58 p. m.           1416 ProfileController.php
+
+
+PS C:\xampp3\htdocs\TerrenaLaravel>
+PS C:\xampp3\htdocs\TerrenaLaravel> # Listar vistas
+PS C:\xampp3\htdocs\TerrenaLaravel> Get-ChildItem resources/views/
+
+
+    Directorio: C:\xampp3\htdocs\TerrenaLaravel\resources\views
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----     16/10/2025  12:24 p. m.                auth
+d-----     16/10/2025  11:51 p. m.                caja
+d-----     16/10/2025  12:24 p. m.                components
+d-----     16/10/2025  12:24 p. m.                dashboard
+d-----     16/10/2025  12:24 p. m.                inventory
+d-----     16/10/2025  11:28 p. m.                layouts
+d-----     13/10/2025  09:35 p. m.                legacy
+d-----     16/10/2025  12:24 p. m.                livewire
+d-----     16/10/2025  12:24 p. m.                partials
+d-----     16/10/2025  12:24 p. m.                profile
+d-----     16/10/2025  12:24 p. m.                recipes
+-a----     30/09/2025  12:41 p. m.           1487 app.blade.php
+-a----     14/10/2025  12:42 a. m.           9242 compras.blade.php
+-a----     14/10/2025  12:25 a. m.           7887 dashboard.blade.php
+-a----     14/10/2025  12:42 a. m.          13257 inventario.blade.php
+-a----     14/10/2025  12:45 a. m.           1868 login.blade.php
+-a----     14/10/2025  08:14 a. m.          12350 personal.blade.php
+-a----     14/10/2025  12:27 a. m.            591 placeholder.blade.php
+-a----     14/10/2025  12:44 a. m.           7175 produccion.blade.php
+-a----     14/10/2025  12:44 a. m.           3341 recetas.blade.php
+-a----     29/08/2025  10:40 a. m.          82568 welcome.blade - copia.php
+-a----     30/09/2025  12:43 p. m.            282 welcome.blade.php
+
+
+PS C:\xampp3\htdocs\TerrenaLaravel>
+PS C:\xampp3\htdocs\TerrenaLaravel> # Listar migraciones
+PS C:\xampp3\htdocs\TerrenaLaravel> Get-ChildItem database/migrations/
+
+
+    Directorio: C:\xampp3\htdocs\TerrenaLaravel\database\migrations
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----     29/08/2025  10:40 a. m.           1473 0001_01_01_000000_create_users_table.php
+-a----     29/08/2025  10:40 a. m.            849 0001_01_01_000001_create_cache_table.php
+-a----     29/08/2025  10:40 a. m.           1812 0001_01_01_000002_create_jobs_table.php
+-a----     26/09/2025  03:06 a. m.            708 2025_09_26_090415_create_cat_unidades_table.php
+-a----     29/09/2025  07:26 p. m.            851 2025_09_26_090657_create_cat_unidades_table.php
+-a----     26/09/2025  02:59 p. m.           6539 2025_09_26_205955_create_permission_tables.php
+
+
+PS C:\xampp3\htdocs\TerrenaLaravel>
+PS C:\xampp3\htdocs\TerrenaLaravel> # Listar rutas
+PS C:\xampp3\htdocs\TerrenaLaravel> Get-ChildItem routes/
+
+
+    Directorio: C:\xampp3\htdocs\TerrenaLaravel\routes
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----     16/10/2025  11:41 p. m.           7916 api.php
+-a----     26/09/2025  02:58 p. m.           2360 auth.php
+-a----     29/08/2025  10:40 a. m.            210 console.php
+-a----     16/10/2025  10:55 p. m.           5706 web.php
+
+
+PS C:\xampp3\htdocs\TerrenaLaravel> # Ver variables DB sin passwords
+PS C:\xampp3\htdocs\TerrenaLaravel> Get-Content .env | Select-String "DB_" | Where-Object { $_ -notmatch "PASSWORD" }
+
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5433
+DB_DATABASE=pos
+DB_USERNAME=postgres
+DB_SCHEMA=selemti,public
+#DB_CONNECTION=sqlite
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=laravel
+# DB_USERNAME=root
+
+
+PS C:\xampp3\htdocs\TerrenaLaravel> # Información general del proyecto
+PS C:\xampp3\htdocs\TerrenaLaravel> php artisan about
+
+  Environment ......................................................................................................................................
+  Application Name ....................................................................................................................... TerrenaUI
+  Laravel Version .......................................................................................................................... 12.34.0
+  PHP Version ............................................................................................................................... 8.2.12
+  Composer Version ........................................................................................................................... 2.8.9
+  Environment ................................................................................................................................ local
+  Debug Mode ............................................................................................................................... ENABLED
+  URL ..................................................................................................................... localhost/TerrenaLaravel
+  Maintenance Mode ............................................................................................................................. OFF
+  Timezone ..................................................................................................................................... UTC
+  Locale ........................................................................................................................................ es
+
+  Cache ............................................................................................................................................
+  Config ................................................................................................................................ NOT CACHED
+  Events ................................................................................................................................ NOT CACHED
+  Routes ................................................................................................................................ NOT CACHED
+  Views ..................................................................................................................................... CACHED
+
+  Drivers ..........................................................................................................................................
+  Broadcasting ................................................................................................................................. log
+  Cache ....................................................................................................................................... file
+  Database ................................................................................................................................... pgsql
+  Logs .............................................................................................................................. stack / single
+  Mail ......................................................................................................................................... log
+  Queue ....................................................................................................................................... sync
+  Session ................................................................................................................................. database
+
+  Storage ..........................................................................................................................................
+  C:\xampp3\htdocs\TerrenaLaravel\public\storage ............................................................................................ LINKED
+
+  Livewire .........................................................................................................................................
+  Livewire ........................................................................................................................... v3.7.0-beta.1
+
+  Spatie Permissions ...............................................................................................................................
+  Features Enabled ......................................................................................................................... Default
+  Version ................................................................................................................................... 6.21.0
+
+PS C:\xampp3\htdocs\TerrenaLaravel>
+PS C:\xampp3\htdocs\TerrenaLaravel> # Versión de PHP
+PS C:\xampp3\htdocs\TerrenaLaravel> php --version
+PHP 8.2.12 (cli) (built: Oct 24 2023 21:15:15) (ZTS Visual C++ 2019 x64)
+Copyright (c) The PHP Group
+Zend Engine v4.2.12, Copyright (c) Zend Technologies
+PS C:\xampp3\htdocs\TerrenaLaravel>
+PS C:\xampp3\htdocs\TerrenaLaravel> # Versión de Laravel
+PS C:\xampp3\htdocs\TerrenaLaravel> composer show laravel/framework
+name     : laravel/framework
+descrip. : The Laravel Framework.
+keywords : framework, laravel
+versions : * v12.34.0
+released : 2025-10-14, this week
+type     : library
+license  : MIT License (MIT) (OSI approved) https://spdx.org/licenses/MIT.html#licenseText
+homepage : https://laravel.com
+source   : [git] https://github.com/laravel/framework.git f9ec5a5d88bc8c468f17b59f88e05c8ac3c8d687
+dist     : [zip] https://api.github.com/repos/laravel/framework/zipball/f9ec5a5d88bc8c468f17b59f88e05c8ac3c8d687 f9ec5a5d88bc8c468f17b59f88e05c8ac3c8d687
+path     : C:\xampp3\htdocs\TerrenaLaravel\vendor\laravel\framework
+names    : laravel/framework, psr/container-implementation, psr/log-implementation, psr/simple-cache-implementation, illuminate/auth, illuminate/broadcasting, illuminate/bus, illuminate/cache, illuminate/collections, illuminate/concurrency, illuminate/conditionable, illuminate/config, illuminate/console, illuminate/container, illuminate/contracts, illuminate/cookie, illuminate/database, illuminate/encryption, illuminate/events, illuminate/filesystem, illuminate/hashing, illuminate/http, illuminate/json-schema, illuminate/log, illuminate/macroable, illuminate/mail, illuminate/notifications, illuminate/pagination, illuminate/pipeline, illuminate/process, illuminate/queue, illuminate/redis, illuminate/routing, illuminate/session, illuminate/support, illuminate/testing, illuminate/translation, illuminate/validation, illuminate/view, spatie/once
+
+support
+issues : https://github.com/laravel/framework/issues
+source : https://github.com/laravel/framework
+
+autoload
+files
+psr-4
+Illuminate\ => src/Illuminate/
+Illuminate\Support\ => src/Illuminate/Macroable/, src/Illuminate/Collections/, src/Illuminate/Conditionable/
+
+requires
+brick/math ^0.11|^0.12|^0.13|^0.14
+composer-runtime-api ^2.2
+doctrine/inflector ^2.0.5
+dragonmantank/cron-expression ^3.4
+egulias/email-validator ^3.2.1|^4.0
+ext-ctype *
+ext-filter *
+ext-hash *
+ext-mbstring *
+ext-openssl *
+ext-session *
+ext-tokenizer *
+fruitcake/php-cors ^1.3
+guzzlehttp/guzzle ^7.8.2
+guzzlehttp/uri-template ^1.0
+laravel/prompts ^0.3.0
+laravel/serializable-closure ^1.3|^2.0
+league/commonmark ^2.7
+league/flysystem ^3.25.1
+league/flysystem-local ^3.25.1
+league/uri ^7.5.1
+monolog/monolog ^3.0
+nesbot/carbon ^3.8.4
+nunomaduro/termwind ^2.0
+php ^8.2
+psr/container ^1.1.1|^2.0.1
+psr/log ^1.0|^2.0|^3.0
+psr/simple-cache ^1.0|^2.0|^3.0
+ramsey/uuid ^4.7
+symfony/console ^7.2.0
+symfony/error-handler ^7.2.0
+symfony/finder ^7.2.0
+symfony/http-foundation ^7.2.0
+symfony/http-kernel ^7.2.0
+symfony/mailer ^7.2.0
+symfony/mime ^7.2.0
+symfony/polyfill-php83 ^1.33
+symfony/polyfill-php84 ^1.33
+symfony/polyfill-php85 ^1.33
+symfony/process ^7.2.0
+symfony/routing ^7.2.0
+symfony/uid ^7.2.0
+symfony/var-dumper ^7.2.0
+tijsverkoyen/css-to-inline-styles ^2.2.5
+vlucas/phpdotenv ^5.6.1
+voku/portable-ascii ^2.0.2
+
+requires (dev)
+ably/ably-php ^1.0
+aws/aws-sdk-php ^3.322.9
+ext-gmp *
+fakerphp/faker ^1.24
+guzzlehttp/promises ^2.0.3
+guzzlehttp/psr7 ^2.4
+laravel/pint ^1.18
+league/flysystem-aws-s3-v3 ^3.25.1
+league/flysystem-ftp ^3.25.1
+league/flysystem-path-prefixing ^3.25.1
+league/flysystem-read-only ^3.25.1
+league/flysystem-sftp-v3 ^3.25.1
+mockery/mockery ^1.6.10
+opis/json-schema ^2.4.1
+orchestra/testbench-core ^10.7.0
+pda/pheanstalk ^5.0.6|^7.0.0
+php-http/discovery ^1.15
+phpstan/phpstan ^2.0
+phpunit/phpunit ^10.5.35|^11.5.3|^12.0.1
+predis/predis ^2.3|^3.0
+resend/resend-php ^0.10.0
+symfony/cache ^7.2.0
+symfony/http-client ^7.2.0
+symfony/psr-http-message-bridge ^7.2.0
+symfony/translation ^7.2.0
+
+suggests
+ably/ably-php Required to use the Ably broadcast driver (^1.0).
+aws/aws-sdk-php Required to use the SQS queue driver, DynamoDb failed job storage, and SES mail driver (^3.322.9).
+brianium/paratest Required to run tests in parallel (^7.0|^8.0).
+ext-apcu Required to use the APC cache driver.
+ext-fileinfo Required to use the Filesystem class.
+ext-ftp Required to use the Flysystem FTP driver.
+ext-gd Required to use Illuminate\Http\Testing\FileFactory::image().
+ext-memcached Required to use the memcache cache driver.
+ext-pcntl Required to use all features of the queue worker and console signal trapping.
+ext-pdo Required to use all database features.
+ext-posix Required to use all features of the queue worker.
+ext-redis Required to use the Redis cache and queue drivers (^4.0|^5.0|^6.0).
+fakerphp/faker Required to generate fake data using the fake() helper (^1.23).
+filp/whoops Required for friendly error pages in development (^2.14.3).
+laravel/tinker Required to use the tinker console command (^2.0).
+league/flysystem-aws-s3-v3 Required to use the Flysystem S3 driver (^3.25.1).
+league/flysystem-ftp Required to use the Flysystem FTP driver (^3.25.1).
+league/flysystem-path-prefixing Required to use the scoped driver (^3.25.1).
+league/flysystem-read-only Required to use read-only disks (^3.25.1)
+league/flysystem-sftp-v3 Required to use the Flysystem SFTP driver (^3.25.1).
+mockery/mockery Required to use mocking (^1.6).
+pda/pheanstalk Required to use the beanstalk queue driver (^5.0).
+php-http/discovery Required to use PSR-7 bridging features (^1.15).
+phpunit/phpunit Required to use assertions and run tests (^10.5.35|^11.5.3|^12.0.1).
+predis/predis Required to use the predis connector (^2.3|^3.0).
+psr/http-message Required to allow Storage::put to accept a StreamInterface (^1.0).
+pusher/pusher-php-server Required to use the Pusher broadcast driver (^6.0|^7.0).
+resend/resend-php Required to enable support for the Resend mail transport (^0.10.0).
+symfony/cache Required to PSR-6 cache bridge (^7.2).
+symfony/filesystem Required to enable support for relative symbolic links (^7.2).
+symfony/http-client Required to enable support for the Symfony API mail transports (^7.2).
+symfony/mailgun-mailer Required to enable support for the Mailgun mail transport (^7.2).
+symfony/postmark-mailer Required to enable support for the Postmark mail transport (^7.2).
+symfony/psr-http-message-bridge Required to use PSR-7 bridging features (^7.2).
+
+provides
+psr/container-implementation 1.1|2.0
+psr/log-implementation 1.0|2.0|3.0
+psr/simple-cache-implementation 1.0|2.0|3.0
+
+conflicts
+tightenco/collect <5.5.33
+
+replaces
+illuminate/auth self.version
+illuminate/broadcasting self.version
+illuminate/bus self.version
+illuminate/cache self.version
+illuminate/collections self.version
+illuminate/concurrency self.version
+illuminate/conditionable self.version
+illuminate/config self.version
+illuminate/console self.version
+illuminate/container self.version
+illuminate/contracts self.version
+illuminate/cookie self.version
+illuminate/database self.version
+illuminate/encryption self.version
+illuminate/events self.version
+illuminate/filesystem self.version
+illuminate/hashing self.version
+illuminate/http self.version
+illuminate/json-schema self.version
+illuminate/log self.version
+illuminate/macroable self.version
+illuminate/mail self.version
+illuminate/notifications self.version
+illuminate/pagination self.version
+illuminate/pipeline self.version
+illuminate/process self.version
+illuminate/queue self.version
+illuminate/redis self.version
+illuminate/routing self.version
+illuminate/session self.version
+illuminate/support self.version
+illuminate/testing self.version
+illuminate/translation self.version
+illuminate/validation self.version
+illuminate/view self.version
+spatie/once *
+PS C:\xampp3\htdocs\TerrenaLaravel> # Backend
+PS C:\xampp3\htdocs\TerrenaLaravel> Get-Content composer.json
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "laravel/laravel",
+    "type": "project",
+    "description": "The skeleton application for the Laravel framework.",
+    "keywords": ["laravel", "framework"],
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "darkaonline/l5-swagger": "^9.0",
+        "laravel/framework": "^12.0",
+        "laravel/tinker": "^2.10.1",
+        "livewire/livewire": "3.7.0-beta.1",
+        "spatie/laravel-permission": "^6.21",
+        "tymon/jwt-auth": "^2.2"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "laravel/breeze": "^2.3",
+        "laravel/pail": "^1.2.2",
+        "laravel/pint": "^1.24",
+        "laravel/sail": "^1.41",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "phpunit/phpunit": "^11.5.3"
+    },
+    "autoload": {
+                                "psr-4": {
+                                                "App\\": "app/",
+                                                "Database\\Factories\\": "database/factories/",
+                                                "Database\\Seeders\\": "database/seeders/",
+                                                "App\\Models\\Caja\\": "app/Models/Caja/",
+                                                "App\\Http\\Controllers\\Api\\Caja\\": "app/Http/Controllers/Api/Caja/"
+                                },
+                                "autoload": {
+                                                "files": [
+                                                                "app/Helpers/CajaHelper.php"
+                                                ]
+                                }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi",
+            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
+            "@php artisan migrate --graceful --ansi"
+        ],
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+        ],
+        "test": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
+PS C:\xampp3\htdocs\TerrenaLaravel>
+PS C:\xampp3\htdocs\TerrenaLaravel> # Frontend (si existe)
+PS C:\xampp3\htdocs\TerrenaLaravel> Get-Content package.json
+{
+    "$schema": "https://json.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
+    "devDependencies": {
+        "@tailwindcss/forms": "^0.5.2",
+        "@tailwindcss/vite": "^4.0.0",
+        "alpinejs": "^3.4.2",
+        "autoprefixer": "^10.4.2",
+        "axios": "^1.11.0",
+        "concurrently": "^9.0.1",
+        "laravel-vite-plugin": "^2.0.0",
+        "postcss": "^8.4.31",
+        "tailwindcss": "^3.1.0",
+        "vite": "^7.0.4"
+    },
+    "dependencies": {
+        "@popperjs/core": "^2.11.8",
+        "alpinejs": "^3.15.0",
+        "bootstrap": "^5.3.8",
+        "cleave.js": "^1.6.0"
+    }
+}
+PS C:\xampp3\htdocs\TerrenaLaravel> php artisan route:list
+
+  GET|HEAD  / .................................................................................................................................................................................................
+  GET|HEAD  __probe ...........................................................................................................................................................................................
+  GET|HEAD  admin ....................................................................................................................................................................................... admin
+  POST      api/auth/login ...................................................................................................................................................... Api\Caja\AuthController@login
+  GET|HEAD  api/auth/login .................................................................................................................................................. Api\Caja\AuthController@loginHelp
+  GET|HEAD  api/caja/cajas ..................................................................................................................................................... Api\Caja\CajasController@index
+  GET|HEAD  api/caja/conciliacion/{sesion_id} ..................................................................................................................... Api\Caja\ConciliacionController@getBySesion
+  GET|HEAD  api/caja/formas-pago .......................................................................................................................................... Api\Caja\FormasPagoController@index
+  POST      api/caja/postcortes ........................................................................................................................................... Api\Caja\PostcorteController@create
+  GET|HEAD  api/caja/postcortes/{id} ........................................................................................................................................ Api\Caja\PostcorteController@show
+  POST      api/caja/postcortes/{id} ...................................................................................................................................... Api\Caja\PostcorteController@update
+  GET|HEAD  api/caja/postcortes/{id}/detalle ............................................................................................................................. Api\Caja\PostcorteController@detalle
+  POST      api/caja/precortes ....................................................................................................................................... Api\Caja\PrecorteController@createLegacy
+  GET|POST|HEAD api/caja/precortes/preflight/{sesion_id?} ............................................................................................................... Api\Caja\PrecorteController@preflight
+  GET|HEAD  api/caja/precortes/sesion/{sesion_id}/totales ........................................................................................................ Api\Caja\PrecorteController@totalesPorSesion
+  GET|HEAD  api/caja/precortes/{id} .......................................................................................................................................... Api\Caja\PrecorteController@show
+  POST      api/caja/precortes/{id} .................................................................................................................................. Api\Caja\PrecorteController@updateLegacy
+  POST      api/caja/precortes/{id}/enviar ................................................................................................................................. Api\Caja\PrecorteController@enviar
+  GET|POST|HEAD api/caja/precortes/{id}/status ....................................................................................................................... Api\Caja\PrecorteController@statusLegacy
+  GET|HEAD  api/caja/precortes/{id}/totales ......................................................................................................................... Api\Caja\PrecorteController@resumenLegacy
+  GET|HEAD  api/caja/sesiones/activa .................................................................................................................................... Api\Caja\SesionesController@getActiva
+  GET|HEAD  api/documentation ................................................................................................................. l5-swagger.default.api › L5Swagger\Http › SwaggerController@api
+  GET|HEAD  api/health ........................................................................................................................................................ Api\Caja\HealthController@check
+  GET|HEAD  api/inventory/items ............................................................................................................................................ Api\Inventory\ItemController@index
+  POST      api/inventory/items ............................................................................................................................................ Api\Inventory\ItemController@store
+  GET|HEAD  api/inventory/items/{id} ........................................................................................................................................ Api\Inventory\ItemController@show
+  PUT       api/inventory/items/{id} ...................................................................................................................................... Api\Inventory\ItemController@update
+  DELETE    api/inventory/items/{id} ..................................................................................................................................... Api\Inventory\ItemController@destroy
+  GET|HEAD  api/inventory/items/{id}/batches ............................................................................................................................ Api\Inventory\StockController@batches
+  GET|HEAD  api/inventory/items/{id}/kardex .............................................................................................................................. Api\Inventory\StockController@kardex
+  GET|HEAD  api/inventory/items/{id}/vendors ............................................................................................................................ Api\Inventory\VendorController@byItem
+  POST      api/inventory/items/{id}/vendors ............................................................................................................................ Api\Inventory\VendorController@attach
+  GET|HEAD  api/inventory/stock ..................................................................................................................................... Api\Inventory\StockController@stockByItem
+  GET|HEAD  api/legacy/caja/cajas.php .......................................................................................................................................... Api\Caja\CajasController@index
+  GET|HEAD  api/legacy/caja/formas_pago .................................................................................................................................. Api\Caja\FormasPagoController@listar
+  POST      api/legacy/caja/precorte_create.php ...................................................................................................................... Api\Caja\PrecorteController@createLegacy
+  GET|HEAD  api/legacy/caja/precorte_status.php ...................................................................................................................... Api\Caja\PrecorteController@statusLegacy
+  GET|HEAD  api/legacy/caja/precorte_totales.php .................................................................................................................... Api\Caja\PrecorteController@resumenLegacy
+  POST      api/legacy/caja/precorte_update.php ...................................................................................................................... Api\Caja\PrecorteController@updateLegacy
+  POST      api/legacy/postcortes[/{id}] .................................................................................................................... Api\Caja\PostcorteController@createOrUpdateLegacy
+  POST      api/legacy/precortes[/{id}] ...................................................................................................................... Api\Caja\PrecorteController@createOrUpdateLegacy
+  GET|POST|HEAD api/legacy/sprecorte/create/{id?} .................................................................................................................... Api\Caja\PrecorteController@createLegacy
+  GET|POST|HEAD api/legacy/sprecorte/preflight/{sesion_id?} ............................................................................................................. Api\Caja\PrecorteController@preflight
+  GET|POST|HEAD api/legacy/sprecorte/totales/sesion/{sesion_id?} ................................................................................................. Api\Caja\PrecorteController@totalesPorSesion
+  GET|POST|HEAD api/legacy/sprecorte/totales/{id?} .................................................................................................................. Api\Caja\PrecorteController@resumenLegacy
+  GET|POST|HEAD api/legacy/sprecorte/update/{id?} .................................................................................................................... Api\Caja\PrecorteController@updateLegacy
+  GET|HEAD  api/oauth2-callback ........................................................................................ l5-swagger.default.oauth2_callback › L5Swagger\Http › SwaggerController@oauth2Callback
+  GET|HEAD  api/ping ..........................................................................................................................................................................................
+  GET|HEAD  api/unidades .................................................................................................................................................. Api\Unidades\UnidadController@index
+  POST      api/unidades .................................................................................................................................................. Api\Unidades\UnidadController@store
+  GET|HEAD  api/unidades/conversiones ................................................................................................................................. Api\Unidades\ConversionController@index
+  POST      api/unidades/conversiones ................................................................................................................................. Api\Unidades\ConversionController@store
+  PUT       api/unidades/conversiones/{id} ........................................................................................................................... Api\Unidades\ConversionController@update
+  DELETE    api/unidades/conversiones/{id} .......................................................................................................................... Api\Unidades\ConversionController@destroy
+  GET|HEAD  api/unidades/{id} .............................................................................................................................................. Api\Unidades\UnidadController@show
+  PUT       api/unidades/{id} ............................................................................................................................................ Api\Unidades\UnidadController@update
+  DELETE    api/unidades/{id} ........................................................................................................................................... Api\Unidades\UnidadController@destroy
+  GET|HEAD  api/{fallbackPlaceholder} .........................................................................................................................................................................
+  GET|HEAD  caja/cortes ........................................................................................................................................................................... caja.cortes
+  GET|HEAD  catalogos/almacenes .......................................................................................................................... cat.almacenes › App\Livewire\Catalogs\AlmacenesIndex
+  GET|HEAD  catalogos/proveedores .................................................................................................................... cat.proveedores › App\Livewire\Catalogs\ProveedoresIndex
+  GET|HEAD  catalogos/stock-policy ................................................................................................................... cat.stockpolicy › App\Livewire\Catalogs\StockPolicyIndex
+  GET|HEAD  catalogos/sucursales ....................................................................................................................... cat.sucursales › App\Livewire\Catalogs\SucursalesIndex
+  GET|HEAD  catalogos/unidades ............................................................................................................................. cat.unidades › App\Livewire\Catalogs\UnidadesIndex
+  GET|HEAD  catalogos/uom .................................................................................................................................. cat.uom › App\Livewire\Catalogs\UomConversionIndex
+  GET|HEAD  compras ................................................................................................................................................................................... compras
+  GET|HEAD  confirm-password ....................................................................................................................... password.confirm › Auth\ConfirmablePasswordController@show
+  POST      confirm-password ......................................................................................................................................... Auth\ConfirmablePasswordController@store
+  GET|HEAD  dashboard ............................................................................................................................................................................... dashboard
+  GET|HEAD  docs ............................................................................................................................ l5-swagger.default.docs › L5Swagger\Http › SwaggerController@docs
+  GET|HEAD  docs/asset/{asset} ....................................................................................................... l5-swagger.default.asset › L5Swagger\Http › SwaggerAssetController@index
+  POST      email/verification-notification ............................................................................................ verification.send › Auth\EmailVerificationNotificationController@store
+  GET|HEAD  forgot-password ........................................................................................................................ password.request › Auth\PasswordResetLinkController@create
+  POST      forgot-password ........................................................................................................................... password.email › Auth\PasswordResetLinkController@store
+  GET|HEAD  inventario ............................................................................................................................................................................. inventario
+  GET|HEAD  inventory/items ......................................................................................................................... inventory.items.index › App\Livewire\Inventory\ItemsIndex
+  GET|HEAD  inventory/lots ........................................................................................................................................ inv.lots › App\Livewire\Inventory\LotsIndex
+  GET|HEAD  inventory/receptions ...................................................................................................................... inv.receptions › App\Livewire\Inventory\ReceptionsIndex
+  GET|HEAD  inventory/receptions/new .............................................................................................................. inv.receptions.new › App\Livewire\Inventory\ReceptionCreate
+  GET|HEAD  kds ............................................................................................................................................................ kds.board › App\Livewire\Kds\Board
+  GET|HEAD  livewire/livewire.js .................................................................................................................. Livewire\Mechanisms › FrontendAssets@returnJavaScriptAsFile
+  GET|HEAD  livewire/livewire.min.js.map ............................................................................................................................ Livewire\Mechanisms › FrontendAssets@maps
+  GET|HEAD  livewire/preview-file/{filename} ......................................................................................... livewire.preview-file › Livewire\Features › FilePreviewController@handle
+  POST      livewire/update ............................................................................................................... livewire.update › Livewire\Mechanisms › HandleRequests@handleUpdate
+  POST      livewire/upload-file ....................................................................................................... livewire.upload-file › Livewire\Features › FileUploadController@handle
+  GET|HEAD  login .......................................................................................................................................... login › Auth\AuthenticatedSessionController@create
+  POST      login ................................................................................................................................................... Auth\AuthenticatedSessionController@store
+  POST      logout ....................................................................................................................................... logout › Auth\AuthenticatedSessionController@destroy
+  PUT       password ......................................................................................................................................... password.update › Auth\PasswordController@update
+  GET|HEAD  personal ................................................................................................................................................................................. personal
+  GET|HEAD  produccion ............................................................................................................................................................................. produccion
+  GET|HEAD  recetas ................................................................................................................................................................................... recetas
+  GET|HEAD  recipes ............................................................................................................................................. rec.index › App\Livewire\Recipes\RecipesIndex
+  GET|HEAD  recipes/editor/{id?} ............................................................................................................................... rec.editor › App\Livewire\Recipes\RecipeEditor
+  GET|HEAD  register .......................................................................................................................................... register › Auth\RegisteredUserController@create
+  POST      register ...................................................................................................................................................... Auth\RegisteredUserController@store
+  GET|HEAD  reportes ................................................................................................................................................................................. reportes
+  POST      reset-password .................................................................................................................................. password.store › Auth\NewPasswordController@store
+  GET|HEAD  reset-password/{token} ......................................................................................................................... password.reset › Auth\NewPasswordController@create
+  GET|HEAD  storage/{path} ...................................................................................................................................................................... storage.local
+  GET|HEAD  up ................................................................................................................................................................................................
+  GET|HEAD  verify-email ......................................................................................................................... verification.notice › Auth\EmailVerificationPromptController
+  GET|HEAD  verify-email/{id}/{hash} ......................................................................................................................... verification.verify › Auth\VerifyEmailController
+
+                                                                                                                                                                                           Showing [103] routes
+
+PS C:\xampp3\htdocs\TerrenaLaravel> php artisan route:list --json
+[{"domain":null,"method":"GET|HEAD","uri":"\/","name":null,"action":"Closure","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"__probe","name":null,"action":"Closure","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"admin","name":"admin","action":"Illuminate\\Routing\\ViewController","middleware":["web"]},{"domain":null,"method":"POST","uri":"api\/auth\/login","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\AuthController@login","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/auth\/login","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\AuthController@loginHelp","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/caja\/cajas","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\CajasController@index","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/caja\/conciliacion\/{sesion_id}","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\ConciliacionController@getBySesion","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/caja\/formas-pago","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\FormasPagoController@index","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/caja\/postcortes","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PostcorteController@create","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/caja\/postcortes\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PostcorteController@show","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/caja\/postcortes\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PostcorteController@update","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/caja\/postcortes\/{id}\/detalle","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PostcorteController@detalle","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/caja\/precortes","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@createLegacy","middleware":["api"]},{"domain":null,"method":"GET|POST|HEAD","uri":"api\/caja\/precortes\/preflight\/{sesion_id?}","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@preflight","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/caja\/precortes\/sesion\/{sesion_id}\/totales","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@totalesPorSesion","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/caja\/precortes\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@show","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/caja\/precortes\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@updateLegacy","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/caja\/precortes\/{id}\/enviar","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@enviar","middleware":["api"]},{"domain":null,"method":"GET|POST|HEAD","uri":"api\/caja\/precortes\/{id}\/status","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@statusLegacy","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/caja\/precortes\/{id}\/totales","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@resumenLegacy","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/caja\/sesiones\/activa","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\SesionesController@getActiva","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/documentation","name":"l5-swagger.default.api","action":"L5Swagger\\Http\\Controllers\\SwaggerController@api","middleware":["L5Swagger\\Http\\Middleware\\Config"]},{"domain":null,"method":"GET|HEAD","uri":"api\/health","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\HealthController@check","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/inventory\/items","name":null,"action":"App\\Http\\Controllers\\Api\\Inventory\\ItemController@index","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/inventory\/items","name":null,"action":"App\\Http\\Controllers\\Api\\Inventory\\ItemController@store","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/inventory\/items\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Inventory\\ItemController@show","middleware":["api"]},{"domain":null,"method":"PUT","uri":"api\/inventory\/items\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Inventory\\ItemController@update","middleware":["api"]},{"domain":null,"method":"DELETE","uri":"api\/inventory\/items\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Inventory\\ItemController@destroy","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/inventory\/items\/{id}\/batches","name":null,"action":"App\\Http\\Controllers\\Api\\Inventory\\StockController@batches","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/inventory\/items\/{id}\/kardex","name":null,"action":"App\\Http\\Controllers\\Api\\Inventory\\StockController@kardex","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/inventory\/items\/{id}\/vendors","name":null,"action":"App\\Http\\Controllers\\Api\\Inventory\\VendorController@byItem","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/inventory\/items\/{id}\/vendors","name":null,"action":"App\\Http\\Controllers\\Api\\Inventory\\VendorController@attach","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/inventory\/stock","name":null,"action":"App\\Http\\Controllers\\Api\\Inventory\\StockController@stockByItem","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/legacy\/caja\/cajas.php","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\CajasController@index","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/legacy\/caja\/formas_pago","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\FormasPagoController@listar","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/legacy\/caja\/precorte_create.php","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@createLegacy","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/legacy\/caja\/precorte_status.php","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@statusLegacy","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/legacy\/caja\/precorte_totales.php","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@resumenLegacy","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/legacy\/caja\/precorte_update.php","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@updateLegacy","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/legacy\/postcortes[\/{id}]","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PostcorteController@createOrUpdateLegacy","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/legacy\/precortes[\/{id}]","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@createOrUpdateLegacy","middleware":["api"]},{"domain":null,"method":"GET|POST|HEAD","uri":"api\/legacy\/sprecorte\/create\/{id?}","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@createLegacy","middleware":["api"]},{"domain":null,"method":"GET|POST|HEAD","uri":"api\/legacy\/sprecorte\/preflight\/{sesion_id?}","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@preflight","middleware":["api"]},{"domain":null,"method":"GET|POST|HEAD","uri":"api\/legacy\/sprecorte\/totales\/sesion\/{sesion_id?}","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@totalesPorSesion","middleware":["api"]},{"domain":null,"method":"GET|POST|HEAD","uri":"api\/legacy\/sprecorte\/totales\/{id?}","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@resumenLegacy","middleware":["api"]},{"domain":null,"method":"GET|POST|HEAD","uri":"api\/legacy\/sprecorte\/update\/{id?}","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\\PrecorteController@updateLegacy","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/oauth2-callback","name":"l5-swagger.default.oauth2_callback","action":"L5Swagger\\Http\\Controllers\\SwaggerController@oauth2Callback","middleware":["L5Swagger\\Http\\Middleware\\Config"]},{"domain":null,"method":"GET|HEAD","uri":"api\/ping","name":null,"action":"Closure","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/unidades","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\\UnidadController@index","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/unidades","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\\UnidadController@store","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/unidades\/conversiones","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\\ConversionController@index","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/unidades\/conversiones","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\\ConversionController@store","middleware":["api"]},{"domain":null,"method":"PUT","uri":"api\/unidades\/conversiones\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\\ConversionController@update","middleware":["api"]},{"domain":null,"method":"DELETE","uri":"api\/unidades\/conversiones\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\\ConversionController@destroy","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/unidades\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\\UnidadController@show","middleware":["api"]},{"domain":null,"method":"PUT","uri":"api\/unidades\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\\UnidadController@update","middleware":["api"]},{"domain":null,"method":"DELETE","uri":"api\/unidades\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\\UnidadController@destroy","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/{fallbackPlaceholder}","name":null,"action":"Closure","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"caja\/cortes","name":"caja.cortes","action":"Illuminate\\Routing\\ViewController","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"catalogos\/almacenes","name":"cat.almacenes","action":"App\\Livewire\\Catalogs\\AlmacenesIndex","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"catalogos\/proveedores","name":"cat.proveedores","action":"App\\Livewire\\Catalogs\\ProveedoresIndex","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"catalogos\/stock-policy","name":"cat.stockpolicy","action":"App\\Livewire\\Catalogs\\StockPolicyIndex","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"catalogos\/sucursales","name":"cat.sucursales","action":"App\\Livewire\\Catalogs\\SucursalesIndex","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"catalogos\/unidades","name":"cat.unidades","action":"App\\Livewire\\Catalogs\\UnidadesIndex","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"catalogos\/uom","name":"cat.uom","action":"App\\Livewire\\Catalogs\\UomConversionIndex","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"compras","name":"compras","action":"Illuminate\\Routing\\ViewController","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"confirm-password","name":"password.confirm","action":"App\\Http\\Controllers\\Auth\\ConfirmablePasswordController@show","middleware":["web","Illuminate\\Auth\\Middleware\\Authenticate"]},{"domain":null,"method":"POST","uri":"confirm-password","name":null,"action":"App\\Http\\Controllers\\Auth\\ConfirmablePasswordController@store","middleware":["web","Illuminate\\Auth\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"dashboard","name":"dashboard","action":"Illuminate\\Routing\\ViewController","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"docs","name":"l5-swagger.default.docs","action":"L5Swagger\\Http\\Controllers\\SwaggerController@docs","middleware":["L5Swagger\\Http\\Middleware\\Config"]},{"domain":null,"method":"GET|HEAD","uri":"docs\/asset\/{asset}","name":"l5-swagger.default.asset","action":"L5Swagger\\Http\\Controllers\\SwaggerAssetController@index","middleware":["L5Swagger\\Http\\Middleware\\Config"]},{"domain":null,"method":"POST","uri":"email\/verification-notification","name":"verification.send","action":"App\\Http\\Controllers\\Auth\\EmailVerificationNotificationController@store","middleware":["web","Illuminate\\Auth\\Middleware\\Authenticate","Illuminate\\Routing\\Middleware\\ThrottleRequests:6,1"]},{"domain":null,"method":"GET|HEAD","uri":"forgot-password","name":"password.request","action":"App\\Http\\Controllers\\Auth\\PasswordResetLinkController@create","middleware":["web","Illuminate\\Auth\\Middleware\\RedirectIfAuthenticated"]},{"domain":null,"method":"POST","uri":"forgot-password","name":"password.email","action":"App\\Http\\Controllers\\Auth\\PasswordResetLinkController@store","middleware":["web","Illuminate\\Auth\\Middleware\\RedirectIfAuthenticated"]},{"domain":null,"method":"GET|HEAD","uri":"inventario","name":"inventario","action":"Illuminate\\Routing\\ViewController","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"inventory\/items","name":"inventory.items.index","action":"App\\Livewire\\Inventory\\ItemsIndex","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"inventory\/lots","name":"inv.lots","action":"App\\Livewire\\Inventory\\LotsIndex","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"inventory\/receptions","name":"inv.receptions","action":"App\\Livewire\\Inventory\\ReceptionsIndex","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"inventory\/receptions\/new","name":"inv.receptions.new","action":"App\\Livewire\\Inventory\\ReceptionCreate","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"kds","name":"kds.board","action":"App\\Livewire\\Kds\\Board","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"livewire\/livewire.js","name":null,"action":"Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@returnJavaScriptAsFile","middleware":[]},{"domain":null,"method":"GET|HEAD","uri":"livewire\/livewire.min.js.map","name":null,"action":"Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@maps","middleware":[]},{"domain":null,"method":"GET|HEAD","uri":"livewire\/preview-file\/{filename}","name":"livewire.preview-file","action":"Livewire\\Features\\SupportFileUploads\\FilePreviewController@handle","middleware":["web"]},{"domain":null,"method":"POST","uri":"livewire\/update","name":"livewire.update","action":"Livewire\\Mechanisms\\HandleRequests\\HandleRequests@handleUpdate","middleware":["web"]},{"domain":null,"method":"POST","uri":"livewire\/upload-file","name":"livewire.upload-file","action":"Livewire\\Features\\SupportFileUploads\\FileUploadController@handle","middleware":["web","Illuminate\\Routing\\Middleware\\ThrottleRequests:60,1"]},{"domain":null,"method":"GET|HEAD","uri":"login","name":"login","action":"App\\Http\\Controllers\\Auth\\AuthenticatedSessionController@create","middleware":["web","Illuminate\\Auth\\Middleware\\RedirectIfAuthenticated"]},{"domain":null,"method":"POST","uri":"login","name":null,"action":"App\\Http\\Controllers\\Auth\\AuthenticatedSessionController@store","middleware":["web","Illuminate\\Auth\\Middleware\\RedirectIfAuthenticated"]},{"domain":null,"method":"POST","uri":"logout","name":"logout","action":"App\\Http\\Controllers\\Auth\\AuthenticatedSessionController@destroy","middleware":["web","Illuminate\\Auth\\Middleware\\Authenticate"]},{"domain":null,"method":"PUT","uri":"password","name":"password.update","action":"App\\Http\\Controllers\\Auth\\PasswordController@update","middleware":["web","Illuminate\\Auth\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"personal","name":"personal","action":"Illuminate\\Routing\\ViewController","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"produccion","name":"produccion","action":"Illuminate\\Routing\\ViewController","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"recetas","name":"recetas","action":"Illuminate\\Routing\\ViewController","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"recipes","name":"rec.index","action":"App\\Livewire\\Recipes\\RecipesIndex","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"recipes\/editor\/{id?}","name":"rec.editor","action":"App\\Livewire\\Recipes\\RecipeEditor","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"register","name":"register","action":"App\\Http\\Controllers\\Auth\\RegisteredUserController@create","middleware":["web","Illuminate\\Auth\\Middleware\\RedirectIfAuthenticated"]},{"domain":null,"method":"POST","uri":"register","name":null,"action":"App\\Http\\Controllers\\Auth\\RegisteredUserController@store","middleware":["web","Illuminate\\Auth\\Middleware\\RedirectIfAuthenticated"]},{"domain":null,"method":"GET|HEAD","uri":"reportes","name":"reportes","action":"Illuminate\\Routing\\ViewController","middleware":["web"]},{"domain":null,"method":"POST","uri":"reset-password","name":"password.store","action":"App\\Http\\Controllers\\Auth\\NewPasswordController@store","middleware":["web","Illuminate\\Auth\\Middleware\\RedirectIfAuthenticated"]},{"domain":null,"method":"GET|HEAD","uri":"reset-password\/{token}","name":"password.reset","action":"App\\Http\\Controllers\\Auth\\NewPasswordController@create","middleware":["web","Illuminate\\Auth\\Middleware\\RedirectIfAuthenticated"]},{"domain":null,"method":"GET|HEAD","uri":"storage\/{path}","name":"storage.local","action":"Closure","middleware":[]},{"domain":null,"method":"GET|HEAD","uri":"up","name":null,"action":"Closure","middleware":[]},{"domain":null,"method":"GET|HEAD","uri":"verify-email","name":"verification.notice","action":"App\\Http\\Controllers\\Auth\\EmailVerificationPromptController","middleware":["web","Illuminate\\Auth\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"verify-email\/{id}\/{hash}","name":"verification.verify","action":"App\\Http\\Controllers\\Auth\\VerifyEmailController","middleware":["web","Illuminate\\Auth\\Middleware\\Authenticate","Illuminate\\Routing\\Middleware\\ValidateSignature","Illuminate\\Routing\\Middleware\\ThrottleRequests:6,1"]}]
+PS C:\xampp3\htdocs\TerrenaLaravel> php artisan route:list --compact
+
+
+  The "--compact" option does not exist.
+
+
+PS C:\xampp3\htdocs\TerrenaLaravel> # Información básica
+PS C:\xampp3\htdocs\TerrenaLaravel> php artisan about
+
+  Environment ......................................................................................................................................
+  Application Name ....................................................................................................................... TerrenaUI
+  Laravel Version .......................................................................................................................... 12.34.0
+  PHP Version ............................................................................................................................... 8.2.12
+  Composer Version ........................................................................................................................... 2.8.9
+  Environment ................................................................................................................................ local
+  Debug Mode ............................................................................................................................... ENABLED
+  URL ..................................................................................................................... localhost/TerrenaLaravel
+  Maintenance Mode ............................................................................................................................. OFF
+  Timezone ..................................................................................................................................... UTC
+  Locale ........................................................................................................................................ es
+
+  Cache ............................................................................................................................................
+  Config ................................................................................................................................ NOT CACHED
+  Events ................................................................................................................................ NOT CACHED
+  Routes ................................................................................................................................ NOT CACHED
+  Views ..................................................................................................................................... CACHED
+
+  Drivers ..........................................................................................................................................
+  Broadcasting ................................................................................................................................. log
+  Cache ....................................................................................................................................... file
+  Database ................................................................................................................................... pgsql
+  Logs .............................................................................................................................. stack / single
+  Mail ......................................................................................................................................... log
+  Queue ....................................................................................................................................... sync
+  Session ................................................................................................................................. database
+
+  Storage ..........................................................................................................................................
+  C:\xampp3\htdocs\TerrenaLaravel\public\storage ............................................................................................ LINKED
+
+  Livewire .........................................................................................................................................
+  Livewire ........................................................................................................................... v3.7.0-beta.1
+
+  Spatie Permissions ...............................................................................................................................
+  Features Enabled ......................................................................................................................... Default
+  Version ................................................................................................................................... 6.21.0
+
+PS C:\xampp3\htdocs\TerrenaLaravel> php --version
+PHP 8.2.12 (cli) (built: Oct 24 2023 21:15:15) (ZTS Visual C++ 2019 x64)
+Copyright (c) The PHP Group
+Zend Engine v4.2.12, Copyright (c) Zend Technologies
+PS C:\xampp3\htdocs\TerrenaLaravel>
+PS C:\xampp3\htdocs\TerrenaLaravel> # Estructura de carpetas
+PS C:\xampp3\htdocs\TerrenaLaravel> Write-Host "=== CONTROLLERS ===" -ForegroundColor Green
+=== CONTROLLERS ===
+PS C:\xampp3\htdocs\TerrenaLaravel> Get-ChildItem app/Http/Controllers/
+
+
+    Directorio: C:\xampp3\htdocs\TerrenaLaravel\app\Http\Controllers
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----     16/10/2025  12:22 p. m.                Api
+d-----     16/10/2025  12:22 p. m.                Auth
+-a----     29/08/2025  10:40 a. m.             77 Controller.php
+-a----     26/09/2025  02:58 p. m.           1416 ProfileController.php
+
+
+PS C:\xampp3\htdocs\TerrenaLaravel>
+PS C:\xampp3\htdocs\TerrenaLaravel> Write-Host "=== VIEWS ===" -ForegroundColor Green
+=== VIEWS ===
+PS C:\xampp3\htdocs\TerrenaLaravel> Get-ChildItem resources/views/
+
+
+    Directorio: C:\xampp3\htdocs\TerrenaLaravel\resources\views
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----     16/10/2025  12:24 p. m.                auth
+d-----     16/10/2025  11:51 p. m.                caja
+d-----     16/10/2025  12:24 p. m.                components
+d-----     16/10/2025  12:24 p. m.                dashboard
+d-----     16/10/2025  12:24 p. m.                inventory
+d-----     16/10/2025  11:28 p. m.                layouts
+d-----     13/10/2025  09:35 p. m.                legacy
+d-----     16/10/2025  12:24 p. m.                livewire
+d-----     16/10/2025  12:24 p. m.                partials
+d-----     16/10/2025  12:24 p. m.                profile
+d-----     16/10/2025  12:24 p. m.                recipes
+-a----     30/09/2025  12:41 p. m.           1487 app.blade.php
+-a----     14/10/2025  12:42 a. m.           9242 compras.blade.php
+-a----     14/10/2025  12:25 a. m.           7887 dashboard.blade.php
+-a----     14/10/2025  12:42 a. m.          13257 inventario.blade.php
+-a----     14/10/2025  12:45 a. m.           1868 login.blade.php
+-a----     14/10/2025  08:14 a. m.          12350 personal.blade.php
+-a----     14/10/2025  12:27 a. m.            591 placeholder.blade.php
+-a----     14/10/2025  12:44 a. m.           7175 produccion.blade.php
+-a----     14/10/2025  12:44 a. m.           3341 recetas.blade.php
+-a----     29/08/2025  10:40 a. m.          82568 welcome.blade - copia.php
+-a----     30/09/2025  12:43 p. m.            282 welcome.blade.php
+
+
+PS C:\xampp3\htdocs\TerrenaLaravel>
+PS C:\xampp3\htdocs\TerrenaLaravel> # Configuración DB
+PS C:\xampp3\htdocs\TerrenaLaravel> Write-Host "=== DB CONFIG (NO PASSWORDS) ===" -ForegroundColor Green
+=== DB CONFIG (NO PASSWORDS) ===
+PS C:\xampp3\htdocs\TerrenaLaravel> Get-Content .env | Select-String "DB_" | Where-Object { $_ -notmatch "PASSWORD" }
+
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5433
+DB_DATABASE=pos
+DB_USERNAME=postgres
+DB_SCHEMA=selemti,public
+#DB_CONNECTION=sqlite
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=laravel
+# DB_USERNAME=root
+
+
+PS C:\xampp3\htdocs\TerrenaLaravel> composer show laravel/framework | Select-String "versions"
+
+versions : * v12.34.0
+
+### BASE DE DATOS #####
+SELECT version();
+"PostgreSQL 9.5.0, compiled by Visual C++ build 1800, 32-bit"
+------
+
+SELECT table_schema, table_name 
+FROM information_schema.tables 
+WHERE table_schema IN ('public', 'selemti')
+AND table_type = 'BASE TABLE';
+
+
+"public";"custom_payment"
+"public";"coupon_and_discount"
+"public";"attendence_history"
+"public";"inventory_group"
+"public";"guest_check_print"
+"public";"inventory_meta_code"
+"public";"item_order_type"
+"public";"inventory_warehouse"
+"public";"kitchen_ticket"
+"public";"inventory_transaction"
+"public";"menugroup_discount"
+"public";"drawer_pull_report"
+"public";"menu_modifier_group"
+"public";"menucategory_discount"
+"public";"menu_item_size"
+"public";"menu_group"
+"public";"global_config"
+"public";"group_taxes"
+"public";"inventory_location"
+"public";"multiplier"
+"public";"menumodifier_pizzamodifierprice"
+"selemti";"sucursal"
+"selemti";"almacen"
+"public";"terminal"
+"public";"inventory_unit"
+"public";"inventory_vendor"
+"public";"modifier_multiplier_price"
+"public";"menu_item_properties"
+"public";"kds_ready_log"
+"selemti";"postcorte"
+"selemti";"auditoria"
+"selemti";"formas_pago"
+"selemti";"precorte"
+"public";"menuitem_modifiergroup"
+"selemti";"precorte_efectivo"
+"public";"menu_category"
+"selemti";"password_reset_tokens"
+"public";"menuitem_shift"
+"public";"menuitem_discount"
+"selemti";"precorte_otros"
+"selemti";"sesion_cajon"
+"public";"menu_item"
+"public";"menu_item_terminal_ref"
+"selemti";"sessions"
+"selemti";"migrations"
+"public";"packaging_unit"
+"selemti";"cache"
+"selemti";"cache_locks"
+"selemti";"jobs"
+"selemti";"job_batches"
+"selemti";"failed_jobs"
+"public";"payout_recepients"
+"public";"pizza_modifier_price"
+"public";"printer_configuration"
+"public";"shift"
+"public";"shop_table_type"
+"public";"shop_floor_template"
+"public";"pizza_crust"
+"public";"payout_reasons"
+"public";"order_type"
+"public";"purchase_order"
+"public";"printer_group"
+"public";"shop_table_status"
+"public";"restaurant"
+"selemti";"user_roles"
+"public";"recepie"
+"public";"shop_floor_template_properties"
+"public";"printer_group_printers"
+"public";"recepie_item"
+"public";"tax_group"
+"public";"terminal_properties"
+"public";"table_booking_mapping"
+"public";"tax"
+"public";"table_type_relation"
+"public";"terminal_printers"
+"public";"table_ticket_num"
+"public";"ticket_item"
+"public";"table_booking_info"
+"public";"ticket_item_addon_relation"
+"public";"ticket_item_modifier_relation"
+"public";"users"
+"public";"ticket_item_modifier"
+"public";"zip_code_vs_delivery_charge"
+"public";"ticket_table_num"
+"public";"transaction_properties"
+"public";"virtualprinter_order_type"
+"selemti";"mov_inv"
+"public";"kitchen_ticket_item"
+"public";"delivery_address"
+"public";"menuitem_pizzapirce"
+"public";"ticket_discount"
+"public";"currency_balance"
+"public";"ticket_item_cooking_instruction"
+"public";"user_user_permission"
+"public";"menu_modifier_properties"
+"public";"ticket_item_discount"
+"public";"kit_ticket_table_num"
+"public";"shop_floor"
+"public";"inventory_item"
+"public";"shop_table"
+"public";"employee_in_out_history"
+"public";"menu_modifier"
+"selemti";"cat_unidades"
+"public";"customer"
+"selemti";"receta_det"
+"public";"pizza_price"
+"public";"ticket"
+"public";"migrations"
+"public";"restaurant_properties"
+"public";"drawer_pull_report_voidtickets"
+"public";"customer_properties"
+"public";"cooking_instruction"
+"public";"drawer_assigned_history"
+"public";"action_history"
+"public";"cash_drawer_reset_history"
+"public";"cash_drawer"
+"public";"data_update_info"
+"public";"daily_folio_counter"
+"public";"delivery_instruction"
+"public";"delivery_charge"
+"public";"delivery_configuration"
+"public";"currency"
+"public";"gratuity"
+"selemti";"users"
+"selemti";"proveedor"
+"public";"transactions"
+"public";"user_permission"
+"public";"user_type"
+"public";"ticket_properties"
+"public";"virtual_printer"
+"public";"void_reasons"
+"selemti";"ticket_venta_cab"
+"selemti";"op_produccion_cab"
+"selemti";"conversiones_unidad"
+"selemti";"model_has_permissions"
+"selemti";"model_has_roles"
+"selemti";"historial_costos_item"
+"selemti";"permissions"
+"selemti";"receta_version"
+"selemti";"historial_costos_receta"
+"selemti";"roles"
+"selemti";"role_has_permissions"
+"selemti";"cost_layer"
+"selemti";"pos_map"
+"selemti";"receta_cab"
+"selemti";"modificadores_pos"
+"selemti";"receta_shadow"
+"selemti";"ticket_venta_det"
+"selemti";"job_recalc_queue"
+"selemti";"recalc_log"
+"selemti";"item_vendor"
+"selemti";"param_sucursal"
+"selemti";"stock_policy"
+"selemti";"sucursal_almacen_terminal"
+"selemti";"perdida_log"
+"selemti";"items"
+"selemti";"unidades_medida"
+"selemti";"ticket_det_consumo"
+"selemti";"inventory_batch"
+
+
