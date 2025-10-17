@@ -50,7 +50,7 @@ class CajaController extends Controller
                     'opening_float' => (float) ($row->opening_float ?? 0),
                     'assigned_user' => (int) ($row->assigned_user ?? 0),
                     'assigned_name' => $row->assigned_name ?? '—',
-                    'sesion_id' => (int) ($row->sesion_id ?? 0),
+                    'sesion_id' => $row->sesion_id ? (int) $row->sesion_id : null,  // Preserva null en lugar de 0
                     'activa' => (bool) $row->activa,
                     'asignada' => (bool) $row->asignada,
                     'precorte_listo' => (bool) $row->precorte_listo,

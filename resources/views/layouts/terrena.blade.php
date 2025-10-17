@@ -6,7 +6,10 @@
   <title>@yield('title', 'SelemTI - TerrenaPOS')</title>
 
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <script>window.__BASE__ = "{{ url('/') }}";</script>
+  <script>
+    window.__BASE__ = "{{ rtrim(parse_url(url('/'), PHP_URL_PATH), '/') }}";
+    window.__API_BASE__ = window.__BASE__;  // API base is the same as app base
+  </script>
 
   {{-- CSS locales (mismo orden que legacy) --}}
   <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet">

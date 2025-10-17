@@ -25,8 +25,11 @@
 						</button>
 						<!-- Botón global para abrir Wizard (opcional; igual habrá botón por fila) -->
 					</div>
-				</div>		
-		
+				</div>
+
+        {{-- Campo oculto para sincronizar fecha con JavaScript --}}
+        <input type="hidden" id="filtroFecha" value="{{ $date ?? now()->format('Y-m-d') }}">
+
         {{-- KPIs --}}
         <div class="row g-3 mb-3">
             <div class="col-6 col-md-3">

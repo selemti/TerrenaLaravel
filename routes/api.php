@@ -55,17 +55,17 @@ Route::prefix('caja')->group(function () {
     Route::prefix('precortes')->group(function () {
         // Preflight - verificar tickets abiertos
         Route::match(['get', 'post'], '/preflight/{sesion_id?}', [PrecorteController::class, 'preflight']);
-        
+
         // CRUD principal
-        Route::post('/', [PrecorteController::class, 'create']);
+        Route::post('/', [PrecorteController::class, 'createLegacy']);
         Route::get('/{id}', [PrecorteController::class, 'show']);
-        Route::post('/{id}', [PrecorteController::class, 'update']);
-        
+        Route::post('/{id}', [PrecorteController::class, 'updateLegacy']);
+
         // Acciones específicas
-        Route::get('/{id}/totales', [PrecorteController::class, 'totales']);
-        Route::get('/{id}/status', [PrecorteController::class, 'status']);
+        Route::get('/{id}/totales', [PrecorteController::class, 'resumenLegacy']);
+        Route::match(['get', 'post'], '/{id}/status', [PrecorteController::class, 'statusLegacy']);
         Route::post('/{id}/enviar', [PrecorteController::class, 'enviar']);
-        
+
         // Totales por sesión
         Route::get('/sesion/{sesion_id}/totales', [PrecorteController::class, 'totalesPorSesion']);
     });

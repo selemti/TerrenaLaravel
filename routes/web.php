@@ -48,8 +48,13 @@ use App\Livewire\Kds\Board                   as KdsBoard;
 |  HOME (UNA sola definición, limpia y canónica)
 |========================================================================= */
 Route::get('/', function () {
+    return "Página de inicio - <a href='" . route('dashboard') . "'>Ir al Dashboard</a>";
+});
+
+/*
+Route::get('/', function () {
     return redirect()->route('dashboard'); // 302 hacia la ruta nombrada
-})->name('home');
+})->name('home');*/
 
 /* =========================================================================
 |  BLADES “estáticos” del menú principal

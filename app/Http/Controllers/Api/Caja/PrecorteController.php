@@ -92,10 +92,10 @@ class PrecorteController extends Controller
 
             // Buscar precorte existente
             $existing = DB::selectOne("
-                SELECT id, estatus, created_at 
-                FROM selemti.precorte 
-                WHERE sesion_id = ? 
-                ORDER BY id DESC 
+                SELECT id, estatus, creado_en
+                FROM selemti.precorte
+                WHERE sesion_id = ?
+                ORDER BY id DESC
                 LIMIT 1
             ", [$sesionId]);
 
@@ -104,23 +104,23 @@ class PrecorteController extends Controller
                     'ok' => true,
                     'precorte_id' => (int) $existing->id,
                     'estatus' => $existing->estatus ?? 'PENDIENTE',
-                    'creado_en' => $existing->created_at,
+                    'creado_en' => $existing->creado_en,
                     'ya_existia' => true
                 ]);
             }
 
             // Crear nuevo precorte
             $result = DB::selectOne("
-                INSERT INTO selemti.precorte (sesion_id, estatus, created_at) 
-                VALUES (?, 'PENDIENTE', NOW()) 
-                RETURNING id, created_at
-            ", [$sesionId]);
+                INSERT INTO selemti.precorte (sesion_id, estatus, creado_en, creado_por, ip_cliente)
+                VALUES (?, 'PENDIENTE', NOW(), ?, ?::inet)
+                RETURNING id, creado_en
+            ", [$sesionId, $userId, $request->ip()]);
 
             return response()->json([
                 'ok' => true,
                 'precorte_id' => (int) $result->id,
                 'estatus' => 'PENDIENTE',
-                'creado_en' => $result->created_at,
+                'creado_en' => $result->creado_en,
                 'ya_existia' => false
             ]);
 

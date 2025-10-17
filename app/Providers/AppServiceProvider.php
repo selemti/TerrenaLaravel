@@ -3,24 +3,23 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\URL;   // <-- AGREGA ESTA LÍNEA
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // deja aquí lo que ya tienes
+        // aquí lo que ya tengas de bindings/registrations
     }
 
     public function boot(): void
     {
-        // Fuerza la raíz de generación de URLs para respetar /terrena/ui
-        $appUrl = config('app.url'); // ej: http://localhost/terrena/ui
-        if ($appUrl) {
-            URL::forceRootUrl($appUrl);
+        // Fuerza la raíz para que route(), url(), asset() respeten /TerrenaLaravel
+        if ($root = config('app.url')) {
+            URL::forceRootUrl($root);
         }
 
-        // Si usas HTTPS en prod:
+        // Si en producción usas HTTPS, descomenta:
         // URL::forceScheme('https');
     }
 }

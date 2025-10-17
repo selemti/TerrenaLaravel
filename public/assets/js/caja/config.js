@@ -7,14 +7,14 @@ export const BASE  = (window.__BASE__ || '').replace(/\/+$/,'');   // ej: "/terr
 
 export const api = {
  // Cajas
-  cajasIndex: (qs = '') => `${BASE}/api/caja/cajas${qs ? `?${qs}` : ''}`,
+  cajas: (qs = '') => `${BASE}/api/caja/cajas${qs ? `?${qs}` : ''}`,
 
   // Sesión / conciliación / formas de pago
   sesionActiva:                 `${BASE}/api/caja/sesiones/activa`,
   conciliacionBySesion: (id) => `${BASE}/api/caja/conciliacion/${id}`,
   formasPago:                   `${BASE}/api/caja/formas-pago`,
 
-  // Precortes
+  // Precortes (camelCase)
   precortesCreate:                `${BASE}/api/caja/precortes`,                    // POST
   precortesPreflight:     (sid) => `${BASE}/api/caja/precortes/preflight/${sid ?? ''}`.replace(/\/$/, ''),
   precortesShow:          (id)  => `${BASE}/api/caja/precortes/${id}`,            // GET
@@ -24,11 +24,21 @@ export const api = {
   precortesTotales:       (id)  => `${BASE}/api/caja/precortes/${id}/totales`,    // GET
   precortesTotalesSesion: (sid) => `${BASE}/api/caja/precortes/sesion/${sid}/totales`, // GET
 
-  // Postcortes
+  // Aliases con guion bajo para compatibilidad con wizard.js legacy
+  precorte_create:  ()    => `${BASE}/api/caja/precortes`,
+  precorte_update:  (id)  => `${BASE}/api/caja/precortes/${id}`,
+  precorte_totales: (id)  => `${BASE}/api/caja/precortes/${id}/totales`,
+  precorte_preflight: (sid) => `${BASE}/api/caja/precortes/preflight/${sid ?? ''}`.replace(/\/$/, ''),
+
+  // Postcortes (camelCase)
   postcortesCreate:              `${BASE}/api/caja/postcortes`,                   // POST
   postcortesUpdate:        (id) => `${BASE}/api/caja/postcortes/${id}`,           // POST (OJO: NO PUT)
   postcortesShow:          (id) => `${BASE}/api/caja/postcortes/${id}`,           // GET
   postcortesDetalle:       (id) => `${BASE}/api/caja/postcortes/${id}/detalle`,   // GET
+
+  // Aliases con guion bajo para postcortes
+  postcorte_create: ()    => `${BASE}/api/caja/postcortes`,
+  postcorte_update: (id)  => `${BASE}/api/caja/postcortes/${id}`,
 
   // (Opcional) endpoints legacy de compatibilidad mientras migras
   legacyPreflight:         (sid) => `${BASE}/api/legacy/sprecorte/preflight/${sid ?? ''}`.replace(/\/$/, ''),
