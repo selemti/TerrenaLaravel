@@ -1,4 +1,4 @@
-// assets/js/caja/wizard.js
+﻿// assets/js/caja/wizard.js
 import { BASE, DENOMS, MXN, api } from './config.js';
 import { $, GET, GET_SOFT, POST_FORM, toast } from './helpers.js';
 import { els, state } from './state.js';
@@ -10,7 +10,7 @@ const parseNum = (v)=>{
   if (v == null) return 0;
   const s = String(v).trim();
   if (!s) return 0;
-  // “1.234,56” -> 1234.56  |  “1,234.56” -> 1234.56
+  // â€œ1.234,56â€ -> 1234.56  |  â€œ1,234.56â€ -> 1234.56
   if (/^\d{1,3}(\.\d{3})*(,\d+)?$/.test(s)) return Number(s.replace(/\./g,'').replace(',', '.')) || 0;
   return Number(s.replace(/,/g,'')) || 0;
 };
@@ -20,7 +20,7 @@ const formatInputMoney = (el)=>{
   el.value = v.toFixed(2); // deja 2 decimales
 };
 
-/** Entradas “no efectivo”: parseo robusto + formateo “.00”
+/** Entradas â€œno efectivoâ€: parseo robusto + formateo â€œ.00â€
 		"12,345.67" / "12.345,67" / "12345" -> number */
 function toNumber(x){
   let s = String(x ?? '').trim();
@@ -55,7 +55,7 @@ function reloadTable() {
   window.recargarTablaCajas && window.recargarTablaCajas();
 }
 
-// --- Inicialización del modal ---
+// --- InicializaciÃ³n del modal ---
 let modalInstance = null;
 function initModal() {
   // Aceptar cualquiera de los IDs usados en las vistas
@@ -92,12 +92,12 @@ async function postFirstAlive(pathCandidates, payload, queryString='') {
       if (r?.ok) return r;                // listo
       lastErr = r;                        // no ok, seguimos con la siguiente
     } catch (e) {
-      lastErr = e;                        // 404/500 lance excepción → seguimos
+      lastErr = e;                        // 404/500 lance excepciÃ³n â†’ seguimos
     }
   }
-  // si ninguna respondió ok, propagamos el último error
+  // si ninguna respondiÃ³ ok, propagamos el Ãºltimo error
   if (lastErr instanceof Error) throw lastErr;
-  throw new Error('Ninguna ruta válida: ' + pathCandidates.join(' | '));
+  throw new Error('Ninguna ruta vÃ¡lida: ' + pathCandidates.join(' | '));
 }
 
 /* =============== STEP / UI =============== */
@@ -122,10 +122,10 @@ export function setStep(n){
   if (els.btnIrPostcorte)     els.btnIrPostcorte.classList.toggle('d-none', n!==2);
   if (els.btnCerrarSesion)    els.btnCerrarSesion.classList.toggle('d-none', n!==3);
 
-  // botón Ir a Postcorte siempre deshabilitado hasta tener DPR
+  // botÃ³n Ir a Postcorte siempre deshabilitado hasta tener DPR
   if (n===2 && els.btnIrPostcorte) els.btnIrPostcorte.disabled = true;
 
-  // Paso 1: limpia los “no efectivo” si es un nuevo precorte
+  // Paso 1: limpia los â€œno efectivoâ€ si es un nuevo precorte
   if (n===1 && !state.pasoGuardado){
     [els.declCredito, els.declDebito, els.declTransfer].forEach(el=>{ if(el){ el.value='0'; el.dataset.touched='0'; }});
   }
@@ -178,7 +178,7 @@ function ensureModalRefs(){
   return true;
 }
 
-/* === ÚNICO handler para “Ir a Postcorte” (sin duplicados) === */
+/* === ÃšNICO handler para â€œIr a Postcorteâ€ (sin duplicados) === */
 bindIrPostcorteUnique
 
 /* =============== DENOMS (Paso 1) =============== */
@@ -250,13 +250,13 @@ export function recalcPaso1(){
 
 /* =============== ABRIR WIZARD =============== */
 export async function abrirWizard(ev){
-  ev?.preventDefault?.();
+  ev?.preventDefault?.(); ev?.stopPropagation?.(); ev?.stopImmediatePropagation?.();
 
   const btn = (
     ev?.currentTarget?.closest?.('[data-caja-action="wizard"]') ||
     ev?.target?.closest?.('[data-caja-action="wizard"]')
   );
-  if (!btn){ toast('No se pudo resolver el botón del wizard','err', 8000, 'UI'); return; }
+  if (!btn){ toast('No se pudo resolver el botÃ³n del wizard','err', 8000, 'UI'); return; }
   if (btn.__busy) return; btn.__busy = true;
 
   const d = (k)=> (btn.dataset && k in btn.dataset) ? btn.dataset[k] : btn.getAttribute?.(`data-${k}`);
@@ -272,7 +272,7 @@ export async function abrirWizard(ev){
   state.postcorteId = null;
   state.pasoGuardado = false;
 
-  // Limpia “no efectivo” y denoms
+  // Limpia â€œno efectivoâ€ y denoms
   const resetNE = (el)=>{ if (!el) return; el.value=''; el.dataset.touched='0'; };
   resetNE(els.declCredito); resetNE(els.declDebito); resetNE(els.declTransfer);
   if (els.notasPaso1) els.notasPaso1.value = '';
@@ -306,13 +306,13 @@ export async function abrirWizard(ev){
 
     // 2) UI
     if (!ensureModalRefs()){
-      fallbackModal(`Precorte #${state.precorteId} listo, pero no se encontró el modal real. Incluye <code>_wizard_modals.php</code>.`);
+      fallbackModal(`Precorte #${state.precorteId} listo, pero no se encontrÃ³ el modal real. Incluye <code>_wizard_modals.php</code>.`);
       btn.__busy=false; return;
     }
     wireDelegates();
     bindModalButtons();
 
-    // 2b) Reanudar postcorte si quedó abierto (cerraste modal sin validar)
+    // 2b) Reanudar postcorte si quedÃ³ abierto (cerraste modal sin validar)
     const recalled = sesion ? recallPostcorte(sesion) : 0;
     if (recalled){
       state.postcorteId = recalled;
@@ -324,7 +324,7 @@ export async function abrirWizard(ev){
       btn.__busy=false; return;
     }
 
-    // 3) Decidir paso por estatus (ENVIADO ⇒ Paso 2)
+    // 3) Decidir paso por estatus (ENVIADO â‡’ Paso 2)
     let est = (j?.estatus || '').toUpperCase();
     try{
       const st = await GET_SOFT(`${BASE}/api/caja/precortes/${state.precorteId}/status`);
@@ -337,7 +337,7 @@ export async function abrirWizard(ev){
       const modal = initModal();
       if (!modal) { btn.__busy=false; return; }
       modal.show();
-      await sincronizarPOS(true);        // muestra/oculta botones según DPR
+      await sincronizarPOS(true);        // muestra/oculta botones segÃºn DPR
       bindIrPostcorteUnique();
       btn.__busy = false; return;
     }
@@ -346,7 +346,7 @@ export async function abrirWizard(ev){
     [els.declCredito, els.declDebito, els.declTransfer].forEach(el=>{
       if (!el) return;
       el.placeholder = '0.00';
-      el.addEventListener('input', ()=>{ el.dataset.touched='1'; /* no formatees aquí para no “brincar” el cursor */ });
+      el.addEventListener('input', ()=>{ el.dataset.touched='1'; /* no formatees aquÃ­ para no â€œbrincarâ€ el cursor */ });
       el.addEventListener('blur',  ()=>{ el.dataset.touched='1'; formatInputMoney(el); recalcPaso1(); });
     });
     bindDenoms();
@@ -387,12 +387,12 @@ async function guardarPrecorte(){
   const totalDecl = totalEf + totalNoEf;
 
   const html = `
-    <div class="mb-2">Se guardará el precorte <b>#${state.precorteId}</b> con:</div>
+    <div class="mb-2">Se guardarÃ¡ el precorte <b>#${state.precorteId}</b> con:</div>
     <table class="table table-sm align-middle mb-2">
       <tbody>
         <tr><td>Efectivo</td><td class="text-end fw-semibold">${MXN.format(totalEf)}</td></tr>
-        <tr><td>Tarjeta crédito</td><td class="text-end">${MXN.format(credito)}</td></tr>
-        <tr><td>Tarjeta débito</td><td class="text-end">${MXN.format(debito)}</td></tr>
+        <tr><td>Tarjeta crÃ©dito</td><td class="text-end">${MXN.format(credito)}</td></tr>
+        <tr><td>Tarjeta dÃ©bito</td><td class="text-end">${MXN.format(debito)}</td></tr>
         <tr><td>Transferencias</td><td class="text-end">${MXN.format(transfer)}</td></tr>
         <tr class="table-light"><th>Total declarado</th><th class="text-end">${MXN.format(totalDecl)}</th></tr>
       </tbody>
@@ -418,7 +418,7 @@ async function guardarPrecorte(){
     state.pasoGuardado = true;
     toast('Precorte guardado','ok',6000,'Listo');
 
-    // formatea campos “no efectivo”
+    // formatea campos â€œno efectivoâ€
     [els.declCredito, els.declDebito, els.declTransfer].forEach(el=>{ if (el) el.value = fmt2(parseMoneyInput(el)); });
 
     setStep(2);
@@ -428,36 +428,36 @@ async function guardarPrecorte(){
     toast(`Error guardando precorte: ${e.message}`,'err',9000,'Error');
   }
 }
-/* =============== Paso 2: Conciliación =============== */
-// Paso 2: sincroniza, muestra conciliación y habilita/deshabilita "Ir a Postcorte".
-// NUNCA muestra el botón "Sincronizar POS".
+/* =============== Paso 2: ConciliaciÃ³n =============== */
+// Paso 2: sincroniza, muestra conciliaciÃ³n y habilita/deshabilita "Ir a Postcorte".
+// NUNCA muestra el botÃ³n "Sincronizar POS".
 export async function sincronizarPOS(auto=false){
   if (!state.precorteId){ toast('No hay precorte activo','err', 9000, 'Error'); return; }
   els.bannerFaltaCorte?.classList.add('d-none');
-  if (els.concGrid) els.concGrid.innerHTML = '<div class="text-muted small">Sincronizando con POS…</div>';
+  if (els.concGrid) els.concGrid.innerHTML = '<div class="text-muted small">Sincronizando con POSâ€¦</div>';
 
   // Por default, no dejamos avanzar
   if (els.btnIrPostcorte) els.btnIrPostcorte.disabled = true;
 
   const j = await GET_SOFT(api.precorte_totales(state.precorteId));
 
-  // Si no hay DPR: mostramos banner y (si existe) botón "Sincronizar POS"
+  // Si no hay DPR: mostramos banner y (si existe) botÃ³n "Sincronizar POS"
   if (!j?.ok){
     els.bannerFaltaCorte?.classList.remove('d-none');
     if (els.btnSincronizarPOS) els.btnSincronizarPOS.classList.remove('d-none');
     if (!auto){
       mostrarAvisoElegante(
         'Falta realizar el corte en POS',
-        'Aún no hay Drawer Pull Report en Floreant POS. Realiza el corte y pulsa <b>Sincronizar</b>.',
+        'AÃºn no hay Drawer Pull Report en Floreant POS. Realiza el corte y pulsa <b>Sincronizar</b>.',
         ()=> sincronizarPOS(false)
       );
     } else if (els.concGrid) {
-      els.concGrid.innerHTML = '<div class="small text-muted">Esperando corte en POS…</div>';
+      els.concGrid.innerHTML = '<div class="small text-muted">Esperando corte en POSâ€¦</div>';
     }
     return;
   }
 
-  // Con DPR: ocultamos “Sincronizar POS” y habilitamos “Ir a Postcorte”
+  // Con DPR: ocultamos â€œSincronizar POSâ€ y habilitamos â€œIr a Postcorteâ€
   if (els.btnSincronizarPOS) els.btnSincronizarPOS.classList.add('d-none');
   if (els.btnIrPostcorte)    els.btnIrPostcorte.disabled = false;
 
@@ -507,12 +507,12 @@ export function renderConciliacion(d, raw){
   els.concGrid.innerHTML = `
     <table class="table table-sm align-middle mb-2">
       <thead><tr>
-        <th>Categoría</th><th class="text-end">Declarado</th><th class="text-end">Sistema</th><th class="text-end">Diferencia</th><th class="text-center">Estado</th>
+        <th>CategorÃ­a</th><th class="text-end">Declarado</th><th class="text-end">Sistema</th><th class="text-end">Diferencia</th><th class="text-center">Estado</th>
       </tr></thead>
       <tbody>
         ${row('Efectivo',         efectivo_decl, efectivo_sys)}
-        ${row('Tarjeta Crédito',  credito_decl,  credito_sys)}
-        ${row('Tarjeta Débito',   debito_decl,   debito_sys)}
+        ${row('Tarjeta CrÃ©dito',  credito_decl,  credito_sys)}
+        ${row('Tarjeta DÃ©bito',   debito_decl,   debito_sys)}
         ${row('Transferencias',   transf_decl,   transf_sys)}
       </tbody>
     </table>
@@ -526,7 +526,7 @@ export function renderConciliacion(d, raw){
       </div>
       <div class="col-12 col-md-3">
         <div class="border rounded p-2 h-100">
-          <div class="text-muted">Ventas netas en efectivo (sistema – fondo)</div>
+          <div class="text-muted">Ventas netas en efectivo (sistema â€“ fondo)</div>
           <div class="fw-semibold">${MXN.format(netEf)}</div>
         </div>
       </div>
@@ -600,7 +600,7 @@ export function bindModalButtons(){
     els.btnContinuarConc.addEventListener('click', (ev)=>{
       ev.preventDefault(); ev.stopPropagation();
       if (!state.pasoGuardado){
-        toast('Primero guarda el precorte.','warn', 5000, 'Validación');
+        toast('Primero guarda el precorte.','warn', 5000, 'ValidaciÃ³n');
         return;
       }
       setStep(2);
@@ -619,7 +619,7 @@ export function bindModalButtons(){
   if (els.btnCerrarSesion){
     els.btnCerrarSesion.addEventListener('click', stop(()=>{
       try { bootstrap.Modal.getInstance(els.modal)?.hide(); } catch(_){}
-      toast('Sesión cerrada.', 'ok', 6000, 'Listo');
+      toast('SesiÃ³n cerrada.', 'ok', 6000, 'Listo');
       import('./mainTable.js').then(m => m.cargarTabla().catch(()=>{}));
     }));
   }
@@ -632,7 +632,7 @@ async function irAPostcorte(){
     toast('No hay precorte activo','err',9000,'Error');
     return;
   }
-  // si ya lo teníamos, reanudar
+  // si ya lo tenÃ­amos, reanudar
   if (state.postcorteId){
     setStep(3);
     await renderPaso3();
@@ -640,7 +640,7 @@ async function irAPostcorte(){
   }
 
   try{
-    // ÚNICA ruta válida en tu API
+    // ÃšNICA ruta vÃ¡lida en tu API
     const j = await POST_FORM(`${BASE}/api/postcortes?precorte_id=${encodeURIComponent(state.precorteId)}`, {});
     if (!j?.ok) throw new Error(j?.error || 'No se pudo generar el Post-corte');
 
@@ -700,7 +700,7 @@ async function renderPaso3(){
   grid.innerHTML = `
     <table class="table table-sm align-middle mb-3">
       <thead><tr>
-        <th>Categoría</th><th class="text-end">Declarado</th>
+        <th>CategorÃ­a</th><th class="text-end">Declarado</th>
         <th class="text-end">Sistema</th><th class="text-end">Diferencia</th><th class="text-center">Veredicto</th>
       </tr></thead>
       <tbody>
@@ -712,7 +712,7 @@ async function renderPaso3(){
     <label class="form-label">Notas del postcorte</label>
   `;
 
-  // re-bind limpio (evita doble diálogo)
+  // re-bind limpio (evita doble diÃ¡logo)
   const cloneV = btnV.cloneNode(true);
   btnV.replaceWith(cloneV);
 
@@ -743,20 +743,20 @@ function rowConcWithSelect(name, declarado, sistema, selectId){
 /* Guarda/valida el postcorte */
 let _pcSaving = false; // flag anti-doble click
 
-/* ===== Guardar/Validar con diálogo bonito ===== */
-/* ===== Guardar/Validar con diálogo bonito + fallbacks de ruta ===== */
+/* ===== Guardar/Validar con diÃ¡logo bonito ===== */
+/* ===== Guardar/Validar con diÃ¡logo bonito + fallbacks de ruta ===== */
 let __pcSaving = false;
-/* ===== Guardar/Validar con diálogo bonito (rutas corregidas) ===== */
-/* ===== Guardar/Validar con diálogo bonito ===== */
+/* ===== Guardar/Validar con diÃ¡logo bonito (rutas corregidas) ===== */
+/* ===== Guardar/Validar con diÃ¡logo bonito ===== */
 async function guardarPostcorte(validar){
   if (!state?.postcorteId){
-    toast('No hay postcorte creado aún.','err',9000,'Error');
+    toast('No hay postcorte creado aÃºn.','err',9000,'Error');
     return;
   }
   if (guardarPostcorte.__busy) return;
   guardarPostcorte.__busy = true;
 
-  // Relee diferencias para el resumen de confirmación
+  // Relee diferencias para el resumen de confirmaciÃ³n
   const tot = await GET(`${BASE}/api/caja/precortes/${state.precorteId}/totales`);
   if (!tot?.ok){
     toast('No fue posible recalcular diferencias.','err',9000,'Error');
@@ -783,11 +783,11 @@ async function guardarPostcorte(validar){
 
   if (validar){
     const html = `
-      <div class="mb-2">Se guardará el postcorte y se cerrará la sesión.</div>
+      <div class="mb-2">Se guardarÃ¡ el postcorte y se cerrarÃ¡ la sesiÃ³n.</div>
       <ul class="list-unstyled mb-0 small">
         <li class="mb-1"><span class="text-muted">Diferencia efectivo:</span> <b>${MXN.format(dif.ef)}</b></li>
         <li class="mb-1"><span class="text-muted">Diferencia tarjetas:</span> <b>${MXN.format(dif.tj)}</b>
-          <span class="text-muted"> (Crédito ${MXN.format(dif.cr)}, Débito ${MXN.format(dif.db)})</span>
+          <span class="text-muted"> (CrÃ©dito ${MXN.format(dif.cr)}, DÃ©bito ${MXN.format(dif.db)})</span>
         </li>
         <li><span class="text-muted">Diferencia transferencias:</span> <b>${MXN.format(dif.tr)}</b></li>
       </ul>`;
@@ -795,7 +795,7 @@ async function guardarPostcorte(validar){
     if (!ok){ guardarPostcorte.__busy = false; return; }
   }
 
-  // veredictos automáticos (si no usas selects manuales)
+  // veredictos automÃ¡ticos (si no usas selects manuales)
   const ver = (v)=> v===0 ? 'CUADRA' : (v>0 ? 'A_FAVOR' : 'EN_CONTRA');
   const payload = {
     veredicto_efectivo:       ver(dif.ef),
@@ -815,14 +815,14 @@ async function guardarPostcorte(validar){
   if (btnC) btnC.disabled = true;
 
   try{
-    // **ÚNICA ruta de update en tu API**
+    // **ÃšNICA ruta de update en tu API**
     const res = await POST_FORM(`${BASE}/api/postcortes?id=${encodeURIComponent(state.postcorteId)}`, payload);
-    if (!res?.ok) throw new Error(res?.error || 'falló guardado');
+    if (!res?.ok) throw new Error(res?.error || 'fallÃ³ guardado');
 
     toast(validar ? 'Postcorte validado y cerrado.' : 'Postcorte guardado.','ok',4000,'Listo');
 
     if (validar){
-      // limpiar “pendiente” de sesión y cerrar modal
+      // limpiar â€œpendienteâ€ de sesiÃ³n y cerrar modal
       if (state.sesionId) forgetPostcorte(state.sesionId);
       try { bootstrap.Modal.getInstance(els.modal)?.hide(); } catch(_){}
 
@@ -832,7 +832,7 @@ async function guardarPostcorte(validar){
         .querySelectorAll(`[data-caja-action="wizard"][data-sesion="${state.sesionId}"]`)
         .forEach(b => b.classList.add('d-none'));
     }else{
-      // re-habilitar si sólo fue borrador
+      // re-habilitar si sÃ³lo fue borrador
       if (btnV) btnV.disabled = false;
       if (btnC) btnC.disabled = false;
     }
@@ -846,7 +846,7 @@ async function guardarPostcorte(validar){
   }
 }
 
-// ===== Persistencia ligera para reanudar paso 3 por sesión =====
+// ===== Persistencia ligera para reanudar paso 3 por sesiÃ³n =====
 function rememberPostcorte(sesionId, postcorteId){
   try { sessionStorage.setItem(`postcorte:${sesionId}`, String(postcorteId)); } catch(_) {}
 }
@@ -883,7 +883,7 @@ function wireDelegates(){
     const cont = e.target.closest('#czBtnContinuarConciliacion,#btnContinuarConc,[data-action="continuar-conc"]');
     if (cont){
       e.preventDefault();
-      if (!state.pasoGuardado){ toast('Primero guarda el precorte.','warn',5000,'Validación'); return; }
+      if (!state.pasoGuardado){ toast('Primero guarda el precorte.','warn',5000,'ValidaciÃ³n'); return; }
       setStep(2); return;
     }
 
@@ -893,7 +893,7 @@ function wireDelegates(){
     const go3  = e.target.closest('#czBtnIrPostcorte,#btnIrPostcorte,[data-action="ir-postcorte"]');
     if (go3){
       e.preventDefault();
-      if (els.btnIrPostcorte?.disabled){ toast('Aún no hay corte en POS','warn',6000,'Aviso'); return; }
+      if (els.btnIrPostcorte?.disabled){ toast('AÃºn no hay corte en POS','warn',6000,'Aviso'); return; }
       irAPostcorte(); return;
     }
 
@@ -905,7 +905,7 @@ function wireDelegates(){
   });
 }
 
-/* =============== Diálogos bonitos =============== */
+/* =============== DiÃ¡logos bonitos =============== */
 function mostrarAvisoElegante(titulo, htmlCuerpo, onRetry){
   if (window.bootstrap?.Modal) {
     const el = document.createElement('div');
@@ -937,7 +937,7 @@ function mostrarAvisoElegante(titulo, htmlCuerpo, onRetry){
     <div style="background:#fff;max-width:520px;width:100%;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.25);overflow:hidden">
       <div style="padding:12px 16px;border-bottom:1px solid #eee;display:flex;gap:8px;align-items:center">
         <strong style="font-size:16px">${titulo}</strong>
-        <span style="margin-left:auto;cursor:pointer;font-weight:bold" data-x>×</span>
+        <span style="margin-left:auto;cursor:pointer;font-weight:bold" data-x>Ã—</span>
       </div>
       <div style="padding:16px;font-size:14px">${htmlCuerpo}</div>
       <div style="padding:12px 16px;display:flex;gap:8px;justify-content:flex-end;background:#fafafa;border-top:1px solid #eee">
@@ -977,7 +977,7 @@ function confirmElegante(titulo, htmlCuerpo, txtCancel='Cancelar', txtOk='Acepta
 
       const setBusy = (v)=> {
         btnOk.disabled = v; btnCa.disabled = v;
-        btnOk.innerHTML = v ? 'Guardando…' : txtOk;
+        btnOk.innerHTML = v ? 'Guardandoâ€¦' : txtOk;
       };
       const done = (v)=>{ try{ m.hide(); }catch(_){} el.addEventListener('hidden.bs.modal', ()=> el.remove(), {once:true}); resolve(v); };
 
@@ -1006,7 +1006,7 @@ function fallbackModal(html){
       <div style="background:#fff;max-width:720px;width:92%;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.25);overflow:hidden">
         <div style="padding:10px 14px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:8px">
           <strong>Precorte</strong>
-          <span style="margin-left:auto;cursor:pointer;font-weight:bold" id="__debug_fallback_close">×</span>
+          <span style="margin-left:auto;cursor:pointer;font-weight:bold" id="__debug_fallback_close">Ã—</span>
         </div>
         <div id="__debug_fallback_body" style="padding:14px;max-height:70vh;overflow:auto"></div>
       </div>`;
@@ -1022,3 +1022,4 @@ if (!window.abrirWizard) window.abrirWizard = abrirWizard;
 // Exponer utils de postcorte pendiente para que la tabla los use
 if (!window.czRecallPostcorte) window.czRecallPostcorte = recallPostcorte;
 if (!window.czForgetPostcorte) window.czForgetPostcorte = forgetPostcorte;
+
