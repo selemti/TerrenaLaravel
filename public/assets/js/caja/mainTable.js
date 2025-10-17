@@ -1,4 +1,4 @@
-// assets/js/caja/mainTable.js
+﻿// assets/js/caja/mainTable.js
 import { api, MXN } from './config.js';
 import { $, esc, GET_FALLBACK, currentDate } from './helpers.js';
 import { els, state } from './state.js';
@@ -14,12 +14,12 @@ export function renderKPIs() {
   if (els.kpiAbiertas) els.kpiAbiertas.textContent = abiertas;
   if (els.kpiPrecortes) els.kpiPrecortes.textContent = precortes;
   if (els.kpiConcil) els.kpiConcil.textContent = conciliadas;
-  // Cálculo de la diferencia promedio
-  // Aún no implementado, por lo que se mantiene en 0.
+  // CÃ¡lculo de la diferencia promedio
+  // AÃºn no implementado, por lo que se mantiene en 0.
   if (els.kpiDifProm) els.kpiDifProm.textContent = MXN.format(0);
 }
 
-// --- Lógica del Wizard / acciones ---
+// --- LÃ³gica del Wizard / acciones ---
 export function puedeWizard(r) {
   const asignadaActiva = !!(r.asignada && r.activa && r.assigned_user);
   const validacionSinPC = !!(r.precorte_listo && r.sin_postcorte);
@@ -39,7 +39,7 @@ export function renderAcciones(r) {
   if (!puedeWizard(r)) return '';
 
   return `
-    <button class="btn btn-sm btn-primary"
+    <button type="button" class="btn btn-sm btn-primary"
             data-caja-action="wizard"
             data-store="${esc(store)}"
             data-terminal="${esc(r.id)}"
@@ -55,7 +55,7 @@ export function renderAcciones(r) {
 // --- Tabla ---
 export function renderTabla() {
   if (!els.tbody) {
-    console.error('El elemento tbody de la tabla no se encontró.');
+    console.error('El elemento tbody de la tabla no se encontrÃ³.');
     return;
   }
   els.tbody.innerHTML = '';
@@ -74,17 +74,17 @@ export function renderTabla() {
     } else if (r.asignada && !r.activa) {
       badgeEstado = '<span class="badge bg-info">En Corte</span>';
     } else if (!r.asignada && r.precorte_listo && r.sin_postcorte) {
-      badgeEstado = '<span class="badge bg-warning text-dark">Validación</span>';
+      badgeEstado = '<span class="badge bg-warning text-dark">ValidaciÃ³n</span>';
     } else {
       badgeEstado = '<span class="badge bg-secondary">Cerrada</span>';
     }
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${esc(r.location ?? '—')}</td>
-      <td>${esc(r.name ?? r.id ?? '—')}</td>
-      <td>${esc(r.assigned_name ?? '—')}</td>
-      <td>${esc(state.date ?? '—')}</td>
+      <td>${esc(r.location ?? 'â€”')}</td>
+      <td>${esc(r.name ?? r.id ?? 'â€”')}</td>
+      <td>${esc(r.assigned_name ?? 'â€”')}</td>
+      <td>${esc(state.date ?? 'â€”')}</td>
       <td>${badgeEstado}</td>
       <td class="text-end">${MXN.format(Number(r.opening_float || 0))}</td>
       <td class="text-end">${MXN.format(0)}</td>
