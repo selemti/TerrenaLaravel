@@ -1,5 +1,5 @@
 @extends('layouts.terrena')
-    @include('caja._wizard_modals')
+    @includeIf('caja._wizard_modals')
     @include('caja._anulaciones')
 @section('title', 'Administración de cajas')
 
