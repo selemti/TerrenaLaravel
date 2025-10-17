@@ -74,17 +74,17 @@ export function renderTabla() {
     } else if (r.asignada && !r.activa) {
       badgeEstado = '<span class="badge bg-info">En Corte</span>';
     } else if (!r.asignada && r.precorte_listo && r.sin_postcorte) {
-      badgeEstado = '<span class="badge bg-warning text-dark">ValidaciÃ³n</span>';
+      badgeEstado = '<span class="badge bg-warning text-dark">Validación</span>';
     } else {
       badgeEstado = '<span class="badge bg-secondary">Cerrada</span>';
     }
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${esc(r.location ?? 'â€”')}</td>
-      <td>${esc(r.name ?? r.id ?? 'â€”')}</td>
-      <td>${esc(r.assigned_name ?? 'â€”')}</td>
-      <td>${esc(state.date ?? 'â€”')}</td>
+      <td>${esc(r.location ?? '–')}</td>
+      <td>${esc(r.name ?? r.id ?? '–')}</td>
+      <td>${esc(r.assigned_name ?? '–')}</td>
+      <td>${esc(state.date ?? '–')}</td>
       <td>${badgeEstado}</td>
       <td class="text-end">${MXN.format(Number(r.opening_float || 0))}</td>
       <td class="text-end">${MXN.format(0)}</td>

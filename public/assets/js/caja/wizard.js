@@ -380,12 +380,12 @@ async function guardarPrecorte(){
   const totalDecl = totalEf + totalNoEf;
 
   const html = `
-    <div class="mb-2">Se guardarÃ¡ el precorte <b>#${state.precorteId}</b> con:</div>
+    <div class="mb-2">Se guardará el precorte <b>#${state.precorteId}</b> con:</div>
     <table class="table table-sm align-middle mb-2">
       <tbody>
         <tr><td>Efectivo</td><td class="text-end fw-semibold">${MXN.format(totalEf)}</td></tr>
-        <tr><td>Tarjeta crÃ©dito</td><td class="text-end">${MXN.format(credito)}</td></tr>
-        <tr><td>Tarjeta dÃ©bito</td><td class="text-end">${MXN.format(debito)}</td></tr>
+        <tr><td>Tarjeta crédito</td><td class="text-end">${MXN.format(credito)}</td></tr>
+        <tr><td>Tarjeta débito</td><td class="text-end">${MXN.format(debito)}</td></tr>
         <tr><td>Transferencias</td><td class="text-end">${MXN.format(transfer)}</td></tr>
         <tr class="table-light"><th>Total declarado</th><th class="text-end">${MXN.format(totalDecl)}</th></tr>
       </tbody>
@@ -427,7 +427,7 @@ async function guardarPrecorte(){
 export async function sincronizarPOS(auto=false){
   if (!state.precorteId){ toast('No hay precorte activo','err', 9000, 'Error'); return; }
   els.bannerFaltaCorte?.classList.add('d-none');
-  if (els.concGrid) els.concGrid.innerHTML = '<div class="text-muted small">Sincronizando con POSâ€¦</div>';
+  if (els.concGrid) els.concGrid.innerHTML = '<div class="text-muted small">Sincronizando con POS…</div>';
 
   // Por default, no dejamos avanzar
   if (els.btnIrPostcorte) els.btnIrPostcorte.disabled = true;
@@ -441,11 +441,11 @@ export async function sincronizarPOS(auto=false){
     if (!auto){
       mostrarAvisoElegante(
         'Falta realizar el corte en POS',
-        'AÃºn no hay Drawer Pull Report en Floreant POS. Realiza el corte y pulsa <b>Sincronizar</b>.',
+        'Aún no hay Drawer Pull Report en Floreant POS. Realiza el corte y pulsa <b>Sincronizar</b>.',
         ()=> sincronizarPOS(false)
       );
     } else if (els.concGrid) {
-      els.concGrid.innerHTML = '<div class="small text-muted">Esperando corte en POSâ€¦</div>';
+      els.concGrid.innerHTML = '<div class="small text-muted">Esperando corte en POS…</div>';
     }
     return;
   }
@@ -500,12 +500,12 @@ export function renderConciliacion(d, raw){
   els.concGrid.innerHTML = `
     <table class="table table-sm align-middle mb-2">
       <thead><tr>
-        <th>CategorÃ­a</th><th class="text-end">Declarado</th><th class="text-end">Sistema</th><th class="text-end">Diferencia</th><th class="text-center">Estado</th>
+        <th>Categoría</th><th class="text-end">Declarado</th><th class="text-end">Sistema</th><th class="text-end">Diferencia</th><th class="text-center">Estado</th>
       </tr></thead>
       <tbody>
         ${row('Efectivo',         efectivo_decl, efectivo_sys)}
-        ${row('Tarjeta CrÃ©dito',  credito_decl,  credito_sys)}
-        ${row('Tarjeta DÃ©bito',   debito_decl,   debito_sys)}
+        ${row('Tarjeta Crédito',  credito_decl,  credito_sys)}
+        ${row('Tarjeta Débito',   debito_decl,   debito_sys)}
         ${row('Transferencias',   transf_decl,   transf_sys)}
       </tbody>
     </table>
@@ -519,7 +519,7 @@ export function renderConciliacion(d, raw){
       </div>
       <div class="col-12 col-md-3">
         <div class="border rounded p-2 h-100">
-          <div class="text-muted">Ventas netas en efectivo (sistema â€“ fondo)</div>
+          <div class="text-muted">Ventas netas en efectivo (sistema – fondo)</div>
           <div class="fw-semibold">${MXN.format(netEf)}</div>
         </div>
       </div>
@@ -693,7 +693,7 @@ async function renderPaso3(){
   grid.innerHTML = `
     <table class="table table-sm align-middle mb-3">
       <thead><tr>
-        <th>CategorÃ­a</th><th class="text-end">Declarado</th>
+        <th>Categoría</th><th class="text-end">Declarado</th>
         <th class="text-end">Sistema</th><th class="text-end">Diferencia</th><th class="text-center">Veredicto</th>
       </tr></thead>
       <tbody>
@@ -776,11 +776,11 @@ async function guardarPostcorte(validar){
 
   if (validar){
     const html = `
-      <div class="mb-2">Se guardarÃ¡ el postcorte y se cerrarÃ¡ la sesiÃ³n.</div>
+      <div class="mb-2">Se guardará el postcorte y se cerrará la sesión.</div>
       <ul class="list-unstyled mb-0 small">
         <li class="mb-1"><span class="text-muted">Diferencia efectivo:</span> <b>${MXN.format(dif.ef)}</b></li>
         <li class="mb-1"><span class="text-muted">Diferencia tarjetas:</span> <b>${MXN.format(dif.tj)}</b>
-          <span class="text-muted"> (CrÃ©dito ${MXN.format(dif.cr)}, DÃ©bito ${MXN.format(dif.db)})</span>
+          <span class="text-muted"> (Crédito ${MXN.format(dif.cr)}, Débito ${MXN.format(dif.db)})</span>
         </li>
         <li><span class="text-muted">Diferencia transferencias:</span> <b>${MXN.format(dif.tr)}</b></li>
       </ul>`;
@@ -970,7 +970,7 @@ function confirmElegante(titulo, htmlCuerpo, txtCancel='Cancelar', txtOk='Acepta
 
       const setBusy = (v)=> {
         btnOk.disabled = v; btnCa.disabled = v;
-        btnOk.innerHTML = v ? 'Guardandoâ€¦' : txtOk;
+        btnOk.innerHTML = v ? 'Guardando…' : txtOk;
       };
       const done = (v)=>{ try{ m.hide(); }catch(_){} el.addEventListener('hidden.bs.modal', ()=> el.remove(), {once:true}); resolve(v); };
 

@@ -46,8 +46,6 @@ export const els = {
   notasCierre:        document.getElementById('czNotasCierre'),
   btnCerrarSesion:    document.getElementById('czBtnCerrarSesion'),
 
-  // Nuevo: Elemento para modal (para debuggear si null)
-  modalElement:       document.getElementById('wizardPrecorte'),
 };
 
 export const state = {
@@ -60,8 +58,3 @@ export const state = {
   pasoGuardado: false,
   step: 1,
 };
-
-// Debug: Verificar si modal existe
-if (!els.modalElement) {
-    console.error('[state.js] Modal #wizardPrecorte no encontrado en el DOM');
-}

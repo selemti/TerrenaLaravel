@@ -21,5 +21,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Si en producción usas HTTPS, descomenta:
         // URL::forceScheme('https');
+
+        // Forzar encoding UTF-8 en PostgreSQL
+        if (config('database.default') === 'pgsql') {
+            \DB::statement("SET NAMES 'UTF8'");
+        }
     }
 }

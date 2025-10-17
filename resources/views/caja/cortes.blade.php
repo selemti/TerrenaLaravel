@@ -1,12 +1,12 @@
 ﻿@extends('layouts.terrena')
     @includeIf('caja._wizard_modals')
     @include('caja._anulaciones')
-@section('title', 'AdministraciÃ³n de cajas')
+@section('title', 'Administración de cajas')
 
 @section('page-title')
     <div class="d-flex align-items-center justify-content-between mb-2">
         <div class="d-flex align-items-center gap-2">
-            <h2 class="mb-0"><i class="fa-solid fa-cash-register me-2"></i> AdministraciÃ³n de cajas</h2>
+            <h2 class="mb-0"><i class="fa-solid fa-cash-register me-2"></i> Administración de cajas</h2>
         </div>
     </div>
 @endsection
@@ -23,7 +23,7 @@
 						<button id="btnRefrescar" class="btn btn-outline-secondary btn-sm">
 							<i class="fa-solid fa-rotate"></i> Refrescar
 						</button>
-						<!-- BotÃ³n global para abrir Wizard (opcional; igual habrÃ¡ botÃ³n por fila) -->
+						<!-- Botón global para abrir Wizard (opcional; igual habrá botón por fila) -->
 					</div>
 				</div>
 
@@ -66,7 +66,7 @@
                         <th>Sucursal</th>
                         <th>Terminal</th>
                         <th>Cajero</th>
-                        <th>AsignaciÃ³n</th>
+                        <th>Asignación</th>
                         <th>Estado</th>
                         <th class="text-end">Precorte</th>
                         <th class="text-end">Ventas POS</th>
@@ -77,9 +77,9 @@
                 <tbody id="tbodyCajas">
                     @forelse($cajas ?? [] as $caja)
                         <tr>
-                            <td>{{ $caja->location ?? 'â€”' }}</td>
-                            <td>{{ $caja->name ?? $caja->id ?? 'â€”' }}</td>
-                            <td>{{ $caja->assigned_name ?? 'â€”' }}</td>
+                            <td>{{ $caja->location ?? '–' }}</td>
+                            <td>{{ $caja->name ?? $caja->id ?? '–' }}</td>
+                            <td>{{ $caja->assigned_name ?? '–' }}</td>
                             <td>{{ $date ?? now()->format('Y-m-d') }}</td>
                             <td>
                                 @if($caja->skipped_precorte)
@@ -89,7 +89,7 @@
                                 @elseif($caja->asignada && !$caja->activa)
                                     <span class="badge bg-info">En Corte</span>
                                 @elseif(!$caja->asignada && $caja->precorte_listo && $caja->sin_postcorte)
-                                    <span class="badge bg-warning text-dark">ValidaciÃ³n</span>
+                                    <span class="badge bg-warning text-dark">Validación</span>
                                 @else
                                     <span class="badge bg-secondary">Cerrada</span>
                                 @endif
@@ -130,7 +130,7 @@
                         <h5 class="mb-0">Detalle de Caja</h5>
                         <button class="btn btn-light btn-sm" id="btnOcultarDetalle">Ocultar</button>
                     </div>
-                    <div id="detalleContenido" class="mt-3"><em>Selecciona una cajaâ€¦</em></div>
+                    <div id="detalleContenido" class="mt-3"><em>Selecciona una caja…</em></div>
                 </div>
             </div>
         </div>

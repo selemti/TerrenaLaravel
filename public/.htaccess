@@ -3,6 +3,12 @@
         Options -MultiViews -Indexes
     </IfModule>
 
+    # Force UTF-8 encoding
+    AddDefaultCharset UTF-8
+    <FilesMatch "\.(htm|html|css|js|php)$">
+        AddCharset UTF-8 .htm .html .css .js .php
+    </FilesMatch>
+
     RewriteEngine On
     RewriteBase /TerrenaLaravel/
 
