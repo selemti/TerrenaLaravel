@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Providers;
 
@@ -27,7 +27,7 @@ class AuthServiceProvider extends ServiceProvider
         // Estos coinciden con los usados en personal.blade.php
         
         Gate::define('people.employees.manage', function ($user) {
-            // Lógica real: verificar rol/permisos desde BD
+            // LÃ³gica real: verificar rol/permisos desde BD
             // Por ahora retornamos true para desarrollo
             return $user && in_array($user->role ?? '', ['admin', 'gerente']);
         });
@@ -48,10 +48,10 @@ class AuthServiceProvider extends ServiceProvider
             return $user && in_array($user->role ?? '', ['admin', 'gerente']);
         });
 
-        // Puedes agregar más gates según necesites:
-        // Gate::define('inventory.view', fn($user) => /* lógica */);
-        // Gate::define('inventory.move', fn($user) => /* lógica */);
-        // Gate::define('purchasing.view', fn($user) => /* lógica */);
-        // Gate::define('cashcuts.view', fn($user) => /* lógica */);
+        // Puedes agregar mÃ¡s gates segÃºn necesites:
+        // Gate::define('inventory.view', fn($user) => /* lÃ³gica */);
+        // Gate::define('inventory.move', fn($user) => /* lÃ³gica */);
+        // Gate::define('purchasing.view', fn($user) => /* lÃ³gica */);
+        // Gate::define('cashcuts.view', fn($user) => /* lÃ³gica */);
     }
 }
