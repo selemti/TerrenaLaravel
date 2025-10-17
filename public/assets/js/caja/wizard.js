@@ -324,7 +324,7 @@ export async function abrirWizard(ev){
     // 3) Decidir paso por estatus (ENVIADO ⇒ Paso 2)
     let est = (j?.estatus || '').toUpperCase();
     try{
-      const st = await GET_SOFT(`/api/precortes/${state.precorteId}/status`);
+      const st = await GET_SOFT(`${BASE}/api/caja/precortes/${state.precorteId}/status`);
       if (st?.estatus) est = String(st.estatus).toUpperCase();
     }catch(_){}
 
@@ -410,7 +410,7 @@ async function guardarPrecorte(){
     const j = await POST_FORM(api.precorte_update(state.precorteId), payload);
     if (!j?.ok){ toast('No se pudo guardar precorte','err', 9000, 'Error'); return; }
 
-    try { await POST_FORM(`${BASE}/api/precortes/${state.precorteId}/enviar`, { estatus:'ENVIADO' }); } catch(_){}
+    try { await POST_FORM(`${BASE}/api/caja/precortes/${state.precorteId}/enviar`, { estatus:'ENVIADO' }); } catch(_){}
 
     state.pasoGuardado = true;
     toast('Precorte guardado','ok',6000,'Listo');
@@ -670,7 +670,7 @@ async function renderPaso3(){
   //try { btnClose.parentNode.insertBefore(btnV, btnClose); } catch(_) {}
 
   // resumen con datos frescos del precorte
-  const r = await GET(`${BASE}/api/caja/precorte_totales.php?id=${state.precorteId}`);
+  const r = await GET(`${BASE}/api/caja/precortes/${state.precorteId}/totales`);
   if (!r?.ok){ toast('No fue posible cargar totales de precorte','err',9000,'Error'); return; }
   const d = r.data || {};
 
@@ -754,7 +754,7 @@ async function guardarPostcorte(validar){
   guardarPostcorte.__busy = true;
 
   // Relee diferencias para el resumen de confirmación
-  const tot = await GET(`${BASE}/api/caja/precorte_totales.php?id=${state.precorteId}`);
+  const tot = await GET(`${BASE}/api/caja/precortes/${state.precorteId}/totales`);
   if (!tot?.ok){
     toast('No fue posible recalcular diferencias.','err',9000,'Error');
     guardarPostcorte.__busy = false;
