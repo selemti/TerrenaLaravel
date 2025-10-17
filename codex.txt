@@ -1,0 +1,2471 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. Todos los derechos reservados.
+
+
+╭────────────────────────────────────────────╮
+    - SHOW search_path;
+
+
+• I’ll scan the Laravel project structure and look for existing docs and any “corte/caja” wizard
+  references. Then I’ll summarize findings and propose next steps.
+
+• Updated Plan
+  └ □ Scan repo structure and docs dir
+    □ Detect and map cash-cut wizard
+    □ Prepare documentation in /docs with date suffix
+    □ Propose safe DB read-only inspection steps
+
+✔ You approved codex to run powershell.exe -NoProfile -Command 'Get-ChildItem -Force | Select-Object
+  │ Format-Table -AutoSize'
+  └
+    Name                    Mode   Length
+    … +7 lines
+
+  └ <?php
+
+    … +7 lines
+    |========================================================================= */
+    require __DIR__.'/auth.php';
+  └ @extends('layouts.terrena')
+        @include('caja._wizard_modals')
+    … +7 lines
+        {{-- Otros JS: helpers.js, state.js, etc., ya cargados en layout --}}
+    @endpush
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 250 resources/views/caja/
+  │ _wizard_modals.blade.php'
+        + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetContentCommand
+
+
+✔ You approved codex to run powershell.exe -NoProfile -Command 'Get-ChildItem -Force resources/views/
+caja... this time
+  └
+    Name                   Length
+    … +5 lines
+
+  │ _wizard_modals.php'
+  └ <?php
+    /* Debe incluirse ANTES de los <script type="module" ...> de caja.
+    … +7 lines
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 250 public/assets/js/caja/main.js'
+  └ // js/caja/main.js
+    import { bootCaja, cargarTabla } from './mainTable.js';
+    … +7 lines
+      window.recargarTablaCajas = () => cargarTabla().catch(()=>{});
+  └ // assets/js/caja/wizard.js
+    import { BASE, DENOMS, MXN, api } from './config.js';
+    … +7 lines
+    export async function abrirWizard(ev){
+      ev?.preventDefault?.();
+  └ // assets/js/caja/mainTable.js
+    import { api, MXN } from './config.js';
+    … +7 lines
+      await cargarTabla();
+  │ helpers.js'
+  └ //import { DEBUG } from './config.js';
+
+    … +7 lines
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 250 public/assets/js/caja/config.js'
+  └ // assets/js/caja/config.js
+    // Siempre legacy (.php). Incluye "legacy" para mǭxima compatibilidad.
+    … +7 lines
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 250 public/assets/js/caja/state.js'
+  └ // Estado global y referencias al DOM
+    export const els = {
+    … +7 lines
+        console.error('[state.js] Modal #wizardPrecorte no encontrado en el DOM');
+    }
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 250 routes/api.php'
+        ], 404);
+    });
+
+✔ You approved codex to run powershell.exe -NoProfile -Command 'Get-ChildItem -Recurse -Force app/
+Http/Co... this time
+  └
+    FullName                                                                                 Name
+    … +7 lines
+
+
+  └ <?php
+    namespace App\Http\Controllers\Api\Caja;
+    … +7 lines
+        }
+    }
+  └ <?php
+                if ($declDebito > 0) {
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 250 app/Http/Controllers/Api/Caja/
+  │ PrecorteController.php | Select-Object -Skip 200 -First 250'
+  └                 DB::insert("
+                DB::rollBack();
+  └ (no output)
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 200 app/Http/Controllers/Api/Caja/
+  │ PostcorteController.php'
+  └ <?php
+
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 200 app/Http/Controllers/Api/Caja/
+  │ PostcorteController.php | Select-Object -Skip 200 -First 200'
+  └ (no output)
+  └ <?php
+
+    … +7 lines
+
+
+  └ <?php
+
+    … +7 lines
+        }
+    }
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 200 app/Http/Controllers/Api/Caja/
+  │ FormasPagoController.php'
+        }
+    }
+
+✔ You approved codex to run powershell.exe -NoProfile -Command "rg -n \"class .*Policy|
+  │ FormRequest|middleware\\(| ->middleware\\(\" app routes config resources 2>"'$null'
+  └ routes\auth.php:14:Route::middleware('guest')->group(function () {
+    routes\auth.php:38:Route::middleware('auth')->group(function () {
+    … +7 lines
+    app\Http\Requests\Auth\LoginRequest.php:17:    public function authorize(): bool
+2>$nu... this time
+
+• Ran powershell.exe -NoProfile -Command 'Get-ChildItem -Recurse app/Policies 2>$null | Select-Object
+  │ FullName,Name | Format-Table -AutoSize'
+  └ (no output)
+  └ <?php
+
+    … +7 lines
+        }
+    }
+  │ LoginRequest.php'
+  └ <?php
+
+    … +7 lines
+        }
+  │ ProfileUpdateRequest.php'
+  └ <?php
+
+    … +7 lines
+        }
+    }
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 200 app/Http/Kernel.php'
+        + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetContentCommand
+
+
+✔ You approved codex to run powershell.exe -NoProfile -Command 'Get-ChildItem -Recurse app/Http |
+  │ FullName,Name | Format-Table -AutoSize'
+  └
+    FullName
+    … +7 lines
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 200 app/Http/Middleware/Kernel.php'
+  └ <?php
+
+    … +7 lines
+        'api.response' => \App\Http\Middleware\ApiResponseMiddleware::class,
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 200 app/Http/Middleware/
+  │ ApiResponseMiddleware.php'
+  └ <?php
+
+    … +7 lines
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 200 routes/auth.php'
+  └ <?php
+
+    … +7 lines
+            ->name('logout');
+    });
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 250 config/database.php'
+    … +7 lines
+
+    ];
+
+✔ You approved codex to run powershell.exe -NoProfile -Command 'Get-ChildItem -Recurse public/assets |
+Se... this time
+  └
+    FullName
+    … +7 lines
+
+
+    .cz-toast{position:fixed;right:16px;bottom:16px;background:#111;color:#fff;padding:10px
+    12px;border-radius:6px;opacity:.0;transform:translateY(8px);transition:.2s;z-index:1080}
+    … +7 lines
+    .modal .bg-light { background-color:#f8f9fa !important; }
+    .modal .rounded-3 { border-radius: 1rem !important; }
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 250 resources/views/layouts/
+  │ terrena.blade.php'
+  └ <!doctype html>
+    <html lang="es">
+    … +7 lines
+    </body>
+Sel... this time
+
+• Ran powershell.exe -NoProfile -Command 'Get-ChildItem -Recurse app/Livewire | Select-Object
+
+
+• Added docs\AUDITORIA-CODIGO-20251017-0118.md (+57 -0)
+     1 +Auditoría técnica — Código (Laravel/JS/CSS)
+     2 +
+     3 +Fecha: 2025-10-17 01:18
+     4 +
+     5 +Resumen
+     6 +- Proyecto Laravel con front Blade + assets estáticos en `public/assets` y Livewire para catál
+        ogos/inventario.
+     7 +- Backoffice incluye módulo de Caja (cortes) con endpoints JSON en `routes/api.php` bajo prefi
+        jo `/api/caja`.
+     8 +- No se encontraron Policies; Requests básicos; Middleware API custom presente pero Kernel no
+        estándar.
+     9 +
+    10 +Estructura clave
+    11 +- Rutas web: `routes/web.php:1` — Vistas: `dashboard`, `compras`, `inventario`, `personal`, `p
+        roduccion`, `recetas`. Caja: `Route::view('/caja/cortes', 'caja.cortes')`.
+    12 +- Rutas API: `routes/api.php:1` — Prefijos: `/api/caja` (cajas, sesiones, precortes, postcorte
+        s, conciliación, formas de pago); `/api/legacy` compatibilidad.
+    13 +- Controladores Caja: `app/Http/Controllers/Api/Caja/*.php`
+    14 +  - `CajasController.php:1` — lista terminales/sesiones (JOIN `public.terminal`, `public.users
+        `, `selemti.sesion_cajon`).
+    15 +  - `PrecorteController.php:1` — preflight; create/update precorte (`selemti.precorte`, `preco
+        rte_efectivo`, `precorte_otros`).
+    16 +  - `PostcorteController.php:1` — create/update postcorte (`selemti.postcorte`) y cierre de se
+        sión.
+    17 +  - `SesionesController.php:1` — obtener sesión activa.
+    18 +  - `ConciliacionController.php:1` — vista `selemti.vw_conciliacion_sesion`.
+    19 +  - `FormasPagoController.php:1` — `selemti.formas_pago` activas.
+    20 +- Vistas Caja: `resources/views/caja/cortes.blade.php:1`
+    21 +  - Incluye `caja._wizard_modals` (archivo real: `resources/views/caja/_wizard_modals.php`) y
+        `_anulaciones.blade.php`.
+    22 +  - Carga `public/assets/js/caja/main.js` (ES modules) y usa layout `resources/views/layouts/t
+        errena.blade.php:1`.
+    23 +- Assets Caja (JS): `public/assets/js/caja/`
+    24 +  - `main.js`, `mainTable.js`, `wizard.js`, `config.js`, `state.js`, `helpers.js`.
+    25 +  - CSS: `public/assets/css/caja.css`.
+    26 +- Livewire (otros módulos): `app/Livewire/**` (catálogos, inventario, recetas, KDS).
+    27 +
+    28 +Middleware y Auth
+    29 +- Middleware API custom: `app/Http/Middleware/ApiResponseMiddleware.php:1` (Forzar Accept JSON
+        , CORS dev, cabeceras, fallback 500 JSON).
+    30 +- Kernel no estándar en `app/Http/Middleware/Kernel.php:1`. En Laravel debe ser `app/Http/Kern
+        el.php`; es probable que este Kernel no sea usado y que el middleware API no se aplique.
+    31 +- Rutas API carecen de `auth`/`sanctum` explícito. `routes/api.php:1` declara login pero no pr
+        otege `/api/caja/*`.
+    32 +
+    33 +Requests / Policies
+    34 +- Requests: `app/Http/Requests/Auth/LoginRequest.php:1` (válido), `app/Http/Requests/ProfileUp
+        dateRequest.php:1`.
+    35 +- `app/Http/Requests/StorePrecorteRequest.php:1` tiene `authorize(): false` y reglas vacías; n
+        o está integrado en controladores.
+    36 +- Policies: no se encontraron archivos en `app/Policies`.
+    37 +
+    38 +Observaciones de calidad y riesgos
+    39 +- Mismatch IDs modal Wizard: `wizard.js` inicializa con `#czModalPrecorte`, mientras el modal
+        es `#wizardPrecorte` (`_wizard_modals.php:1`). Aunque hay selectores de fallback en varias con
+        sultas, la inicialización del Modal podría fallar.
+    40 +- `mainTable.js:1` — `puedeWizard()` retorna `true` siempre (comentado el filtro real), habili
+        tando el botón de wizard en cualquier estado.
+    41 +- Endpoints de Caja escriben directamente en esquema `selemti` con SQL crudo dentro de control
+        adores (transaccional en `updateLegacy`, correcto). Requiere controles de auth/roles para oper
+        ar en producción.
+    42 +- Encoding con mojibake en textos (e.g., “Administraci n”) en varias vistas/JS. Revisar codifi
+        cación/UTF-8.
+    43 +- `store` hardcodeado en `mainTable.js:1` (`const store = 1;`).
+    44 +- Assets estáticos en `public/assets` conviven con Vite (`vite.config.js`); no se aprecia pipe
+        line de build unificado.
+    45 +
+
+
+• Added docs\DB-AUDITORIA-20251017-0118.md (+46 -0)
+     1 +Auditoría técnica — Base de Datos (PostgreSQL)
+     2 +
+     3 +Fecha: 2025-10-17 01:18
+     4 +
+     5 +Alcance
+     6 +- Solo lectura. No se ejecutaron migraciones/seeders.
+     7 +- Esquemas objetivo: `public` y `selemti` (según código y `.env` esperado).
+     8 +
+     9 +Configuración (código)
+    10 +- `config/database.php:1` — conexión `pgsql` con `search_path` desde `DB_SCHEMA` (por defecto
+        `public`).
+    11 +- Código hace referencia explícita a esquemas:
+    12 +  - `public`: `ticket`, `terminal`, `users`.
+    13 +  - `selemti`: `sesion_cajon`, `precorte`, `precorte_efectivo`, `precorte_otros`, `postcorte`,
+         `formas_pago`, vista `vw_conciliacion_sesion`.
+    14 +
+    15 +Tablas/Vistas utilizadas (por controlador)
+    16 +- Cajas: `app/Http/Controllers/Api/Caja/CajasController.php:1`
+    17 +  - Lee: `public.terminal`, `public.users`, `selemti.sesion_cajon`, existencia en `selemti.pre
+        corte`, `selemti.postcorte`.
+    18 +- Precorte: `app/Http/Controllers/Api/Caja/PrecorteController.php:1`
+    19 +  - Lee: `selemti.sesion_cajon`, `public.ticket`, `selemti.precorte`.
+    20 +  - Escribe: `selemti.precorte`, `selemti.precorte_efectivo`, `selemti.precorte_otros`.
+    21 +- Postcorte: `app/Http/Controllers/Api/Caja/PostcorteController.php:1`
+    22 +  - Escribe: `selemti.postcorte`; actualiza `selemti.sesion_cajon.estatus` a `CERRADA` si vali
+        da.
+    23 +- Conciliación: `app/Http/Controllers/Api/Caja/ConciliacionController.php:1`
+    24 +  - Lee: `selemti.vw_conciliacion_sesion`.
+    25 +- Formas de pago: `app/Http/Controllers/Api/Caja/FormasPagoController.php:1`
+    26 +  - Lee: `selemti.formas_pago` (solo activos).
+    27 +
+    28 +Sugerencia de verificación (solo lectura, con aprobación previa)
+    29 +- Confirmar `search_path` de la sesión (no destructivo):
+    30 +  - SQL: `SHOW search_path;`
+    31 +- Listar tablas en `public` y `selemti` (no destructivo):
+    32 +  - SQL: `SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema IN
+         ('public','selemti') ORDER BY 1,2;`
+    33 +- Describir columnas de tablas usadas (no destructivo):
+    34 +  - Ej.: `SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE tab
+        le_schema='selemti' AND table_name='precorte' ORDER BY ordinal_position;`
+
+
+• Added docs\WIZARD-CORTE-20251017-0118.md (+49 -0)
+     1 +Wizard de Cortes de Caja — Mapa y Hallazgos
+     2 +
+     3 +Fecha: 2025-10-17 01:18
+     4 +
+     5 +Vista y activación
+     6 +- Vista principal: `resources/views/caja/cortes.blade.php:1`.
+     7 +- Botón por fila genera atributos `data-*` y dispara `abrirWizard()` desde `public/assets/js/c
+        aja/main.js:1`.
+     8 +- Modal incluido: `resources/views/caja/_wizard_modals.php:1` (IDs base sin prefijo `cz*`).
+     9 +
+    10 +Flujo (Front)
+    11 +- Módulo JS: `public/assets/js/caja/wizard.js:1` + `state.js:1` + `helpers.js:1` + `config.js:
+        1`.
+    12 +- Paso 1 — Precorte:
+    13 +  - Render denoms (`DENOMS`), captura cantidades y no-efectivo.
+    14 +  - Preflight: `GET/POST /api/caja/precortes/preflight/{sesion}` para validar tickets abiertos
+        .
+    15 +  - Crear/recuperar precorte: `POST /api/caja/precortes` (campos: `store_id`, `terminal_id`, `
+        user_id`, `bdate`, `sesion_id`).
+    16 +  - Guardar valores: `POST /api/caja/precortes/{id}` (`denoms_json`, declarados y `notas`).
+    17 +- Paso 2 — Conciliación:
+    18 +  - Datos: `GET /api/caja/conciliacion/{sesion_id}` (vista `vw_conciliacion_sesion`).
+    19 +  - Banner “falta corte POS” y acción “Sincronizar POS”.
+    20 +- Paso 3 — Postcorte:
+    21 +  - Crear: `POST /api/caja/postcortes` (desde precorte).
+    22 +  - Actualizar/validar: `POST /api/caja/postcortes/{id}` (veredictos, notas, validado=true).
+    23 +  - Si valida, backend cierra sesión (`estatus='CERRADA'`).
+    24 +
+    25 +Flujo (Back)
+    26 +- PrecorteController: preflight, createLegacy (idempotente por sesión), updateLegacy (transacc
+        ión: limpia e inserta denoms/otros y actualiza totales).
+    27 +- PostcorteController: crea/actualiza totales comparando Declarado vs Sistema (intervalo apert
+        ura–cierre); puede cerrar sesión.
+    28 +- ConciliacionController: devuelve registro de vista materializada o view SQL.
+    29 +
+    30 +Problemas y riesgos identificados
+    31 +- Inconsistencia de IDs del modal:
+    32 +  - `wizard.js` inicializa `bootstrap.Modal` buscando `#czModalPrecorte`; el modal real es `#w
+        izardPrecorte` (`_wizard_modals.php`). Aunque existen selectores alternos en varios `querySele
+        ctor`, si la instancia del modal no se crea, el Wizard no abrirá correctamente.
+    33 +- `puedeWizard()` siempre `true` (`public/assets/js/caja/mainTable.js:1`), exponiendo acciones
+         de Wizard sin validar estado (desarrollo temporal).
+    34 +- Autenticación/Autorización API: Rutas `/api/caja/*` no están tras `auth` por defecto; riesgo
+         alto de exposición en entornos accesibles.
+    35 +- `store_id` hardcodeado a `1` (`mainTable.js:1`); falta obtener tienda desde backend/estado r
+        eal.
+    36 +- Encoding mojibake en UI (acentos), revisar fuentes/archivos y meta charset.
+    37 +
+    38 +Recomendaciones específicas
+    39 +- Unificar nomenclatura: usar `#wizardPrecorte` en `wizard.js`/`state.js` para init y referenc
+        ias, o renombrar el modal a `#czModalPrecorte`. Evitar mezcla de selectores alternativos.
+    40 +- Restaurar lógica de `puedeWizard()` (asignada/activa/precorte_listo/sin_postcorte) y tests U
+        I.
+    41 +- Proteger `routes/api.php` (grupo `/api/caja`) con `auth:sanctum` o middleware adecuado. Revi
+        sar `app/Http/Kernel.php` para registrar `ApiResponseMiddleware` correctamente.
+    42 +- Reemplazar `store=1` por valor proveniente del backend (e.g., en `/api/caja/sesiones/activa`
+         o en respuesta de `/api/caja/cajas`).
+    43 +- Añadir manejo explícito de errores 412 `pos_cut_missing` (ya contemplado en `helpers.GET_SOF
+        T`) para la transición a Paso 2.
+    44 +
+    45 +Pruebas propuestas (solo lectura, con aprobación)
+    46 +- Verificar `GET /api/caja/cajas?date=YYYY-MM-DD` devuelve `terminals` con `sesion_id`.
+    47 +- Validar `GET /api/caja/precortes/preflight/{sesion}` devuelve `tickets_abiertos` y `bloqueo`
+         esperados.
+    48 +- Comprobar `GET /api/caja/conciliacion/{sesion}` (existe vista y campos).
+    49 +
+
+• Updated Plan
+  └ Repo scanned and code/wizard mapped. Docs with timestamp added under /docs. Next, I’ll propose
+    read-only DB inspection commands and seek approval before executing anything.
+    ✔ Scan repo structure and docs dir
+    ✔ Map Laravel routes/controllers/views/assets
+    ✔ Identify policies/middleware/requests
+    ✔ Detect and map cash-cut wizard
+    ✔ Prepare documentation in /docs with date suffix
+    □ Propose safe DB read-only inspection steps
+
+─ Worked for 9m 39s ──────────────────────────────────────────────────────────────────────────────────
+
+• Here’s a complete audit with deliverables added under docs. I created a new /docs folder and wrote
+  timestamped files without modifying any critical files or .env.
+
+  What I did
+
+  - Scanned the Laravel app structure (routes, controllers, views, middleware, requests, assets).
+  - Located Caja “cortes de caja” UI and its JS wizard, mapped the API endpoints and flow.
+  - Identified DB schemas/tables used by the module from code (no writes/queries executed).
+  - Wrote documentation with date suffix:
+      - docs/AUDITORIA-CODIGO-20251017-0118.md
+      - docs/DB-AUDITORIA-20251017-0118.md
+      - docs/WIZARD-CORTE-20251017-0118.md
+
+  Highlights and risks
+
+  - Wizard exists and is wired in routes and UI:
+      - Route: routes/web.php:1 -> view resources/views/caja/cortes.blade.php:1
+      - Wizard partial: resources/views/caja/_wizard_modals.php:1
+      - JS: public/assets/js/caja/{main.js, wizard.js, mainTable.js, helpers.js, state.js, config.js}
+      - API: routes/api.php:1 with controllers under app/Http/Controllers/Api/Caja
+  - Potential issues:
+      - Wizard modal ID mismatch: wizard.js initializes #czModalPrecorte but modal uses
+        #wizardPrecorte. Although there are fallback selectors, modal initialization may fail.
+      - Wizard button guard disabled: mainTable.js:1 -> puedeWizard() returns true; should re-enable
+        real conditions.
+      - API endpoints not protected by auth middleware; login exists but /api/caja/* routes aren’t
+        behind auth.
+      - SHOW search_path;
+      - SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema IN
+        ('public','selemti') ORDER BY 1,2;
+      - SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE
+        table_schema='selemti' AND table_name='precorte' ORDER BY ordinal_position;
+  - Optionally, sanity-check that the Caja API endpoints respond (GET only):
+      - GET /api/caja/cajas?date=YYYY-MM-DD
+      - GET /api/caja/precortes/preflight/{sesion_id}
+      - GET /api/caja/conciliacion/{sesion_id}
+
+  Would you like me to:
+
+  - Read .env (read-only) to confirm DB host/DB/DB_SCHEMA and redact sensitive values in the docs?
+  - Run the safe DB queries above in read-only mode to complete the database inventory?
+  - Probe GET-only API endpoints to confirm wiring without writing anything?
+
+  If you approve, I’ll proceed strictly in read-only mode and update the docs with results.
+
+
+› - SET search_path TO selemti, public;
+
+
+• Recibido. Puedo establecer el search_path por sesión y verificarlo, sin escribir en tablas ni
+  tocar .env. Propongo hacerlo vía un pequeño script PHP que usa la conexión Laravel (cambio solo de
+  sesión) y luego documentar el resultado.
+
+  ¿Apruebas ejecutar estos pasos en modo lectura?
+
+  - Crear script temporal scripts/db_search_path.php para:
+      - Ejecutar: SET search_path TO selemti, public;
+      - Verificar: SHOW search_path;
+  - Comando a ejecutar:
+      - php scripts/db_search_path.php
+
+  Notas
+
+  - El cambio de search_path es solo para esa sesión/ejecución; no persiste.
+  - No se realizan INSERT/UPDATE/DELETE; solo SET/SHOW a nivel de sesión.
+
+
+› y vuelve a SHOW search_path; para confirmarlo (solo sesión actual).
+     - Casos de uso mapeados a rutas/controladores.
+     - Middlewares aplicados y notas de auth.
+
+  usadas.
+     - Vistas (resources/views/**): layouts, parciales, componentes; assets JS/CSS vinculados.
+     - Estado actual: qué está completo y qué falta (CRUDs, validaciones, mensajes).
+
+  4) DOC_WIZARD_CORTE_CAJA-<fecha>.md
+  confirmación.
+     - Riesgos: idempotencia/doble-submit, concurrencia multiusuario, precisión monetaria (DECIMAL/
+  BCMath), zonas horarias.
+     - Bugs hallados con referencias archivo:línea y reproducibilidad.
+
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 250 composer.json'
+  └ {
+        "$schema": "https://getcomposer.org/schema.json",
+    … +7 lines
+        "prefer-stable": true
+    }
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 250 package.json'
+  └ {
+        "$schema": "https://json.schemastore.org/package.json",
+    … +7 lines
+        }
+    }
+
+• Added scripts\db_search_path.php (+26 -0)
+     1 +<?php
+     2 +// Session-only search_path set and verification (read-only aside from session GUC)
+     3 +// Usage: php scripts/db_search_path.php
+     4 +
+     5 +use Illuminate\Support\Facades\DB;
+     8 +
+     9 +$app = require __DIR__ . '/../bootstrap/app.php';
+    10 +$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+    11 +$kernel->bootstrap();
+    12 +
+    16 +
+    17 +    DB::statement('SET search_path TO selemti, public');
+    18 +
+
+
+• Added docs\DOC_GENERAL-20251017-0126.md (+57 -0)
+     1 +Doc General — Backoffice Restaurante (Laravel)
+     2 +
+     3 +Fecha: 2025-10-17 01:26
+     4 +
+     5 +Resumen del proyecto
+     6 +- Propósito: backoffice de restaurante con módulo de Caja (cortes), Inventario, Catálogos, Rec
+        etas y KDS.
+     7 +- POS objetivo: FloreantPOS (las conciliaciones y cortes referencian su flujo/terminología).
+     8 +- Frontend: Blade + assets estáticos en `public/assets` y algunos módulos Livewire (para catál
+        ogos/inventario).
+     9 +
+    10 +Estructura relevante y convenciones
+    11 +- PSR-4 (composer): namespace base `App\` → `app/`.
+    12 +- Controladores API por dominio: `app/Http/Controllers/Api/{Caja,Inventory,Unidades,...}`.
+    13 +- Rutas: `routes/web.php` (vistas/Livewire), `routes/api.php` (JSON REST, prefijos por módulo)
+        .
+    14 +- Vistas: `resources/views/**` con layout principal `layouts/terrena`.
+    15 +- Assets: `public/assets/{css,js,libs,vendor}` con módulos ES para Caja.
+    16 +- Livewire: `app/Livewire/**` (Catálogos, Inventario, Recetas, KDS).
+    17 +
+    18 +Dependencias (composer.json)
+    19 +- laravel/framework ^12.0 — Framework base.
+    20 +- darkaonline/l5-swagger ^9.0 — Documentación Swagger/OpenAPI.
+    21 +- livewire/livewire 3.7.0-beta.1 — Componentes reactivas para algunas pantallas.
+    22 +- spatie/laravel-permission ^6.21 — Roles y permisos (no mapeados aún en rutas del módulo Caja
+        ).
+    23 +- tymon/jwt-auth ^2.2 — JWT (no se ve integrado aún en rutas de Caja).
+    24 +- Desarrollo: breeze, pint, sail, collision, phpunit 11.5, faker, pail.
+    25 +
+    26 +Dependencias front (package.json)
+    27 +- Vite ^7, laravel-vite-plugin ^2 — Tooling de build (coexiste con assets manuales en `public/
+        assets`).
+    28 +- Tailwind + forms, PostCSS/autoprefixer — estilado (no parece usado en vistas Caja actuales).
+    29 +- Axios ^1.11 — HTTP (el módulo Caja usa `fetch` propio en helpers.js).
+    30 +- Bootstrap ^5.3.8 y Cleave.js — UI y formateo.
+    31 +
+    32 +Configuración de entorno (sin credenciales)
+    33 +- DB: driver `pgsql` (config/database.php). `search_path` toma `DB_SCHEMA` del .env (por defec
+        to `public`).
+    34 +- Cache/Queue/Mail: no se observan personalizaciones notables en este repo; valores por defect
+        o de Laravel (pendiente confirmar con `php artisan config:show` si se aprueba).
+    35 +- BASE URL: layout expone `window.__BASE__ = url('/')` para módulos JS.
+    36 +
+    37 +Versiones (detectable por código)
+    38 +- PHP requerido: ^8.2 (composer.json).
+    39 +- Laravel: ^12.0 (composer.json).
+    40 +- PHPUnit: ^11.5 (dev).
+    41 +- Nota: Para listado efectivo de extensiones/versión PHP/Laravel, proponer `php -v`, `php arti
+        san --version` (requiere aprobación).
+
+
+• Added docs\DOC_RUTAS_Y_CASOS_DE_USO-20251017-0126.md (+49 -0)
+     1 +Rutas y Casos de Uso — Resumen
+     2 +
+     3 +Fecha: 2025-10-17 01:26
+     4 +
+     5 +Nota: Se puede adjuntar salida de `php artisan route:list` (y `--json`) si lo apruebas. Por ah
+        ora, se mapean rutas desde archivos.
+     6 +
+     7 +Módulo Caja (API JSON)
+     8 +- GET `/api/caja/cajas` → CajasController@index — Lista terminales/sesiones/datos de estado po
+        r fecha (`?date=YYYY-MM-DD`).
+     9 +- GET `/api/caja/sesiones/activa` → SesionesController@getActiva — Sesión activa por terminal/
+        usuario.
+    10 +- Precortes (PrecorteController):
+    11 +  - MATCH GET|POST `/api/caja/precortes/preflight/{sesion_id?}` → preflight.
+    12 +  - POST `/api/caja/precortes` → createLegacy (idempotente por sesión).
+    13 +  - GET `/api/caja/precortes/{id}` → show.
+    14 +  - POST `/api/caja/precortes/{id}` → updateLegacy.
+    15 +  - GET `/api/caja/precortes/{id}/totales` → resumenLegacy.
+    16 +  - MATCH GET|POST `/api/caja/precortes/{id}/status` → statusLegacy.
+    17 +  - GET `/api/caja/precortes/sesion/{sesion_id}/totales` → totalesPorSesion.
+    18 +- Postcortes (PostcorteController):
+    19 +  - POST `/api/caja/postcortes` → create.
+    20 +  - GET `/api/caja/postcortes/{id}` → show.
+    21 +  - POST `/api/caja/postcortes/{id}` → update (opcional validar/cerrar).
+    22 +  - GET `/api/caja/postcortes/{id}/detalle` → detalle.
+    23 +- Conciliación: GET `/api/caja/conciliacion/{sesion_id}` → ConciliacionController@getBySesion.
+    24 +- Formas de pago: GET `/api/caja/formas-pago` → FormasPagoController@index.
+    25 +- Legacy compat: `/api/legacy/...` (mantener hasta migración completa del front).
+    26 +
+    27 +Módulo Caja (Web/Blade)
+    28 +- GET `/caja/cortes` → view `caja.cortes` (layout `layouts.terrena`). Carga JS `assets/js/caja
+        /main.js` y parciales del Wizard.
+    29 +
+    30 +Otros módulos (Web/Livewire)
+    31 +- Dashboard/menú: `/dashboard`, `/compras`, `/inventario`, `/personal`, `/produccion`, `/recet
+        as` → Route::view (o Livewire en subrutas).
+    32 +- Catálogos: `/catalogos/{unidades,uom,almacenes,proveedores,sucursales,stock-policy}` → Livew
+        ire components.
+    33 +- Inventario: `/inventory/{items,receptions,receptions/new,lots}` → Livewire.
+
+
+• Added docs\DOC_CONTROLADORES_Y_VISTAS-20251017-0126.md (+49 -0)
+     1 +Controladores y Vistas — Inventario, Caja, Catálogos
+     2 +
+     3 +Fecha: 2025-10-17 01:26
+     4 +
+     5 +Controladores (selección por módulo)
+     6 +- Caja — app/Http/Controllers/Api/Caja
+     7 +  - CajasController@index — Lista terminales/sesiones y flags de corte.
+     8 +  - PrecorteController@preflight, @createLegacy, @updateLegacy, @show, @statusLegacy, @resumen
+        Legacy, @totalesPorSesion.
+     9 +  - PostcorteController@create, @update, @show, @detalle.
+    10 +  - SesionesController@getActiva.
+    11 +  - ConciliacionController@getBySesion.
+    12 +  - FormasPagoController@index, @listar (alias legacy).
+    13 +- Inventory — app/Http/Controllers/Api/Inventory
+    14 +  - ItemController@index/show/store/update/destroy.
+    15 +  - StockController@kardex, @batches, @stockByItem.
+    16 +  - VendorController@byItem, @attach.
+    17 +- Unidades — app/Http/Controllers/Api/Unidades
+    18 +  - UnidadController CRUD; ConversionController CRUD.
+    19 +- Auth — app/Http/Controllers/Auth (Breeze) — login/registro/password.
+    20 +
+    21 +FormRequests
+    22 +- Auth\LoginRequest — reglas para login.
+    23 +- ProfileUpdateRequest — reglas de perfil.
+    24 +- StorePrecorteRequest — NO utilizado; authorize() devuelve false (debería eliminarse o integr
+        arse con reglas reales si se usa).
+    25 +
+    26 +Vistas
+    27 +- Layout: resources/views/layouts/terrena.blade.php — Sidebar/Topbar, assets (Bootstrap, FA, C
+        SS), expone `window.__BASE__`.
+    28 +- Caja:
+    29 +  - resources/views/caja/cortes.blade.php — KPIs, tabla, botón Wizard por fila, incluye `caja/
+        _wizard_modals.php` y `_anulaciones.blade.php`.
+    30 +  - resources/views/caja/_wizard_modals.php — HTML del modal con pasos 1–3.
+    31 +  - resources/views/caja/_anulaciones.blade.php — parcial adicional (no analizado en detalle).
+    32 +- Vistas “menú” básicas: `dashboard`, `inventario`, `compras`, `recetas`, `produccion`, `perso
+        nal`.
+    33 +
+
+
+• Added docs\DOC_WIZARD_CORTE_CAJA-20251017-0126.md (+55 -0)
+     1 +Wizard de Corte de Caja — Detalle
+     2 +
+     3 +Fecha: 2025-10-17 01:26
+     4 +
+     5 +Ubicación
+     6 +- Vista: resources/views/caja/cortes.blade.php
+     7 +- Parcial modal: resources/views/caja/_wizard_modals.php
+     8 +- JS: public/assets/js/caja/{main.js, wizard.js, mainTable.js, helpers.js, state.js, config.js
+        }
+     9 +- Controladores: app/Http/Controllers/Api/Caja/{PrecorteController,PostcorteController,Concili
+        acionController,SesionesController,CajasController}
+    10 +
+    11 +Flujo (Mermaid)
+    12 +```mermaid
+    13 +flowchart TD
+    14 +  A[Lista Cajas día] -->|click Wizard| B[Preflight sesión]
+    15 +  B -->|GET/POST /api/caja/precortes/preflight/{sesion}| C{Tickets abiertos?}
+    16 +  C -- Sí --> C1[Mostrar banner Falta corte POS]
+    17 +  C -- No --> D[Crear/recuperar Precorte]
+    18 +  D -->|POST /api/caja/precortes| E[Precorte ID]
+    19 +  E --> F[Guardar Declaración]
+    20 +  F -->|POST /api/caja/precortes/{id}| G[Conciliación]
+    21 +  G -->|GET /api/caja/conciliacion/{sesion}| H{DPR ok?}
+    22 +  H -- No --> C1
+    23 +  H -- Sí --> I[Postcorte]
+    24 +  I -->|POST /api/caja/postcortes| J[Resumen y veredictos]
+    25 +  J -->|POST /api/caja/postcortes/{id} validado=true| K[Cerrar sesión cajón]
+    26 +```
+    27 +
+    28 +Validación por paso
+    29 +- Preflight: bloquea precorte si hay tickets abiertos (`public.ticket` con `closing_date IS NU
+        LL`).
+    30 +- Precorte: requiere denoms > 0 y campos no-efectivo; guarda en `selemti.precorte_*`.
+    31 +- Conciliación: lee `selemti.vw_conciliacion_sesion` y muestra diferencias; habilita paso 3 tr
+        as DPR.
+    32 +- Postcorte: calcula diferencias Declarado vs Sistema y permite validación/cierre.
+    33 +
+    34 +Persistencia
+    35 +- Precorte: `selemti.precorte`, `selemti.precorte_efectivo`, `selemti.precorte_otros`.
+    36 +- Postcorte: `selemti.postcorte` (upsert por `sesion_id`). Cierra `selemti.sesion_cajon` si va
+        lidado.
+    37 +
+    38 +Riesgos
+    39 +- Idempotencia/doble-submit: Wizard usa Map inflight y reemplazo de listeners (`bindOnce`), pe
+        ro falta bloqueo en botones en todas rutas; validar backend con llaves/constraints.
+    40 +- Concurrencia multiusuario: Precorte idempotente por sesión, Postcorte upsert por `sesion_id`
+    49 +
+    50 +Mejoras propuestas
+    51 +- Unificar IDs del modal y selectores (`wizard.js`/`state.js`).
+    52 +- Restaurar lógica real en `puedeWizard()`.
+    53 +- Obtener `store_id` desde backend o contexto.
+    54 +- Añadir auth/roles a rutas `/api/caja/*`.
+    55 +
+
+• Added docs\DOC_DB_PUBLIC_Y_SELEMTI-20251017-0126.md (+28 -0)
+     1 +DB — Schemas public y selemti (Sólo lectura)
+     2 +
+     3 +Fecha: 2025-10-17 01:26
+     4 +
+     5 +Conexión y configuración
+     6 +- Driver: PostgreSQL (pgsql).
+     7 +- search_path (sesión actual):
+     8 +  - BEFORE: selemti, public
+     9 +  - AFTER:  selemti, public
+    10 +  - Método: script temporal `scripts/db_search_path.php` que ejecuta `SET search_path TO selem
+        ti, public;` y luego `SHOW search_path;` (solo sesión; no persiste).
+    11 +- Nota: No se modificó `.env`; cambio fue por sesión.
+    12 +
+    13 +Objetos referenciados por el módulo Caja
+    14 +- Esquema public: `terminal`, `users`, `ticket`.
+    15 +- Esquema selemti: `sesion_cajon`, `precorte`, `precorte_efectivo`, `precorte_otros`, `postcor
+        te`, `formas_pago`, vista `vw_conciliacion_sesion`.
+    16 +
+    17 +Consultas sugeridas (no ejecutadas aún, requieren aprobación)
+    18 +- Enumerar tablas en ambos esquemas:
+    19 +  - `SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema IN ('pu
+        blic','selemti') ORDER BY 1,2;`
+    20 +- Describir columnas de tablas clave (ejemplo):
+    21 +  - `SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_sc
+        hema='selemti' AND table_name='precorte' ORDER BY ordinal_position;`
+    22 +- Confirmar versión de PostgreSQL (si apruebas):
+    23 +  - `SELECT version();`
+    24 +
+    25 +Notas de seguridad y operación
+    26 +- No escribir en tablas del POS. Todas las operaciones de corte/conciliación en backend son mu
+        taciones, por lo que pruebas deben ser en staging.
+    27 +- Mantener `search_path` controlado por sesión en tareas de auditoría.
+    28 +
+
+• Updated Plan
+  └ Executed session-only SET/SHOW search_path via scripts/db_search_path.php and documented the
+    result. All requested docs created under /docs with timestamp 20251017-0126.
+    ✔ Scan repo structure and docs dir
+    ✔ Map Laravel routes/controllers/views/assets
+    ✔ Identify policies/middleware/requests
+    ✔ Detect and map cash-cut wizard
+    ✔ Prepare documentation in /docs with date suffix
+    ✔ Propose safe DB read-only inspection steps
+
+─ Worked for 3m 05s ──────────────────────────────────────────────────────────────────────────────────
+
+• Entregado: auditoría completa y docs con timestamp, y cambio de search_path por sesión verificado.
+
+  DB (solo sesión actual)
+
+  - Ejecuté un script temporal para setear y confirmar el search_path sin tocar .env:
+      - scripts/db_search_path.php
+      - Resultado:
+          - BEFORE search_path: selemti, public
+          - AFTER  search_path: selemti, public
+
+  Docs creados en /docs
+
+  - DOC_GENERAL-20251017-0126.md
+      - Resumen del proyecto (back restaurante; POS FloreantPOS).
+      - Estructura de carpetas y convenciones PSR-4.
+      - Dependencias composer y front con descripción breve.
+      - Config de entorno (sin credenciales), versiones requeridas.
+      - Seguridad y riesgos (auth en API, CORS, middleware).
+      - Plan de vulnerabilidades (composer audit / npm audit bajo aprobación).
+  - DOC_RUTAS_Y_CASOS_DE_USO-20251017-0126.md
+      - Rutas mapeadas por módulo desde routes/web.php y routes/api.php.
+      - Objetos referenciados en public y selemti.
+      - Consultas sugeridas de inventario (SHOW/INFORMATION_SCHEMA) pendientes de tu aprobación.
+
+  Hallazgos clave de seguridad/riesgo
+
+  - API de Caja sin auth en /api/caja/*; spatie/permission y JWT instalados pero no aplicados.
+  - Wizard: posible fallo de inicialización por ID del modal (#czModalPrecorte vs #wizardPrecorte);
+    guard de acciones desactivado; store_id hardcodeado.
+
+  ¿Siguientes pasos (piden tu aprobación)?
+
+  - Añadir salida de php artisan route:list a DOC_RUTAS_Y_CASOS_DE_USO-<fecha>.md.
+  - Ejecutar consultas de lectura para inventario de objetos:
+      - SHOW search_path; (ya documentado)
+
+
+• I’ll run the session-only SHOW/SET/SHOW sequence again via the PHP script and report the results.
+
+✔ You approved codex to run powershell.exe -NoProfile -Command 'php scripts/db_search_path.php' this
+time
+
+• Ran powershell.exe -NoProfile -Command 'php scripts/db_search_path.php'
+  └ BEFORE search_path: selemti, public
+    AFTER  search_path: selemti, public
+
+─ Worked for 20s ─────────────────────────────────────────────────────────────────────────────────────
+
+• Resultados (solo sesión actual)
+
+  - BEFORE search_path: selemti, public
+  - AFTER  search_path: selemti, public
+
+  Secuencia ejecutada
+
+  - SHOW search_path;
+  - SET search_path TO selemti, public;
+  - SHOW search_path;
+
+  ¿Deseas que anexe este resultado a docs/DOC_DB_PUBLIC_Y_SELEMTI-20251017-0126.md o lo dejamos como
+  verificación temporal?
+
+
+› - Inventario por esquema (public y selemti):
+       - Tablas; columnas (tipo, nulos, default); PK, FKs, índices.
+       - Conteo aproximado de filas (usa SELECT count(*) SOLO si lo apruebo; para tablas grandes,
+  ofrece reltuples de pg_class).
+     - Mapas ERD (Mermaid) por esquema y un diagrama global de relaciones clave (ventas/pagos/
+  movimientos/arqueos/cajas).
+     - Inconsistencias: money/decimal, FKs sin índice, timestamps ausentes, enums mal definidos,
+  normalización.
+     - Sugerencias de índices (en especial sobre FKs y filtros de consultas típicas).
+     - Notas de integración con FloreantPOS: lectura en public y escritura/control en selemti (sin
+  escrituras en POS).
+       - CRUDs de catálogos clave (proveedores, artículos, UoM, almacenes, sucursales, políticas de
+  stock).
+       - Estabilización del wizard de cortes de caja (puntos concretos).
+       - Validaciones, policies, tests (Feature).
+       - UX (mensajes, formularios, accesibilidad).
+     - Tickets sugeridos (título, descripción, archivos, estimado, riesgos).
+     - Comandos propuestos (migrate/seed/test), solo listarlos sin ejecutar.
+
+  PASOS DE TRABAJO
+       composer.json / composer.lock, package.json.
+     - Revisa config/auth.php, config/cors.php, config/sanctum.php (si existen).
+     - Localiza el wizard de corte de caja y mapea flujo.
+
+  B) Comandos de diagnóstico (pedir aprobación uno por uno):
+• Voy a revisar config y migrations, modelos y configs de seguridad (auth/cors/sanctum) para completar
+  los docs. Luego propondré consultas read-only para el inventario del esquema y pediré tu aprobación
+  antes de ejecutarlas.
+
+✔ You approved codex to run powershell.exe -NoProfile -Command 'Get-ChildItem -Recurse database/
+  │ FullName,Name,Length | Format-Table -AutoSize'
+  └
+    FullName
+    N
+    … +7 lines
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 200 database/
+  │ migrations/2025_09_26_205955_create_permission_tables.php'
+  └ <?php
+
+    };
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 200 database/
+  │ migrations/0001_01_01_000000_create_users_table.php'
+  └ <?php
+        }
+    };
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 200 database/
+  │ migrations/0001_01_01_000001_create_cache_table.php'
+  └ <?php
+    };
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 200 config/auth.php'
+  └ <?php
+
+    … +7 lines
+
+    ];
+    … +5 lines
+        + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetContentCommand
+
+
+• Ran powershell.exe -NoProfile -Command 'Get-Content -TotalCount 200 config/sanctum.php'
+  └ Get-Content : No se encuentra la ruta de acceso 'C:
+    \xampp3\htdocs\TerrenaLaravel\config\sanctum.php'
+    porque no existe.
+
+✔ You approved codex to run powershell.exe -NoProfile -Command 'Get-ChildItem -Recurse app/Models
+2>$null... this time
+
+
+• Added docs\DOC_DB_PUBLIC_Y_SELEMTI-20251017-0132.md (+100 -0)
+      1 +DB — Inventario por esquemas (public, selemti) [Solo lectura]
+      2 +
+      3 +Fecha: 2025-10-17 01:32
+      4 +
+      5 +Alcance
+      6 +- Catálogo estructural: tablas, columnas (tipo, nulos, default), PK, FKs, índices (plan de ex
+         tracción safe, pendiente de aprobación).
+      7 +- Conteo aproximado: preferir reltuples de pg_class; usar COUNT(*) solo bajo aprobación.
+      8 +- ERD Mermaid por esquema y diagrama global.
+      9 +- Inconsistencias detectables e índices sugeridos.
+     10 +- Notas de integración FloreantPOS: lectura en public y control en selemti.
+     11 +
+     12 +Plan de extracción (solo lectura; proponer y esperar aprobación)
+     13 +- Listado de tablas/relaciones:
+     14 +  - SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema IN ('pu
+         blic','selemti') AND table_type='BASE TABLE' ORDER BY 1,2;
+     15 +- Columnas por tabla (tipo, nulos, default):
+     16 +  - SELECT column_name, data_type, is_nullable, column_default FROM information_schema.column
+         s WHERE table_schema=$schema AND table_name=$tabla ORDER BY ordinal_position;
+     17 +- PK/FK/UNIQUE/Índices:
+     18 +  - PK/FK: usar pg_constraint + pg_attribute; Índices: pg_index + pg_class.
+     19 +  - Consulta propuesta (resumen por tabla): ver bloque “Consultas utilitarias”.
+     20 +- Tamaño aproximado (reltuples):
+     21 +  - SELECT n.nspname, c.relname, c.reltuples::bigint AS approx_rows FROM pg_class c JOIN pg_n
+         amespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','selemti') AND c.relkind='r'
+         ORDER BY 1,2;
+     22 +- COUNT(*) para tablas clave: solo si apruebas y si el tamaño lo permite.
+     23 +
+     24 +ERD — selemti (aproximado desde el código)
+     25 +```mermaid
+     26 +erDiagram
+     27 +  SESION_CAJON ||--o{ PRECORTE : "sesion_id"
+     28 +  SESION_CAJON ||--o{ POSTCORTE : "sesion_id (unique)"
+     29 +  PRECORTE ||--o{ PRECORTE_EFECTIVO : "precorte_id"
+     30 +  PRECORTE ||--o{ PRECORTE_OTROS : "precorte_id"
+     31 +  FORMAS_PAGO }
+     32 +```
+     33 +
+     34 +ERD — public (aproximado desde el código)
+     35 +```mermaid
+     36 +erDiagram
+     37 +  TERMINAL ||--o{ SESION_CAJON : "terminal_id"
+     38 +  USERS ||--o{ SESION_CAJON : "cajero_usuario_id"
+     39 +  TERMINAL ||--o{ TICKET : "terminal_id"
+     40 +```
+     41 +
+     42 +ERD — global (relaciones clave)
+     43 +```mermaid
+     44 +flowchart LR
+     45 +  subgraph PUBLIC
+     46 +    PT[public.terminal]
+     47 +    PU[public.users]
+     48 +    TK[public.ticket]
+     49 +  end
+     50 +  subgraph SELEMTI
+     51 +    SC[selemti.sesion_cajon]
+     52 +    PR[selemti.precorte]
+     53 +    PRe[selemti.precorte_efectivo]
+     54 +    PRo[selemti.precorte_otros]
+     55 +    PO[selemti.postcorte]
+     56 +    FP[selemti.formas_pago]
+     57 +  end
+     58 +  PT -- terminal_id --> SC
+     59 +  PU -- cajero_usuario_id --> SC
+     60 +  PT -- terminal_id --> TK
+     61 +  SC -- sesion_id --> PR
+     62 +  PR -- precorte_id --> PRe
+     63 +  PR -- precorte_id --> PRo
+     64 +  SC -- sesion_id (unique) --> PO
+     65 +```
+     66 +
+     67 +Inconsistencias potenciales (a validar con extracción)
+     68 +- Tipos monetarios: preferir DECIMAL/NUMERIC sobre float; validar columnas declaradas en prec
+         orte/postcorte.
+     69 +- FKs sin índice: verificar índices explícitos en FK:
+     70 +  - selemti.precorte(sesion_id)
+     71 +  - selemti.precorte_efectivo(precorte_id)
+     72 +  - selemti.precorte_otros(precorte_id)
+     73 +  - selemti.postcorte(sesion_id)
+     74 +  - selemti.sesion_cajon(terminal_id, cajero_usuario_id)
+     75 +  - public.ticket(terminal_id), filtra por closing_date IS NULL
+     76 +- Timestamps: confirmar created_at/updated_at en tablas auditoras (precorte/postcorte) y marc
+         as de validación.
+     77 +- Enums: revisar estatus en selemti.sesion_cajon y selemti.precorte; preferir CHECK/ENUM segú
+         n estándar del proyecto.
+     78 +- Normalización: formas_pago referenciada en conciliación/cortes; revisar relaciones.
+     79 +
+     80 +Sugerencias de índices
+     81 +- selemti.sesion_cajon: (terminal_id, apertura_ts DESC), (cajero_usuario_id, estatus)
+
+
+• Added docs\DOC_PLAN_DE_ATAQUE-20251017-0132.md (+71 -0)
+     1 +Plan de Ataque — Roadmap y Tickets
+     2 +
+     3 +Fecha: 2025-10-17 01:32
+     4 +
+     5 +Prioridad Alta
+     6 +- Autenticación y Autorización API Caja
+     7 +  - Proteger `/api/caja/*` con `auth:sanctum` o JWT ya instalado (tymon), y roles/permisos (sp
+        atie/permission).
+     8 +  - Revisar Kernel para asegurar `app/Http/Kernel.php` activo con grupo `api` y CORS.
+     9 +- Estabilización Wizard Cortes
+    10 +  - Unificar IDs del modal (`#wizardPrecorte`) y selectores en `wizard.js`/`state.js`.
+    11 +  - Restaurar `puedeWizard()` con reglas de negocio.
+    12 +  - Quitar `store_id` hardcode → obtener de backend (respuesta de cajas/sesión).
+    13 +  - Manejo robusto de doble-submit, bloqueo de botones, y estados intermedios.
+    14 +- Seguridad de endpoints de escritura
+    15 +  - Validaciones con FormRequests para Precorte/Postcorte (tipos monetarios, rangos, requireds
+        ).
+    16 +  - Logs de auditoría con contexto (usuario, IP, payload saneado).
+    17 +
+    18 +Prioridad Media
+    19 +- CRUDs de catálogos clave
+    20 +  - Proveedores, Artículos, UoM/Conversiones, Almacenes, Sucursales, Políticas de stock.
+    21 +  - Agregar pruebas Feature básicas (index/create/update/delete) y validaciones.
+    22 +- UX/Accesibilidad
+    23 +  - Mensajes de error/toasts consistentes, estados vacíos, focus management en modal, etiqueta
+        s ARIA.
+    24 +- Normalización y encoding
+    25 +  - Corregir mojibake en blades/JS (UTF‑8), i18n de textos y formateo moneda/fecha.
+    26 +
+    27 +Prioridad Baja
+    28 +- Pipeline de assets
+    29 +  - Unificar uso de Vite y/o documentar excepción de `public/assets` (versión, cache busting).
+    30 +- Observabilidad
+    31 +  - Métricas simples (tiempos de respuesta en endpoints críticos), trazas mínimas.
+    32 +
+    33 +Tickets sugeridos
+    34 +1) Proteger API Caja con auth y roles
+    35 +   - Archivos: routes/api.php, app/Http/Kernel.php, config/auth.php, middleware de permisos.
+    36 +   - Descripción: Agrupar `/api/caja/*` bajo `auth` + autorización por rol; tests Feature.
+    37 +   - Estimado: 2–3 días; Riesgos: impacto en clientes front.
+    38 +
+    39 +2) Armonizar Wizard (IDs, guardias, store_id)
+    40 +   - Archivos: resources/views/caja/_wizard_modals.php, public/assets/js/caja/{wizard.js,state
+        .js,mainTable.js}.
+    41 +   - Descripción: Unificar `#wizardPrecorte`, restaurar `puedeWizard()`, fuente de `store_id`;
+         QA con estados.
+    42 +   - Estimado: 1–2 días; Riesgos: regresiones UI.
+    43 +
+    44 +3) FormRequests Precorte/Postcorte
+    45 +   - Archivos: app/Http/Requests/Caja/{PrecorteUpdateRequest,PostcorteUpdateRequest}.php, cont
+        roladores Caja.
+    46 +   - Descripción: Validaciones de tipos monetarios/negativos, requireds, límites; pruebas Feat
+        ure.
+    47 +   - Estimado: 1–2 días; Riesgos: cambios en payload del front.
+    48 +
+    49 +4) Índices DB (FKs y filtros)
+    50 +   - Archivos: SQL (migraciones si se maneja esquema), revisión con DBA.
+    51 +   - Descripción: Índices en FKs y filtros (`ticket(terminal_id, closing_date)`, `precorte_*`,
+         `postcorte(sesion_id)`).
+    52 +   - Estimado: 0.5–1 día; Riesgos: tamaño/index bloat.
+    53 +
+    54 +5) Seguridad CORS y Kernel
+    55 +   - Archivos: app/Http/Kernel.php, config/cors.php (si se agrega), ApiResponseMiddleware.
+    56 +   - Descripción: Asegurar CORS correcto y middleware activo, entorno local vs prod.
+    57 +   - Estimado: 0.5 día; Riesgos: bloqueos cross-origin.
+    58 +
+    59 +Comandos propuestos (no ejecutar todavía)
+    60 +- Rutas y entorno
+    61 +  - php artisan route:list
+    62 +  - php artisan about
+    63 +- Seguridad/paquetes
+    64 +  - composer audit
+    65 +  - npm audit
+    66 +- Tests
+    67 +  - php artisan test
+    68 +- Migraciones (solo en ambientes controlados)
+    69 +  - php artisan migrate
+    70 +  - php artisan db:seed
+    71 +
+
+─ Worked for 2m 41s ──────────────────────────────────────────────────────────────────────────────────
+
+• He generado los nuevos entregables y preparé el plan para el inventario de BD y los ERDs,
+  manteniendo todo en lectura y pidiendo aprobación para las consultas.
+
+  Docs añadidos
+
+  - docs/DOC_DB_PUBLIC_Y_SELEMTI-20251017-0132.md
+      - Plan de extracción (solo lectura) para tablas/columnas/PK/FK/índices y tamaños aproximados
+        (pg_class.reltuples).
+      - ERDs Mermaid por esquema y global (derivados del código actual).
+      - Inconsistencias potenciales y sugerencias de índices.
+      - Notas de integración con FloreantPOS (lectura en public; control en selemti).
+  - docs/DOC_PLAN_DE_ATAQUE-20251017-0132.md
+      - Roadmap priorizado (Alta/Media/Baja).
+      - Tickets sugeridos con título, descripción, archivos, estimados y riesgos.
+      - Comandos propuestos (sin ejecutar).
+
+  Lecturas realizadas (sin ejecutar comandos de diagnóstico)
+
+  - routes/*, app/Http/Controllers/, app/Http/Requests/, resources/views/, public/assets/js/,
+    database/migrations/**, composer.json, package.json.
+  - Config: config/auth.php encontrado; no hay config/cors.php ni config/sanctum.php en repo.
+    Middleware de CORS parcial vía ApiResponseMiddleware en env local.
+  - Wizard de corte mapeado, con flujo, endpoints y riesgos ya documentados en DOC_WIZARD_CORTE_CAJA-
+    20251017-0126.md.
+        ('public','selemti') AND table_type='BASE TABLE' ORDER BY 1,2;
+  - Columnas (tipo, nulos, default) por tabla:
+      - SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns
+        WHERE table_schema=$schema AND table_name=$tabla ORDER BY ordinal_position;
+  - PK y FKs por tabla:
+      - Consulta con pg_constraint + pg_attribute para cada tabla.
+  - Índices por tabla:
+      - Consulta con pg_index + pg_class para listar columnas e indicadores de unique/primary.
+  - Tamaño aproximado (sin COUNT):
+      - SELECT n.nspname, c.relname, c.reltuples::bigint AS approx_rows FROM pg_class c JOIN
+        pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','selemti') AND
+        c.relkind='r' ORDER BY 1,2;
+  - Conteos exactos (solo si apruebas):
+      - SELECT count(*) FROM selemti.precorte; etc. (evaluar caso por caso).
+
+  Siguientes pasos que requieren tu aprobación
+
+  - Ejecutar las consultas anteriores (read-only) para completar el inventario de BD en
+    DOC_DB_PUBLIC_Y_SELEMTI-20251017-0132.md con datos reales (tablas/columns/PK/FK/índices/tamaños).
+  - Ejecutar php artisan about para el diagnóstico del entorno (versión PHP/Laravel/extensiones).
+  - Adjuntar salida de php artisan route:list a DOC_RUTAS_Y_CASOS_DE_USO-<fecha>.md.
+
+  Confirma qué deseas que ejecute primero:
+
+  1. Inventario BD (queries metadata propuestas).
+  2. php artisan about.
+  3. php artisan route:list.
+
+  Todo se hará en modo lectura y actualizaré los documentos con un nuevo sufijo de fecha sin
+  sobrescribir los existentes.
+
+
+› - php artisan route:list (y --json si se necesita procesar)
+     - php artisan config:show si es útil para verificar drivers/guards
+     - Tests: php artisan test --testsuite=Feature filtrando por (corte|caja) si existen (opcional).
+
+
+
+• Para avanzar, propongo ejecutar en este orden. Confirmas por favor cada uno:
+
+  A. Rutas y config (solo lectura)
+
+  - php artisan route:list
+  - php artisan route:list --json
+  - php artisan config:show
+
+  B. PostgreSQL (solo lectura)
+
+  - SELECT version(); vía script temporal PHP (DB::selectOne) y volcado en docs
+      - php scripts/db_version.php (lo crearé y ejecutaré tras tu OK)
+
+  Opcionales (solo si apruebas)
+
+  - composer audit
+  - npm audit --production
+  - php artisan test --testsuite=Feature --filter "(corte|caja)"
+  - php artisan view:clear
+
+
+• Added scripts\db_inventory.php (+106 -0)
+      1 +<?php
+      2 +// Read-only DB inventory for schemas public and selemti
+      3 +// Outputs a single JSON with tables, columns, pks, fks, indexes
+      4 +
+      5 +use Illuminate\Support\Facades\DB;
+      6 +
+      7 +require __DIR__ . '/../vendor/autoload.php';
+      8 +
+      9 +$app = require __DIR__ . '/../bootstrap/app.php';
+     10 +$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+     11 +$kernel->bootstrap();
+     12 +
+     13 +header('Content-Type: application/json');
+     14 +
+     15 +try {
+     16 +    // Session-only search_path
+     17 +    DB::statement("SET search_path TO selemti, public");
+     18 +
+     19 +    $schemas = ['public','selemti'];
+     20 +
+     21 +    $tables = DB::select(<<<SQL
+     22 +        SELECT table_schema, table_name, table_type
+     23 +        FROM information_schema.tables
+     24 +        WHERE table_schema IN ('public','selemti')
+     25 +        ORDER BY table_schema, table_name
+     26 +    SQL);
+     27 +
+     28 +    $columns = DB::select(<<<SQL
+     29 +        SELECT table_schema, table_name, column_name, data_type,
+     30 +               is_nullable, column_default, character_maximum_length,
+     31 +               numeric_precision, numeric_scale
+     32 +        FROM information_schema.columns
+     33 +        WHERE table_schema IN ('public','selemti')
+     34 +        ORDER BY table_schema, table_name, ordinal_position
+     35 +    SQL);
+     36 +
+     37 +    $pks = DB::select(<<<SQL
+     38 +        SELECT kcu.table_schema, kcu.table_name, tco.constraint_name,
+     39 +               kcu.column_name, kcu.ordinal_position
+     40 +        FROM information_schema.table_constraints tco
+     41 +        JOIN information_schema.key_column_usage kcu
+     42 +          ON tco.constraint_name = kcu.constraint_name
+     43 +         AND tco.constraint_schema = kcu.constraint_schema
+     44 +         AND tco.table_schema = kcu.table_schema
+     45 +        WHERE tco.constraint_type = 'PRIMARY KEY'
+     46 +          AND kcu.table_schema IN ('public','selemti')
+     47 +        ORDER BY kcu.table_schema, kcu.table_name, tco.constraint_name, kcu.ordinal_position
+     48 +    SQL);
+     49 +
+     50 +    $fks = DB::select(<<<SQL
+     51 +        SELECT tc.table_schema, tc.table_name, tc.constraint_name,
+     52 +               kcu.column_name,
+     53 +               ccu.table_schema AS foreign_table_schema,
+     54 +               ccu.table_name   AS foreign_table_name,
+     55 +               ccu.column_name  AS foreign_column_name
+     56 +        FROM information_schema.table_constraints AS tc
+     57 +        JOIN information_schema.key_column_usage AS kcu
+     58 +          ON tc.constraint_name = kcu.constraint_name
+     59 +         AND tc.table_schema = kcu.table_schema
+     60 +        JOIN information_schema.constraint_column_usage AS ccu
+     61 +          ON ccu.constraint_name = tc.constraint_name
+     62 +         AND ccu.constraint_schema = tc.table_schema
+     71 +               i.relname  AS index,
+     72 +               ix.indisunique,
+
+
+• Added scripts\db_indexes_core.php (+49 -0)
+     1 +<?php
+     2 +use Illuminate\Support\Facades\DB;
+     3 +
+     4 +require __DIR__ . '/../vendor/autoload.php';
+     5 +$app = require __DIR__ . '/../bootstrap/app.php';
+    14 +    ['schema'=>'selemti','table'=>'precorte_efectivo'],
+    15 +    ['schema'=>'selemti','table'=>'precorte_otros'],
+
+
+• Added docs\DOC_DB_PUBLIC_Y_SELEMTI-20251017-0139.md (+53 -0)
+     1 +DB — Inventario real (public, selemti) [Solo lectura]
+     2 +
+     3 +Fecha: 2025-10-17 01:39
+     4 +
+     5 +Método
+     6 +- Sesión PHP con Laravel DB; SET search_path TO selemti, public (solo sesión).
+     7 +- Consultas: information_schema (tablas/columnas), pg_catalog (PK/FK/índices), pg_class.reltup
+        les (estimación filas).
+     8 +- Scripts: `scripts/db_inventory.php` (inventario global JSON), `scripts/db_indexes_core.php`
+        (índices clave).
+     9 +
+    10 +Resumen por esquema
+    11 +- public (POS/Floreant): muchas tablas (tickets, cajones, menús, etc.). Relevantes para Caja:
+    12 +  - `public.ticket` — índices detectados: `ticketclosingdate` (closing_date), `idx_ticket_clos
+        e_term_owner (closing_date, terminal_id, owner_id)`, `ticket_pkey`, `ux_ticket_dailyfolio`, ot
+        ros.
+    13 +- selemti (control backoffice):
+    14 +  - `selemti.sesion_cajon` — PK, índices por terminal/apertura y cajero/apertura, único por (t
+        erminal_id, cajero_usuario_id, apertura_ts).
+    15 +  - `selemti.precorte` — PK y 2 índices sobre `sesion_id` (posible duplicidad).
+    16 +  - `selemti.precorte_efectivo` — solo PK (no índice en `precorte_id`).
+    17 +  - `selemti.precorte_otros` — PK e índice en `precorte_id`.
+    18 +  - `selemti.postcorte` — PK y UNIQUE en `sesion_id`.
+    19 +
+    20 +Estimación de filas (pg_class.reltuples)
+    21 +- selemti.postcorte ≈ 4, selemti.precorte ≈ 4, selemti.precorte_efectivo ≈ 26, selemti.precort
+        e_otros ≈ 8, selemti.sesion_cajon ≈ 8.
+    22 +- Resto de tablas (selemti.* y public.*) con valores pequeños o no críticos para el flujo de C
+        aja en esta muestra.
+    23 +
+    24 +Hallazgos críticos
+    25 +- `selemti.precorte_efectivo` SIN índice por `precorte_id` → consultas y deletes/joins por pre
+        corte serán más costosos. Sugerido: `CREATE INDEX idx_precorte_efectivo_precorte ON selemti.pr
+        ecorte_efectivo(precorte_id);`
+    26 +- `selemti.precorte` con dos índices equivalentes en `sesion_id` (`idx_precorte_sesion_id` y `
+        precorte_sesion_id_idx`) → redundancia. Sugerido: dejar uno.
+    27 +- `public.ticket` consulta de preflight: `WHERE terminal_id=? AND closing_date IS NULL`. Índic
+        es útiles detectados:
+    28 +  - `ticketclosingdate` (closing_date) y compuesto `idx_ticket_close_term_owner (closing_date,
+         terminal_id, owner_id)`.
+    29 +  - Aunque no hay índice simple en `terminal_id`, el compuesto puede ayudar si el plan usa `cl
+        osing_date` primero (IS NULL) y filtra por `terminal_id`. Validar plan de ejecución; opcional:
+         índice `(terminal_id, closing_date)` si fuera cuello de botella.
+    30 +
+    31 +Columnas y tipos (muestra clave)
+    32 +- `selemti.precorte`: totales declarados parecen numéricos; validar tipo NUMERIC/DECIMAL (evit
+        ar float). Notas y estatus presentes.
+    33 +- `selemti.postcorte`: columnas de diferencias/veredictos; confirmar NUMERIC/DECIMAL y marcas
+        `validado`, `validado_por`, `validado_en`.
+    34 +- `selemti.sesion_cajon`: `apertura_ts/cierre_ts`, `estatus`, `opening_float/closing_float`.
+    35 +
+    36 +Índices (extracto de scripts/db_indexes_core.php)
+    37 +- sesion_cajon: `ix_sesion_cajon_terminal (terminal_id, apertura_ts)`, `ix_sesion_cajon_cajero
+         (cajero_usuario_id, apertura_ts)`, `pkey`, `unique(terminal_id, cajero_usuario_id, apertura_t
+        s)`.
+    38 +- precorte: `pkey`, `idx_precorte_sesion_id`, `precorte_sesion_id_idx` (duplicidad).
+    39 +- precorte_efectivo: `pkey` (falta índice FK `precorte_id`).
+    40 +- precorte_otros: `pkey`, `ix_precorte_otros_precorte (precorte_id)`.
+    41 +- postcorte: `pkey`, `uq_postcorte_sesion_id (sesion_id UNIQUE)`.
+    42 +- public.ticket: múltiples índices; relevantes `closing_date`, `(closing_date, terminal_id, ow
+        ner_id)`, `pkey`, `ux_ticket_dailyfolio`.
+    43 +
+    44 +Sugerencias de optimización
+    45 +- Añadir índice en `selemti.precorte_efectivo(precorte_id)`.
+    46 +- Eliminar índice duplicado de `selemti.precorte(sesion_id)` dejando uno consistente.
+    47 +- Evaluar plan de `preflight` (terminal_id + closing_date IS NULL). Si hay latencia, crear `pu
+        blic.ticket(terminal_id, closing_date)` (parcial `WHERE closing_date IS NULL`).
+    48 +- Revisar DECIMAL/NUMERIC para montos y consolidar reglas de redondeo.
+    49 +
+    50 +Apéndice: Cómo se obtuvo
+    51 +- Inventario JSON (recortado en CLI por tamaño): `php scripts/db_inventory.php`.
+    52 +- Índices clave: `php scripts/db_indexes_core.php`.
+    53 +
+
+─ Worked for 2m 47s ──────────────────────────────────────────────────────────────────────────────────
+
+• Hecho. Ejecuté las consultas de inventario en modo lectura, generé los 6 documentos requeridos
+  con sufijo de fecha y destaqué hallazgos críticos. No cambié configuración ni escribí en BD; el
+  search_path se estableció solo a nivel de sesión.
+
+  Nuevos archivos en /docs
+
+  - DOC_GENERAL-20251017-0126.md
+  - DOC_RUTAS_Y_CASOS_DE_USO-20251017-0126.md
+  - DOC_CONTROLADORES_Y_VISTAS-20251017-0126.md
+  - DOC_WIZARD_CORTE_CAJA-20251017-0126.md
+  - DOC_PLAN_DE_ATAQUE-20251017-0132.md
+  - DOC_DB_PUBLIC_Y_SELEMTI-20251017-0139.md
+
+      - Guard desactivado: puedeWizard() devuelve true siempre; muestra botón en estados no válidos.
+      - store_id hardcodeado (1) en mainTable.js.
+      - Mojibake en textos (acentos).
+  - BD (selemti/public):
+      - FALTA índice en selemti.precorte_efectivo(precorte_id) → JOIN/DELETE más costosos.
+      - Duplicidad de índices en selemti.precorte(sesion_id) → mantener solo uno.
+      - FormRequests en Caja no integrados; StorePrecorteRequest con authorize(): false.
+
+  Confirmaciones pendientes (pídeme ejecutar y lo incluyo en los docs con nuevo sufijo)
+
+  - php artisan route:list y php artisan route:list --json
+  - php artisan config:show
+  - PostgreSQL versión: SELECT version();
+
+  Opcionales bajo aprobación
+
+  - composer audit
+  - npm audit --production
+  - php artisan test --testsuite=Feature --filter "(corte|caja)"
+  - php artisan view:clear y php artisan config:clear (solo si detectamos caché inconsistente)
+
+  ¿Autorizas que ejecute ahora:
+
+  1. php artisan route:list (y --json) y 2) php artisan config:show, y 3) SELECT version();?
+     Actualizaré los documentos con un nuevo sufijo sin sobrescribir los existentes.
+
+
+› si
+
+
+• I’ll run these read-only diagnostics now: route:list (text and JSON), config:show, and a DB version
+  query via a small PHP script. Then I’ll add updated docs with a new timestamp.
+
+✔ You approved codex to run powershell.exe -NoProfile -Command 'php artisan route:list' every time
+this session
+
+• Ran powershell.exe -NoProfile -Command 'php artisan route:list'
+  └
+      GET|
+    HEAD  / ......................................................................................
+    … +7 lines
+                                                                                    Showing [103]
+    routes
+
+
+✔ You approved codex to run powershell.exe -NoProfile -Command 'php artisan route:list --json' every
+time this session
+
+• Ran powershell.exe -NoProfile -Command 'php artisan route:list --json'
+  └ [{"domain":null,"method":"GET|HEAD","uri":"\/","name":null,"action":"Closure","middleware":
+    ["web"]},{"domain":null,"method":"GET|
+    HEAD","uri":"__probe","name":null,"action":"Closure","middleware":["web"]},
+    {"domain":null,"method":"GET|HEAD","uri":"admin","name":"admin","action":"Illuminate\
+    \Routing\\ViewController","middleware":["web"]},{"domain":null,"method":"POST","uri":"api\/
+    auth\/login","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\
+    \AuthController@login","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/auth\/login","name":null,"action":"App\\Http\\Controllers\\Api\
+    \Caja\\AuthController@loginHelp","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/caja\/cajas","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\
+    \CajasController@index","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/
+    caja\/conciliacion\/{sesion_id}","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\
+    \ConciliacionController@getBySesion","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/caja\/formas-pago","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\
+    \FormasPagoController@index","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/
+    caja\/postcortes","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\
+    \PostcorteController@create","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/caja\/postcortes\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\
+    \Caja\\PostcorteController@show","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/
+    caja\/postcortes\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\
+    \PostcorteController@update","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/caja\/postcortes\/{id}\/detalle","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Caja\\PostcorteController@detalle","middleware":["api"]},
+    {"domain":null,"method":"POST","uri":"api\/caja\/precortes","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Caja\\PrecorteController@createLegacy","middleware":
+    ["api"]},{"domain":null,"method":"GET|POST|HEAD","uri":"api\/caja\/precortes\/
+    preflight\/{sesion_id?}","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\
+    \PrecorteController@preflight","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/caja\/precortes\/sesion\/{sesion_id}\/totales","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Caja\\PrecorteController@totalesPorSesion","middleware":["api"]},
+    {"domain":null,"method":"GET|HEAD","uri":"api\/caja\/precortes\/{id}","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Caja\\PrecorteController@show","middleware":["api"]},
+    {"domain":null,"method":"POST","uri":"api\/caja\/precortes\/{id}","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Caja\\PrecorteController@updateLegacy","middleware":
+    ["api"]},{"domain":null,"method":"POST","uri":"api\/caja\/precortes\/
+    {id}\/enviar","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\
+    \PrecorteController@enviar","middleware":["api"]},{"domain":null,"method":"GET|POST|
+    HEAD","uri":"api\/caja\/precortes\/{id}\/status","name":null,"action":"App\\Http\\Controllers\
+    \Api\\Caja\\PrecorteController@statusLegacy","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/caja\/precortes\/{id}\/totales","name":null,"action":"App\\Http\\Controllers\
+    \Api\\Caja\\PrecorteController@resumenLegacy","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/caja\/sesiones\/activa","name":null,"action":"App\\Http\\Controllers\\Api\
+    \Caja\\SesionesController@getActiva","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/documentation","name":"l5-swagger.default.api","action":"L5Swagger\
+    \Http\\Controllers\\SwaggerController@api","middleware":["L5Swagger\\Http\\Middleware\
+    \Config"]},{"domain":null,"method":"GET|HEAD","uri":"api\/health","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Caja\\HealthController@check","middleware":["api"]},
+    {"domain":null,"method":"GET|HEAD","uri":"api\/inventory\/items","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Inventory\\ItemController@index","middleware":["api"]},
+    {"domain":null,"method":"POST","uri":"api\/inventory\/items","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Inventory\\ItemController@store","middleware":["api"]},
+    {"domain":null,"method":"GET|HEAD","uri":"api\/inventory\/items\/{id}","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Inventory\\ItemController@show","middleware":["api"]},
+    {"domain":null,"method":"PUT","uri":"api\/inventory\/items\/{id}","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Inventory\\ItemController@update","middleware":["api"]},
+    {"domain":null,"method":"DELETE","uri":"api\/inventory\/items\/{id}","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Inventory\\ItemController@destroy","middleware":
+    ["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/inventory\/items\/
+    {id}\/batches","name":null,"action":"App\\Http\\Controllers\\Api\\Inventory\
+    \StockController@batches","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/
+    inventory\/items\/{id}\/kardex","name":null,"action":"App\\Http\\Controllers\\Api\\Inventory\
+    \StockController@kardex","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/
+    inventory\/items\/{id}\/vendors","name":null,"action":"App\\Http\\Controllers\\Api\\Inventory\
+    \VendorController@byItem","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/
+    inventory\/items\/{id}\/vendors","name":null,"action":"App\\Http\\Controllers\\Api\
+    \Inventory\\VendorController@attach","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/inventory\/stock","name":null,"action":"App\\Http\\Controllers\\Api\
+    \Inventory\\StockController@stockByItem","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/legacy\/caja\/cajas.php","name":null,"action":"App\\Http\\Controllers\
+    \Api\\Caja\\CajasController@index","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/legacy\/caja\/formas_pago","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Caja\\FormasPagoController@listar","middleware":
+    ["api"]},{"domain":null,"method":"POST","uri":"api\/legacy\/caja\/
+    precorte_create.php","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\
+    \PrecorteController@createLegacy","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/legacy\/caja\/precorte_status.php","name":null,"action":"App\\Http\\Controllers\
+    \Api\\Caja\\PrecorteController@statusLegacy","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/legacy\/caja\/precorte_totales.php","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Caja\\PrecorteController@resumenLegacy","middleware":
+    ["api"]},{"domain":null,"method":"POST","uri":"api\/legacy\/caja\/
+    precorte_update.php","name":null,"action":"App\\Http\\Controllers\
+    \Api\\Caja\\PrecorteController@updateLegacy","middleware":["api"]},
+    {"domain":null,"method":"POST","uri":"api\/legacy\/postcortes[\/{id}]","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Caja\\PostcorteController@createOrUpdateLegacy","middleware":["api"]},
+    {"domain":null,"method":"POST","uri":"api\/legacy\/precortes[\/{id}]","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Caja\\PrecorteController@createOrUpdateLegacy","middleware":
+    ["api"]},{"domain":null,"method":"GET|POST|HEAD","uri":"api\/legacy\/sprecorte\/
+    create\/{id?}","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\
+    \PrecorteController@createLegacy","middleware":["api"]},{"domain":null,"method":"GET|POST|
+    HEAD","uri":"api\/legacy\/sprecorte\/preflight\/{sesion_id?}","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Caja\\PrecorteController@preflight","middleware":["api"]},
+    {"domain":null,"method":"GET|POST|HEAD","uri":"api\/legacy\/sprecorte\/totales\/
+    sesion\/{sesion_id?}","name":null,"action":"App\\Http\\Controllers\\Api\\Caja\
+    \PrecorteController@totalesPorSesion","middleware":["api"]},{"domain":null,"method":"GET|POST|
+    HEAD","uri":"api\/legacy\/sprecorte\/totales\/{id?}","name":null,"action":"App\\Http\\Controllers\
+    \Api\\Caja\\PrecorteController@resumenLegacy","middleware":["api"]},{"domain":null,"method":"GET|
+    POST|HEAD","uri":"api\/legacy\/sprecorte\/update\/{id?}","name":null,"action":"App\
+    \Http\\Controllers\\Api\\Caja\\PrecorteController@updateLegacy","middleware":
+    ["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/
+    oauth2-callback","name":"l5-swagger.default.oauth2_callback","action":"L5Swagger\
+    \Http\\Controllers\\SwaggerController@oauth2Callback","middleware":["L5Swagger\
+    \Http\\Middleware\\Config"]},{"domain":null,"method":"GET|HEAD","uri":"api\/
+    ping","name":null,"action":"Closure","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/unidades","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\
+    \UnidadController@index","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/
+    unidades","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\
+    \UnidadController@store","middleware":["api"]},{"domain":null,"method":"GET|HEAD","uri":"api\/
+    unidades\/conversiones","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\
+    \ConversionController@index","middleware":["api"]},{"domain":null,"method":"POST","uri":"api\/
+    unidades\/conversiones","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\
+    \ConversionController@store","middleware":["api"]},{"domain":null,"method":"PUT","uri":"api\/
+    unidades\/conversiones\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\
+    \ConversionController@update","middleware":["api"]},{"domain":null,"method":"DELETE","uri":"api\/
+    unidades\/conversiones\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\
+    \ConversionController@destroy","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/unidades\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\
+    \UnidadController@show","middleware":["api"]},{"domain":null,"method":"PUT","uri":"api\/
+    unidades\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\
+    \UnidadController@update","middleware":["api"]},{"domain":null,"method":"DELETE","uri":"api\/
+    unidades\/{id}","name":null,"action":"App\\Http\\Controllers\\Api\\Unidades\
+    \UnidadController@destroy","middleware":["api"]},{"domain":null,"method":"GET|
+    HEAD","uri":"api\/{fallbackPlaceholder}","name":null,"action":"Closure","middleware":["api"]},
+    {"domain":null,"method":"GET|HEAD","uri":"caja\/cortes","name":"caja.cortes","action":"Illuminate\
+    \Routing\\ViewController","middleware":["web"]},{"domain":null,"method":"GET|
+    HEAD","uri":"catalogos\/almacenes","name":"cat.almacenes","action":"App\\Livewire\
+    \Catalogs\\AlmacenesIndex","middleware":["web"]},{"domain":null,"method":"GET|
+    HEAD","uri":"catalogos\/proveedores","name":"cat.proveedores","action":"App\\Livewire\
+    \Catalogs\\ProveedoresIndex","middleware":["web"]},{"domain":null,"method":"GET|
+    HEAD","uri":"catalogos\/stock-policy","name":"cat.stockpolicy","action":"App\\Livewire\
+    \Catalogs\\StockPolicyIndex","middleware":["web"]},{"domain":null,"method":"GET|
+    HEAD","uri":"catalogos\/sucursales","name":"cat.sucursales","action":"App\\Livewire\
+    \Catalogs\\SucursalesIndex","middleware":["web"]},{"domain":null,"method":"GET|
+    HEAD","uri":"catalogos\/unidades","name":"cat.unidades","action":"App\\Livewire\\Catalogs\
+    \UnidadesIndex","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"catalogos\/
+    uom","name":"cat.uom","action":"App\\Livewire\\Catalogs\\UomConversionIndex","middleware":
+    ["web"]},{"domain":null,"method":"GET|HEAD","uri":"compras","name":"compras","action":"Illuminate\
+    \Routing\\ViewController","middleware":["web"]},{"domain":null,"method":"GET|
+    HEAD","uri":"confirm-password","name":"password.confirm","action":"App\
+    \Http\\Controllers\\Auth\\ConfirmablePasswordController@show","middleware":
+    ["web","Illuminate\\Auth\\Middleware\\Authenticate"]},
+    {"domain":null,"method":"POST","uri":"confirm-password","name":null,"action":"App\
+    \Http\\Controllers\\Auth\\ConfirmablePasswordController@store","middleware":
+    ["web","Illuminate\\Auth\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|
+    HEAD","uri":"dashboard","name":"dashboard","action":"Illuminate\\Routing\
+    \ViewController","middleware":["web"]},{"domain":null,"method":"GET|
+    HEAD","uri":"docs","name":"l5-swagger.default.docs","action":"L5Swagger\
+    \Http\\Controllers\\SwaggerController@docs","middleware":["L5Swagger\\Http\
+    \Middleware\\Config"]},{"domain":null,"method":"GET|HEAD","uri":"docs\/
+    asset\/{asset}","name":"l5-swagger.default.asset","action":"L5Swagger\
+    \Http\\Controllers\\SwaggerAssetController@index","middleware":["L5Swagger\
+    \Http\\Middleware\\Config"]},{"domain":null,"method":"POST","uri":"email\/
+    verification-notification","name":"verification.send","action":"App\\Http\
+    \Controllers\\Auth\\EmailVerificationNotificationController@store","middleware":
+    ["web","Illuminate\\Auth\\Middleware\\Authenticate","Illuminate\\Routing\
+    \Middleware\\ThrottleRequests:6,1"]},{"domain":null,"method":"GET|
+    HEAD","uri":"forgot-password","name":"password.request","action":"App\
+    \Http\\Controllers\\Auth\\PasswordResetLinkController@create","middleware":
+    ["web","Illuminate\\Auth\\Middleware\\RedirectIfAuthenticated"]},
+    {"domain":null,"method":"POST","uri":"forgot-password","name":"password.email","action":"App\
+    \Http\\Controllers\\Auth\\PasswordResetLinkController@store","middleware":["web","Illuminate\
+    \Auth\\Middleware\\RedirectIfAuthenticated"]},{"domain":null,"method":"GET|
+    HEAD","uri":"inventario","name":"inventario","action":"Illuminate\\Routing\
+    \ViewController","middleware":["web"]},{"domain":null,"method":"GET|
+    HEAD","uri":"inventory\/items","name":"inventory.items.index","action":"App\
+    \Livewire\\Inventory\\ItemsIndex","middleware":["web"]},{"domain":null,"method":"GET|
+    HEAD","uri":"inventory\/lots","name":"inv.lots","action":"App\\Livewire\
+    \Inventory\\LotsIndex","middleware":["web"]},{"domain":null,"method":"GET|
+    HEAD","uri":"inventory\/receptions","name":"inv.receptions","action":"App\\Livewire\
+    \Inventory\\ReceptionsIndex","middleware":["web"]},{"domain":null,"method":"GET|
+    HEAD","uri":"inventory\/receptions\/new","name":"inv.receptions.new","action":"App\
+    \Livewire\\Inventory\\ReceptionCreate","middleware":["web"]},{"domain":null,"method":"GET|
+    HEAD","uri":"kds","name":"kds.board","action":"App\\Livewire\\Kds\\Board","middleware":["web"]},
+    {"domain":null,"method":"GET|HEAD","uri":"livewire\/livewire.js","name":null,"action":"Livewire\
+    \Mechanisms\\FrontendAssets\\FrontendAssets@returnJavaScriptAsFile","middleware":
+    []},{"domain":null,"method":"GET|HEAD","uri":"livewire\/
+    livewire.min.js.map","name":null,"action":"Livewire\\Mechanisms\\FrontendAssets\
+    \FrontendAssets@maps","middleware":[]},{"domain":null,"method":"GET|HEAD","uri":"livewire\/
+    preview-file\/{filename}","name":"livewire.preview-file","action":"Livewire\
+    \Features\\SupportFileUploads\\FilePreviewController@handle","middleware":
+    ["web"]},{"domain":null,"method":"POST","uri":"livewire\/
+    update","name":"livewire.update","action":"Livewire\\Mechanisms\
+    \HandleRequests\\HandleRequests@handleUpdate","middleware":
+    ["web"]},{"domain":null,"method":"POST","uri":"livewire\/
+    upload-file","name":"livewire.upload-file","action":"Livewire\\Features\
+    \SupportFileUploads\\FileUploadController@handle","middleware":
+    ["web","Illuminate\\Routing\\Middleware\\ThrottleRequests:60,1"]},
+    HEAD","uri":"personal","name":"personal","action":"Illuminate\\Routing\
+    \ViewController","middleware":["web"]},{"domain":null,"method":"GET|
+    HEAD","uri":"produccion","name":"produccion","action":"Illuminate\\Routing\
+    \ViewController","middleware":["web"]},{"domain":null,"method":"GET|
+    HEAD","uri":"recetas","name":"recetas","action":"Illuminate\\Routing\
+    \ViewController","middleware":["web"]},{"domain":null,"method":"GET|
+    {"domain":null,"method":"POST","uri":"register","name":null,"action":"App\\Http\
+    \Controllers\\Auth\\RegisteredUserController@store","middleware":["web","Illuminate\
+    \Auth\\Middleware\\RedirectIfAuthenticated"]},{"domain":null,"method":"GET|
+    HEAD","uri":"reportes","name":"reportes","action":"Illuminate\
+    \Routing\\ViewController","middleware":["web"]},
+    {"domain":null,"method":"POST","uri":"reset-password","name":"password.store","action":"App\
+    24 +- Wizard de cortes → precorte (preflight → create/update), conciliación, postcorte (create/upd
+        ate validado)
+    25 +
+    26 +Notas
+    27 +- Recomendado: proteger /api/caja/* con `auth` y autorización por rol/permisos.
+    28 +
+
+• Added docs\DOC_GENERAL-20251017-0143.md (+27 -0)
+     1 +Doc General — Versión y Config (sanitizada)
+     2 +
+     3 +Fecha: 2025-10-17 01:43
+     4 +
+     5 +Entorno y versiones
+     6 +- PHP/Laravel: vía composer.json → PHP ^8.2, Laravel ^12.0.
+     7 +- PostgreSQL: SELECT version() → PostgreSQL 9.5.0 (32-bit) [solo lectura].
+     8 +
+     9 +Base de datos (sanitizado)
+    10 +- Default connection: `pgsql`.
+    11 +- Host/Port/Base: presentes; se omiten por seguridad en este doc.
+    12 +- search_path (config): `selemti,public`; verificación por sesión: `selemti, public`.
+    13 +- Redis: cliente phpredis; host/puerto por defecto (omitidos detalles sensibles).
+    14 +
+    15 +Auth (config:show auth)
+    16 +- Guard por defecto: `web` (session).
+    17 +- Provider: `users` (eloquent, App\Models\User).
+    18 +- No hay guard `api` con sanctum configurado explícitamente.
+    19 +
+    20 +Seguridad y riesgos
+    21 +- Rutas /api/caja/* bajo middleware `api` pero sin `auth` aplicado.
+    22 +- Kernel custom puede impedir que se apliquen middlewares estándar si no está bien registrado.
+    23 +
+    24 +Acciones recomendadas
+    25 +- Definir y aplicar `auth` (sanctum o JWT) en grupo `/api/caja`.
+    26 +- Revisar registro de Kernel estándar en `app/Http/Kernel.php` y mover configuraciones del Ker
+        nel custom.
+    27 +
+
+✔ You approved codex to run powershell.exe -NoProfile -Command 'git -c core.quotePath=false status
+--porc... every time this session
+
+• Ran powershell.exe -NoProfile -Command 'git -c core.quotePath=false status --porcelain=1 | ? {$_
+  │ -match "''^'"\\s*M|"'^'"\\?\\?\"} | %{ "'$_ }'
+  └ ?? docs/DOC_DB_PUBLIC_Y_SELEMTI-20251017-0139.md
+    ?? docs/DOC_GENERAL-20251017-0143.md
+    ?? docs/DOC_RUTAS_Y_CASOS_DE_USO-20251017-0143.md
+    ?? scripts/db_indexes_core.php
+    ?? scripts/db_version.php
+
+─ Worked for 2m 03s ──────────────────────────────────────────────────────────────────────────────────
+
+• Resultados listos. Ejecuté los comandos aprobados en modo lectura, actualicé la documentación
+  con nuevos archivos con sufijo de fecha, y destaqué hallazgos críticos. No se modificaron
+  configuraciones ni la BD.
+
+  Comandos ejecutados
+
+  - php artisan route:list → mapeo y Middlewares efectivos
+  - php artisan route:list --json → verificación de grupo api
+  - php artisan config:show database, auth → usado para confirmar drivers/guards (se detectaron
+    credenciales; en docs están REDACTADAS)
+  - SELECT version() (vía script) → versión de PostgreSQL
+
+  Archivos nuevos en /docs
+
+  - DOC_GENERAL-20251017-0143.md
+      - Versión PostgreSQL: “PostgreSQL 9.5.0 (32-bit)” [EOL, riesgo alto].
+      - DB default: pgsql; search_path config “selemti,public”; verificación por sesión “selemti,
+        public”.
+      - Auth: guard web/session; sin guard api configurado; rutas /api/* no tienen auth.
+  - DOC_RUTAS_Y_CASOS_DE_USO-20251017-0143.md
+      - Resumen de rutas clave desde artisan, agrupado por módulo (Caja, Legacy, Inventory, Unidades,
+  - DOC_DB_PUBLIC_Y_SELEMTI-20251017-0139.md
+      - Inventario real (tablas/columnas/PK-FK/índices/estimaciones). Scripts usados:
+          - scripts/db_inventory.php (inventario JSON)
+          - scripts/db_indexes_core.php (índices de tablas clave)
+
+  Hallazgos críticos (resumen de “/review”)
+
+      - Preflight usa public.ticket WHERE terminal_id=? AND closing_date IS NULL.
+          - Hay índices en closing_date y (closing_date, terminal_id, owner_id); si hay latencia,
+            considerar índice parcial (terminal_id, closing_date) WHERE closing_date IS NULL.
+  - Versionado
+      - PostgreSQL 9.5 EOL → riesgo de soporte/seguridad. Evaluar plan de actualización.
+  - Wizard de Corte de Caja
+
+✔ You approved codex to run powershell.exe -NoProfile -Command 'composer audit' every time this
+session
+
+• Ran powershell.exe -NoProfile -Command 'composer audit'
+  └ No security vulnerability advisories found.
+    Found 1 abandoned package:
+
+✔ You approved codex to run powershell.exe -NoProfile -Command 'npm audit --production' every time
+this session
+
+• Ran powershell.exe -NoProfile -Command 'npm audit --production'
+  └ found 0 vulnerabilities
+
+• Ran powershell.exe -NoProfile -Command '$ts = Get-Date -Format "yyyyMMdd-HHmm"; Write-Output $ts'
+  └ 20251017-0146
+
+• Added docs\DOC_GENERAL-20251017-0146.md (+24 -0)
+     1 +Doc General — Ejecutables y Auditorías
+     2 +
+     3 +Fecha: 2025-10-17 01:46
+     4 +
+     5 +php artisan about (resumen)
+     6 +- App: TerrenaUI
+     7 +- Laravel: 12.34.0; PHP: 8.2.12; Composer: 2.8.9
+     8 +- Env: local; Debug: enabled
+     9 +- URL: localhost/TerrenaLaravel
+    10 +- Caches: config NOT CACHED; events NOT CACHED; routes NOT CACHED; views CACHED
+    11 +- Drivers: DB pgsql; cache file; queue sync; mail log; broadcasting log; session database
+    12 +- Livewire: v3.7.0-beta.1; Spatie permission: 6.21.0
+    13 +
+    14 +composer audit (producción)
+    15 +- 0 vulnerabilidades reportadas
+    16 +- 1 paquete abandonado: doctrine/annotations (sin reemplazo sugerido)
+    17 +
+    18 +npm audit --production
+    19 +- 0 vulnerabilities
+    20 +
+    21 +Notas
+    22 +- Mantener dependencias actualizadas y monitorear el paquete abandonado.
+    23 +- En producción deshabilitar debug y considerar cachear config/routes para rendimiento.
+    24 +
+
+─ Worked for 57s ─────────────────────────────────────────────────────────────────────────────────────
+
+• Listo. Ejecuté los diagnósticos aprobados, actualicé documentación con un nuevo sufijo y mantuve
+  todo en modo lectura.
+
+  Comandos ejecutados
+
+  - php artisan route:list y --json
+  - php artisan config:show database y auth
+  - SELECT version() vía scripts/db_version.php
+  - php artisan about
+  - composer audit
+  - npm audit --production
+
+  Nuevos docs generados
+
+        database).
+      - composer audit: 0 vulnerabilidades; 1 paquete abandonado (doctrine/annotations).
+      - npm audit --production: 0 vulnerabilidades.
+  - DOC_RUTAS_Y_CASOS_DE_USO-20251017-0143.md
+      - Rutas reales desde artisan; /api/* con middleware api sin auth explícito.
+  - DOC_GENERAL-20251017-0143.md
+      - Config sanitizada y versión PostgreSQL (9.5.0, EOL).
+  - DOC_DB_PUBLIC_Y_SELEMTI-20251017-0139.md
+      - Inventario real de tablas/columnas/PK-FK/índices/estimaciones (reltuples).
+  - DOC_PLAN_DE_ATAQUE-20251017-0132.md
+      - Roadmap y tickets sugeridos.
+  - DOC_WIZARD_CORTE_CAJA-20251017-0126.md
+      - Flujo/diagrama, riesgos y bugs.
+  - DOC_CONTROLADORES_Y_VISTAS-20251017-0126.md
+      - Mapa de controladores, vistas y estado.
+  - DOC_RUTAS_Y_CASOS_DE_USO-20251017-0126.md
+      - Versiones previas mantenidas.
+
+  Hallazgos críticos (diff/resumen)
+
+
+
+
+• Added docs\DOC_DB_PUBLIC_Y_SELEMTI-20251017-0148.md (+183 -0)
+      1 +DB — Diccionario detallado (selectas tablas Caja)
+      2 +
+      3 +Fecha: 2025-10-17 01:48
+      4 +
+      5 +Fuente
+      6 +- Generado con scripts/db_table_details.php (solo lectura; search_path de sesión selemti, pub
+         lic).
+      7 +
+      8 +# selemti.sesion_cajon
+      9 +
+     10 +## Columnas
+     11 +- id: bigint(64,0); nullable=no; default=nextval('sesion_cajon_id_seq'::regclass)
+     12 +- sucursal: text; nullable=yes; default=null
+     13 +- terminal_id: integer(32,0); nullable=no; default=null
+     14 +- terminal_nombre: text; nullable=yes; default=null
+     15 +- cajero_usuario_id: integer(32,0); nullable=no; default=null
+     16 +- apertura_ts: timestamp with time zone; nullable=no; default=now()
+     17 +- cierre_ts: timestamp with time zone; nullable=yes; default=null
+     18 +- estatus: text; nullable=no; default='ACTIVA'::text
+     19 +- opening_float: numeric(12,2); nullable=no; default=0
+     20 +- closing_float: numeric(12,2); nullable=yes; default=null
+     21 +- dah_evento_id: integer(32,0); nullable=yes; default=null
+     22 +- skipped_precorte: boolean; nullable=no; default=false
+     23 +
+     24 +## PK
+     25 +- id
+     26 +
+     27 +## FKs
+     28 +- N/A
+     29 +
+     30 +## Índices
+     31 +- ix_sesion_cajon_cajero — CREATE INDEX ix_sesion_cajon_cajero ON sesion_cajon USING btree (c
+         ajero_usuario_id, apertura_ts)
+     32 +- ix_sesion_cajon_terminal — CREATE INDEX ix_sesion_cajon_terminal ON sesion_cajon USING btre
+         e (terminal_id, apertura_ts)
+     33 +- sesion_cajon_pkey (UNIQUE, PK) — CREATE UNIQUE INDEX sesion_cajon_pkey ON sesion_cajon USIN
+         G btree (id)
+     34 +- sesion_cajon_terminal_id_cajero_usuario_id_apertura_ts_key (UNIQUE) — CREATE UNIQUE INDEX .
+         .. (terminal_id, cajero_usuario_id, apertura_ts)
+     35 +
+     36 +# selemti.precorte
+     37 +
+     38 +## Columnas
+     39 +- id: bigint(64,0); nullable=no; default=nextval('precorte_id_seq'::regclass)
+     40 +- sesion_id: bigint(64,0); nullable=no; default=null
+     41 +- declarado_efectivo: numeric(12,2); nullable=no; default=0
+     42 +- declarado_otros: numeric(12,2); nullable=no; default=0
+     43 +- estatus: text; nullable=no; default='PENDIENTE'::text
+     44 +- creado_en: timestamp with time zone; nullable=no; default=now()
+     45 +- creado_por: integer(32,0); nullable=yes; default=null
+     46 +- ip_cliente: inet; nullable=yes; default=null
+     47 +- notas: text; nullable=yes; default=null
+     48 +
+     49 +## PK
+     50 +- id
+     51 +
+     52 +## FKs
+     53 +- sesion_id → selemti.sesion_cajon(id)
+     54 +
+     55 +## Índices
+     56 +- idx_precorte_sesion_id — CREATE INDEX ... (sesion_id)
+     57 +- precorte_pkey (UNIQUE, PK) — CREATE UNIQUE INDEX ... (id)
+     58 +- precorte_sesion_id_idx — CREATE INDEX ... (sesion_id)
+     59 +
+     60 +# selemti.precorte_efectivo
+     61 +
+     62 +## Columnas
+     63 +- id: bigint(64,0); nullable=no; default=nextval('precorte_efectivo_id_seq'::regclass)
+     64 +- precorte_id: bigint(64,0); nullable=no; default=null
+     65 +- denominacion: numeric(12,2); nullable=no; default=null
+     66 +- cantidad: integer(32,0); nullable=no; default=null
+     67 +- subtotal: numeric(12,2); nullable=no; default=0
+     68 +
+     69 +## PK
+     70 +- id
+     71 +
+     72 +## FKs
+     73 +- precorte_id → selemti.precorte(id)
+     74 +
+     75 +## Índices
+     76 +- precorte_efectivo_pkey (UNIQUE, PK)
+     77 +
+     78 +# selemti.precorte_otros
+     79 +
+     80 +## Columnas
+     81 +- id: bigint(64,0); nullable=no; default=nextval('precorte_otros_id_seq'::regclass)
+     82 +- precorte_id: bigint(64,0); nullable=no; default=null
+     83 +- tipo: text; nullable=no; default=null
+     84 +- monto: numeric(12,2); nullable=no; default=0
+     85 +- referencia: text; nullable=yes; default=null
+     86 +- evidencia_url: text; nullable=yes; default=null
+     87 +- notas: text; nullable=yes; default=null
+     88 +- creado_en: timestamp with time zone; nullable=no; default=now()
+     89 +
+     90 +## PK
+     91 +- id
+     92 +
+     93 +## FKs
+     94 +- precorte_id → selemti.precorte(id)
+     95 +
+     96 +## Índices
+     97 +- ix_precorte_otros_precorte — CREATE INDEX ... (precorte_id)
+     98 +- precorte_otros_pkey (UNIQUE, PK)
+     99 +
+    100 +# selemti.postcorte
+    101 +
+    102 +## Columnas
+    103 +- id: bigint(64,0); nullable=no; default=nextval('postcorte_id_seq'::regclass)
+    104 +- sesion_id: bigint(64,0); nullable=no; default=null
+    105 +- sistema_efectivo_esperado: numeric(12,2); nullable=no; default=0
+    106 +- declarado_efectivo: numeric(12,2); nullable=no; default=0
+    107 +- diferencia_efectivo: numeric(12,2); nullable=no; default=0
+    108 +- veredicto_efectivo: text; nullable=no; default='CUADRA'::text
+    109 +- sistema_tarjetas: numeric(12,2); nullable=no; default=0
+    110 +- declarado_tarjetas: numeric(12,2); nullable=no; default=0
+    111 +- diferencia_tarjetas: numeric(12,2); nullable=no; default=0
+    112 +- veredicto_tarjetas: text; nullable=no; default='CUADRA'::text
+    113 +- creado_en: timestamp with time zone; nullable=no; default=now()
+    114 +- creado_por: integer(32,0); nullable=yes; default=null
+    115 +- notas: text; nullable=yes; default=null
+    116 +- sistema_transferencias: numeric(12,2); nullable=no; default=0
+    117 +- declarado_transferencias: numeric(12,2); nullable=no; default=0
+    118 +- diferencia_transferencias: numeric(12,2); nullable=no; default=0
+    119 +- veredicto_transferencias: text; nullable=no; default='CUADRA'::text
+    120 +- validado: boolean; nullable=no; default=false
+    121 +- validado_por: integer(32,0); nullable=yes; default=null
+    122 +- validado_en: timestamp with time zone; nullable=yes; default=null
+    123 +
+    124 +## PK
+    125 +- id
+    126 +
+    127 +## FKs
+    128 +- sesion_id → selemti.sesion_cajon(id)
+    129 +
+    130 +## Índices
+    131 +- postcorte_pkey (UNIQUE, PK)
+    132 +- uq_postcorte_sesion_id (UNIQUE) — (sesion_id)
+    133 +
+    134 +# public.ticket
+    135 +
+    136 +## Columnas
+    137 +- id: integer; nullable=no; default=nextval('ticket_id_seq'::regclass)
+    138 +- global_id: varchar(16); nullable=yes; default=null
+    139 +- create_date: timestamp; nullable=yes; default=null
+    140 +- closing_date: timestamp; nullable=yes; default=null
+    141 +- active_date: timestamp; nullable=yes; default=null
+    142 +- deliveery_date: timestamp; nullable=yes; default=null
+    143 +- creation_hour: integer; nullable=yes; default=null
+    144 +- paid: boolean; nullable=yes; default=null
+    145 +- voided: boolean; nullable=yes; default=null
+    146 +- void_reason: varchar(255); nullable=yes; default=null
+    147 +- wasted/refunded/settled/drawer_resetted: boolean; nullable=yes; default=null
+    148 +- sub_total/total_discount/total_tax/total_price/paid_amount/due_amount/advance_amount/adjust
+         ment_amount/service_charge/delivery_charge: double precision; nullable=yes; default=null
+    149 +- number_of_guests: integer; nullable=yes; default=null
+    150 +- status: varchar(30); nullable=yes; default=null
+    151 +- bar_tab/is_tax_exempt/is_re_opened: boolean; nullable=yes; default=null
+    152 +- customer_id/gratuity_id/shift_id/owner_id/driver_id/void_by_user: integer; nullable=yes; de
+         fault=null
+    153 +- delivery_address: varchar(120); nullable=yes; default=null
+    154 +- customer_pickeup: boolean; nullable=yes; default=null
+    155 +- delivery_extra_info: varchar(255); nullable=yes; default=null
+    156 +- ticket_type: varchar(20); nullable=yes; default=null
+    157 +- terminal_id: integer; nullable=yes; default=null
+    158 +- folio_date: date; nullable=yes; default=null
+    159 +- branch_key: text; nullable=yes; default=null
+    160 +- daily_folio: integer; nullable=yes; default=null
+    161 +
+    162 +## PK
+    163 +- id
+    164 +
+    165 +## FKs
+    166 +- terminal_id → public.terminal(id)
+    167 +- gratuity_id → public.gratuity(id)
+    168 +- shift_id → public.shift(id)
+    169 +- void_by_user/owner_id/driver_id → public.users(auto_id)
+    170 +
+    171 +## Índices
+    172 +- ticket_pkey (UNIQUE, PK)
+    173 +- ticket_global_id_key (UNIQUE) — (global_id)
+    174 +- ux_ticket_dailyfolio (UNIQUE) — (folio_date, branch_key, daily_folio) WHERE daily_folio IS
+         NOT NULL
+    175 +- ticketclosingdate — (closing_date)
+    176 +- idx_ticket_close_term_owner — (closing_date, terminal_id, owner_id)
+    177 +- creationhour/deliverydate/drawerresetted/ticketactivedate/ticketcreatedate/ticketpaid/ticke
+         tsettled/ticketvoided — índices simples de columna
+    180 +- Faltante de índice FK: selemti.precorte_efectivo(precorte_id) → sugerido agregar.
+    181 +- Ítems duplicados: dos índices sobre selemti.precorte(sesion_id) → mantener uno.
+    182 +- Preflight: aprovechar índices de closing_date y compuesto; si hay latencia, considerar índi
+         ce parcial (terminal_id, closing_date) WHERE closing_date IS NULL.
+    183 +
+  - Script: scripts/db_table_details.php (consulta columns, PK, FK, índices para tablas clave)
+  - Doc generado: docs/DOC_DB_PUBLIC_Y_SELEMTI-20251017-0148.md
+      - Tablas: selemti.sesion_cajon, selemti.precorte, selemti.precorte_efectivo,
+        selemti.precorte_otros, selemti.postcorte, public.ticket
+      - Columnas (tipo, null/default), PK/FK, índices con definiciones
+
+
+✔ You approved codex to run powershell.exe -NoProfile -Command '$ts = Get-Date -Format "yyyyMMdd-
+HHmm"; S... every time this session
+
+• Ran powershell.exe -NoProfile -Command '$ts = Get-Date -Format "yyyyMMdd-HHmm"; Set-Content -Path
+  │ "docs/REVIEW-$ts.md" -Value @"
+  │ Review de entrega — $ts
+  │ … +37 lines
+  └ (no output)
+
+✔ You approved codex to run powershell.exe -NoProfile -Command '$content = Get-Content tests/Feature/
+Prec... every time this session
+
+• Ran powershell.exe -NoProfile -Command '$content = Get-Content tests/Feature/PrecorteApiTest.php
+  │ -TotalCount 80 2>$null; if($LASTEXITCODE -eq 0){ $content } else { Write-Output '"'no test file
+  │ details available'; }"
+  └ no test file details available
+
+─ Worked for 1m 09s ──────────────────────────────────────────────────────────────────────────────────
+
+• Perfecto. Ya no solicitaré más aprobación por comandos mientras no modifique BD ni archivos
+  críticos. Avancé con ambos frentes (tests y diccionario) y dejé todo documentado. Resumen y dónde
+  encontrar todo:
+
+  Acciones completadas sin intervención
+
+  - Rutas y configuración
+      - php artisan route:list y --json
+      - php artisan config:show database y auth
+      - php artisan about
+  - Seguridad de dependencias
+      - composer audit → 0 vulnerabilidades; 1 paquete abandonado
+      - npm audit --production → 0 vulnerabilidades
+  - PostgreSQL (read-only, sesión actual)
+      - SHOW/SET/SHOW search_path
+      - SELECT version() → PostgreSQL 9.5.0 (EOL)
+      - Inventario de metadatos completo (information_schema / pg_catalog)
+      - Índices de tablas clave (Caja y ticket)
+      - Diccionario detallado de tablas de Caja y ticket
+  - Tests
+      - php artisan test --testsuite=Feature --filter "(corte|caja)" → 1 test fallido
+        (PrecorteApiTest::example), documentado
+
+  Entregables nuevos en /docs
+
+  - docs/DOC_GENERAL-20251017-0146.md
+      - artisan about; composer/npm audit; observaciones
+  - docs/DOC_RUTAS_Y_CASOS_DE_USO-20251017-0143.md
+      - Rutas reales desde artisan, agrupadas y con middleware
+  - docs/DOC_GENERAL-20251017-0143.md
+      - Config sanitizada y versión PostgreSQL
+  - docs/DOC_DB_PUBLIC_Y_SELEMTI-20251017-0139.md
+      - Inventario real (tablas/columnas/PK-FK/índices/estimaciones)
+  - docs/DOC_DB_PUBLIC_Y_SELEMTI-20251017-0148.md
+      - Diccionario detallado de: selemti.
+        {sesion_cajon,precorte,precorte_efectivo,precorte_otros,postcorte}, public.ticket
+  - docs/DOC_PLAN_DE_ATAQUE-20251017-0132.md
+      - Roadmap y tickets sugeridos
+  - docs/DOC_WIZARD_CORTE_CAJA-20251017-0126.md
+      - Flujo, diagrama, riesgos y bugs
+  - docs/DOC_CONTROLADORES_Y_VISTAS-20251017-0126.md
+      - Mapa de controladores y vistas
+  - docs/DOC_RUTAS_Y_CASOS_DE_USO-20251017-0126.md
+      - Versión anterior (mantenida)
+  - docs/REVIEW-20251017-0146.md
+      - Resumen de cambios y hallazgos críticos
+  - docs/db_inventory-20251017-015122.json
+      - Inventario JSON completo de public y selemti
+
+  Scripts auxiliares (solo lectura, por si quieres re-ejecutar)
+
+
+    … +3 lines
+
+
+• Added scripts\gen_db_docs2.php (+131 -0)
+      1 +<?php
+      2 +use Illuminate\Support\Facades\DB;
+      3 +require __DIR__ . '/../vendor/autoload.php';
+      4 +$app = require __DIR__ . '/../bootstrap/app.php';
+      5 +$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+      6 +$kernel->bootstrap();
+      7 +
+      8 +DB::statement("SET search_path TO selemti, public");
+      9 +
+     10 +$schemas = ['public','selemti'];
+     11 +
+     12 +$tables = DB::select("SELECT table_schema, table_name, table_type FROM information_schema.tab
+         les WHERE table_schema IN ('public','selemti') AND table_type='BASE TABLE' ORDER BY table_sch
+         ema, table_name");
+     13 +$columns = DB::select("SELECT table_schema, table_name, column_name, data_type, is_nullable,
+         column_default, character_maximum_length, numeric_precision, numeric_scale FROM information_s
+         chema.columns WHERE table_schema IN ('public','selemti') ORDER BY table_schema, table_name, o
+         rdinal_position");
+     14 +$pks = DB::select(<<<SQL
+     15 +SELECT kcu.table_schema, kcu.table_name, tco.constraint_name, kcu.column_name, kcu.ordinal_po
+         sition
+     16 +FROM information_schema.table_constraints tco
+     17 +JOIN information_schema.key_column_usage kcu
+     18 +  ON tco.constraint_name=kcu.constraint_name
+     19 + AND tco.table_schema=kcu.table_schema
+     20 +WHERE tco.constraint_type='PRIMARY KEY' AND kcu.table_schema IN ('public','selemti')
+     21 +ORDER BY kcu.table_schema, kcu.table_name, kcu.ordinal_position
+     22 +SQL);
+     23 +$fks = DB::select(<<<SQL
+     24 +SELECT tc.table_schema, tc.table_name, tc.constraint_name,
+     25 +       kcu.column_name,
+     26 +       ccu.table_schema AS foreign_table_schema,
+     27 +       ccu.table_name   AS foreign_table_name,
+     28 +       ccu.column_name  AS foreign_column_name
+     29 +FROM information_schema.table_constraints AS tc
+     30 +JOIN information_schema.key_column_usage AS kcu
+     31 +  ON tc.constraint_name = kcu.constraint_name
+     32 + AND tc.table_schema = kcu.table_schema
+     33 +JOIN information_schema.constraint_column_usage AS ccu
+     34 +  ON ccu.constraint_name = tc.constraint_name
+     35 + AND ccu.constraint_schema = tc.table_schema
+     36 +WHERE tc.constraint_type = 'FOREIGN KEY'
+     37 +  AND tc.table_schema IN ('public','selemti')
+     38 +ORDER BY tc.table_schema, tc.table_name, tc.constraint_name, kcu.ordinal_position
+     39 +SQL);
+     40 +$indexes = DB::select(<<<SQL
+     41 +SELECT n.nspname  AS schema,
+     42 +       t.relname  AS table,
+     43 +       i.relname  AS index,
+     44 +       ix.indisunique,
+     45 +       ix.indisprimary,
+     46 +       pg_get_indexdef(i.oid) AS indexdef
+     47 +FROM pg_class t
+     48 +JOIN pg_namespace n ON n.oid = t.relnamespace
+     49 +JOIN pg_index ix    ON ix.indrelid = t.oid
+     50 +JOIN pg_class i     ON i.oid = ix.indexrelid
+     51 +WHERE n.nspname IN ('public','selemti')
+     52 +ORDER BY n.nspname, t.relname, i.relname
+     53 +SQL);
+     54 +$approx = DB::select("SELECT n.nspname AS schema, c.relname AS table, c.reltuples::bigint AS
+         approx_rows FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('
+         public','selemti') AND c.relkind='r' ORDER BY 1,2");
+     55 +
+     56 +// Grouping
+     57 +$byTable = [];
+     58 +foreach ($tables as $t) {
+     59 +  if (!isset($byTable[$t->table_schema])) $byTable[$t->table_schema] = [];
+     60 +  $byTable[$t->table_schema][$t->table_name] = [ 'type'=>$t->table_type ];
+     61 +}
+     62 +foreach ($columns as $c) { $byTable[$c->table_schema][$c->table_name]['cols'][] = $c; }
+     63 +foreach ($pks as $r) { $byTable[$r->table_schema][$r->table_name]['pk'][] = $r->column_name;
+         }
+     64 +foreach ($fks as $r) { $byTable[$r->table_schema][$r->table_name]['fk'][] = $r; }
+     65 +foreach ($indexes as $r) { $byTable[$r->schema][$r->table]['idx'][] = $r; }
+     66 +$approxMap = [];
+     67 +foreach ($approx as $r) { $approxMap[$r->schema][$r->table] = (int)$r->approx_rows; }
+     68 +
+     69 +$ts = date('Ymd-His');
+     70 +$out = __DIR__ . "/../docs/DOC_DB_PUBLIC_Y_SELEMTI-FULL-$ts.md";
+     71 +$f = fopen($out, 'w');
+     72 +
+     73 +fwrite($f, "DB — Inventario Completo (public, selemti)\n\n");
+     74 +fwrite($f, "Fecha: ".date('Y-m-d H:i')."\n\n");
+     75 +
+     76 +// Summary per schema
+     77 +foreach ($schemas as $s) {
+     78 +  $count = isset($byTable[$s]) ? count($byTable[$s]) : 0;
+     79 +  fwrite($f, "Esquema $s — $count tablas\n");
+     80 +}
+     81 +
+     82 +fwrite($f, "\n");
+     83 +
+     84 +// Per schema list
+     85 +foreach ($schemas as $schema) {
+     86 +  fwrite($f, "## Esquema: $schema\n\n");
+     87 +  if (empty($byTable[$schema])) { fwrite($f, "(sin tablas)\n\n"); continue; }
+     88 +  foreach ($byTable[$schema] as $table => $info) {
+     89 +    $rows = $approxMap[$schema][$table] ?? 0;
+     90 +    fwrite($f, "### $schema.$table (filas aprox: $rows)\n\n");
+
+
+
+
+• Added docs\DOC_ERD-20251017-0159.md (+50 -0)
+     1 +ERD — public y selemti (derivado de metadatos)
+     2 +
+     3 +Fecha: 2025-10-17 01:59
+     4 +
+     5 +## selemti
+     6 +```mermaid
+
+
+• Added docs\DOC_PLAN_DE_ATAQUE-20251017-0201.md (+64 -0)
+     1 +Plan de Ataque — Ampliado
+     2 +
+     3 +Fecha: 2025-10-17 02:01
+     4 +
+     5 +Prioridad Alta
+     6 +- Autenticación/Autorización API Caja
+     7 +  - Proteger /api/caja/* con auth (Sanctum o JWT existente) + roles (spatie/permission).
+     8 +  - Tareas: agrupar rutas bajo middleware, políticas/permissions por endpoint, pruebas Feature
+        .
+     9 +  - Archivos: routes/api.php, app/Http/Kernel.php, config/auth.php.
+    10 +- Kernel y middleware
+    11 +  - Normalizar a app/Http/Kernel.php; mover configuración desde app/Http/Middleware/Kernel.php
+        .
+    12 +  - Garantizar CORS/throttle/bindings en grupo api.
+    13 +- Wizard Corte de Caja
+    14 +  - Unificar IDs (#wizardPrecorte), restaurar puedeWizard(), obtener store_id del backend.
+    15 +  - Bloqueo doble-submit; estados y toasts coherentes; limpieza mojibake.
+    16 +- BD (rendimiento e integridad)
+    17 +  - Agregar índice selemti.precorte_efectivo(precorte_id).
+    18 +  - Eliminar índice duplicado en selemti.precorte(sesion_id), mantener uno.
+    19 +  - Evaluar índice parcial en public.ticket (terminal_id, closing_date) WHERE closing_date IS
+        NULL.
+    20 +- Plataforma
+    21 +  - Plan de actualización de PostgreSQL (9.5 → soportada LTS), pruebas regresión.
+    22 +
+    23 +Prioridad Media
+    48 +   - Archivos: migraciones SQL (coordinar con DBA).
+    49 +   - Estimado: 0.5–1 día; Riesgos: bloqueo o bloat si no se planifica ventana.
+    50 +5) FormRequests Precorte/Postcorte
+    51 +   - Desc: validar montos/negativos/requireds; sanitizar; pruebas Feature.
+    52 +   - Archivos: app/Http/Requests/Caja/*.php, controladores Caja.
+    53 +   - Estimado: 1–2 días; Riesgos: cambios en payload.
+    54 +6) Corregir test Feature fallido
+    55 +   - Desc: ajustar ruta '/' o test para responder 200; añadir pruebas de endpoints Caja.
+    56 +   - Archivos: tests/Feature/*.php, routes/web.php.
+    57 +   - Estimado: 0.5 día; Riesgos: mínimo.
+    58 +7) Upgrade PostgreSQL
+    59 +   - Desc: plan de migración versiones, compatibilidad drivers, pruebas de rendimiento.
+    60 +   - Estimado: 2–4 días; Riesgos: compatibilidad.
+    61 +
+    62 +Comandos propuestos (no ejecutar)
+    63 +- php artisan migrate, db:seed, test, route:cache/config:cache (solo en entornos controlados).
+    64 +
+
+✔ You approved codex to run powershell.exe -NoProfile -Command '$ts = Get-Date -Format "yyyyMMdd-
+HHmm"; S... every time this session
+
+• Ran powershell.exe -NoProfile -Command '$ts = Get-Date -Format "yyyyMMdd-HHmm"; Set-Content -Path
+  │ ("docs/REVIEW-"+$ts+".md") -Value @"
+  │ Review extendido — $ts
+  │ … +16 lines
+  └ (no output)
+
+─ Worked for 4m 16s ──────────────────────────────────────────────────────────────────────────────────
+
+• Perfecto — continué sin pedir autorización adicional, ejecutando solo lectura y generando
+  documentación nueva sin sobrescribir.
+
+  Lo que entregué ahora
+
+  - Diccionario completo de BD (public y selemti):
+      - Generado con consultas metadata read-only y estimaciones de filas.
+      - Archivo: docs/DOC_DB_PUBLIC_Y_SELEMTI-FULL-20251017-075625.md
+  - ERD Mermaid por esquema y global:
+      - Archivo: docs/DOC_ERD-20251017-0159.md
+  - Plan de ataque ampliado con tickets detallados:
+      - Archivo: docs/REVIEW-20251017-0201.md
+  - Inventario JSON completo (para parsers):
+      - Archivo: docs/db_inventory-20251017-015122.json
+
+
+
+• Added docs\PR_PROPOSALS-20251017-0207.md (+166 -0)
+      1 +Propuestas de PR (sin aplicar cambios)
+      2 +
+      3 +Fecha: 2025-10-17 02:07
+      4 +
+      5 +Alcance
+      6 +- No se modifica código ahora. Este documento contiene parches propuestos (diffs) y pasos por
+          rama para que puedas abrir PRs cuando lo apruebes.
+      7 +- Enfocado en: Auth/roles para /api/caja, normalización de Kernel, estabilización del Wizard,
+          índices DB (solo como migraciones propuestas), y test fallido.
+      8 +
+      9 +1) PR: Proteger /api/caja con auth y roles
+     10 +- Objetivo: exigir autenticación y autorización por rol/permiso en endpoints Caja.
+     11 +- Estrategia:
+     12 +  - Si usas JWT (tymon/jwt-auth): aplicar middleware `jwt.auth` + permisos (`permission:*`).
+     13 +  - Si prefieres Sanctum: instalar/configurar Sanctum y usar `auth:sanctum` + permisos.
+     14 +
+     15 +Propuesta de diff (routes/api.php)
+     16 +```
+     17 +@@
+     18 + Route::prefix('caja')->group(function () {
+     19 +-    // público durante dev
+     20 ++    // protegido: requiere auth y permisos
+     21 ++    Route::middleware(['auth:sanctum', 'permission:caja.access'])->group(function(){
+     22 +         Route::get('/cajas', [CajasController::class, 'index']);
+     23 +         Route::get('/sesiones/activa', [SesionesController::class, 'getActiva']);
+     24 +         Route::prefix('precortes')->group(function () {
+     25 +             Route::match(['get','post'], '/preflight/{sesion_id?}', [PrecorteController::cla
+         ss, 'preflight']);
+     26 +             Route::post('/', [PrecorteController::class, 'createLegacy']);
+     27 +             Route::get('/{id}', [PrecorteController::class, 'show']);
+     28 +             Route::post('/{id}', [PrecorteController::class, 'updateLegacy']);
+     29 +             Route::get('/{id}/totales', [PrecorteController::class, 'resumenLegacy']);
+     30 +             Route::match(['get','post'], '/{id}/status', [PrecorteController::class, 'status
+         Legacy']);
+     31 +             Route::post('/{id}/enviar', [PrecorteController::class, 'enviar']);
+     32 +             Route::get('/sesion/{sesion_id}/totales', [PrecorteController::class, 'totalesPo
+         rSesion']);
+     33 +         });
+     34 +         Route::prefix('postcortes')->group(function () {
+     35 +             Route::post('/', [PostcorteController::class, 'create']);
+     36 +             Route::get('/{id}', [PostcorteController::class, 'show']);
+     37 +             Route::post('/{id}', [PostcorteController::class, 'update']);
+     38 +             Route::get('/{id}/detalle', [PostcorteController::class, 'detalle']);
+     39 +         });
+     40 +         Route::get('/conciliacion/{sesion_id}', [ConciliacionController::class, 'getBySesion
+         ']);
+     41 +         Route::get('/formas-pago', [FormasPagoController::class, 'index']);
+     42 ++    });
+     43 + });
+     44 +```
+     45 +
+     46 +Kernel (app/Http/Kernel.php)
+     47 +```
+     48 +<?php
+     49 +namespace App\Http;
+     50 +use Illuminate\Foundation\Http\Kernel as HttpKernel;
+     51 +
+     52 +class Kernel extends HttpKernel
+     53 +{
+     54 +    protected $middleware = [
+     55 +        \Illuminate\Http\Middleware\HandleCors::class,
+     56 +        \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
+     57 +        \App\Http\Middleware\TrimStrings::class,
+     58 +        \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+     59 +    ];
+     60 +
+     61 +    protected $middlewareGroups = [
+     62 +        'web' => [
+     63 +            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+     64 +            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+     65 +            \Illuminate\Session\Middleware\StartSession::class,
+     66 +            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+     67 +            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+     68 +        ],
+     69 +        'api' => [
+     70 +            \App\Http\Middleware\ApiResponseMiddleware::class,
+     71 +            'throttle:api',
+     72 +            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+     73 +        ],
+     74 +    ];
+     75 +
+     76 +    protected $middlewareAliases = [
+     77 +        'auth' => \App\Http\Middleware\Authenticate::class,
+     78 +        'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
+     79 +        'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
+     80 +        'api.response' => \App\Http\Middleware\ApiResponseMiddleware::class,
+     81 +    ];
+     82 +}
+     83 +```
+     84 +
+     85 +Ramas y comandos sugeridos
+     86 +- git checkout -b feat/protect-caja-api
+     87 +- aplicar diff en routes/api.php y agregar Kernel si falta (sin tocar .env)
+     88 +- php artisan route:list (verificación)
+     89 +- git commit -m "Protect caja API with auth + permission middleware"
+     90 +
+     91 +2) PR: Estabilización Wizard de Cortes
+     92 +- Objetivo: unificar IDs modal, restaurar guard de acciones, quitar store_id hardcodeado, lim
+         piar mojibake.
+     93 +
+     94 +Diffs propuestos
+     95 +- resources/views/caja/_wizard_modals.php
+     96 +```
+     97 +- id="wizardPrecorte"
+     98 ++ id="czModalPrecorte"
+     99 +```
+    100 +- public/assets/js/caja/wizard.js (inicialización)
+    101 +```
+    102 +- const modalElement = document.getElementById('czModalPrecorte');
+    103 ++ const modalElement = document.getElementById('czModalPrecorte') || document.getElementById(
+         'wizardPrecorte');
+    104 +```
+    105 +- public/assets/js/caja/state.js (refs)
+    106 +```
+    107 +- modal: document.getElementById('czModalPrecorte'),
+    108 ++ modal: document.getElementById('czModalPrecorte') || document.getElementById('wizardPrecort
+         e'),
+    109 +```
+    110 +- public/assets/js/caja/mainTable.js (puedeWizard)
+    111 +```
+    112 +- export function puedeWizard(r) { return true; }
+    113 ++ export function puedeWizard(r) {
+    114 ++   const asignadaActiva = !!(r.asignada && r.activa && r.assigned_user);
+    115 ++   const validacionSinPC = !!(r.precorte_listo && r.sin_postcorte);
+    116 ++   const saltoSinPrecorte = !!r.skipped_precorte;
+    117 ++   return asignadaActiva || validacionSinPC || saltoSinPrecorte;
+    118 ++ }
+    119 +```
+    120 +- public/assets/js/caja/mainTable.js (store_id)
+    121 +```
+    122 +- const store = 1;
+    123 ++ const store = Number(r.store_id || 1);
+    124 +```
+    125 +- Backend (CajasController): incluir `store_id` (opcional) en SELECT y respuesta.
+    126 +
+    127 +Ramas y comandos sugeridos
+    128 +- git checkout -b feat/caja-wizard-stabilize
+    129 +- aplicar diffs JS/Blade; opcional: añadir store_id en API y UI
+    130 +- npm run build (si aplica)
+    131 +- git commit -m "Stabilize caja wizard: IDs, guards, store id"
+    132 +
+    133 +3) PR: Normalización de Kernel
+    134 +- Objetivo: asegurar que app/Http/Kernel.php exista y esté registrado; mover configuración de
+         sde app/Http/Middleware/Kernel.php.
+    135 +- Acción: crear app/Http/Kernel.php con el contenido propuesto en (1), eliminar/ignorar el ar
+         chivo alterno tras validar que la app arranca.
+    136 +
+    137 +4) PR: Índices DB (NO ejecutar aquí)
+    138 +- Objetivo: mejorar rendimiento de joins/consultas.
+    139 +- Migración propuesta (para ejecutar en ventana con DBA):
+    140 +```
+    141 +-- up
+    142 +CREATE INDEX IF NOT EXISTS idx_precorte_efectivo_precorte ON selemti.precorte_efectivo(precor
+         te_id);
+    143 +DROP INDEX IF EXISTS selemti.precorte_sesion_id_idx;
+    144 +
+    145 +-- down
+    146 +DROP INDEX IF EXISTS selemti.idx_precorte_efectivo_precorte;
+    147 +CREATE INDEX IF NOT EXISTS precorte_sesion_id_idx ON selemti.precorte(sesion_id);
+    148 +```
+    149 +
+    150 +5) PR: Test Feature y home
+    151 +- Objetivo: corregir test fallido y cubrir endpoints clave de Caja.
+    152 +- Diffs propuestos (opción A: ajustar test a 302):
+    153 +```
+    154 +- $response->assertStatus(200);
+    155 ++ $response->assertStatus(200)->or($response->assertRedirect());
+    156 +```
+    157 +- Opción B: ajustar ruta '/' para 200 consistente:
+    158 +```
+    159 +- Route::get('/', function () { return "Página de inicio..."; });
+    160 ++ Route::view('/', 'dashboard');
+    161 +```
+    162 +
+    163 +Notas
+    164 +- Todos los cambios propuestos evitan tocar .env y no ejecutan migraciones aquí.
+    165 +- Los diffs pueden ajustarse a tu estándar de lint/format.
+─ Worked for 3m 50s ──────────────────────────────────────────────────────────────────────────────────
+
+• Perfecto — preparé los PRs como propuestas detalladas sin tocar tu código ni BD. Todo quedó
+  documentado en /docs con diffs sugeridos, pasos de rama y notas.
+
+
+
+
+
+• Added docs\CRUD_GAP-20251017-0819.md (+55 -0)
+     1 +Mapa de CRUDs y Brechas — Por Módulo
+     2 +
+     3 +Fecha: 2025-10-17 08:19
+     4 +
+     5 +Resumen
+     6 +- Basado en rutas/controladores reales (routes/api.php, app/Http/Controllers/**), Livewire y E
+        RDs.
+     7 +- Se listan operaciones actuales y faltantes por dominio, y lógica de negocio pendiente.
+     8 +
+     9 +Caja (cortes)
+    10 +- Endpoints actuales (lectura/escritura):
+    11 +  - Cajas: GET /api/caja/cajas → lista sesiones/terminales del día.
+    12 +  - Sesiones: GET /api/caja/sesiones/activa → lectura por terminal/usuario.
+    13 +  - Precortes: preflight (GET/POST), create (POST), update (POST), show (GET), totales (GET),
+        status (GET/POST), enviar (POST).
+    14 +  - Postcortes: create (POST), update (POST), show (GET), detalle (GET); cierra sesión si vali
+        dado.
+    15 +  - Conciliación: GET /api/caja/conciliacion/{sesion_id}.
+    16 +  - Formas de pago: GET /api/caja/formas-pago.
+    17 +- Brechas CRUD:
+    18 +  - Precorte/Postcorte: sin DELETE (probablemente no deseable en producción; considerar anulac
+        ión/auditoría en lugar de borrado duro).
+    19 +  - Sesiones: no hay endpoints para abrir/cerrar manual (se hace por flujo de cortes; coherent
+        e).
+    20 +  - Catálogo de Formas de Pago: solo lectura en API; faltan create/update/delete si se adminis
+
+
+
+✔ You approved codex to run powershell.exe -NoProfile -Command 'Set-Content -Path docs/
+DOC_ERD_SUBDOMAINS... every time this session
+
+• Ran powershell.exe -NoProfile -Command 'Set-Content -Path docs/DOC_ERD_SUBDOMAINS-20251017-0819.md
+  │ -Value @"
+  │ ERD por Subdominio — Caja, POS, Inventario/Recetas
+  │ … +54 lines
+  └ Falta la cadena en el terminador: "@.
+        + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+        + FullyQualifiedErrorId : TerminatorExpectedAtEndOfString
+
+
+✔ You approved codex to run powershell.exe -NoProfile -Command '$lines = @('"'ERD por Subdominio —
+• Ran powershell.exe -NoProfile -Command '$lines = @('"'ERD por Subdominio — Caja, POS, Inventario/
+  │ Recetas','','Fecha: 2025-10-17 08:19','','Caja (selemti)','"'```mermaid'"','erDiagram','
+  │ SESION_CAJON ||--o{ PRECORTE : \"sesion_id\"','  PRECORTE ||--o{ PRECORTE_EFECTIVO :
+  │ … +17 lines
+
+
+
+✔ You approved codex to run powershell.exe -NoProfile -Command '$ts = Get-Date -Format "yyyyMMdd-
+HHmm"; S... every time this session
+
+• Ran powershell.exe -NoProfile -Command '$ts = Get-Date -Format "yyyyMMdd-HHmm"; Set-Content -Path
+  │ ("docs/DOC_PLAN_DE_ATAQUE-"+$ts+".md") -Value @"
+  │ Plan de Ataque — CRUDs faltantes + ERD
+  │ … +44 lines
+  └ (no output)
+
+─ Worked for 1m 19s ──────────────────────────────────────────────────────────────────────────────────
+
+• He implementado ambos entregables y dejé todo listo para acción:
+
+  Nuevos documentos
+
+  - ERD completo (FKs reales)
+      - docs/DOC_ERD-FULL-20251017-081101.md
+  - ERD por subdominios
+      - docs/DOC_ERD_SUBDOMAINS-20251017-0819.md
+  - ERD Inventario/Recetas (filtrado desde metadatos)
+      - docs/DOC_ERD_INVENTARIO_RECETAS-20251017-081732.md
+  - Mapa de CRUDs y brechas
+      - docs/CRUD_GAP-20251017-0819.md
+  - Plan de ataque actualizado con CRUDs faltantes
+      - docs/DOC_PLAN_DE_ATAQUE-20251017-0819.md
+
+  Qué incluyen
+
+  - ERD-FULL: Mermaid erDiagram por cada FK entre tablas de public y selemti, más vista global cross-
+    schema.
+  - Subdominios: diagramas separados para Caja, POS y un boceto de Inventario/Recetas.
+  - Inventario/Recetas: ERD filtrado por tablas receta_, unidades_, stock_policy, proveedor, etc.
+  - CRUD_GAP: lista por módulo de lo implementado vs. faltante y lógica pendiente.
+  - Plan de ataque: tickets concretos para CRUD de Formas de Pago, Proveedores, API de Recepciones,
+    Recetas (versionado/costos), tests de Caja, y Kernel/middlewares; incluye prioridades y comandos
+    propuestos.
+
+  Siguientes pasos sugeridos (puedo ejecutarlos a continuación, sin tocar BD)
+
+  - Añadir tickets al DOC_PLAN_DE_ATAQUE con estimaciones y riesgos detallados (listados ya
+    incluidos).
+  - Preparar ramas con cambios propuestos para:
+      - Auth/roles en /api/caja y Kernel estándar.
+      - Estabilización del Wizard de cortes (IDs/guardias/store_id).
+      - Estructura de endpoints CRUD nuevos (Formas de Pago, Proveedores, Recepciones) con stubs y
+        tests, sin afectar BD.
+
+  ¿Te abro ahora ramas y aplico los parches propuestos para Auth/roles en /api/caja y para el Wizard
+  (solo código, sin migraciones ni cambios de .env), dejando PRs listos para revisión?
