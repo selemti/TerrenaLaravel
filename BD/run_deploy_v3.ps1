@@ -44,3 +44,4 @@ $env:PGPASSWORD = $Password
 & "$psqlPath" -h $HostName -p $Port -U $User -d $Database -v ON_ERROR_STOP=1 -f $SqlFile *>&1 | Tee-Object -FilePath $LogFile
 if ($LASTEXITCODE -ne 0) { Write-Error "Deploy falló. Ver $LogFile"; exit 1 }
 Write-Host "Deploy OK. Log: $LogFile"
+
