@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Caja;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Caja\CreatePostcorteRequest;
+use App\Http\Requests\Caja\UpdatePostcorteRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
@@ -11,10 +13,13 @@ class PostcorteController extends Controller
 {
     /**
      * Crear postcorte desde precorte
+     *
+     * Note: Session status will be automatically set to 'CERRADA' by the
+     * trg_postcorte_after_insert trigger when the postcorte is created.
      */
-    public function create(Request $request): JsonResponse
+    public function create(CreatePostcorteRequest $request): JsonResponse
     {
-        $precorteId = (int) $request->input('precorte_id', 0);
+        $precorteId = (int) $request->validated('precorte_id');
 
         try {
             if ($precorteId <= 0) {
@@ -40,7 +45,7 @@ class PostcorteController extends Controller
             $difTr = $dec['transfer'] - $sys['transfer'];
 
             $usr = auth()->user()->id ?? 1;
-            $notas = '';
+            $notas = trim($request->validated('notas') ?? '');
 
             $sql = "
                 INSERT INTO selemti.postcorte (
@@ -109,9 +114,13 @@ class PostcorteController extends Controller
 
     /**
      * Actualizar postcorte
+     *
+     * When validado=true, marks the postcorte as validated and can
+     * optionally update the session status to 'CONCILIADA'.
      */
-    public function update(Request $request, $postId = null): JsonResponse
+    public function update(UpdatePostcorteRequest $request, $postId = null): JsonResponse
     {
+        $validated = $request->validated();
         $postId = $postId ?? (int) $request->input('id', 0);
 
         try {
@@ -143,11 +152,12 @@ class PostcorteController extends Controller
             $difTj = $dec['tarjetas'] - $sys['tarjetas'];
             $difTr = $dec['transfer'] - $sys['transfer'];
 
-            $verE = $request->input('veredicto_efectivo', $this->ver($difEf));
-            $verT = $request->input('veredicto_tarjetas', $this->ver($difTj));
-            $verR = $request->input('veredicto_transferencias', $this->ver($difTr));
-            $notas = trim($request->input('notas', ''));
-            $valid = $request->input('validado');
+            $verE = $validated['veredicto_efectivo'] ?? $this->ver($difEf);
+            $verT = $validated['veredicto_tarjetas'] ?? $this->ver($difTj);
+            $verR = $validated['veredicto_transferencias'] ?? $this->ver($difTr);
+            $notas = trim($validated['notas'] ?? '');
+            $valid = $validated['validado'] ?? null;
+            $sesionEstatus = $validated['sesion_estatus'] ?? null;
             $usr = auth()->user()->id ?? 1;
 
             $sql = "
@@ -188,8 +198,12 @@ class PostcorteController extends Controller
                 return response()->json(['ok' => false, 'error' => 'update_failed'], 500);
             }
 
-            if ($valid) {
-                DB::update("UPDATE selemti.sesion_cajon SET estatus = 'CERRADA' WHERE id = ?", [$sid]);
+            // Update session status if requested
+            if ($sesionEstatus && in_array($sesionEstatus, ['CERRADA', 'CONCILIADA'])) {
+                DB::update("UPDATE selemti.sesion_cajon SET estatus = ? WHERE id = ?", [$sesionEstatus, $sid]);
+            } elseif ($valid) {
+                // If validated but no explicit status provided, ensure it's at least CERRADA
+                DB::update("UPDATE selemti.sesion_cajon SET estatus = 'CERRADA' WHERE id = ? AND estatus != 'CERRADA' AND estatus != 'CONCILIADA'", [$sid]);
             }
 
             return response()->json([

@@ -1,8 +1,8 @@
 <?php
 /* Debe incluirse ANTES de los <script type="module" ...> de caja.
    Requisitos que usa wizard.js:
-   - Modal:  #wizardPrecorte  (data-role="precorte")
-   - Steps:  #step1, #step2, #step3
+   - Modal:  #czModalPrecorte  (data-role="precorte")
+   - Steps:  #czStep1, #czStep2, #czStep3
    - Barra:  .progress-bar  (data-role="stepbar")
    - Botones: #btnGuardarPrecorte, #btnContinuarConc, #btnSincronizarPOS, #btnIrPostcorte, #btnCerrarSesion
    - Denoms tbody: #tablaDenomsBody
@@ -12,9 +12,9 @@
    - Hidden id: #precorteId (data-role="precorte-id")
 */
 ?>
-<input type="hidden" id="precorteId" data-role="precorte-id" value="">
+<input type="hidden" id="cz_precorte_id" data-role="precorte-id" value="">
 
-<div class="modal fade" id="wizardPrecorte" data-role="precorte" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="czModalPrecorte" data-role="precorte" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
@@ -32,7 +32,7 @@
         </div>
 
         <!-- STEP 1: Declaración -->
-        <section id="step1">
+        <section id="czStep1" data-step="1">
           <div class="row g-3">
             <div class="col-md-7">
               <div class="card">
@@ -81,7 +81,7 @@
         </section>
 
         <!-- STEP 2: Conciliación -->
-        <section id="step2" data-step="2" class="d-none">
+        <section id="czStep2" data-step="2" class="d-none">
           <div class="alert alert-warning d-none" data-role="banner-falta-corte">
             <div class="d-flex align-items-center gap-2">
               <i class="fa-solid fa-triangle-exclamation"></i>
@@ -100,7 +100,7 @@
         </section>
 
         <!-- STEP 3: Postcorte -->
-        <section id="step3" class="d-none">
+        <section id="czStep3" data-step="3" class="d-none">
           <div class="card mb-2">
             <div class="card-header py-2">Resumen final (Postcorte)</div>
             <div class="card-body p-2">
