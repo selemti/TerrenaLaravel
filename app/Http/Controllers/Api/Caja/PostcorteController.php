@@ -48,7 +48,7 @@ class PostcorteController extends Controller
                     sistema_efectivo_esperado, declarado_efectivo, diferencia_efectivo, veredicto_efectivo,
                     sistema_tarjetas, declarado_tarjetas, diferencia_tarjetas, veredicto_tarjetas,
                     sistema_transferencias, declarado_transferencias, diferencia_transferencias, veredicto_transferencias,
-                    created_at, creado_por, notas
+                    creado_en, creado_por, notas
                 ) VALUES (
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?
                 )

@@ -137,9 +137,10 @@ class PrecorteController extends Controller
     /**
      * Actualizar precorte (LÓGICA EXACTA DE SLIM)
      */
-    public function updateLegacy(Request $request): JsonResponse
+    public function updateLegacy(Request $request, $id = null): JsonResponse
     {
-        $precorteId = (int) $request->input('id', 0);
+        // Aceptar id desde URL (parámetro de ruta) o body (compatibilidad legacy)
+        $precorteId = (int) ($id ?? $request->input('id', 0));
 
         if ($precorteId <= 0) {
             return response()->json(['ok' => false, 'error' => 'missing_precorte_id'], 400);

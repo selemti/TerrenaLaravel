@@ -73,13 +73,6 @@ function initModal() {
     keyboard: false
   });
 
-  // Limpiar event listeners en botones (para evitar duplicados)
-  bindOnce(els.btnGuardarPrecorte, guardarPrecorte);
-  bindOnce(els.btnContinuarConc, continuarConciliacion);
-  bindOnce(els.btnIrPostcorte, irPostcorte);
-  bindOnce(els.btnPCGuardar, guardarBorradorPostcorte);
-  bindOnce(els.btnPCValidar, validarPostcorte);
-
   return modalInstance;
 }
 
@@ -296,7 +289,7 @@ export async function abrirWizard(ev){
 
     // 1) Crear/recuperar precorte
     const payload = { bdate, store_id:store, terminal_id:terminal, user_id:user, sesion_id: sesion || '' };
-    const j = await postFirstAlive(['caja/precortes','legacy/sprecorte/create','legacy/precortes'], payload);
+    const j = await POST_FORM(api.precorte_create(), payload);
     if (!j?.ok || !j?.precorte_id){
       toast('No se pudo iniciar/recuperar precorte','err',12000,'Error',{sticky:true});
       btn.__busy=false; return;
@@ -641,7 +634,7 @@ async function irAPostcorte(){
 
   try{
     // ÃšNICA ruta vÃ¡lida en tu API
-    const j = await POST_FORM(`${BASE}/api/postcortes?precorte_id=${encodeURIComponent(state.precorteId)}`, {});
+    const j = await POST_FORM(`${api.postcorte_create()}?precorte_id=${encodeURIComponent(state.precorteId)}`, {});
     if (!j?.ok) throw new Error(j?.error || 'No se pudo generar el Post-corte');
 
     state.postcorteId = j.postcorte_id;
@@ -816,7 +809,7 @@ async function guardarPostcorte(validar){
 
   try{
     // **ÃšNICA ruta de update en tu API**
-    const res = await POST_FORM(`${BASE}/api/postcortes?id=${encodeURIComponent(state.postcorteId)}`, payload);
+    const res = await POST_FORM(api.postcorte_update(state.postcorteId), payload);
     if (!res?.ok) throw new Error(res?.error || 'fallÃ³ guardado');
 
     toast(validar ? 'Postcorte validado y cerrado.' : 'Postcorte guardado.','ok',4000,'Listo');
