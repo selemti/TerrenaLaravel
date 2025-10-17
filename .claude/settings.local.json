@@ -14,7 +14,9 @@
       "Read(//c/xampp3/apache/conf/**)",
       "Read(//c/xampp3/php/**)",
       "Bash(cat:*)",
-      "Read(//c/xampp3/htdocs/**)"
+      "Read(//c/xampp3/htdocs/**)",
+      "Bash(awk:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -Command \"& {$env:PGPASSWORD=''postgres''; .\\DEPLOY_v4_SAFE.ps1 -HostName localhost -Port 5433 -Database floreant -User postgres}\")"
     ],
     "deny": [],
     "ask": []

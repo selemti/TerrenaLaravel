@@ -24,12 +24,12 @@ export function puedeWizard(r) {
   const asignadaActiva = !!(r.asignada && r.activa && r.assigned_user);
   const validacionSinPC = !!(r.precorte_listo && r.sin_postcorte);
   const saltoSinPrecorte = !!r.skipped_precorte;
-  return true;
-  //return asignadaActiva || validacionSinPC || saltoSinPrecorte;
+  return asignadaActiva || validacionSinPC || saltoSinPrecorte;
 }
 
 export function renderAcciones(r) {
-  const store = 1; 
+  // Get store_id from session data instead of hardcoding
+  const store = r.store_id || 1;
   const bdate = currentDate();
   const opening = Number(r.opening_float || 0);
   const sesionId = r.sesion_id;
