@@ -296,7 +296,7 @@ export async function abrirWizard(ev){
 
     // 1) Crear/recuperar precorte
     const payload = { bdate, store_id:store, terminal_id:terminal, user_id:user, sesion_id: sesion || '' };
-    const j = await POST_FORM(api.precorte_create(), payload);
+    const j = await postFirstAlive(['caja/precortes','legacy/sprecorte/create','legacy/precortes'], payload);
     if (!j?.ok || !j?.precorte_id){
       toast('No se pudo iniciar/recuperar precorte','err',12000,'Error',{sticky:true});
       btn.__busy=false; return;
@@ -1022,4 +1022,5 @@ if (!window.abrirWizard) window.abrirWizard = abrirWizard;
 // Exponer utils de postcorte pendiente para que la tabla los use
 if (!window.czRecallPostcorte) window.czRecallPostcorte = recallPostcorte;
 if (!window.czForgetPostcorte) window.czForgetPostcorte = forgetPostcorte;
+
 
