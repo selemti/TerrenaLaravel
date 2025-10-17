@@ -58,9 +58,12 @@ function reloadTable() {
 // --- Inicialización del modal ---
 let modalInstance = null;
 function initModal() {
-  const modalElement = document.getElementById('czModalPrecorte');
+  // Aceptar cualquiera de los IDs usados en las vistas
+  const modalElement = document.getElementById('czModalPrecorte')
+                    || document.getElementById('wizardPrecorte')
+                    || document.querySelector('.modal[data-role="precorte"]');
   if (!modalElement) {
-    console.error('[wizard.js] Modal #czModalPrecorte no encontrado en el DOM');
+    console.error('[wizard.js] Modal de precorte no encontrado en el DOM (#czModalPrecorte / #wizardPrecorte)');
     fallbackModal('Error: Modal de precorte no encontrado. Verifica _wizard_modals.php');
     return null;
   }
