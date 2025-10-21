@@ -1,4 +1,5 @@
-// database/migrations/2025_10_20_082400_update_vw_sesion_ventas.php
+<?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 

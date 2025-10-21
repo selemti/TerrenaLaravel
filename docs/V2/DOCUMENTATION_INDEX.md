@@ -44,8 +44,8 @@ docs/
 
 | Archivo / Carpeta                                     | Estado | Acción recomendada | Destino sugerido |
 |-------------------------------------------------------|--------|--------------------|------------------|
-| `docs/PROJECT_OVERVIEW.md`                            | ✅ Vigente | Mover/renombrar como `01_General/vision.md` | `docs/V2/01_General/` |
-| `docs/DATA_DICTIONARY-2025-10-17.md`                  | ⚠ Mixto (vigente pero desordenado) | Curar y dividir por esquema (`schema_public`, `schema_selemti`) | `docs/V2/02_Database/` |
+| `docs/V2/01_General/vision.md`                        | ✅ Migrado | Revisar y ampliar con roadmap actual | `docs/V2/01_General/` |
+| `docs/V2/02_Database/schema_public.md` y `docs/V2/02_Database/schema_selemti.md` | ⚠ Parcial | Completar consolidación del data dictionary original (agregar tablas pendientes, referencias a scripts) | `docs/V2/02_Database/` |
 | `docs/DOC_ERD-FULL-20251017-081101.md`                | ✅ | Referenciar en `schema_public.md` | `docs/V2/02_Database/` |
 | `docs/DOC_GENERAL-20251017-0146.md`                   | ⚠ Obsoleto parcial | Extraer secciones útiles (auditoría) y amalgamar en `PROJECT_STATUS.md` | `legacy/` |
 | `docs/DOC_RUTAS_Y_CASOS_DE_USO-*.md`                  | ⚠ Duplicados | Consolidar en `03_Backend/routes_web.md` y `routes_api.md` | `docs/V2/03_Backend/` |

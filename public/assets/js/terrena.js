@@ -57,11 +57,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // ======================= Datos reales (API) =======================
 window.Terrena = window.Terrena || {};
 window.Terrena.initDashboardCharts = async function (range) {
-  const base = (window.__BASE__ || '') + '/api/reports';
-  const today = new Date().toISOString().slice(0, 10);
-  const desde = range?.desde || today;
-  const hasta = range?.hasta || desde;
+  const baseReports = (window.__BASE__ || '') + '/api/reports';
+  const baseCaja = (window.__BASE__ || '') + '/api/caja';
+  const todayIso = toISODate(new Date());
+  const desde = toISODateOnly(range?.desde || todayIso);
+  const hasta = toISODateOnly(range?.hasta || desde);
   const rangeParams = { desde, hasta };
+  const trendDesde = toISODateOnly(subtractDays(hasta, 6));
+  const trendParams = { desde: trendDesde, hasta };
 
   const buildQuery = (params = {}) => {
     const usp = new URLSearchParams();
@@ -74,7 +77,7 @@ window.Terrena.initDashboardCharts = async function (range) {
   };
 
   const fetchReport = async (path) => {
-    const res = await fetch(base + path, { headers: { Accept: 'application/json' } });
+    const res = await fetch(baseReports + path, { headers: { Accept: 'application/json' } });
     if (!res.ok) {
       const err = new Error(`GET ${path} → ${res.status}`);
       err.status = res.status;
@@ -89,9 +92,27 @@ window.Terrena.initDashboardCharts = async function (range) {
     return payload;
   };
 
+  const fetchCajaStatus = async (date) => {
+    const query = buildQuery({ date: toISODateOnly(date) });
+    const res = await fetch(baseCaja + `/cajas${query}`, { headers: { Accept: 'application/json' } });
+    if (!res.ok) {
+      const err = new Error(`GET /caja/cajas → ${res.status}`);
+      err.status = res.status;
+      throw err;
+    }
+    const payload = await res.json().catch(() => null);
+    if (!payload || payload.ok === false) {
+      const err = new Error(payload?.error || 'Error al cargar estatus de cajas');
+      err.payload = payload;
+      throw err;
+    }
+    return payload;
+  };
+
   try {
     const [
       kpisSucursal,
+      kpisTerminal,
       ventasDia,
       ventasFamilia,
       ventasHora,
@@ -99,35 +120,49 @@ window.Terrena.initDashboardCharts = async function (range) {
       ticketPromedio,
       itemsResumen,
       formasPago,
-      alertasAnomalias
+      alertasAnomalias,
+      cajasStatus,
+      ordenesRecientes
     ] = await Promise.all([
       fetchReport(`/kpis/sucursal${buildQuery(rangeParams)}`),
-      fetchReport(`/ventas/dia${buildQuery(rangeParams)}`),
+      fetchReport(`/kpis/terminal${buildQuery(rangeParams)}`),
+      fetchReport(`/ventas/dia${buildQuery(trendParams)}`),
       fetchReport(`/ventas/familia${buildQuery(rangeParams)}`),
       fetchReport(`/ventas/hora${buildQuery(rangeParams)}`),
       fetchReport(`/ventas/top${buildQuery({ ...rangeParams, limit: 5 })}`),
       fetchReport(`/ticket/promedio${buildQuery(rangeParams)}`),
       fetchReport(`/ventas/items_resumen${buildQuery(rangeParams)}`),
       fetchReport(`/ventas/formas${buildQuery(rangeParams)}`),
-      fetchReport(`/anomalias${buildQuery({ limit: 6 })}`)
+      fetchReport(`/anomalias${buildQuery({ limit: 6 })}`),
+      fetchCajaStatus(hasta),
+      fetchReport(`/ventas/ordenes_recientes${buildQuery({ ...rangeParams, limit: 10 })}`)
     ]);
 
-    const kpiRows = kpisSucursal.data || [];
-    const totalVentas = kpiRows.reduce((sum, row) => {
+    const kpiRows = Array.isArray(kpisSucursal.data) ? kpisSucursal.data : [];
+    const terminalRows = Array.isArray(kpisTerminal.data) ? kpisTerminal.data : [];
+    const cajaRows = Array.isArray(cajasStatus.terminals) ? cajasStatus.terminals : [];
+    const branchLookup = buildBranchLookup(cajaRows);
+    const totalsSource = kpiRows.length ? kpiRows : terminalRows;
+
+    const totals = totalsSource.reduce((acc, row) => {
       const efectivo = Number(row.sistema_efectivo || 0);
       const noEfectivo = Number(row.sistema_no_efectivo || 0);
-      return sum + efectivo + noEfectivo;
-    }, 0);
+      acc.venta += efectivo + noEfectivo;
+      acc.sesiones += Number(row.sesiones || 0);
+      return acc;
+    }, { venta: 0, sesiones: 0 });
+
+    const totalVentas = totals.venta;
 
     setText('kpi-sales-today', money(totalVentas));
     setText('kpi-avg-ticket', money(Number(ticketPromedio.ticket_promedio || 0)));
-    setText('kpi-items-sold', Number(itemsResumen.unidades || 0).toLocaleString('es-MX'));
+    setText('kpi-items-sold', Number(itemsResumen.unidades ?? 0).toLocaleString('es-MX'));
 
     const topProducts = aggregateTopProducts(ventasTop.data || []);
     const bestProduct = topProducts[0];
     if (bestProduct) {
       setText('kpi-star-product', bestProduct.descripcion || bestProduct.plu || '—');
-      setText('kpi-star-sales', money(Number(bestProduct.venta_total || 0)));
+      setText('kpi-star-sales', `${money(Number(bestProduct.venta_total || 0))} · ${formatUnits(bestProduct.unidades)}`);
     } else {
       setText('kpi-star-product', '—');
       setText('kpi-star-sales', '—');
@@ -137,13 +172,14 @@ window.Terrena.initDashboardCharts = async function (range) {
     setText('kpi-alerts', alerts.length.toLocaleString('es-MX'));
 
     renderHeaderAlerts(alerts);
-    renderKpiRegisters(kpiRows, { fechaObjetivo: hasta });
+    renderKpiRegisters(kpiRows, terminalRows, cajaRows, { fechaObjetivo: hasta, branchLookup, fallbackLatest: false });
 
-    renderSalesTrendChart(ventasDia.data || []);
-    renderSalesByHourChart(ventasHora.data || []);
-    renderBranchPaymentsChart(ventasFamilia.data || []);
+    renderSalesTrendChart(ventasDia.data || [], { desde: trendDesde, hasta });
+    renderSalesByHourChart(ventasHora.data || [], { startHour: 7, endHour: 19 });
+    renderBranchPaymentsChart(ventasFamilia.data || [], { branchLookup });
     renderTopProductsChart(topProducts);
     renderPaymentChart(formasPago.data || []);
+    renderOrders(ordenesRecientes.data || []);
   } catch (error) {
     console.error('Error cargando dashboard', error);
     toast('No fue posible obtener los datos del dashboard.', 'danger');
@@ -153,8 +189,9 @@ window.Terrena.initDashboardCharts = async function (range) {
     setText('kpi-star-product', '—');
     setText('kpi-star-sales', '—');
     setText('kpi-alerts', '0');
-    renderKpiRegisters([]);
     renderHeaderAlerts([]);
+    renderKpiRegisters([], [], []);
+    renderOrders([]);
     ['salesTrendChart', 'salesByHourChart', 'branchPaymentsChart', 'topProductsChart', 'paymentChart'].forEach(destroyChart);
   }
 };
@@ -183,8 +220,11 @@ function aggregateTopProducts(rows) {
       venta_total: 0,
       unidades: 0
     };
-    current.venta_total += Number(row.venta_total || 0);
-    current.unidades += Number(row.unidades || 0);
+    current.venta_total += Number(row.venta_total || row.total || 0);
+    current.unidades += Number(row.unidades ?? row.qty ?? row.cantidad ?? 0);
+    if (!current.descripcion && row.descripcion) {
+      current.descripcion = row.descripcion;
+    }
     map.set(key, current);
   });
   return Array.from(map.values())
@@ -192,16 +232,33 @@ function aggregateTopProducts(rows) {
     .slice(0, 5);
 }
 
-function renderSalesTrendChart(rows) {
+function renderSalesTrendChart(rows, opts = {}) {
   if (typeof Chart === 'undefined') return;
   const canvas = document.getElementById('salesTrendChart');
   if (!canvas) return;
 
-  const sorted = Array.isArray(rows)
-    ? rows.filter(r => r && r.fecha).sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
-    : [];
-  const labels = sorted.map(r => formatDateLabel(r.fecha));
-  const data = sorted.map(r => Number(r.venta_total || 0));
+  const list = Array.isArray(rows) ? rows.filter(r => r && r.fecha) : [];
+  const totalsByDate = new Map();
+  list.forEach((row) => {
+    const iso = toISODateOnly(row.fecha);
+    totalsByDate.set(iso, Number(row.venta_total || 0));
+  });
+
+  const startDate = parseISODate(opts.desde) || parseISODate(list[0]?.fecha);
+  const endDate = parseISODate(opts.hasta) || startDate;
+  const labels = [];
+  const data = [];
+
+  if (startDate && endDate) {
+    for (let cursor = new Date(startDate); cursor <= endDate; cursor.setDate(cursor.getDate() + 1)) {
+      const iso = toISODate(cursor);
+      labels.push(formatDateLabel(iso));
+      data.push(Number(totalsByDate.get(iso) || 0));
+    }
+  } else {
+    labels.push('—');
+    data.push(0);
+  }
 
   destroyChart(canvas);
   const chartLabels = labels.length ? labels : ['—'];
@@ -233,21 +290,28 @@ function renderSalesTrendChart(rows) {
   });
 }
 
-function renderSalesByHourChart(rows) {
+function renderSalesByHourChart(rows, opts = {}) {
   if (typeof Chart === 'undefined') return;
   const canvas = document.getElementById('salesByHourChart');
   if (!canvas) return;
 
   const aggregated = new Map();
   (Array.isArray(rows) ? rows : []).forEach((row) => {
-    if (!row || !row.hora) return;
-    const key = row.hora;
-    aggregated.set(key, (aggregated.get(key) || 0) + Number(row.venta_total || 0));
+    const date = parseISODateTime(row.hora);
+    if (!date) return;
+    const hour = date.getHours();
+    aggregated.set(hour, (aggregated.get(hour) || 0) + Number(row.venta_total || 0));
   });
 
-  const entries = Array.from(aggregated.entries()).sort((a, b) => new Date(a[0]) - new Date(b[0]));
-  const labels = entries.map(([hour]) => formatHourLabel(hour));
-  const data = entries.map(([, total]) => total);
+  const startHour = Number.isFinite(opts.startHour) ? Number(opts.startHour) : 0;
+  const endHour = Number.isFinite(opts.endHour) ? Number(opts.endHour) : 23;
+
+  const labels = [];
+  const data = [];
+  for (let hour = startHour; hour <= endHour; hour += 1) {
+    labels.push(formatHourLabelFromHour(hour));
+    data.push(Number(aggregated.get(hour) || 0));
+  }
 
   destroyChart(canvas);
   const chartLabels = labels.length ? labels : ['—'];
@@ -275,18 +339,19 @@ function renderSalesByHourChart(rows) {
   });
 }
 
-function renderBranchPaymentsChart(rows) {
+function renderBranchPaymentsChart(rows, opts = {}) {
   if (typeof Chart === 'undefined') return;
   const canvas = document.getElementById('branchPaymentsChart');
   if (!canvas) return;
 
+  const branchLookup = opts.branchLookup instanceof Map ? opts.branchLookup : new Map();
   const branchesSet = new Set();
   const familiesSet = new Set();
   const lookup = new Map();
 
   (Array.isArray(rows) ? rows : []).forEach((row) => {
     if (!row) return;
-    const branch = row.sucursal_id || row.sucursal || 'Sin sucursal';
+    const branch = resolveBranchName(row, branchLookup);
     const family = row.familia || 'OTROS';
     const key = `${branch}::${family}`;
     branchesSet.add(branch);
@@ -352,13 +417,77 @@ function renderTopProductsChart(rows) {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label(context) {
+              const row = list[context.dataIndex] || {};
+              const venta = money(context.parsed.x ?? context.parsed.y ?? 0);
+              const unidades = Number(row.unidades || 0).toLocaleString('es-MX');
+              return `Venta: ${venta} · Unidades: ${unidades}`;
+            }
+          }
+        }
+      },
       scales: {
         x: { beginAtZero: true },
         y: { grid: { display: false } }
       }
     }
   });
+}
+
+const PAYMENT_LABEL_MAP = {
+  CASH: 'Efectivo',
+  CASH_MXN: 'Efectivo',
+  CASH_MXP: 'Efectivo',
+  CASH_MXN_POS: 'Efectivo',
+  CASH_USD: 'Efectivo USD',
+  DEBIT: 'Tarjeta de débito',
+  DEBIT_CARD: 'Tarjeta de débito',
+  DEBITCARD: 'Tarjeta de débito',
+  CREDIT: 'Tarjeta de crédito',
+  CREDIT_CARD: 'Tarjeta de crédito',
+  CREDITCARD: 'Tarjeta de crédito',
+  CREDIT_SALE: 'Crédito',
+  CREDIT_CLIENT: 'Crédito',
+  TRANSFER: 'Transferencia',
+  TRANSFERENCIA: 'Transferencia',
+  BANK_TRANSFER: 'Transferencia',
+  SPEI: 'Transferencia',
+  CHECK: 'Cheque',
+  CHEQUE: 'Cheque',
+  VOUCHER: 'Vales',
+  VALE: 'Vales',
+  COUPON: 'Cupón',
+  GIFT_CARD: 'Tarjeta de regalo',
+  COURTESY: 'Cortesía',
+  MERCADOPAGO: 'Mercado Pago',
+  MPOS: 'TPV',
+  OTHER: 'Otros',
+  UNKNOWN: 'Otros',
+  PENDING: 'Pendiente'
+};
+
+function formatPaymentLabel(code) {
+  if (!code) return 'Otros';
+  const raw = code.toString().trim();
+  const normalized = raw.toUpperCase().replace(/[^A-Z0-9]/g, '_');
+  if (PAYMENT_LABEL_MAP[normalized]) {
+    return PAYMENT_LABEL_MAP[normalized];
+  }
+  if (normalized.startsWith('CASH')) return 'Efectivo';
+  if (normalized.includes('DEBIT')) return 'Tarjeta de débito';
+  if (normalized.includes('CREDIT')) return 'Tarjeta de crédito';
+  if (normalized.includes('TRANSFER')) return 'Transferencia';
+  if (normalized.includes('VOUCHER') || normalized.includes('VALE')) return 'Vales';
+  if (normalized.includes('CHEQ')) return 'Cheque';
+  const beautified = raw
+    .replace(/[_\-]+/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  return beautified || 'Otros';
 }
 
 function renderPaymentChart(rows) {
@@ -374,11 +503,12 @@ function renderPaymentChart(rows) {
   destroyChart(canvas);
   const chartLabels = labels.length ? labels : ['—'];
   const chartData = data.length ? data : [0];
+  const displayLabels = chartLabels.map(formatPaymentLabel);
 
   canvas._chart = new Chart(canvas.getContext('2d'), {
     type: 'doughnut',
     data: {
-      labels: chartLabels,
+      labels: displayLabels,
       datasets: [{
         data: chartData,
         backgroundColor: chartLabels.map((_, idx) => palette[idx % palette.length])
@@ -387,9 +517,34 @@ function renderPaymentChart(rows) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: 'bottom' } }
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          callbacks: {
+            label(context) {
+              const value = Number(context.raw || 0);
+              const texto = context.label || '';
+              return `${texto}: ${money(value)}`;
+            }
+          }
+        }
+      }
     }
   });
+}
+
+function formatUnits(units) {
+  const value = Number(units || 0);
+  const formatted = value.toLocaleString('es-MX');
+  return `${formatted} ${value === 1 ? 'ud' : 'uds'}`;
+}
+
+function subtractDays(value, days) {
+  const base = parseISODate(value);
+  if (!base) return new Date();
+  const offset = Number(days) || 0;
+  base.setDate(base.getDate() - Math.max(0, offset));
+  return base;
 }
 
 function formatDateLabel(value) {
@@ -402,6 +557,11 @@ function formatHourLabel(value) {
   const date = value ? new Date(value) : null;
   if (!date || Number.isNaN(date.getTime())) return value || '—';
   return date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatHourLabelFromHour(hour) {
+  const h = String(hour).padStart(2, '0');
+  return `${h}:00`;
 }
 
 function toISODateOnly(value) {
@@ -421,6 +581,104 @@ function escapeHtml(value) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function parseISODate(value) {
+  if (!value) return null;
+  if (value instanceof Date) {
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
+  const str = String(value);
+  const parts = str.split('-');
+  if (parts.length === 3) {
+    const year = Number(parts[0]);
+    const month = Number(parts[1]) - 1;
+    const day = Number(parts[2]);
+    if (Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day)) {
+      return new Date(year, month, day);
+    }
+  }
+  const d = new Date(str);
+  if (Number.isNaN(d.getTime())) return null;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function parseISODateTime(value) {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return d;
+}
+
+function formatDateShort(value) {
+  const date = parseISODate(value);
+  if (!date) return '';
+  return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
+}
+
+function resolveRowsForDate(rows, targetIso, opts = {}) {
+  const data = Array.isArray(rows) ? rows.filter(Boolean) : [];
+  if (!targetIso) return data;
+  const prop = opts.prop || 'fecha';
+  const fallbackLatest = Boolean(opts.fallbackLatest);
+  const matches = data.filter(r => toISODateOnly(r[prop] ?? r.fecha ?? r.hora) === targetIso);
+  if (matches.length || !fallbackLatest) return matches;
+  const latestIso = data
+    .map(r => toISODateOnly(r[prop] ?? r.fecha ?? r.hora))
+    .filter(Boolean)
+    .sort()
+    .pop();
+  return latestIso ? data.filter(r => toISODateOnly(r[prop] ?? r.fecha ?? r.hora) === latestIso) : matches;
+}
+
+function buildBranchLookup(rows = []) {
+  const map = new Map();
+  rows.forEach((row) => {
+    if (!row) return;
+    const location = (row.location || row.branch || row.sucursal || row.name || '').trim();
+    const primary = location || (row.name || '').trim();
+    if (primary) {
+      map.set(primary, primary);
+    }
+    if (row.name) {
+      map.set(row.name, primary || row.name);
+    }
+    if (row.sucursal) {
+      map.set(row.sucursal, primary || row.sucursal);
+    }
+    if (row.sucursal_id) {
+      map.set(String(row.sucursal_id), primary || String(row.sucursal_id));
+    }
+    if (row.branch_id) {
+      map.set(String(row.branch_id), primary || String(row.branch_id));
+    }
+    if (row.id != null) {
+      map.set(String(row.id), primary || `Terminal ${row.id}`);
+    }
+  });
+  return map;
+}
+
+function resolveBranchName(row, lookup) {
+  if (!row) return 'Sin sucursal';
+  const candidates = [
+    row.sucursal_nombre,
+    row.location,
+    row.sucursal,
+    row.sucursal_id,
+    row.branch,
+    row.branch_id
+  ].map(v => (v == null ? '' : String(v).trim())).filter(Boolean);
+  for (const candidate of candidates) {
+    if (lookup.has(candidate)) {
+      return lookup.get(candidate);
+    }
+  }
+  if (row.terminal_id != null) {
+    const key = String(row.terminal_id);
+    if (lookup.has(key)) return lookup.get(key);
+  }
+  return candidates[0] || 'Sin sucursal';
 }
 
 // Bind filtros por si el handler original no llama a BD
@@ -450,25 +708,30 @@ function setupFilters(){
   if (!s || !e) return;
 
   const today = new Date();
-  const weekAgo = new Date(today); weekAgo.setDate(today.getDate() - 7);
-
-  if (!s.value) s.value = toISODate(weekAgo);
+  if (!s.value) s.value = toISODate(today);
   if (!e.value) e.value = toISODate(today);
 
-  const triggerRefresh = () => {
-    const desde = s.value || undefined;
-    const hasta = e.value || undefined;
+  const triggerRefresh = (ensureOrder = true) => {
+    let desde = s.value || undefined;
+    let hasta = e.value || undefined;
+    if (ensureOrder && desde && hasta && desde > hasta) {
+      [desde, hasta] = [hasta, desde];
+      s.value = desde;
+      e.value = hasta;
+    }
     if (window.Terrena && typeof Terrena.initDashboardCharts === 'function') {
       Terrena.initDashboardCharts({ desde, hasta });
     }
   };
 
+  s.addEventListener('change', () => triggerRefresh(true));
+  e.addEventListener('change', () => triggerRefresh(true));
   btn?.addEventListener('click', (ev) => {
     ev.preventDefault();
-    triggerRefresh();
+    triggerRefresh(true);
   });
 
-  triggerRefresh();
+  triggerRefresh(false);
 }
 function toISODate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 
@@ -516,61 +779,131 @@ function renderHeaderAlerts(rows = []){
 }
 
 /* =============== KPIs – Estatus de cajas (tabla) =============== */
-function renderKpiRegisters(rows = [], opts = {}){
+function renderKpiRegisters(sucursalRows = [], terminalRows = [], cajaRows = [], opts = {}){
   const tbody = document.getElementById('kpi-registers');
   if (!tbody) return;
 
-  const data = Array.isArray(rows) ? rows.filter(r => r) : [];
-  if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted small">Sin datos en el rango seleccionado</td></tr>';
-    return;
-  }
+  const toArray = (rows) => Array.isArray(rows) ? rows.filter(Boolean) : [];
+  const sucursales = toArray(sucursalRows);
+  const terminales = toArray(terminalRows);
+  const cajas = toArray(cajaRows);
 
-  const targetDate = opts?.fechaObjetivo;
-  let filtered = data;
-  if (targetDate) {
-    const isoTarget = toISODateOnly(targetDate);
-    const matches = data.filter(r => toISODateOnly(r.fecha) === isoTarget);
-    if (matches.length) {
-      filtered = matches;
-    } else {
-      const latest = data.reduce((acc, row) => {
-        if (!acc) return row;
-        return new Date(row.fecha) > new Date(acc.fecha) ? row : acc;
-      }, null);
-      if (latest) {
-        const latestIso = toISODateOnly(latest.fecha);
-        filtered = data.filter(r => toISODateOnly(r.fecha) === latestIso);
-      }
-    }
-  }
+  const targetIso = opts?.fechaObjetivo ? toISODateOnly(opts.fechaObjetivo) : null;
+  const branchLookup = opts.branchLookup instanceof Map ? opts.branchLookup : new Map();
+  const filteredSucursales = resolveRowsForDate(sucursales, targetIso, { fallbackLatest: opts.fallbackLatest });
+  const filteredTerminales = resolveRowsForDate(terminales, targetIso, { fallbackLatest: opts.fallbackLatest });
 
-  const lookup = new Map();
-  filtered.forEach((row) => {
-    const branch = row.sucursal_id || row.sucursal || 'Sin sucursal';
-    const current = lookup.get(branch) || { sucursal: branch, sesiones: 0, vendido: 0 };
-    current.sesiones += Number(row.sesiones || 0);
+  const ventasPorSucursal = new Map();
+  filteredSucursales.forEach((row) => {
+    const key = resolveBranchName(row, branchLookup);
+    const current = ventasPorSucursal.get(key) || { vendido: 0, sesiones: 0 };
     current.vendido += Number(row.sistema_efectivo || 0) + Number(row.sistema_no_efectivo || 0);
-    lookup.set(branch, current);
+    current.sesiones += Number(row.sesiones || 0);
+    ventasPorSucursal.set(key, current);
   });
 
-  const items = Array.from(lookup.values()).sort((a, b) => b.vendido - a.vendido);
-  if (!items.length) {
+  const ventasPorTerminal = new Map();
+  filteredTerminales.forEach((row) => {
+    const key = row.terminal_id || row.terminal || null;
+    if (key == null) return;
+    const current = ventasPorTerminal.get(key) || { vendido: 0, sesiones: 0 };
+    current.vendido += Number(row.sistema_efectivo || 0) + Number(row.sistema_no_efectivo || 0);
+    current.sesiones += Number(row.sesiones || 0);
+    ventasPorTerminal.set(key, current);
+  });
+
+  const rowsToRender = [];
+  const usedTerminals = new Set();
+  const fallbackSucursal = ventasPorSucursal.size ? ventasPorSucursal.keys().next().value : 'Sin sucursal';
+
+  cajas.forEach((row) => {
+    const terminalKey = row.id ?? row.terminal_id ?? row.terminal ?? null;
+    const terminalInfo = terminalKey != null ? ventasPorTerminal.get(terminalKey) : null;
+    const sucursalNombre = resolveBranchName({ ...row, sucursal: row.location || row.branch }, branchLookup) || fallbackSucursal || 'Sin sucursal';
+    const sucursalInfo = ventasPorSucursal.get(sucursalNombre) || ventasPorSucursal.get('Sin sucursal') || { vendido: 0, sesiones: 0 };
+    const vendido = terminalInfo?.vendido ?? sucursalInfo.vendido ?? 0;
+    const sesiones = terminalInfo?.sesiones ?? sucursalInfo.sesiones ?? 0;
+    rowsToRender.push({
+      key: terminalKey ?? sucursalNombre,
+      sucursal: sucursalNombre || 'Sin sucursal',
+      terminal: row.name || (terminalKey != null ? `Terminal ${terminalKey}` : '—'),
+      vendido,
+      sesiones,
+      estadoRow: row
+    });
+    if (terminalKey != null) usedTerminals.add(terminalKey);
+  });
+
+  ventasPorTerminal.forEach((info, terminalKey) => {
+    if (usedTerminals.has(terminalKey)) return;
+    rowsToRender.push({
+      key: terminalKey,
+      sucursal: '—',
+      terminal: `Terminal ${terminalKey}`,
+      vendido: info.vendido,
+      sesiones: info.sesiones,
+      estadoRow: null
+    });
+  });
+
+  if (!rowsToRender.length && ventasPorSucursal.size) {
+    ventasPorSucursal.forEach((info, sucursal) => {
+      rowsToRender.push({
+        key: sucursal,
+        sucursal,
+        terminal: '—',
+        vendido: info.vendido,
+        sesiones: info.sesiones,
+        estadoRow: null
+      });
+    });
+  }
+
+  if (!rowsToRender.length) {
     tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted small">Sin datos en el rango seleccionado</td></tr>';
     return;
   }
 
-  tbody.innerHTML = items.map(item => {
-    const abierto = item.sesiones > 0;
-    return `
+  rowsToRender.sort((a, b) => b.vendido - a.vendido);
+
+  tbody.innerHTML = rowsToRender.map(item => `
       <tr>
-        <td>${escapeHtml(item.sucursal)}</td>
-        <td>${abierto
-          ? '<span class="badge text-bg-success">Abierta</span>'
-          : '<span class="badge text-bg-secondary">Cerrada</span>'}</td>
+        <td>
+          ${escapeHtml(item.sucursal || 'Sin sucursal')}
+          <div class="text-muted small">${escapeHtml(item.terminal || '—')}</div>
+        </td>
+        <td>${buildCajaStatusBadge(item.estadoRow, item.sesiones)}</td>
         <td class="text-end">${money(Number(item.vendido || 0))}</td>
-      </tr>`;
-  }).join('');
+      </tr>`).join('');
+}
+
+function buildCajaStatusBadge(estadoRow, sesiones = 0) {
+  const defaultClosed = '<span class="badge text-bg-secondary">Cerrada</span>';
+  if (!estadoRow && !sesiones) return defaultClosed;
+
+  const normalized = (estadoRow?.estado || '').toString().trim().toUpperCase();
+  const activa = Boolean(estadoRow?.activa);
+  const badge = (text, cls) => `<span class="badge ${cls}">${escapeHtml(text)}</span>`;
+
+  if (normalized === 'ABIERTA' || activa || sesiones > 0) {
+    return badge('Abierta', 'text-bg-success');
+  }
+  if (normalized === 'REGULARIZAR') {
+    return badge('Regularizar', 'text-bg-danger');
+  }
+  if (normalized === 'VALIDACION' || normalized === 'EN_REVISION') {
+    return badge('En revisión', 'text-bg-warning');
+  }
+  if (normalized === 'PRECORTE_PENDIENTE') {
+    return badge('Precorte pendiente', 'text-bg-warning');
+  }
+  if (normalized === 'CONCILIADA') {
+    return badge('Conciliada', 'text-bg-primary');
+  }
+  if (normalized === 'DISPONIBLE') {
+    return badge('Disponible', 'text-bg-info');
+  }
+  return defaultClosed;
 }
 
 /* =============== Actividad reciente =============== */
@@ -597,7 +930,18 @@ function renderOrders(rows = []){
     return;
   }
   tb.innerHTML = rows.map(r => `
-    <tr><td>${escapeHtml(r.ticket)}</td><td>${escapeHtml(r.suc)}</td><td>${escapeHtml(r.hora)}</td><td class="text-end">${money(Number(r.total || 0))}</td></tr>
+    <tr>
+      <td>${escapeHtml(r.ticket)}</td>
+      <td>
+        ${escapeHtml(r.sucursal || 'Sin sucursal')}
+        <div class="text-muted small">${escapeHtml(r.terminal || '—')}</div>
+      </td>
+      <td>
+        ${escapeHtml(r.hora || '—')}
+        <div class="text-muted small">${escapeHtml(formatDateShort(r.fecha) || '')}</div>
+      </td>
+      <td class="text-end">${money(Number(r.total || 0))}</td>
+    </tr>
   `).join('');
 }
 

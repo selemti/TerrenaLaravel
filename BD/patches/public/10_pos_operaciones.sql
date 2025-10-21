@@ -169,6 +169,22 @@ BEGIN
 END;
 $$;
 
+  CREATE INDEX IF NOT EXISTS idx_transactions_time
+      ON public.transactions (transaction_time);
+
+  -- Si la tabla es muy grande, puedes usar un índice BRIN en vez del BTREE:
+  -- CREATE INDEX IF NOT EXISTS idx_transactions_time_brin
+  --     ON public.transactions USING brin (transaction_time);
+
+  CREATE INDEX IF NOT EXISTS idx_ticket_closing_date
+      ON public.ticket (closing_date);
+
+  CREATE INDEX IF NOT EXISTS idx_ticket_item_ticket
+      ON public.ticket_item (ticket_id);
+
+  CREATE INDEX IF NOT EXISTS idx_pos_map_plu
+      ON selemti.pos_map (plu);
+
 
 DROP TRIGGER IF EXISTS trg_assign_daily_folio ON public.ticket;
 CREATE TRIGGER trg_assign_daily_folio

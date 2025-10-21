@@ -125,7 +125,7 @@ Este documento resume la arquitectura, dependencias y flujos principales de la a
 - Migración incremental `2025_10_19_000001_update_cat_unidades_structure` normaliza `cat_unidades` en entornos existentes.
 - Comando de verificación: `php artisan catalogs:verify-tables --details`
 
-Consulta el diccionario de datos ampliado en `docs/DATA_DICTIONARY-2025-10-17.md` y el ERD en `docs/DOC_ERD-FULL-20251017-081101.md`.
+Consulta los diccionarios actualizados en `docs/V2/02_Database/schema_public.md` y `docs/V2/02_Database/schema_selemti.md`, y el ERD en `docs/DOC_ERD-FULL-20251017-081101.md`.
 
 ---
 
@@ -174,4 +174,3 @@ Revisa también `Documentación_full.zip` para paquetes completos por dominio.
 ---
 
 _Última actualización: octubre 2025._
-

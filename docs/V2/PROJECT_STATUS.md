@@ -101,7 +101,7 @@ _Actualizado: octubre 2025_
 ## 8. Documentación Existente
 
 - `docs/` (en repo): Auditorías, diccionarios de datos, análisis de gaps, plan de ataque, ERD, wizard de caja. Muchos se generaron en fechas cercanas (17 oct 2025) y pueden contener duplicados/inconsistencias.
-- `docs/DATA_DICTIONARY-2025-10-17.md`: referencia principal de entidades `public` y `selemti`.
+- `docs/V2/02_Database/schema_public.md` y `docs/V2/02_Database/schema_selemti.md`: referencia principal de entidades `public` y `selemti`.
 - `docs/DOC_ERD-FULL-20251017-081101.md`: diagrama entidad-relación consolidado.
 - `D:\Tavo\2025\UX\Inventarios` / `Cortes` / `00. Recetas`: Reúnen especificaciones funcionales, archivos Excel, plantillas CSV, scripts SQL y documentación contractual. Deben clasificarse y versionarse (Git o SharePoint) para evitar divergencias.
 - Repos zip (`Documentación_full.zip`, `Inventarios_Old.zip`, etc.) requieren curaduría o migración a esta carpeta `docs/V2/` una vez validados.
@@ -178,7 +178,7 @@ Recomendación: migrar los documentos vigentes a la carpeta `docs/V2/` y registr
 
 ## 13. Referencias Clave
 
-- **Documentación Local**: `docs/PROJECT_OVERVIEW.md`, `docs/DATA_DICTIONARY-2025-10-17.md`, `docs/DOC_ERD-FULL-20251017-081101.md`, `docs/WIZARD_CORTE_CAJA-20251017-0258.md`.  
+- **Documentación Local**: `docs/V2/01_General/vision.md`, `docs/V2/02_Database/schema_public.md`, `docs/V2/02_Database/schema_selemti.md`, `docs/DOC_ERD-FULL-20251017-081101.md`, `docs/WIZARD_CORTE_CAJA-20251017-0258.md`.  
 - **Scripts SQL**: `BD/DEPLOY_CONSOLIDADO_FULL_PG95-v4-FIXED.sql`, `BD/post_deploy_verify_v4.sql`, `BD/patch_*`.  
 - **Material UX / Funcional**: `D:\Tavo\2025\UX\Inventarios\*.xlsx`, `...Cortes\*.php/.sql`, `...00. Recetas\Documentación V1\*`.  
 - **Servicios**: `App\Services\Inventory\ReceptionService`, `App\Http\Controllers\Api\Caja\*`.  

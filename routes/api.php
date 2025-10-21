@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\Unidades\ConversionController;
 use App\Http\Controllers\Api\Inventory\ItemController;
 use App\Http\Controllers\Api\Inventory\StockController;
 use App\Http\Controllers\Api\Inventory\VendorController;
+use App\Http\Controllers\Api\CatalogsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +35,7 @@ Route::prefix('reports')->group(function () {
     Route::get('/ventas/top',           [ReportsController::class, 'ventasTopProductos']);
     Route::get('/ventas/dia',           [ReportsController::class, 'ventasDiarias']);
     Route::get('/ventas/items_resumen', [ReportsController::class, 'ventasItemsResumen']);
+    Route::get('/ventas/ordenes_recientes', [ReportsController::class, 'ordenesRecientes']);
     Route::get('/ventas/formas',        [ReportsController::class, 'formasPago']);
     Route::get('/ticket/promedio',      [ReportsController::class, 'ticketPromedio']);
     Route::get('/stock/val',            [ReportsController::class, 'stockValorizado']);
@@ -136,6 +138,16 @@ Route::prefix('unidades')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('inventory')->group(function () {
+    // KPIs Dashboard
+    Route::get('/kpis', [StockController::class, 'kpis']);
+
+    // Stock endpoints
+    Route::get('/stock', [StockController::class, 'stockByItem']);
+    Route::get('/stock/list', [StockController::class, 'stockList']);
+
+    // Movements
+    Route::post('/movements', [StockController::class, 'createMovement']);
+
     // Items
     Route::prefix('items')->group(function () {
         Route::get('/', [ItemController::class, 'index']);
@@ -143,16 +155,25 @@ Route::prefix('inventory')->group(function () {
         Route::post('/', [ItemController::class, 'store']);
         Route::put('/{id}', [ItemController::class, 'update']);
         Route::delete('/{id}', [ItemController::class, 'destroy']);
-        
+
         // Relacionados con items
         Route::get('/{id}/kardex', [StockController::class, 'kardex']);
         Route::get('/{id}/batches', [StockController::class, 'batches']);
         Route::get('/{id}/vendors', [VendorController::class, 'byItem']);
         Route::post('/{id}/vendors', [VendorController::class, 'attach']);
     });
-    
-    // Stock
-    Route::get('/stock', [StockController::class, 'stockByItem']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| MÓDULO: CATÁLOGOS
+|--------------------------------------------------------------------------
+*/
+Route::prefix('catalogs')->group(function () {
+    Route::get('/categories', [CatalogsController::class, 'categories']);
+    Route::get('/almacenes', [CatalogsController::class, 'almacenes']);
+    Route::get('/sucursales', [CatalogsController::class, 'sucursales']);
+    Route::get('/movement-types', [CatalogsController::class, 'movementTypes']);
 });
 
 /*

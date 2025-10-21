@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Sucursal extends Model
 {
-    protected $table = 'cat_sucursales';
+    protected $connection = 'pgsql';
+    protected $table = 'selemti.cat_sucursales';
 
     protected $fillable = [
         'clave',

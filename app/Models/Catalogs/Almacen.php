@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Almacen extends Model
 {
-    protected $table = 'cat_almacenes';
+    protected $connection = 'pgsql';
+    protected $table = 'selemti.cat_almacenes';
 
     protected $fillable = [
         'clave',

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class MovimientoInventario extends Model
 {
+    protected $connection = 'pgsql';
     protected $table = 'selemti.mov_inv';
     protected $primaryKey = 'id';
     // public $incrementing = true; // BIGSERIAL

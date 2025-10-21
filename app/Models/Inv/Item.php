@@ -5,7 +5,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Item extends Model
 {
-    protected $table = 'items';
+    protected $connection = 'pgsql';
+    protected $table = 'selemti.items';
     protected $guarded = [];
     protected $primaryKey = 'id';
     public $incrementing = false;

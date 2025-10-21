@@ -24,14 +24,25 @@ class ItemController extends Controller
         if ($r->filled('activo'))       $q->where('activo', filter_var($r->get('activo'), FILTER_VALIDATE_BOOL));
         if ($r->filled('categoria_id')) $q->where('categoria_id', $r->get('categoria_id'));
 
-        return response()->json($q->orderBy('nombre')->paginate($r->integer('per_page',25)));
+        $items = $q->orderBy('nombre')->paginate($r->integer('per_page',25));
+
+        return response()->json([
+            'ok' => true,
+            'data' => $items,
+            'timestamp' => now()->toIso8601String()
+        ]);
     }
 
     // GET /api/inventory/items/{id}
     public function show($id)
     {
         $item = Item::with(['uom','uomCompra','uomSalida'])->findOrFail($id);
-        return response()->json($item);
+
+        return response()->json([
+            'ok' => true,
+            'data' => $item,
+            'timestamp' => now()->toIso8601String()
+        ]);
     }
 
     // POST /api/inventory/items
@@ -49,7 +60,13 @@ class ItemController extends Controller
         ]);
 
         $rec = Item::create($data + ['activo' => $data['activo'] ?? true]);
-        return response()->json($rec, 201);
+
+        return response()->json([
+            'ok' => true,
+            'data' => $rec,
+            'message' => 'Item creado exitosamente',
+            'timestamp' => now()->toIso8601String()
+        ], 201);
     }
 
     // PUT /api/inventory/items/{id}
@@ -60,6 +77,29 @@ class ItemController extends Controller
             'nombre','descripcion','categoria_id','unidad_medida_id',
             'unidad_compra_id','unidad_salida_id','activo'
         ]))->save();
-        return response()->json($rec);
+
+        return response()->json([
+            'ok' => true,
+            'data' => $rec,
+            'message' => 'Item actualizado exitosamente',
+            'timestamp' => now()->toIso8601String()
+        ]);
+    }
+
+    // DELETE /api/inventory/items/{id}
+    public function destroy($id)
+    {
+        $item = Item::findOrFail($id);
+
+        // Soft delete - just mark as inactive instead of actually deleting
+        $item->activo = false;
+        $item->save();
+
+        return response()->json([
+            'ok' => true,
+            'data' => ['id' => $id],
+            'message' => 'Item desactivado exitosamente',
+            'timestamp' => now()->toIso8601String()
+        ]);
     }
 }

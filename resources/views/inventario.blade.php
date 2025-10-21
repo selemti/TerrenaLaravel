@@ -11,38 +11,36 @@
   {{-- Filtros --}}
   <div class="card shadow-sm border-0 mb-3">
     <div class="card-body">
-      <form class="row g-2 align-items-end">
+      <form class="row g-2 align-items-end" id="formFiltros">
         <div class="col-12 col-md-4">
           <label class="form-label small">Buscar producto / SKU</label>
-          <input type="text" class="form-control form-control-sm" placeholder="Ej. 'Leche 1.5L' o 'SKU-0001'">
+          <input type="text" id="filterBuscar" class="form-control form-control-sm" placeholder="Ej. 'Leche 1.5L' o 'SKU-0001'">
         </div>
         <div class="col-6 col-md-2">
           <label class="form-label small">Sucursal</label>
-          <select class="form-select form-select-sm">
-            <option>Todas</option>
-            <option>PRINCIPAL</option>
+          <select id="filterSucursal" class="form-select form-select-sm">
+            <option value="">Todas las sucursales</option>
           </select>
         </div>
         <div class="col-6 col-md-2">
           <label class="form-label small">Categoría</label>
-          <select class="form-select form-select-sm">
-            <option>Todas</option>
-            <option>Lácteos</option>
-            <option>Panadería</option>
-            <option>Café</option>
+          <select id="filterCategoria" class="form-select form-select-sm">
+            <option value="">Todas las categorías</option>
           </select>
         </div>
         <div class="col-6 col-md-2">
           <label class="form-label small">Estado</label>
-          <select class="form-select form-select-sm">
-            <option>Todos</option>
-            <option>Con bajo stock</option>
-            <option>Con caducidad próxima</option>
+          <select id="filterEstado" class="form-select form-select-sm">
+            <option value="all">Todos</option>
+            <option value="active">Activos</option>
+            <option value="inactive">Inactivos</option>
+            <option value="low_stock">Bajo stock</option>
+            <option value="expiring">Por caducar</option>
           </select>
         </div>
         <div class="col-6 col-md-2 text-end">
           <div class="d-grid d-md-flex gap-2">
-            <button class="btn btn-sm text-white" style="background:var(--green-dark)" type="button">Filtrar</button>
+            <button id="btnAplicarFiltros" class="btn btn-sm text-white" style="background:var(--green-dark)" type="button">Filtrar</button>
             <button class="btn btn-sm btn-outline-secondary" type="button">Exportar</button>
           </div>
         </div>
@@ -66,7 +64,7 @@
       <div class="card border-0 shadow-sm">
         <div class="card-body">
           <div class="small text-muted">Ítems distintos</div>
-          <div class="h4 m-0">124</div>
+          <div class="h4 m-0" id="kpiTotalItems">0</div>
         </div>
       </div>
     </div>
@@ -74,7 +72,7 @@
       <div class="card border-0 shadow-sm">
         <div class="card-body">
           <div class="small text-muted">Valor inventario</div>
-          <div class="h4 m-0">$ 235,100.00</div>
+          <div class="h4 m-0" id="kpiInventoryValue">$0.00</div>
         </div>
       </div>
     </div>
@@ -82,15 +80,15 @@
       <div class="card border-0 shadow-sm">
         <div class="card-body">
           <div class="small text-muted">Bajo stock</div>
-          <div class="h4 m-0">9</div>
+          <div class="h4 m-0" id="kpiLowStock">0</div>
         </div>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="card border-0 shadow-sm">
         <div class="card-body">
-          <div class="small text-muted">Con caducidad &lt; 15 días</div>
-          <div class="h4 m-0">3</div>
+          <div class="small text-muted">Con caducidad próxima</div>
+          <div class="h4 m-0" id="kpiExpiring">0</div>
         </div>
       </div>
     </div>
@@ -102,10 +100,10 @@
       <span class="badge rounded-pill text-bg-light">Vista: Stock</span>
     </div>
     <div class="d-flex gap-2">
-      <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#mdlKardex">
+      <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#modalKardex">
         Ver Kardex
       </button>
-      <button class="btn btn-sm btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offMov">
+      <button class="btn btn-sm btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMovimiento">
         Movimiento rápido
       </button>
     </div>
@@ -120,65 +118,20 @@
             <tr>
               <th>SKU</th>
               <th>Producto</th>
-              <th>UDM base</th>
+              <th>Categoría</th>
               <th class="text-end">Existencia</th>
-              <th class="text-end">Mín</th>
-              <th class="text-end">Máx</th>
-              <th class="text-end">Costo (base)</th>
-              <th>Sucursal</th>
+              <th>UDM</th>
+              <th class="text-end">Costo</th>
+              <th class="text-end">Valor Total</th>
+              <th>Estado</th>
               <th class="text-end">Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="stockTableBody">
             <tr>
-              <td>SKU-0001</td>
-              <td>Leche entera 1.5L (caja×12)</td>
-              <td>ML</td>
-              <td class="text-end">18,000.00</td>
-              <td class="text-end">5,000</td>
-              <td class="text-end">24,000</td>
-              <td class="text-end">$ 0.0123</td>
-              <td><span class="badge bg-secondary">PRINCIPAL</span></td>
-              <td class="text-end">
-                <div class="btn-group btn-group-sm">
-                  <button class="btn btn-outline-primary" data-bs-toggle="offcanvas" data-bs-target="#offMov">Mover</button>
-                  <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#mdlKardex">Kardex</button>
-                  <button class="btn btn-outline-secondary">Editar</button>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td>SKU-0020</td>
-              <td>Café en grano</td>
-              <td>G</td>
-              <td class="text-end">25,000.00</td>
-              <td class="text-end">5,000</td>
-              <td class="text-end">40,000</td>
-              <td class="text-end">$ 0.3200</td>
-              <td><span class="badge bg-secondary">PRINCIPAL</span></td>
-              <td class="text-end">
-                <div class="btn-group btn-group-sm">
-                  <button class="btn btn-outline-primary" data-bs-toggle="offcanvas" data-bs-target="#offMov">Mover</button>
-                  <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#mdlKardex">Kardex</button>
-                  <button class="btn btn-outline-secondary">Editar</button>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td>SKU-0031</td>
-              <td>Tortilla de maíz (costal 20kg)</td>
-              <td>G</td>
-              <td class="text-end text-danger">2,000.00</td>
-              <td class="text-end">5,000</td>
-              <td class="text-end">20,000</td>
-              <td class="text-end">$ 0.0250</td>
-              <td><span class="badge bg-secondary">PRINCIPAL</span></td>
-              <td class="text-end">
-                <div class="btn-group btn-group-sm">
-                  <button class="btn btn-outline-primary" data-bs-toggle="offcanvas" data-bs-target="#offMov">Mover</button>
-                  <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#mdlKardex">Kardex</button>
-                  <button class="btn btn-outline-secondary">Editar</button>
-                </div>
+              <td colspan="9" class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                Cargando inventario...
               </td>
             </tr>
           </tbody>
@@ -187,101 +140,69 @@
     </div>
 
     {{-- Pie de tabla: paginación --}}
-    <div class="card-footer bg-white d-flex flex-wrap gap-2 justify-content-between align-items-center">
-      <div class="small text-muted">Mostrando 1–15 de 124 items</div>
-      <nav>
-        <ul class="pagination pagination-sm mb-0">
-          <li class="page-item disabled"><a class="page-link">«</a></li>
-          <li class="page-item active"><a class="page-link" href="#">1</a></li>
-          <li class="page-item"><a class="page-link" href="#">2</a></li>
-          <li class="page-item"><a class="page-link" href="#">3</a></li>
-          <li class="page-item"><a class="page-link" href="#">»</a></li>
-        </ul>
-      </nav>
+    <div class="card-footer bg-white">
+      <div id="stockPagination"></div>
     </div>
   </div>
 
   {{-- Offcanvas: Movimiento rápido --}}
-  <div class="offcanvas offcanvas-end" tabindex="-1" id="offMov" style="max-width:420px">
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasMovimiento" style="max-width:420px">
     <div class="offcanvas-header">
       <h5 class="offcanvas-title">Movimiento rápido</h5>
       <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
     <div class="offcanvas-body">
-      <div class="mb-2">
-        <label class="form-label small">Tipo</label>
-        <select class="form-select form-select-sm">
-          <option>Entrada</option>
-          <option>Salida a producción</option>
-          <option>Merma</option>
-          <option>Ajuste</option>
-          <option>Traspaso</option>
-          <option>Devolución a proveedor</option>
-        </select>
-      </div>
+      <form id="formMovimiento">
+        <input type="hidden" id="movItemId" name="item_id">
 
-      <div class="mb-2">
-        <label class="form-label small">Producto</label>
-        <input class="form-control form-control-sm" placeholder="Buscar / seleccionar…">
-        <div class="form-text">Ej. 'Leche 1.5L (caja×12)'</div>
-      </div>
-
-      <div class="row g-2">
-        <div class="col-6">
-          <label class="form-label small">Cantidad</label>
-          <input type="number" step="0.01" class="form-control form-control-sm text-end" value="0">
-        </div>
-        <div class="col-6">
-          <label class="form-label small">UDM</label>
-          <select class="form-select form-select-sm">
-            <option>ML</option>
-            <option>G</option>
-            <option>PZA</option>
-            <option>CAJA12</option>
+        <div class="mb-2">
+          <label class="form-label small">Tipo de movimiento *</label>
+          <select id="movTipo" name="tipo" class="form-select form-select-sm" required>
+            <option value="">Seleccione...</option>
           </select>
         </div>
-      </div>
 
-      <div class="row g-2 mt-1">
-        <div class="col-6">
-          <label class="form-label small">Sucursal origen</label>
-          <select class="form-select form-select-sm"><option>PRINCIPAL</option></select>
+        <div class="mb-2">
+          <label class="form-label small">Cantidad *</label>
+          <input type="number" name="cantidad" step="0.001" min="0.001" class="form-control form-control-sm text-end" required>
         </div>
-        <div class="col-6">
-          <label class="form-label small">Sucursal destino</label>
-          <select class="form-select form-select-sm"><option>PRINCIPAL</option></select>
-        </div>
-      </div>
 
-      <div class="row g-2 mt-1">
-        <div class="col-6">
-          <label class="form-label small">Costo (opcional)</label>
-          <input type="number" step="0.0001" class="form-control form-control-sm text-end" placeholder="0.0000">
+        <div class="mb-2">
+          <label class="form-label small">Sucursal *</label>
+          <select id="movSucursal" name="sucursal_id" class="form-select form-select-sm" required>
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label small">Costo unitario (opcional)</label>
+          <input type="number" name="costo_unit" step="0.0001" min="0" class="form-control form-control-sm text-end" placeholder="0.0000">
           <div class="form-text">Para entradas/ajustes de costo</div>
         </div>
-        <div class="col-6">
-          <label class="form-label small">Lote / Caducidad</label>
-          <input type="date" class="form-control form-control-sm">
+
+        <div class="mb-2">
+          <label class="form-label small">Razón / Notas</label>
+          <textarea name="razon" class="form-control form-control-sm" rows="2" placeholder="Detalle del movimiento..."></textarea>
         </div>
-      </div>
 
-      <div class="mb-2 mt-2">
-        <label class="form-label small">Notas</label>
-        <textarea class="form-control form-control-sm" rows="2" placeholder="Detalle del movimiento…"></textarea>
-      </div>
-
-      <div class="d-grid">
-        <button class="btn btn-sm btn-primary">Guardar movimiento</button>
-      </div>
+        <div class="d-grid">
+          <button type="submit" class="btn btn-sm btn-primary">
+            <i class="fa-solid fa-save me-2"></i>Guardar
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
   {{-- Modal: Kardex --}}
-  <div class="modal fade" id="mdlKardex" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+  <div class="modal fade" id="modalKardex" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
       <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Kardex — SKU-0001 · Leche entera 1.5L (caja×12)</h5>
+        <div class="modal-header bg-primary bg-opacity-10">
+          <h5 class="modal-title">
+            <i class="fa-solid fa-chart-line me-2"></i>
+            Kardex — <span class="item-name"></span>
+          </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
@@ -289,46 +210,20 @@
             <table class="table table-sm align-middle mb-0">
               <thead class="table-light">
                 <tr>
-                  <th>Fecha/Hora</th>
+                  <th>Fecha</th>
+                  <th>Hora</th>
                   <th>Tipo</th>
-                  <th>Ref</th>
                   <th class="text-end">Entrada</th>
                   <th class="text-end">Salida</th>
                   <th class="text-end">Saldo</th>
-                  <th class="text-end">Costo</th>
-                  <th>Notas</th>
+                  <th>Referencia</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="kardexTableBody">
                 <tr>
-                  <td>2025-08-30 09:15</td>
-                  <td>Entrada OC</td>
-                  <td>OC-0009</td>
-                  <td class="text-end">18,000.00</td>
-                  <td class="text-end">—</td>
-                  <td class="text-end">18,000.00</td>
-                  <td class="text-end">$ 0.0123</td>
-                  <td>Recepción parcial</td>
-                </tr>
-                <tr>
-                  <td>2025-08-30 10:40</td>
-                  <td>Salida prod.</td>
-                  <td>OP-001</td>
-                  <td class="text-end">—</td>
-                  <td class="text-end">2,400.00</td>
-                  <td class="text-end">15,600.00</td>
-                  <td class="text-end">$ 0.0123</td>
-                  <td>Lattes del día</td>
-                </tr>
-                <tr>
-                  <td>2025-08-30 18:10</td>
-                  <td>Merma</td>
-                  <td>—</td>
-                  <td class="text-end">—</td>
-                  <td class="text-end">300.00</td>
-                  <td class="text-end">15,300.00</td>
-                  <td class="text-end">$ 0.0123</td>
-                  <td>Caducidad</td>
+                  <td colspan="7" class="text-center py-4">
+                    <div class="spinner-border spinner-border-sm"></div>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -336,7 +231,6 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
-          <button class="btn btn-sm btn-primary">Exportar</button>
         </div>
       </div>
     </div>
@@ -351,5 +245,9 @@
     .btn-group-sm > .btn, .btn-sm { padding: .35rem .5rem; }
   }
 </style>
+@endpush
+
+@push('scripts')
+<script src="{{ asset('assets/js/inventario.js') }}"></script>
 @endpush
 @endsection
