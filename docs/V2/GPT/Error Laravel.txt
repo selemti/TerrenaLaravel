@@ -1,0 +1,86 @@
+# UnexpectedValueException - Internal Server Error
+Invalid route action: [InventoryItemsIndex].
+
+PHP 8.2.12
+Laravel 12.34.0
+localhost
+
+## Stack Trace
+
+0 - vendor\laravel\framework\src\Illuminate\Routing\RouteAction.php:92
+1 - vendor\laravel\framework\src\Illuminate\Routing\RouteAction.php:47
+2 - vendor\laravel\framework\src\Illuminate\Routing\Route.php:197
+3 - vendor\laravel\framework\src\Illuminate\Routing\Route.php:178
+4 - vendor\laravel\framework\src\Illuminate\Routing\Router.php:685
+5 - vendor\laravel\framework\src\Illuminate\Routing\Router.php:576
+6 - vendor\laravel\framework\src\Illuminate\Routing\Router.php:556
+7 - vendor\laravel\framework\src\Illuminate\Routing\Router.php:160
+8 - vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:363
+9 - routes\web.php:87
+10 - vendor\laravel\framework\src\Illuminate\Routing\Router.php:524
+11 - vendor\laravel\framework\src\Illuminate\Routing\Router.php:480
+12 - vendor\laravel\framework\src\Illuminate\Routing\RouteRegistrar.php:210
+13 - routes\web.php:86
+14 - vendor\laravel\framework\src\Illuminate\Routing\RouteFileRegistrar.php:34
+15 - vendor\laravel\framework\src\Illuminate\Routing\Router.php:526
+16 - vendor\laravel\framework\src\Illuminate\Routing\Router.php:480
+17 - vendor\laravel\framework\src\Illuminate\Routing\RouteRegistrar.php:210
+18 - vendor\laravel\framework\src\Illuminate\Foundation\Configuration\ApplicationBuilder.php:248
+19 - vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php:36
+20 - vendor\laravel\framework\src\Illuminate\Container\Util.php:43
+21 - vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php:84
+22 - vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php:35
+23 - vendor\laravel\framework\src\Illuminate\Container\Container.php:836
+24 - vendor\laravel\framework\src\Illuminate\Foundation\Support\Providers\RouteServiceProvider.php:162
+25 - vendor\laravel\framework\src\Illuminate\Foundation\Support\Providers\RouteServiceProvider.php:59
+26 - vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php:36
+27 - vendor\laravel\framework\src\Illuminate\Container\Util.php:43
+28 - vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php:84
+29 - vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php:35
+30 - vendor\laravel\framework\src\Illuminate\Container\Container.php:836
+31 - vendor\laravel\framework\src\Illuminate\Support\ServiceProvider.php:143
+32 - vendor\laravel\framework\src\Illuminate\Foundation\Application.php:1154
+33 - vendor\laravel\framework\src\Illuminate\Foundation\Application.php:1132
+34 - vendor\laravel\framework\src\Illuminate\Foundation\Application.php:1131
+35 - vendor\laravel\framework\src\Illuminate\Foundation\Bootstrap\BootProviders.php:17
+36 - vendor\laravel\framework\src\Illuminate\Foundation\Application.php:342
+37 - vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php:186
+38 - vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php:170
+39 - vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php:144
+40 - public\index.php:36
+
+## Request
+
+GET /catalogos/unidades
+
+## Headers
+
+* **host**: localhost
+* **connection**: keep-alive
+* **cache-control**: max-age=0
+* **sec-ch-ua**: "Google Chrome";v="141", "Not?A_Brand";v="8", "Chromium";v="141"
+* **sec-ch-ua-mobile**: ?0
+* **sec-ch-ua-platform**: "Windows"
+* **upgrade-insecure-requests**: 1
+* **user-agent**: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36
+* **accept**: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+* **sec-fetch-site**: same-origin
+* **sec-fetch-mode**: navigate
+* **sec-fetch-dest**: document
+* **referer**: http://localhost/TerrenaLaravel/catalogos/unidades?categoria=CULINARIO
+* **accept-encoding**: gzip, deflate, br, zstd
+* **accept-language**: es-MX,es-419;q=0.9,es;q=0.8,en;q=0.7,pt;q=0.6
+* **cookie**: XSRF-TOKEN=eyJpdiI6Imp2d1pXbDRWZjA1anh6Z2xUdGFPOFE9PSIsInZhbHVlIjoiZEIxdGdZRm5ydFV4VytZSDZWQXdGdTA1VzdMTU9hMW81MkIyeXlVRGpydFQ5cXlFVDVyRlNaQjBSaHo1QlRNclRMRlVUV0ozWGZuU295SlYySUQ2RVFOZ3hhYVZma24vQWFLenZRVXRxNXFGbEcxRGJIaHJnYWllN3o0RzRaWFMiLCJtYWMiOiJlNDM5NWY5ZWJlNTMwNDYzMDA2MmU0NWRlYjI2ODU1NzYwNTM1YjI5MzNmMGQ1NjEzYTFkOGQxMzljMTgxNWY4IiwidGFnIjoiIn0%3D; terrenaui-session=eyJpdiI6Ii9Eb200VTBocUo1Y1hNYW5CWWF6Znc9PSIsInZhbHVlIjoiK2ZnU0JCelNFbmsrZTIvM1dXbTB6akdDU1pVa3JpOEZiVnUrVTVpeXhJYjFtUUlZWU82QUZLOVJERDZDSnZVcjhOOXY0K0dNR3hlYnFFV0lMcnk4eTB3U0dSaS9wVzVFTjZrbkMzRkE0ci9uMEhwdUFkZW5PQ0JSekxSM0pPTE0iLCJtYWMiOiJlOGQxMWZmM2I5ZWU3Yzk4NmZhZmY4ZDgxNzNlZDVkOThjMGFiNDI2OTVmZjNiNGM2YjUyOTM5OGUwZjA1YTYxIiwidGFnIjoiIn0%3D
+
+## Route Context
+
+No routing data available.
+
+## Route Parameters
+
+No route parameter data available.
+
+## Database Queries
+
+* pgsql - SET NAMES 'UTF8' (74.68 ms)
+###########################

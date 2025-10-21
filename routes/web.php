@@ -34,10 +34,12 @@ use App\Livewire\Catalogs\ProveedoresIndex   as CatalogProveedoresIndex;
 use App\Livewire\Catalogs\SucursalesIndex    as CatalogSucursalesIndex;
 use App\Livewire\Catalogs\StockPolicyIndex   as CatalogStockPolicyIndex;
 
-use App\Livewire\Inventory\ItemsManage       as InventoryItemsManage;
+//use App\Livewire\Inventory\ItemsManage       as InventoryItemsManage;
 use App\Livewire\Inventory\ReceptionsIndex   as InventoryReceptionsIndex;
 use App\Livewire\Inventory\ReceptionCreate   as InventoryReceptionCreate;
 use App\Livewire\Inventory\LotsIndex         as InventoryLotsIndex;
+use App\Livewire\Inventory\ItemsManage       as InventoryItemsManage;
+
 
 use App\Livewire\Recipes\RecipesIndex        as RecipesIndexLW;
 use App\Livewire\Recipes\RecipeEditor        as RecipeEditorLW;
@@ -84,7 +86,8 @@ Route::prefix('catalogos')->group(function () {
 |  Inventario (Livewire pages dinámicas)
 |========================================================================= */
 Route::prefix('inventory')->group(function () {
-    Route::get('/items',          InventoryItemsIndex::class)->name('inventory.items.index');
+    //Route::get('/items',          InventoryItemsIndex::class)->name('inventory.items.index');
+		Route::get('/items',          InventoryItemsManage::class)->name('inventory.items.index');
     Route::get('/receptions',     InventoryReceptionsIndex::class)->name('inv.receptions');
     Route::get('/receptions/new', InventoryReceptionCreate::class)->name('inv.receptions.new');
     Route::get('/lots',           InventoryLotsIndex::class)->name('inv.lots');
