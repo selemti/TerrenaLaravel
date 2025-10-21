@@ -6,10 +6,13 @@ use App\Models\Catalogs\Sucursal;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\On;
 
 class SucursalesIndex extends Component
 {
     use WithPagination;
+
+    protected string $paginationTheme = 'bootstrap';
 
     public string $search = '';
     public ?int $editId = null;
@@ -33,10 +36,16 @@ class SucursalesIndex extends Component
         ];
     }
 
+    private function resetForm(): void
+    {
+        $this->reset(['editId', 'clave', 'nombre', 'ubicacion']);
+        $this->activo = true;
+    }
+
     public function create()
     {
-        $this->reset(['editId', 'clave', 'nombre', 'ubicacion', 'activo']);
-        $this->activo = true;
+        $this->resetForm();
+        $this->dispatch('toggle-sucursal-modal', open: true);
     }
 
     public function edit(int $id)
@@ -48,6 +57,7 @@ class SucursalesIndex extends Component
         $this->nombre    = $sucursal->nombre;
         $this->ubicacion = $sucursal->ubicacion ?? '';
         $this->activo    = (bool) $sucursal->activo;
+        $this->dispatch('toggle-sucursal-modal', open: true);
     }
 
     public function save()
@@ -67,14 +77,23 @@ class SucursalesIndex extends Component
             Sucursal::create($payload);
         }
 
-        $this->create();
+        $this->resetForm();
         session()->flash('ok', 'Sucursal guardada');
+        $this->dispatch('toggle-sucursal-modal', open: false);
     }
 
     public function delete(int $id)
     {
         Sucursal::whereKey($id)->delete();
         session()->flash('ok', 'Sucursal eliminada');
+        $this->resetForm();
+        $this->dispatch('toggle-sucursal-modal', open: false);
+    }
+
+    public function closeModal(): void
+    {
+        $this->resetForm();
+        $this->dispatch('toggle-sucursal-modal', open: false);
     }
 
     public function render()
@@ -97,5 +116,11 @@ class SucursalesIndex extends Component
                 'title'     => 'Catálogo · Sucursales',
                 'pageTitle' => 'Sucursales',
             ]);
+    }
+
+    #[On('sucursal-modal-closed')]
+    public function handleModalClosed(): void
+    {
+        $this->resetForm();
     }
 }

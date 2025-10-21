@@ -224,7 +224,8 @@ class ItemsIndex extends Component
                 ->paginate($this->perPage);
         } catch (\Throwable $e) {
             // Si la vista no existe aún, evita lanzar un error de paginate()
-            $currentPage = max(1, (int) request()->query($this->getPageName(), 1));
+            $pageName = $this->pageName ?? 'page';
+            $currentPage = max(1, (int) request()->query($pageName, 1));
             $rows = new LengthAwarePaginator(
                 items: [],
                 total: 0,

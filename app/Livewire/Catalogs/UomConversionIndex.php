@@ -2,18 +2,20 @@
 
 namespace App\Livewire\Catalogs;
 
-use App\Models\CatUnidad;
+use App\Models\Catalogs\Unidad;
 use App\Models\Catalogs\UomConversion;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\On;
 
 class UomConversionIndex extends Component
 {
     use WithPagination;
 
+    protected string $paginationTheme = 'bootstrap';
     public string $search = '';
     public ?int $editId = null;
     public ?int $origen_id = null;
@@ -28,14 +30,14 @@ class UomConversionIndex extends Component
     public function mount(): void
     {
         $this->tableReady = Schema::hasTable('cat_uom_conversion');
-        $this->unitsReady = Schema::hasTable('cat_unidades');
+        $this->unitsReady = $this->checkUnitsTable();
 
         if (! $this->tableReady && ! $this->unitsReady) {
-            $this->tableNotice = 'Las tablas cat_uom_conversion y cat_unidades no existen. Ejecuta las migraciones de catálogos para habilitar este módulo.';
+            $this->tableNotice = 'No se detectaron las tablas de conversiones ni de unidades. Verifica que la base de datos tenga selemti.cat_uom_conversion y selemti.unidades_medida.';
         } elseif (! $this->tableReady) {
-            $this->tableNotice = 'La tabla cat_uom_conversion no existe. Ejecuta las migraciones correspondientes.';
+            $this->tableNotice = 'La tabla de conversiones (cat_uom_conversion) no existe. Ejecuta las migraciones correspondientes.';
         } elseif (! $this->unitsReady) {
-            $this->tableNotice = 'La tabla cat_unidades no existe. Ejecuta las migraciones correspondientes antes de gestionar conversiones.';
+            $this->tableNotice = 'No se pudo consultar selemti.unidades_medida. Verifica que la tabla exista y que las credenciales tengan permisos.';
         }
 
         $this->resolveUnitColumns();
@@ -47,8 +49,8 @@ class UomConversionIndex extends Component
         $destinoRules = ['required','integer','different:origen_id'];
 
         if ($this->unitsReady) {
-            $origenRules[] = 'exists:cat_unidades,id';
-            $destinoRules[] = 'exists:cat_unidades,id';
+            $origenRules[] = 'exists:selemti.unidades_medida,id';
+            $destinoRules[] = 'exists:selemti.unidades_medida,id';
         }
 
         if ($this->tableReady) {
@@ -69,10 +71,21 @@ class UomConversionIndex extends Component
         ];
     }
 
+    private function resetForm(): void
+    {
+        $this->reset(['editId','origen_id','destino_id']);
+        $this->factor = 1.0;
+    }
+
     public function create()
     {
-        $this->reset(['editId','origen_id','destino_id','factor']);
-        $this->factor = 1.0;
+        if (! $this->tableReady || ! $this->unitsReady) {
+            session()->flash('warn','Catálogo no disponible. Ejecuta las migraciones correspondientes.');
+            return;
+        }
+
+        $this->resetForm();
+        $this->dispatch('toggle-uom-modal', open: true);
     }
 
     public function edit(int $id)
@@ -88,6 +101,7 @@ class UomConversionIndex extends Component
         $this->origen_id  = $conversion->origen_id;
         $this->destino_id = $conversion->destino_id;
         $this->factor     = (float) $conversion->factor;
+        $this->dispatch('toggle-uom-modal', open: true);
     }
 
     public function save()
@@ -111,8 +125,9 @@ class UomConversionIndex extends Component
             UomConversion::create($payload);
         }
 
-        $this->create();
+        $this->resetForm();
         session()->flash('ok','Conversión guardada');
+        $this->dispatch('toggle-uom-modal', open: false);
     }
 
     public function delete(int $id)
@@ -124,6 +139,14 @@ class UomConversionIndex extends Component
 
         UomConversion::whereKey($id)->delete();
         session()->flash('ok','Conversión eliminada');
+        $this->resetForm();
+        $this->dispatch('toggle-uom-modal', open: false);
+    }
+
+    public function closeModal(): void
+    {
+        $this->resetForm();
+        $this->dispatch('toggle-uom-modal', open: false);
     }
 
     public function render()
@@ -144,7 +167,7 @@ class UomConversionIndex extends Component
                 ->orderBy('destino_id')
                 ->paginate(10);
         } else {
-            $rows = new LengthAwarePaginator([], 0, 10, $this->getPage(), [
+            $rows = new LengthAwarePaginator([], 0, 10, 1, [
                 'path'  => request()->url(),
                 'query' => request()->query(),
             ]);
@@ -152,17 +175,17 @@ class UomConversionIndex extends Component
 
         if ($this->tableReady && $this->unitsReady) {
             $rows->getCollection()->transform(function ($row) {
-                $row->origenKey = $this->extractUnitValue($row->origen, $this->unitKeyColumn);
-                $row->origenName = $this->extractUnitValue($row->origen, $this->unitNameColumn);
-                $row->destinoKey = $this->extractUnitValue($row->destino, $this->unitKeyColumn);
-                $row->destinoName = $this->extractUnitValue($row->destino, $this->unitNameColumn);
+                $row->origenKey = $this->formatUnitKey($row->origen, $row->origen_id);
+                $row->origenName = $this->formatUnitName($row->origen);
+                $row->destinoKey = $this->formatUnitKey($row->destino, $row->destino_id);
+                $row->destinoName = $this->formatUnitName($row->destino);
                 return $row;
             });
         }
 
         $unitOptions = $this->unitsReady
-            ? CatUnidad::query()
-                ->orderBy($this->unitOrderColumn(), 'asc')
+            ? Unidad::query()
+                ->orderBy('nombre')
                 ->get()
                 ->map(fn ($unit) => (object) [
                     'id'    => $unit->id,
@@ -183,22 +206,26 @@ class UomConversionIndex extends Component
             ]);
     }
 
+    #[On('uom-modal-closed')]
+    public function handleModalClosed(): void
+    {
+        $this->resetForm();
+    }
+
+    protected function checkUnitsTable(): bool
+    {
+        try {
+            Unidad::query()->limit(1)->exists();
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
     protected function resolveUnitColumns(): void
     {
-        if (! $this->unitsReady) {
-            return;
-        }
-
-        $columns = Schema::getColumnListing('cat_unidades');
-        $this->unitKeyColumn = $this->findFirstAvailable($columns, ['clave', 'codigo', 'abreviatura', 'abbr', 'clave_unidad']);
-        $this->unitNameColumn = $this->findFirstAvailable($columns, ['nombre', 'descripcion', 'name', 'label', 'detalle']);
-
-        if (! $this->unitKeyColumn) {
-            $this->unitKeyColumn = 'id';
-        }
-        if (! $this->unitNameColumn) {
-            $this->unitNameColumn = $this->unitKeyColumn;
-        }
+        $this->unitKeyColumn = 'codigo';
+        $this->unitNameColumn = 'nombre';
     }
 
     protected function findFirstAvailable(array $columns, array $candidates): ?string
@@ -212,16 +239,19 @@ class UomConversionIndex extends Component
         return null;
     }
 
-    protected function extractUnitValue($unit, ?string $column): ?string
+    protected function formatUnitKey($unit, int $fallbackId): string
     {
-        if (! $unit || ! $column) {
-            return null;
+        if ($unit && ($codigo = $unit->codigo)) {
+            return strtoupper($codigo);
         }
 
-        $value = data_get($unit, $column);
+        return 'ID ' . $fallbackId;
+    }
 
-        if (is_string($value) || is_numeric($value)) {
-            return (string) $value;
+    protected function formatUnitName($unit): ?string
+    {
+        if ($unit && $unit->nombre && strtoupper($unit->codigo ?? '') !== strtoupper($unit->nombre)) {
+            return $unit->nombre;
         }
 
         return null;
@@ -229,47 +259,29 @@ class UomConversionIndex extends Component
 
     protected function formatUnitLabel($unit): string
     {
-        $key = $this->extractUnitValue($unit, $this->unitKeyColumn);
-        $name = $this->extractUnitValue($unit, $this->unitNameColumn);
+        $codigo = $unit->codigo ? strtoupper($unit->codigo) : null;
+        $nombre = $unit->nombre ?? null;
 
-        $parts = collect([$key ? strtoupper((string) $key) : null, $name])
-            ->filter()
-            ->unique();
-
-        return $parts->isEmpty()
-            ? 'ID ' . $unit->id
-            : $parts->implode(' — ');
-    }
-
-    protected function unitOrderColumn(): string
-    {
-        if ($this->unitNameColumn && $this->unitNameColumn !== 'id') {
-            return $this->unitNameColumn;
+        if ($codigo && $nombre && strcasecmp($codigo, $nombre) !== 0) {
+            return $codigo . ' — ' . $nombre;
         }
 
-        if ($this->unitKeyColumn && $this->unitKeyColumn !== 'id') {
-            return $this->unitKeyColumn;
+        if ($codigo) {
+            return $codigo;
         }
 
-        return 'id';
+        if ($nombre) {
+            return $nombre;
+        }
+
+        return 'ID ' . $unit->id;
     }
 
     protected function applyUnitSearch($query, string $needle): void
     {
-        $columns = collect([$this->unitKeyColumn, $this->unitNameColumn])
-            ->filter()
-            ->unique()
-            ->values();
-
-        if ($columns->isEmpty()) {
-            $columns = collect(['id']);
-        }
-
-        $query->where(function ($qq) use ($columns, $needle) {
-            foreach ($columns as $index => $column) {
-                $method = $index === 0 ? 'where' : 'orWhere';
-                $qq->{$method}($column, 'ilike', $needle);
-            }
+        $query->where(function ($qq) use ($needle) {
+            $qq->where('codigo', 'ilike', $needle)
+               ->orWhere('nombre', 'ilike', $needle);
         });
     }
 }

@@ -4,9 +4,22 @@
       <h1 class="h4 mb-0">
         <i class="fa-solid fa-bowl-food me-2"></i> Recetas
       </h1>
-      <div class="d-flex gap-2">
-        <input type="text" class="form-control form-control-sm" placeholder="Buscar receta..." wire:model.live.debounce.400ms="search">
-        <a class="btn btn-success btn-sm" href="{{ url('/recetas/nueva') }}">
+      <div class="d-flex gap-2 flex-wrap">
+        <div class="d-flex gap-2">
+          <input type="text"
+                 class="form-control form-control-sm"
+                 placeholder="Buscar receta (PLU, nombre...)"
+                 wire:model.live.debounce.400ms="search">
+          <select class="form-select form-select-sm"
+                  wire:model.live="category"
+                  style="min-width: 160px;">
+            <option value="">Todas las categorías</option>
+            @foreach($categories as $cat)
+              <option value="{{ $cat['value'] }}">{{ $cat['label'] }}</option>
+            @endforeach
+          </select>
+        </div>
+        <a class="btn btn-success btn-sm" href="{{ route('rec.editor') }}">
           <i class="fa-solid fa-plus me-1"></i> Nueva
         </a>
       </div>
@@ -15,59 +28,66 @@
     @if(session('ok'))
       <div class="alert alert-success py-1 small">{{ session('ok') }}</div>
     @endif
-    @if($usingDemoData)
-      <div class="alert alert-warning py-1 small">
-        <i class="fa-solid fa-circle-info me-1"></i>
-        Mostrando datos de demostración. Ejecuta las migraciones y crea el catálogo real para habilitar la operación completa.
-      </div>
-    @endif
 
     <div class="card shadow-sm">
       <div class="table-responsive">
         <table class="table table-sm align-middle mb-0">
           <thead class="table-light">
             <tr>
-              <th style="width:120px">Código</th>
-              <th>Nombre</th>
-              <th style="width:140px" class="text-end">Rendimiento</th>
-              <th style="width:90px">Unidad</th>
-              <th style="width:140px" class="text-end">Costo</th>
-              <th style="width:140px" class="text-end">Acciones</th>
+              <th style="width:120px">PLU</th>
+              <th>Receta</th>
+              <th style="width:140px">Versión</th>
+              <th style="width:150px" class="text-end">Costo estándar</th>
+              <th style="width:150px" class="text-end">Precio sugerido</th>
+              <th style="width:160px" class="text-end">Acciones</th>
             </tr>
           </thead>
           <tbody>
             @forelse($recipes as $r)
+              @php
+                $published = $r->publishedVersion;
+                $latest = $r->latestVersion;
+              @endphp
               <tr>
-                <td class="font-monospace">{{ $r->codigo ?? $r->id }}</td>
-                <td>{{ $r->nombre }}</td>
-                <td class="text-end">
-                  {{ rtrim(rtrim(number_format($r->rendimiento ?? 1, 4, '.', ''), '0'), '.') }}
+                <td class="font-monospace">{{ $r->codigo_plato_pos ?? '—' }}</td>
+                <td>
+                  <div class="fw-semibold">{{ $r->nombre_plato }}</div>
+                  <div class="text-muted small">{{ $r->categoria_plato }}</div>
                 </td>
-                <td>{{ $r->unidad ?? 'pz' }}</td>
-                <td class="text-end">
-                  MX$ {{ number_format((float)($r->costo ?? 0), 2) }}
+                <td>
+                  @if($published)
+                    <span class="badge bg-success-subtle text-success">Publicado v{{ $published->version }}</span>
+                  @elseif($latest)
+                    <span class="badge bg-secondary-subtle text-secondary">Borrador v{{ $latest->version }}</span>
+                  @else
+                    <span class="badge bg-warning-subtle text-warning">Sin versión</span>
+                  @endif
                 </td>
+                <td class="text-end">MX$ {{ number_format((float)($r->costo_standard_porcion ?? 0), 2) }}</td>
+                <td class="text-end">MX$ {{ number_format((float)($r->precio_venta_sugerido ?? 0), 2) }}</td>
                 <td class="text-end">
-                  <a class="btn btn-outline-secondary btn-sm" href="{{ url('/recetas/editar/'.($r->codigo ?? $r->id)) }}">
-                    Editar
-                  </a>
-                  <button class="btn btn-outline-danger btn-sm"
-                          wire:click="confirmDelete({{ $r->id }})">
-                    Eliminar
-                  </button>
+                  <div class="btn-group btn-group-sm">
+                    <a class="btn btn-outline-secondary" href="{{ route('rec.editor', ['id' => $r->id]) }}">
+                      <i class="fa-regular fa-pen-to-square"></i> Editar
+                    </a>
+                    <button class="btn btn-outline-danger"
+                            wire:click="confirmDelete('{{ $r->id }}')">
+                      <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                  </div>
                 </td>
               </tr>
             @empty
-              <tr><td colspan="6" class="text-muted">Sin resultados.</td></tr>
+              <tr>
+                <td colspan="6" class="text-muted py-4 text-center">Sin resultados.</td>
+              </tr>
             @endforelse
           </tbody>
         </table>
       </div>
-      @if(method_exists($recipes, 'links'))
-        <div class="card-footer py-2">
-          {{ $recipes->links() }}
-        </div>
-      @endif
+      <div class="card-footer py-2">
+        {{ $recipes->links() }}
+      </div>
     </div>
   </div>
 

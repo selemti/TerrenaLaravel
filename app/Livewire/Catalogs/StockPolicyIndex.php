@@ -9,10 +9,13 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\On;
 
 class StockPolicyIndex extends Component
 {
     use WithPagination;
+
+    protected string $paginationTheme = 'bootstrap';
 
     public string $search = '';
     public ?int $editId = null;
@@ -47,10 +50,19 @@ class StockPolicyIndex extends Component
         ];
     }
 
+    private function resetForm(): void
+    {
+        $this->reset(['editId','item_id','sucursal_id','min_qty','max_qty','reorder_qty']);
+        $this->min_qty = 0;
+        $this->max_qty = 0;
+        $this->reorder_qty = 0;
+        $this->activo = true;
+    }
+
     public function create()
     {
-        $this->reset(['editId','item_id','sucursal_id','min_qty','max_qty','reorder_qty','activo']);
-        $this->activo = true;
+        $this->resetForm();
+        $this->dispatch('toggle-stock-modal', open: true);
     }
 
     public function edit(int $id)
@@ -64,6 +76,7 @@ class StockPolicyIndex extends Component
         $this->max_qty     = (float) $policy->max_qty;
         $this->reorder_qty = (float) $policy->reorder_qty;
         $this->activo      = (bool) $policy->activo;
+        $this->dispatch('toggle-stock-modal', open: true);
     }
 
     public function save()
@@ -85,14 +98,23 @@ class StockPolicyIndex extends Component
             StockPolicy::create($payload);
         }
 
-        $this->create();
+        $this->resetForm();
         session()->flash('ok','Política guardada');
+        $this->dispatch('toggle-stock-modal', open: false);
     }
 
     public function delete(int $id)
     {
         StockPolicy::whereKey($id)->delete();
         session()->flash('ok','Política eliminada');
+        $this->resetForm();
+        $this->dispatch('toggle-stock-modal', open: false);
+    }
+
+    public function closeModal(): void
+    {
+        $this->resetForm();
+        $this->dispatch('toggle-stock-modal', open: false);
     }
 
     public function render()
@@ -144,5 +166,11 @@ class StockPolicyIndex extends Component
             'title'     => 'Catálogo · Políticas de Stock',
             'pageTitle' => 'Políticas de Stock',
         ]);
+    }
+
+    #[On('stock-modal-closed')]
+    public function handleModalClosed(): void
+    {
+        $this->resetForm();
     }
 }

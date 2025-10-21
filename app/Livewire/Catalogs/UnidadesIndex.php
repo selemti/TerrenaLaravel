@@ -4,12 +4,15 @@ namespace App\Livewire\Catalogs;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\On;
 use App\Models\Catalogs\Unidad;
 use Illuminate\Validation\Rule;
 
 class UnidadesIndex extends Component
 {
     use WithPagination;
+
+    protected string $paginationTheme = 'bootstrap';
 
     // Filtros / querystring
     public string $q = '';
@@ -58,10 +61,9 @@ class UnidadesIndex extends Component
         ];
     }
 
-    public function createNew()
+    private function defaults(): array
     {
-        $this->reset('editingId');
-        $this->form = [
+        return [
             'codigo' => '',
             'nombre' => '',
             'tipo' => 'PESO',
@@ -70,6 +72,18 @@ class UnidadesIndex extends Component
             'factor_conversion_base' => 1.000000,
             'decimales' => 2,
         ];
+    }
+
+    private function resetForm(): void
+    {
+        $this->editingId = null;
+        $this->form = $this->defaults();
+    }
+
+    public function createNew()
+    {
+        $this->resetForm();
+        $this->dispatch('toggle-unidad-modal', open: true);
     }
 
     public function edit(int $id)
@@ -85,6 +99,7 @@ class UnidadesIndex extends Component
             'factor_conversion_base' => (float) $u->factor_conversion_base,
             'decimales' => (int) $u->decimales,
         ];
+        $this->dispatch('toggle-unidad-modal', open: true);
     }
 
     public function save()
@@ -99,9 +114,10 @@ class UnidadesIndex extends Component
             Unidad::create($this->form);
         }
 
-        $this->createNew(); // reset
+        $this->resetForm();
         session()->flash('ok', 'Unidad guardada correctamente');
         $this->resetPage();
+        $this->dispatch('toggle-unidad-modal', open: false);
     }
 
     public function delete(int $id)
@@ -109,6 +125,13 @@ class UnidadesIndex extends Component
         Unidad::whereKey($id)->delete();
         session()->flash('ok', 'Unidad eliminada');
         $this->resetPage();
+        $this->dispatch('toggle-unidad-modal', open: false);
+    }
+
+    public function closeModal(): void
+    {
+        $this->resetForm();
+        $this->dispatch('toggle-unidad-modal', open: false);
     }
 
     public function render()
@@ -135,5 +158,11 @@ class UnidadesIndex extends Component
             'title'     => 'Catálogo · Unidades de Medida',
             'pageTitle' => 'Unidades de Medida',
         ]);
+    }
+
+    #[On('unidad-modal-closed')]
+    public function handleModalClosed(): void
+    {
+        $this->resetForm();
     }
 }

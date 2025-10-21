@@ -3,6 +3,7 @@ namespace App\Services\Inventory;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
 
 class ReceptionService
 {
@@ -19,13 +20,24 @@ class ReceptionService
     {
         return DB::transaction(function() use ($header,$lines) {
 
-            $receptionId = (int) DB::table('recepcion_cab')->insertGetId([
+            $cabecera = [
                 'proveedor_id' => $header['supplier_id'],
-                'sucursal_id'  => $header['branch_id'] ?? null,
-                'almacen_id'   => $header['warehouse_id'] ?? null,
-                'usuario_id'   => $header['user_id'],
                 'ts'           => now(),
-            ]);
+            ];
+
+            if (Schema::hasColumn('recepcion_cab', 'sucursal_id')) {
+                $cabecera['sucursal_id'] = $header['branch_id'] ?? null;
+            }
+
+            if (Schema::hasColumn('recepcion_cab', 'almacen_id')) {
+                $cabecera['almacen_id'] = $header['warehouse_id'] ?? null;
+            }
+
+            if (Schema::hasColumn('recepcion_cab', 'usuario_id')) {
+                $cabecera['usuario_id'] = $header['user_id'];
+            }
+
+            $receptionId = (int) DB::table('recepcion_cab')->insertGetId($cabecera);
 
             foreach ($lines as $l) {
                 // normaliza cantidad a UOM canónica (qty_can = qty_pack * pack_size)
@@ -59,7 +71,7 @@ class ReceptionService
                 ]);
 
                 // movimiento de inventario (kardex) tipo RECEPCION
-                DB::table('mov_inv')->insert([
+                $movimiento = [
                     'item_id'  => $l['item_id'],
                     'batch_id' => $batchId,
                     'tipo'     => 'RECEPCION',
@@ -67,11 +79,19 @@ class ReceptionService
                     'uom'      => $l['uom_base'],    // GR/ML/PZ
                     'ref_tipo' => 'RECEPCION',
                     'ref_id'   => $receptionId,
-                    'sucursal_id' => $header['branch_id'] ?? null,
-                    'almacen_id'  => $header['warehouse_id'] ?? null,
                     'ts'       => now(),
                     'meta'     => json_encode(['temp'=>$l['temp'] ?? null])
-                ]);
+                ];
+
+                if (Schema::hasColumn('mov_inv', 'sucursal_id')) {
+                    $movimiento['sucursal_id'] = $header['branch_id'] ?? null;
+                }
+
+                if (Schema::hasColumn('mov_inv', 'almacen_id')) {
+                    $movimiento['almacen_id'] = $header['warehouse_id'] ?? null;
+                }
+
+                DB::table('mov_inv')->insert($movimiento);
             }
 
             return $receptionId;

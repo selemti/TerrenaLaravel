@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Catalogs\Almacen;
 use App\Models\Catalogs\Sucursal;
+use App\Models\Catalogs\Unidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -143,6 +144,56 @@ class CatalogsController extends Controller
             'ok' => true,
             'data' => $types,
             'timestamp' => now()->toIso8601String()
+        ]);
+    }
+
+    // GET /api/catalogs/unidades
+    public function unidades(Request $request)
+    {
+        $query = Unidad::query();
+
+        if ($request->filled('tipo')) {
+            $query->where('tipo', $request->input('tipo'));
+        }
+
+        if ($request->filled('categoria')) {
+            $query->where('categoria', $request->input('categoria'));
+        }
+
+        $total = (clone $query)->count();
+
+        if ($request->boolean('only_count')) {
+            return response()->json([
+                'ok' => true,
+                'count' => $total,
+                'data' => [],
+                'timestamp' => now()->toIso8601String(),
+            ]);
+        }
+
+        $limit = (int) $request->input('limit', 250);
+        $limit = max(1, min($limit, 500));
+
+        $units = $query
+            ->orderBy('tipo')
+            ->orderBy('codigo')
+            ->limit($limit)
+            ->get([
+                'id',
+                'codigo',
+                'nombre',
+                'tipo',
+                'categoria',
+                'es_base',
+                'factor_conversion_base',
+                'decimales',
+            ]);
+
+        return response()->json([
+            'ok' => true,
+            'count' => $total,
+            'data' => $units,
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 }

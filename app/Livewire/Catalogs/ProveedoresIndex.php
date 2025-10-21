@@ -8,10 +8,13 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\On;
 
 class ProveedoresIndex extends Component
 {
     use WithPagination;
+
+    protected string $paginationTheme = 'bootstrap';
 
     public string $search = '';
     public ?int $editId = null;
@@ -49,10 +52,21 @@ class ProveedoresIndex extends Component
         ];
     }
 
+    private function resetForm(): void
+    {
+        $this->reset(['editId', 'rfc', 'nombre', 'telefono', 'email']);
+        $this->activo = true;
+    }
+
     public function create()
     {
-        $this->reset(['editId', 'rfc', 'nombre', 'telefono', 'email', 'activo']);
-        $this->activo = true;
+        if (! $this->tableReady) {
+            session()->flash('warn', 'Catálogo no disponible. Ejecuta las migraciones correspondientes.');
+            return;
+        }
+
+        $this->resetForm();
+        $this->dispatch('toggle-proveedor-modal', open: true);
     }
 
     public function edit(int $id)
@@ -70,6 +84,7 @@ class ProveedoresIndex extends Component
         $this->telefono = $proveedor->telefono ?? '';
         $this->email    = $proveedor->email ?? '';
         $this->activo   = (bool) $proveedor->activo;
+        $this->dispatch('toggle-proveedor-modal', open: true);
     }
 
     public function save()
@@ -95,8 +110,9 @@ class ProveedoresIndex extends Component
             Proveedor::create($payload);
         }
 
-        $this->create();
+        $this->resetForm();
         session()->flash('ok', 'Proveedor guardado');
+        $this->dispatch('toggle-proveedor-modal', open: false);
     }
 
     public function delete(int $id)
@@ -108,6 +124,14 @@ class ProveedoresIndex extends Component
 
         Proveedor::whereKey($id)->delete();
         session()->flash('ok', 'Proveedor eliminado');
+        $this->resetForm();
+        $this->dispatch('toggle-proveedor-modal', open: false);
+    }
+
+    public function closeModal(): void
+    {
+        $this->resetForm();
+        $this->dispatch('toggle-proveedor-modal', open: false);
     }
 
     public function render()
@@ -141,5 +165,11 @@ class ProveedoresIndex extends Component
                 'title'     => 'Catálogo · Proveedores',
                 'pageTitle' => 'Proveedores',
             ]);
+    }
+
+    #[On('proveedor-modal-closed')]
+    public function handleModalClosed(): void
+    {
+        $this->resetForm();
     }
 }

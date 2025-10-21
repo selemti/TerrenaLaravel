@@ -7,10 +7,13 @@ use App\Models\Catalogs\Sucursal;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\On;
 
 class AlmacenesIndex extends Component
 {
     use WithPagination;
+
+    protected string $paginationTheme = 'bootstrap';
 
     public string $search = '';
     public ?int $editId = null;
@@ -34,10 +37,16 @@ class AlmacenesIndex extends Component
         ];
     }
 
+    private function resetForm(): void
+    {
+        $this->reset(['editId', 'clave', 'nombre', 'sucursal_id']);
+        $this->activo = true;
+    }
+
     public function create()
     {
-        $this->reset(['editId', 'clave', 'nombre', 'sucursal_id', 'activo']);
-        $this->activo = true;
+        $this->resetForm();
+        $this->dispatch('toggle-almacen-modal', open: true);
     }
 
     public function edit(int $id)
@@ -49,6 +58,7 @@ class AlmacenesIndex extends Component
         $this->nombre      = $almacen->nombre;
         $this->sucursal_id = $almacen->sucursal_id;
         $this->activo      = (bool) $almacen->activo;
+        $this->dispatch('toggle-almacen-modal', open: true);
     }
 
     public function save()
@@ -68,14 +78,23 @@ class AlmacenesIndex extends Component
             Almacen::create($payload);
         }
 
-        $this->create();
+        $this->resetForm();
         session()->flash('ok', 'Almacén guardado');
+        $this->dispatch('toggle-almacen-modal', open: false);
     }
 
     public function delete(int $id)
     {
         Almacen::whereKey($id)->delete();
         session()->flash('ok', 'Almacén eliminado');
+        $this->resetForm();
+        $this->dispatch('toggle-almacen-modal', open: false);
+    }
+
+    public function closeModal(): void
+    {
+        $this->resetForm();
+        $this->dispatch('toggle-almacen-modal', open: false);
     }
 
     public function render()
@@ -100,5 +119,11 @@ class AlmacenesIndex extends Component
                 'title'     => 'Catálogo · Almacenes',
                 'pageTitle' => 'Almacenes',
             ]);
+    }
+
+    #[On('almacen-modal-closed')]
+    public function handleModalClosed(): void
+    {
+        $this->resetForm();
     }
 }

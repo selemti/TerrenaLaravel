@@ -235,9 +235,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const apiBase = (window.__API_BASE__ || '') + '/api/catalogs';
 
   try {
-    const [sucursales, almacenes] = await Promise.all([
+    const [sucursales, almacenes, unidades] = await Promise.all([
       fetch(`${apiBase}/sucursales`).then(r => r.json()).catch(() => null),
       fetch(`${apiBase}/almacenes`).then(r => r.json()).catch(() => null),
+      fetch(`${apiBase}/unidades?only_count=1`).then(r => r.json()).catch(() => null),
     ]);
 
     if (sucursales?.ok) {
@@ -248,8 +249,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('count-almacenes').textContent = almacenes.data?.length ?? 0;
     }
 
-    // Valores temporales mientras se habilitan endpoints dedicados
-    document.getElementById('count-unidades').textContent = '--';
+    if (unidades?.ok) {
+      document.getElementById('count-unidades').textContent = unidades.count ?? unidades.data?.length ?? 0;
+    } else {
+      document.getElementById('count-unidades').textContent = '--';
+    }
+
     document.getElementById('count-proveedores').textContent = '--';
   } catch (err) {
     console.error('Error loading catalog counts:', err);

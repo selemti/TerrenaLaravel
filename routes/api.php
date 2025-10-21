@@ -175,6 +175,7 @@ Route::prefix('catalogs')->group(function () {
     Route::get('/categories', [CatalogsController::class, 'categories']);
     Route::get('/almacenes', [CatalogsController::class, 'almacenes']);
     Route::get('/sucursales', [CatalogsController::class, 'sucursales']);
+    Route::get('/unidades', [CatalogsController::class, 'unidades']);
     Route::get('/movement-types', [CatalogsController::class, 'movementTypes']);
 });
 

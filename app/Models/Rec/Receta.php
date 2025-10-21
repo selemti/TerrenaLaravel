@@ -30,4 +30,19 @@ class Receta extends Model
     {
         return $this->hasMany(RecetaVersion::class, 'receta_id', 'id');
     }
+
+    public function publishedVersion()
+    {
+        return $this->hasOne(RecetaVersion::class, 'receta_id', 'id')
+            ->where('version_publicada', true)
+            ->orderByDesc('fecha_efectiva')
+            ->limit(1);
+    }
+
+    public function latestVersion()
+    {
+        return $this->hasOne(RecetaVersion::class, 'receta_id', 'id')
+            ->orderByDesc('version')
+            ->limit(1);
+    }
 }

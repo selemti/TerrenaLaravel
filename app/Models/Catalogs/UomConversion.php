@@ -2,7 +2,7 @@
 
 namespace App\Models\Catalogs;
 
-use App\Models\CatUnidad;
+use App\Models\Catalogs\Unidad;
 use Illuminate\Database\Eloquent\Model;
 
 class UomConversion extends Model
@@ -21,12 +21,11 @@ class UomConversion extends Model
 
     public function origen()
     {
-        return $this->belongsTo(CatUnidad::class, 'origen_id');
+        return $this->belongsTo(Unidad::class, 'origen_id');
     }
 
     public function destino()
     {
-        return $this->belongsTo(CatUnidad::class, 'destino_id');
+        return $this->belongsTo(Unidad::class, 'destino_id');
     }
 }
-
