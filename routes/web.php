@@ -49,7 +49,7 @@ use App\Livewire\Kds\Board                   as KdsBoard;
 |========================================================================= */
 Route::get('/', function () {
     return "Página de inicio - <a href='" . route('dashboard') . "'>Ir al Dashboard</a>";
-});
+})->name('home');
 
 /*
 Route::get('/', function () {
@@ -106,3 +106,9 @@ Route::view('/admin',    'placeholder', ['title'=>'Configuración'])->name('admi
 |  Auth
 |========================================================================= */
 require __DIR__.'/auth.php';
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
+});

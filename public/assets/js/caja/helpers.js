@@ -137,6 +137,13 @@ export function normalizeDate(input){
   return m ? `${m[3]}-${m[2]}-${m[1]}` : s;
 }
 export function todayISO(){
+  // IMPORTANTE: Primero intenta leer del campo oculto del servidor
+  const serverDate = document.querySelector('#filtroFecha')?.value || document.querySelector('#fecha')?.value;
+  if (serverDate && /^\d{4}-\d{2}-\d{2}$/.test(serverDate)) {
+    return serverDate;
+  }
+
+  // Fallback: fecha del navegador (puede tener problemas de zona horaria)
   const d = new Date(), mm = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
   return `${d.getFullYear()}-${mm}-${dd}`;
 }

@@ -50,6 +50,16 @@
     </div>
   </div>
 
+  <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center small mb-3">
+    <span class="text-muted">Catálogos relacionados:</span>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="text-decoration-none link-secondary" href="{{ route('cat.almacenes') }}">Almacenes</a>
+      <a class="text-decoration-none link-secondary" href="{{ route('cat.sucursales') }}">Sucursales</a>
+      <a class="text-decoration-none link-secondary" href="{{ route('cat.unidades') }}">Unidades</a>
+      <a class="text-decoration-none link-secondary" href="{{ route('cat.stockpolicy') }}">Políticas de stock</a>
+    </div>
+  </div>
+
   {{-- KPIs mini --}}
   <div class="row g-3 mb-2">
     <div class="col-6 col-md-3">

@@ -74,7 +74,7 @@ class PostcorteController extends Controller
                 RETURNING id
             ";
 
-            $result = DB::selectOne($sql, [
+            $result = DB::connection('pgsql')->selectOne($sql, [
                 $sid,
                 $sys['efectivo'], $dec['efectivo'], $difEf, $this->ver($difEf),
                 $sys['tarjetas'], $dec['tarjetas'], $difTj, $this->ver($difTj),
@@ -95,8 +95,8 @@ class PostcorteController extends Controller
             
             // Auditoría
             try {
-                DB::insert("
-                    INSERT INTO selemti.auditoria (quien, que, payload) 
+                DB::connection('pgsql')->insert("
+                    INSERT INTO selemti.auditoria (quien, que, payload)
                     VALUES (1, 'postcorte.error', ?)
                 ", [json_encode([
                     'precorte_id' => $precorteId,
@@ -182,7 +182,7 @@ class PostcorteController extends Controller
                 RETURNING id, sesion_id
             ";
 
-            $result = DB::selectOne($sql, [
+            $result = DB::connection('pgsql')->selectOne($sql, [
                 $sys['efectivo'], $dec['efectivo'], $difEf, $verE,
                 $sys['tarjetas'], $dec['tarjetas'], $difTj, $verT,
                 $sys['transfer'], $dec['transfer'], $difTr, $verR,
@@ -200,10 +200,10 @@ class PostcorteController extends Controller
 
             // Update session status if requested
             if ($sesionEstatus && in_array($sesionEstatus, ['CERRADA', 'CONCILIADA'])) {
-                DB::update("UPDATE selemti.sesion_cajon SET estatus = ? WHERE id = ?", [$sesionEstatus, $sid]);
+                DB::connection('pgsql')->update("UPDATE selemti.sesion_cajon SET estatus = ? WHERE id = ?", [$sesionEstatus, $sid]);
             } elseif ($valid) {
                 // If validated but no explicit status provided, ensure it's at least CERRADA
-                DB::update("UPDATE selemti.sesion_cajon SET estatus = 'CERRADA' WHERE id = ? AND estatus != 'CERRADA' AND estatus != 'CONCILIADA'", [$sid]);
+                DB::connection('pgsql')->update("UPDATE selemti.sesion_cajon SET estatus = 'CERRADA' WHERE id = ? AND estatus != 'CERRADA' AND estatus != 'CONCILIADA'", [$sid]);
             }
 
             return response()->json([
@@ -217,8 +217,8 @@ class PostcorteController extends Controller
 
             // Auditoría
             try {
-                DB::insert("
-                    INSERT INTO selemti.auditoria (quien, que, payload) 
+                DB::connection('pgsql')->insert("
+                    INSERT INTO selemti.auditoria (quien, que, payload)
                     VALUES (1, 'postcorte.error', ?)
                 ", [json_encode([
                     'id' => $postId,
@@ -260,10 +260,10 @@ class PostcorteController extends Controller
 
     private function getSesionByPrecorte(int $precorteId): ?array
     {
-        $result = DB::selectOne("
-            SELECT p.sesion_id, s.terminal_id, s.apertura_ts, s.cierre_ts, s.opening_float 
-            FROM selemti.precorte p 
-            JOIN selemti.sesion_cajon s ON s.id = p.sesion_id 
+        $result = DB::connection('pgsql')->selectOne("
+            SELECT p.sesion_id, s.terminal_id, s.apertura_ts, s.cierre_ts, s.opening_float
+            FROM selemti.precorte p
+            JOIN selemti.sesion_cajon s ON s.id = p.sesion_id
             WHERE p.id = ?
         ", [$precorteId]);
 
@@ -272,10 +272,10 @@ class PostcorteController extends Controller
 
     private function getSesionByPostId(int $postId): ?array
     {
-        $result = DB::selectOne("
-            SELECT pc.sesion_id, s.terminal_id, s.apertura_ts, s.cierre_ts, s.opening_float 
-            FROM selemti.postcorte pc 
-            JOIN selemti.sesion_cajon s ON s.id = pc.sesion_id 
+        $result = DB::connection('pgsql')->selectOne("
+            SELECT pc.sesion_id, s.terminal_id, s.apertura_ts, s.cierre_ts, s.opening_float
+            FROM selemti.postcorte pc
+            JOIN selemti.sesion_cajon s ON s.id = pc.sesion_id
             WHERE pc.id = ?
         ", [$postId]);
 
@@ -284,11 +284,11 @@ class PostcorteController extends Controller
 
     private function getUltimoPrecorteDeSesion(int $sesionId): ?int
     {
-        $result = DB::selectOne("
-            SELECT id 
-            FROM selemti.precorte 
-            WHERE sesion_id = ? 
-            ORDER BY id DESC 
+        $result = DB::connection('pgsql')->selectOne("
+            SELECT id
+            FROM selemti.precorte
+            WHERE sesion_id = ?
+            ORDER BY id DESC
             LIMIT 1
         ", [$sesionId]);
 
@@ -297,30 +297,30 @@ class PostcorteController extends Controller
 
     private function totalesDeclarados(int $precorteId): array
     {
-        $ef = (float) DB::selectOne("
-            SELECT COALESCE(SUM(COALESCE(subtotal, denominacion * cantidad)), 0) 
-            FROM selemti.precorte_efectivo 
+        $ef = (float) DB::connection('pgsql')->selectOne("
+            SELECT COALESCE(SUM(COALESCE(subtotal, denominacion * cantidad)), 0)
+            FROM selemti.precorte_efectivo
             WHERE precorte_id = ?
         ", [$precorteId])->coalesce ?? 0;
 
-        $cr = (float) DB::selectOne("
-            SELECT COALESCE(SUM(monto), 0) 
-            FROM selemti.precorte_otros 
-            WHERE precorte_id = ? 
+        $cr = (float) DB::connection('pgsql')->selectOne("
+            SELECT COALESCE(SUM(monto), 0)
+            FROM selemti.precorte_otros
+            WHERE precorte_id = ?
               AND UPPER(tipo) IN ('CREDITO')
         ", [$precorteId])->coalesce ?? 0;
 
-        $dbt = (float) DB::selectOne("
-            SELECT COALESCE(SUM(monto), 0) 
-            FROM selemti.precorte_otros 
-            WHERE precorte_id = ? 
+        $dbt = (float) DB::connection('pgsql')->selectOne("
+            SELECT COALESCE(SUM(monto), 0)
+            FROM selemti.precorte_otros
+            WHERE precorte_id = ?
               AND UPPER(tipo) IN ('DEBITO', 'DÉBITO')
         ", [$precorteId])->coalesce ?? 0;
 
-        $tr = (float) DB::selectOne("
-            SELECT COALESCE(SUM(monto), 0) 
-            FROM selemti.precorte_otros 
-            WHERE precorte_id = ? 
+        $tr = (float) DB::connection('pgsql')->selectOne("
+            SELECT COALESCE(SUM(monto), 0)
+            FROM selemti.precorte_otros
+            WHERE precorte_id = ?
               AND UPPER(tipo) IN ('TRANSFER', 'TRANSFERENCIA', 'TRANSFERENCIAS')
         ", [$precorteId])->coalesce ?? 0;
 
@@ -377,10 +377,10 @@ class PostcorteController extends Controller
 
         $bind = [$terminalId, $a, $b];
 
-        $ef = (float) (DB::selectOne($sqlEf, $bind)->coalesce ?? 0);
-        $cr = (float) (DB::selectOne($sqlCr, $bind)->coalesce ?? 0);
-        $dbt = (float) (DB::selectOne($sqlDb, $bind)->coalesce ?? 0);
-        $tr = (float) (DB::selectOne($sqlTr, $bind)->coalesce ?? 0);
+        $ef = (float) (DB::connection('pgsql')->selectOne($sqlEf, $bind)->coalesce ?? 0);
+        $cr = (float) (DB::connection('pgsql')->selectOne($sqlCr, $bind)->coalesce ?? 0);
+        $dbt = (float) (DB::connection('pgsql')->selectOne($sqlDb, $bind)->coalesce ?? 0);
+        $tr = (float) (DB::connection('pgsql')->selectOne($sqlTr, $bind)->coalesce ?? 0);
 
         return [
             'efectivo' => $ef,

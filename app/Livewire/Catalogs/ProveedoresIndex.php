@@ -2,7 +2,9 @@
 
 namespace App\Livewire\Catalogs;
 
-use Illuminate\Support\Facades\DB;
+use App\Models\Catalogs\Proveedor;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -18,13 +20,30 @@ class ProveedoresIndex extends Component
     public string $telefono = '';
     public string $email = '';
     public bool $activo = true;
+    public bool $tableReady = false;
+    public string $tableNotice = '';
+
+    public function mount(): void
+    {
+        $this->tableReady = Schema::hasTable('cat_proveedores');
+
+        if (! $this->tableReady) {
+            $this->tableNotice = 'La tabla cat_proveedores no existe en la base de datos. Ejecuta las migraciones para habilitar este catálogo.';
+        }
+    }
 
     protected function rules(): array
     {
+        $rfcRules = ['required','string','max:20'];
+
+        if ($this->tableReady) {
+            $rfcRules[] = Rule::unique('cat_proveedores', 'rfc')->ignore($this->editId);
+        }
+
         return [
-            'rfc'      => ['required','max:20', Rule::unique('cat_proveedores','rfc')->ignore($this->editId)],
-            'nombre'   => ['required','max:120'],
-            'telefono' => ['nullable','max:30'],
+            'rfc'      => $rfcRules,
+            'nombre'   => ['required','string','max:120'],
+            'telefono' => ['nullable','string','max:30'],
             'email'    => ['nullable','email','max:120'],
             'activo'   => ['boolean'],
         ];
@@ -32,63 +51,95 @@ class ProveedoresIndex extends Component
 
     public function create()
     {
-        $this->reset(['editId','rfc','nombre','telefono','email','activo']);
+        $this->reset(['editId', 'rfc', 'nombre', 'telefono', 'email', 'activo']);
         $this->activo = true;
     }
 
     public function edit(int $id)
     {
-        $r = DB::table('cat_proveedores')->where('id',$id)->first();
-        if (!$r) return;
-        $this->editId  = $r->id;
-        $this->rfc     = $r->rfc;
-        $this->nombre  = $r->nombre;
-        $this->telefono= $r->telefono ?? '';
-        $this->email   = $r->email ?? '';
-        $this->activo  = (bool)$r->activo;
+        if (! $this->tableReady) {
+            session()->flash('warn', 'Catálogo no disponible. Ejecuta las migraciones correspondientes.');
+            return;
+        }
+
+        $proveedor = Proveedor::findOrFail($id);
+
+        $this->editId   = $proveedor->id;
+        $this->rfc      = $proveedor->rfc;
+        $this->nombre   = $proveedor->nombre;
+        $this->telefono = $proveedor->telefono ?? '';
+        $this->email    = $proveedor->email ?? '';
+        $this->activo   = (bool) $proveedor->activo;
     }
 
     public function save()
     {
+        if (! $this->tableReady) {
+            session()->flash('warn', 'No es posible guardar porque la tabla cat_proveedores no está disponible.');
+            return;
+        }
+
         $this->validate();
 
         $payload = [
-            'rfc'        => $this->rfc,
-            'nombre'     => $this->nombre,
-            'telefono'   => $this->telefono,
-            'email'      => $this->email,
-            'activo'     => $this->activo,
-            'updated_at' => now(),
+            'rfc'      => strtoupper(trim($this->rfc)),
+            'nombre'   => trim($this->nombre),
+            'telefono' => $this->telefono ? trim($this->telefono) : null,
+            'email'    => $this->email ? trim($this->email) : null,
+            'activo'   => (bool) $this->activo,
         ];
 
         if ($this->editId) {
-            DB::table('cat_proveedores')->where('id',$this->editId)->update($payload);
+            Proveedor::findOrFail($this->editId)->update($payload);
         } else {
-            $payload['created_at'] = now();
-            DB::table('cat_proveedores')->insert($payload);
+            Proveedor::create($payload);
         }
 
         $this->create();
-        session()->flash('ok','Proveedor guardado');
+        session()->flash('ok', 'Proveedor guardado');
     }
 
     public function delete(int $id)
     {
-        DB::table('cat_proveedores')->where('id',$id)->delete();
-        session()->flash('ok','Proveedor eliminado');
+        if (! $this->tableReady) {
+            session()->flash('warn', 'No es posible eliminar registros porque la tabla cat_proveedores no está disponible.');
+            return;
+        }
+
+        Proveedor::whereKey($id)->delete();
+        session()->flash('ok', 'Proveedor eliminado');
     }
 
     public function render()
     {
-        $rows = DB::table('cat_proveedores')
-            ->when($this->search, fn($q) =>
-                $q->where('rfc','ilike',"%{$this->search}%")
-                  ->orWhere('nombre','ilike',"%{$this->search}%")
-                  ->orWhere('email','ilike',"%{$this->search}%")
-            )
-            ->orderBy('nombre')
-            ->paginate(10);
+        if ($this->tableReady) {
+            $rows = Proveedor::query()
+                ->when($this->search !== '', function ($query) {
+                    $needle = '%' . $this->search . '%';
+                    $query->where(function ($sub) use ($needle) {
+                        $sub->where('rfc', 'ilike', $needle)
+                            ->orWhere('nombre', 'ilike', $needle)
+                            ->orWhere('email', 'ilike', $needle);
+                    });
+                })
+                ->orderBy('nombre')
+                ->paginate(10);
+        } else {
+            $rows = new LengthAwarePaginator([], 0, 10, $this->getPage(), [
+                'path'  => request()->url(),
+                'query' => request()->query(),
+            ]);
+        }
 
-        return view('livewire.catalogs.proveedores-index', compact('rows'));
+        return view('livewire.catalogs.proveedores-index', [
+            'rows'        => $rows,
+            'tableReady'  => $this->tableReady,
+            'tableNotice' => $this->tableNotice,
+        ])
+            ->layout('layouts.terrena', [
+                'active'    => 'config',
+                'title'     => 'Catálogo · Proveedores',
+                'pageTitle' => 'Proveedores',
+            ]);
     }
 }

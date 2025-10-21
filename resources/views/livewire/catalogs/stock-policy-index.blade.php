@@ -1,96 +1,148 @@
-<x-app-layout>
-  <div class="p-6 space-y-4">
-    <h1 class="text-xl font-bold">Políticas de Stock (Min/Max/Reorden)</h1>
-
+<div class="container-fluid px-0">
     @if (session('ok'))
-      <div class="p-2 bg-green-100 border border-green-300 rounded">{{ session('ok') }}</div>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fa-solid fa-circle-check me-2"></i>{{ session('ok') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+      </div>
     @endif
 
-    <div class="flex items-center gap-2">
-      <input type="text" wire:model.live.debounce.300ms="search" placeholder="Buscar (item/sucursal)..."
-             class="border rounded px-3 py-2">
-      <button wire:click="create" class="px-3 py-2 bg-blue-600 text-white rounded">Nueva</button>
-    </div>
-
-    <div class="grid md:grid-cols-3 gap-4">
-      <div class="border rounded p-4">
-        <h2 class="font-semibold mb-2">{{ $editId ? 'Editar' : 'Crear' }}</h2>
-        <div class="space-y-2">
-          <label class="block">Item
-            <select wire:model="item_id" class="border rounded px-3 py-2 w-full">
-              <option value="">-- Selecciona --</option>
-              @foreach ($items as $it)
-                <option value="{{ $it->id }}">{{ $it->name }}</option>
-              @endforeach
-            </select>
-            @error('item_id') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-          </label>
-          <label class="block">Sucursal
-            <select wire:model="sucursal_id" class="border rounded px-3 py-2 w-full">
-              <option value="">-- Selecciona --</option>
-              @foreach ($sucursales as $s)
-                <option value="{{ $s->id }}">{{ $s->nombre }}</option>
-              @endforeach
-            </select>
-            @error('sucursal_id') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-          </label>
-          <label class="block">Mínimo
-            <input type="number" step="0.0001" wire:model="min_qty" class="border rounded px-3 py-2 w-full">
-            @error('min_qty') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-          </label>
-          <label class="block">Máximo
-            <input type="number" step="0.0001" wire:model="max_qty" class="border rounded px-3 py-2 w-full">
-            @error('max_qty') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-          </label>
-          <label class="block">Reorden
-            <input type="number" step="0.0001" wire:model="reorder_qty" class="border rounded px-3 py-2 w-full">
-            @error('reorder_qty') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-          </label>
-          <label class="inline-flex items-center gap-2">
-            <input type="checkbox" wire:model="activo"> Activo
-          </label>
-          <div class="flex gap-2">
-            <button wire:click="save" class="px-3 py-2 bg-emerald-600 text-white rounded">Guardar</button>
-            <button wire:click="create" class="px-3 py-2 bg-gray-200 rounded">Cancelar</button>
+    <div class="row g-3">
+      <div class="col-lg-4">
+        <div class="card shadow-sm">
+          <div class="card-header bg-white">
+            <strong>{{ $editId ? 'Editar política' : 'Nueva política' }}</strong>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label class="form-label">Artículo</label>
+              <select class="form-select @error('item_id') is-invalid @enderror" wire:model.defer="item_id">
+                <option value="">-- Selecciona --</option>
+                @foreach ($items as $item)
+                  <option value="{{ $item->id }}">{{ $item->name }}</option>
+                @endforeach
+              </select>
+              @error('item_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Sucursal</label>
+              <select class="form-select @error('sucursal_id') is-invalid @enderror" wire:model.defer="sucursal_id">
+                <option value="">-- Selecciona --</option>
+                @foreach ($sucursales as $s)
+                  <option value="{{ $s->id }}">{{ $s->name }}</option>
+                @endforeach
+              </select>
+              @error('sucursal_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="row g-3">
+              <div class="col-4">
+                <label class="form-label">Mínimo</label>
+                <input type="number" step="0.0001" min="0"
+                       class="form-control @error('min_qty') is-invalid @enderror"
+                       wire:model.defer="min_qty">
+                @error('min_qty')<div class="invalid-feedback">{{ $message }}</div>@enderror
+              </div>
+              <div class="col-4">
+                <label class="form-label">Máximo</label>
+                <input type="number" step="0.0001" min="0"
+                       class="form-control @error('max_qty') is-invalid @enderror"
+                       wire:model.defer="max_qty">
+                @error('max_qty')<div class="invalid-feedback">{{ $message }}</div>@enderror
+              </div>
+              <div class="col-4">
+                <label class="form-label">Reorden</label>
+                <input type="number" step="0.0001" min="0"
+                       class="form-control @error('reorder_qty') is-invalid @enderror"
+                       wire:model.defer="reorder_qty">
+                @error('reorder_qty')<div class="invalid-feedback">{{ $message }}</div>@enderror
+              </div>
+            </div>
+            <div class="form-check mt-3">
+              <input class="form-check-input" type="checkbox" id="policyActive" wire:model.defer="activo">
+              <label class="form-check-label" for="policyActive">Activo</label>
+            </div>
+          </div>
+          <div class="card-footer d-flex gap-2">
+            <button class="btn btn-primary flex-grow-1" wire:click="save">
+              <i class="fa-regular fa-floppy-disk me-1"></i> Guardar
+            </button>
+            <button class="btn btn-outline-secondary" wire:click="create">
+              <i class="fa-regular fa-circle-xmark me-1"></i> Cancelar
+            </button>
           </div>
         </div>
       </div>
 
-      <div class="md:col-span-2 border rounded overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="p-2 text-left">Item</th>
-              <th class="p-2 text-left">Sucursal</th>
-              <th class="p-2 text-right">Mín</th>
-              <th class="p-2 text-right">Máx</th>
-              <th class="p-2 text-right">Reorden</th>
-              <th class="p-2 text-left">Activo</th>
-              <th class="p-2 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @foreach ($rows as $r)
-            <tr class="border-t">
-              <td class="p-2">{{ $r->item }}</td>
-              <td class="p-2">{{ $r->sucursal }}</td>
-              <td class="p-2 text-right">{{ $r->min_qty }}</td>
-              <td class="p-2 text-right">{{ $r->max_qty }}</td>
-              <td class="p-2 text-right">{{ $r->reorder_qty }}</td>
-              <td class="p-2">{{ $r->activo ? 'Sí' : 'No' }}</td>
-              <td class="p-2 text-right">
-                <button wire:click="edit({{ $r->id }})" class="px-2 py-1 bg-indigo-600 text-white rounded">Editar</button>
-                <button wire:click="delete({{ $r->id }})" class="px-2 py-1 bg-rose-600 text-white rounded"
-                        onclick="return confirm('¿Eliminar política?')">Eliminar</button>
-              </td>
-            </tr>
-            @endforeach
-          </tbody>
-        </table>
-        <div class="p-2">
-          {{ $rows->links() }}
+      <div class="col-lg-8">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="d-flex flex-wrap align-items-end gap-2">
+              <div class="flex-grow-1">
+                <label class="form-label small text-muted mb-1">Buscar</label>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                  <input type="search" class="form-control" placeholder="Artículo o sucursal"
+                         wire:model.live.debounce.400ms="search">
+                </div>
+              </div>
+              <div>
+                <label class="form-label small text-muted mb-1 d-block">&nbsp;</label>
+                <button class="btn btn-sm btn-outline-secondary" wire:click="create">
+                  <i class="fa-solid fa-plus me-1"></i> Nueva
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-striped table-sm align-middle mb-0">
+              <thead class="table-light">
+              <tr>
+                <th>Artículo</th>
+                <th>Sucursal</th>
+                <th class="text-end">Mín</th>
+                <th class="text-end">Máx</th>
+                <th class="text-end">Reorden</th>
+                <th class="text-center">Activo</th>
+                <th class="text-end">Acciones</th>
+              </tr>
+              </thead>
+              <tbody>
+              @forelse($rows as $row)
+                <tr>
+                  <td>{{ $row->item_name }}</td>
+                  <td>{{ $row->sucursal_name }}</td>
+                  <td class="text-end">{{ number_format($row->min_qty, 2) }}</td>
+                  <td class="text-end">{{ number_format($row->max_qty, 2) }}</td>
+                  <td class="text-end">{{ number_format($row->reorder_qty, 2) }}</td>
+                  <td class="text-center">
+                    @if($row->activo)
+                      <span class="badge bg-success">Sí</span>
+                    @else
+                      <span class="badge bg-secondary">No</span>
+                    @endif
+                  </td>
+                  <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary me-1" wire:click="edit({{ $row->id }})">
+                      <i class="fa-regular fa-pen-to-square"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger"
+                            wire:click="delete({{ $row->id }})"
+                            onclick="return confirm('¿Eliminar política?')">
+                      <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                  </td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="7" class="text-center text-muted py-4">Sin registros.</td>
+                </tr>
+              @endforelse
+              </tbody>
+            </table>
+          </div>
+          <div class="card-footer bg-white py-2">
+            {{ $rows->links() }}
+          </div>
         </div>
       </div>
     </div>
   </div>
-</x-app-layout>

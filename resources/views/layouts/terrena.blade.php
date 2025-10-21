@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>@yield('title', 'SelemTI - TerrenaPOS')</title>
+  <title>{{ $title ?? $__env->yieldContent('title', 'SelemTI - TerrenaPOS') }}</title>
 
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <script>
@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="{{ asset('assets/css/terrena.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/css/caja.css') }}">
 
+  @livewireStyles
   @stack('styles')
 </head>
 <body>
@@ -73,7 +74,11 @@
           <button class="btn btn-sm btn-outline-secondary d-lg-none" id="sidebarToggleMobile" aria-label="Menú">
             <i class="fa-solid fa-bars"></i>
           </button>
-          <h1 class="top-bar-title mb-0">@yield('page-title', 'Dashboard')</h1>
+          @hasSection('page-title')
+            <h1 class="top-bar-title mb-0">@yield('page-title')</h1>
+          @else
+            <h1 class="top-bar-title mb-0">{{ $pageTitle ?? 'Dashboard' }}</h1>
+          @endif
         </div>
 
         <div class="d-flex align-items-center gap-3">
@@ -103,7 +108,7 @@
           <div class="dropdown">
             <button class="btn btn-light d-inline-flex align-items-center gap-2" data-bs-toggle="dropdown">
               <span class="user-profile-icon"><i class="fa-solid fa-user"></i></span>
-              <span>{{ auth()->user()->name ?? 'Juan Pérez' }}</span>
+              <span>{{ optional(auth()->user())->name ?? 'Juan Pérez' }}</span>
               <i class="fa-solid fa-chevron-down small"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
@@ -127,7 +132,11 @@
 
       {{-- Contenido de cada vista --}}
       <div class="p-3">
-        @yield('content')
+        @isset($slot)
+          {{ $slot }}
+        @else
+          @yield('content')
+        @endisset
       </div>
 
       {{-- Footer / Status Bar --}}
@@ -151,6 +160,7 @@
   <script src="{{ asset('assets/vendor/cleave.min.js') }}"></script>
   <script src="{{ asset('assets/js/moneda.js') }}" defer></script>
   <script src="{{ asset('assets/js/terrena.js') }}" defer></script>
+  @livewireScripts
   @stack('scripts')
 </body>
 </html>

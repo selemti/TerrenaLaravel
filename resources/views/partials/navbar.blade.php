@@ -44,7 +44,7 @@
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="fa-regular fa-user"></i>
-              <span>{{ auth()->user()->username ?? auth()->user()->name ?? 'Usuario' }}</span>
+              <span>{{ optional(auth()->user())->username ?? optional(auth()->user())->name ?? 'Usuario' }}</span>
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
               <li><a class="dropdown-item" href="{{ url('/perfil') }}">Mi perfil</a></li>

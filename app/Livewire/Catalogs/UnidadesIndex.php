@@ -130,6 +130,10 @@ class UnidadesIndex extends Component
 
         return view('livewire.catalogs.unidades-index', [
             'rows' => $q->paginate($this->perPage),
-        ])->layout('layouts.app'); // Breeze layout
+        ])->layout('layouts.terrena', [
+            'active'    => 'config',
+            'title'     => 'Catálogo · Unidades de Medida',
+            'pageTitle' => 'Unidades de Medida',
+        ]);
     }
 }

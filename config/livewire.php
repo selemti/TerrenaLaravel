@@ -2,11 +2,6 @@
 
 return [
 
-    // Prefijo para /livewire/livewire.js cuando la app vive en subcarpeta
-    // Dile a Livewire que tu app vive en /terrena/ui
-    'app_url'   => env('LIVEWIRE_APP_URL', env('APP_URL')),
-    'asset_url' => env('LIVEWIRE_ASSET_URL', env('ASSET_URL')),
-
     /*
     |---------------------------------------------------------------------------
     | Class Namespace
@@ -152,6 +147,19 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Smart Wire Keys
+    |---------------------------------------------------------------------------
+    |
+    | Livewire uses loops and keys used within loops to generate smart keys that
+    | are applied to nested components that don't have them. This makes using
+    | nested components more reliable by ensuring that they all have keys.
+    |
+    */
+
+    'smart_wire_keys' => false,
+
+    /*
+    |---------------------------------------------------------------------------
     | Pagination Theme
     |---------------------------------------------------------------------------
     |
@@ -162,4 +170,17 @@ return [
     */
 
     'pagination_theme' => 'tailwind',
+
+    /*
+    |---------------------------------------------------------------------------
+    | Release Token
+    |---------------------------------------------------------------------------
+    |
+    | This token is stored client-side and sent along with each request to check
+    | a users session to see if a new release has invalidated it. If there is
+    | a mismatch it will throw an error and prompt for a browser refresh.
+    |
+    */
+
+    'release_token' => 'a',
 ];

@@ -2,7 +2,11 @@
 
 namespace App\Livewire\Catalogs;
 
-use Illuminate\Support\Facades\DB;
+use App\Models\Catalogs\StockPolicy;
+use App\Models\Catalogs\Sucursal;
+use App\Models\Inv\Item;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -12,7 +16,7 @@ class StockPolicyIndex extends Component
 
     public string $search = '';
     public ?int $editId = null;
-    public ?int $item_id = null;
+    public ?string $item_id = null;
     public ?int $sucursal_id = null;
     public float $min_qty = 0;
     public float $max_qty = 0;
@@ -21,9 +25,21 @@ class StockPolicyIndex extends Component
 
     protected function rules(): array
     {
+        $uniqueRule = Rule::unique('inv_stock_policy', 'item_id')
+            ->where(fn ($query) => $query->where('sucursal_id', $this->sucursal_id));
+
+        if ($this->editId) {
+            $uniqueRule = $uniqueRule->ignore($this->editId);
+        }
+
         return [
-            'item_id'     => ['required','integer'],
-            'sucursal_id' => ['required','integer'],
+            'item_id'     => [
+                'required',
+                'string',
+                'exists:items,id',
+                $uniqueRule,
+            ],
+            'sucursal_id' => ['required','integer','exists:cat_sucursales,id'],
             'min_qty'     => ['required','numeric','gte:0'],
             'max_qty'     => ['required','numeric','gte:min_qty'],
             'reorder_qty' => ['required','numeric','gte:0'],
@@ -39,15 +55,15 @@ class StockPolicyIndex extends Component
 
     public function edit(int $id)
     {
-        $r = DB::table('inv_stock_policy')->where('id',$id)->first();
-        if (!$r) return;
-        $this->editId      = $r->id;
-        $this->item_id     = $r->item_id;
-        $this->sucursal_id = $r->sucursal_id;
-        $this->min_qty     = (float)$r->min_qty;
-        $this->max_qty     = (float)$r->max_qty;
-        $this->reorder_qty = (float)$r->reorder_qty;
-        $this->activo      = (bool)$r->activo;
+        $policy = StockPolicy::findOrFail($id);
+
+        $this->editId      = $policy->id;
+        $this->item_id     = (string) $policy->item_id;
+        $this->sucursal_id = $policy->sucursal_id;
+        $this->min_qty     = (float) $policy->min_qty;
+        $this->max_qty     = (float) $policy->max_qty;
+        $this->reorder_qty = (float) $policy->reorder_qty;
+        $this->activo      = (bool) $policy->activo;
     }
 
     public function save()
@@ -55,20 +71,18 @@ class StockPolicyIndex extends Component
         $this->validate();
 
         $payload = [
-            'item_id'     => $this->item_id,
-            'sucursal_id' => $this->sucursal_id,
+            'item_id'     => trim((string) $this->item_id),
+            'sucursal_id' => (int) $this->sucursal_id,
             'min_qty'     => $this->min_qty,
             'max_qty'     => $this->max_qty,
             'reorder_qty' => $this->reorder_qty,
-            'activo'      => $this->activo,
-            'updated_at'  => now(),
+            'activo'      => (bool) $this->activo,
         ];
 
         if ($this->editId) {
-            DB::table('inv_stock_policy')->where('id',$this->editId)->update($payload);
+            StockPolicy::findOrFail($this->editId)->update($payload);
         } else {
-            $payload['created_at'] = now();
-            DB::table('inv_stock_policy')->insert($payload);
+            StockPolicy::create($payload);
         }
 
         $this->create();
@@ -77,27 +91,58 @@ class StockPolicyIndex extends Component
 
     public function delete(int $id)
     {
-        DB::table('inv_stock_policy')->where('id',$id)->delete();
+        StockPolicy::whereKey($id)->delete();
         session()->flash('ok','Política eliminada');
     }
 
     public function render()
     {
-        // Nota: asumo tablas items y cat_sucursales para joins
-        $rows = DB::table('inv_stock_policy as p')
-            ->leftJoin('items as it','it.id','=','p.item_id')
-            ->leftJoin('cat_sucursales as s','s.id','=','p.sucursal_id')
-            ->select('p.*','it.name as item','s.nombre as sucursal')
-            ->when($this->search, fn($q) =>
-                $q->where('it.name','ilike',"%{$this->search}%")
-                  ->orWhere('s.nombre','ilike',"%{$this->search}%")
-            )
-            ->orderBy('s.nombre')
+        $itemLabel = Schema::hasColumn('items', 'name') ? 'name' : 'nombre';
+
+        $rows = StockPolicy::with([
+                'item:id,' . $itemLabel,
+                'sucursal:id,nombre',
+            ])
+            ->when($this->search !== '', function ($query) use ($itemLabel) {
+                $needle = '%' . $this->search . '%';
+                $query->where(function ($sub) use ($needle, $itemLabel) {
+                    $sub->whereHas('item', fn ($q) => $q->where($itemLabel, 'ilike', $needle))
+                        ->orWhereHas('sucursal', fn ($q) => $q->where('nombre', 'ilike', $needle));
+                });
+            })
+            ->orderBy('sucursal_id')
+            ->orderBy('item_id')
             ->paginate(10);
 
-        $items      = DB::table('items')->select('id','name')->orderBy('name')->get();
-        $sucursales = DB::table('cat_sucursales')->select('id','nombre')->orderBy('nombre')->get();
+        $rows->getCollection()->transform(function ($row) use ($itemLabel) {
+            $row->item_name = optional($row->item)->{$itemLabel} ?? optional($row->item)->nombre ?? optional($row->item)->name ?? '—';
+            $row->sucursal_name = optional($row->sucursal)->nombre ?? '—';
+            return $row;
+        });
 
-        return view('livewire.catalogs.stock-policy-index', compact('rows','items','sucursales'));
+        $items = Item::select('id', $itemLabel)
+            ->orderBy($itemLabel)
+            ->get()
+            ->map(function ($item) use ($itemLabel) {
+                return (object) [
+                    'id'   => (string) $item->id,
+                    'name' => $item->{$itemLabel},
+                ];
+            });
+
+        $sucursales = Sucursal::select('id', 'nombre')
+            ->orderBy('nombre')
+            ->get()
+            ->map(fn ($sucursal) => (object) ['id' => $sucursal->id, 'name' => $sucursal->nombre]);
+
+        return view('livewire.catalogs.stock-policy-index', [
+            'rows'       => $rows,
+            'items'      => $items,
+            'sucursales' => $sucursales,
+        ])->layout('layouts.terrena', [
+            'active'    => 'config',
+            'title'     => 'Catálogo · Políticas de Stock',
+            'pageTitle' => 'Políticas de Stock',
+        ]);
     }
 }

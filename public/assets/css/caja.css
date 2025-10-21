@@ -4,6 +4,9 @@
 .kpi{background:#f8f9fb;border:1px solid #e9ecef;border-radius:8px;padding:10px}
 .kpi-label{font-size:.8rem;color:#6c757d}
 .kpi-value{font-weight:700;}
+.kpi-warning{background:#fff3cd;border-color:#ffc107;border-left:4px solid #ffc107}
+.kpi-warning .kpi-label{color:#664d03}
+.kpi-warning .kpi-value{color:#ff6b00}
 #czPrecorteAutosave{min-width:180px}
 /* badges auxiliares (si no existen en tu theme) */
 .bg-indigo{background-color:#4b0082!important;color:#fff!important}

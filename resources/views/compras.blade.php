@@ -125,8 +125,11 @@
     {{-- Tab Proveedores --}}
     <div class="tab-pane fade" id="tabProv">
       <div class="d-flex justify-content-between mb-2">
-        <div class="small text-muted">Proveedores (maqueta)</div>
-        <button class="btn btn-sm btn-primary">Nuevo proveedor</button>
+        <div class="small text-muted d-flex align-items-center gap-2 flex-wrap">
+          <span>Proveedores (maqueta)</span>
+          <a class="text-decoration-none" href="{{ route('cat.proveedores') }}">Abrir catálogo</a>
+        </div>
+        <a class="btn btn-sm btn-primary" href="{{ route('cat.proveedores') }}">Nuevo proveedor</a>
       </div>
       <div class="card shadow-sm border-0">
         <div class="card-body p-0">
@@ -145,7 +148,7 @@
                 <td>ventas@lacteos.mx</td>
                 <td>55 1234 5678</td>
                 <td class="text-end">
-                  <button class="btn btn-sm btn-outline-secondary">Editar</button>
+                  <a class="btn btn-sm btn-outline-secondary" href="{{ route('cat.proveedores') }}">Editar</a>
                 </td>
               </tr>
             </tbody>
@@ -157,7 +160,8 @@
     {{-- Tab Sugeridos --}}
     <div class="tab-pane fade" id="tabSugeridos">
       <div class="alert alert-secondary small">
-        Sugerencia automática con base en min/max, lead time y producción planificada.
+        Sugerencia automática con base en min/max, lead time y producción planificada. Ajusta los parámetros en el
+        <a class="text-decoration-none" href="{{ route('cat.stockpolicy') }}">catálogo de políticas de stock</a>.
       </div>
       <table class="table table-sm align-middle">
         <thead>

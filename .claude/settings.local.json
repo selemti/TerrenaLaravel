@@ -1,22 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Read(//c/xampp3/htdocs/terrena/**)",
-      "Bash(php artisan:*)",
-      "Bash(php artisan config:clear:*)",
-      "Bash(sudo systemctl stop:*)",
-      "Bash(sudo systemctl disable:*)",
-      "Bash(netstat:*)",
-      "Bash(ss:*)",
-      "Read(//c/xampp3/apache/logs/**)",
-      "Bash(php -r:*)",
-      "Bash(php -S:*)",
-      "Read(//c/xampp3/apache/conf/**)",
-      "Read(//c/xampp3/php/**)",
-      "Bash(cat:*)",
-      "Read(//c/xampp3/htdocs/**)",
-      "Bash(awk:*)",
-      "Bash(powershell -ExecutionPolicy Bypass -Command \"& {$env:PGPASSWORD=''postgres''; .\\DEPLOY_v4_SAFE.ps1 -HostName localhost -Port 5433 -Database floreant -User postgres}\")"
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT id, terminal_id, DATE(apertura_ts) as fecha, apertura_ts, estatus, cajero_usuario_id FROM selemti.sesion_cajon ORDER BY apertura_ts DESC LIMIT 10;\")",
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT id, daily_folio, voided, total_discount, terminal_id, DATE(create_date) FROM public.ticket WHERE total_discount > 0 AND DATE(create_date) = ''2025-10-20'' LIMIT 3;\")",
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d public.ticket_item_discount\")",
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT t.id, t.daily_folio, STRING_AGG(DISTINCT tid.name, '', '') as descuentos_item FROM ticket t INNER JOIN ticket_item ti ON ti.ticket_id = t.id INNER JOIN ticket_item_discount tid ON tid.ticket_itemid = ti.id WHERE t.daily_folio = 9 AND DATE(t.create_date) = ''2025-10-20'' GROUP BY t.id, t.daily_folio;\")",
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT t.id, t.daily_folio, STRING_AGG(DISTINCT td.name, '', '') as descuentos_ticket FROM ticket t LEFT JOIN ticket_discount td ON td.ticket_id = t.id WHERE t.daily_folio IN (9, 10, 11) AND DATE(t.create_date) = ''2025-10-20'' GROUP BY t.id, t.daily_folio ORDER BY t.daily_folio;\")",
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT ti.id, ti.item_name, ti.discount, ti.item_price, ti.total_price FROM ticket_item ti INNER JOIN ticket t ON t.id = ti.ticket_id WHERE t.daily_folio = 10 AND DATE(t.create_date) = ''2025-10-20'' AND ti.discount > 0 LIMIT 5;\")",
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT id, terminal_id, DATE(apertura_ts) as fecha, estatus FROM selemti.sesion_cajon WHERE DATE(apertura_ts) = ''2025-10-20'' ORDER BY id;\")",
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT COUNT(*) as total_voided, COUNT(*) FILTER (WHERE total_discount > 0) as total_discount FROM public.ticket WHERE DATE(create_date) = ''2025-10-20'';\")",
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT \n    COUNT(*) FILTER (WHERE voided = true) as anulados,\n    COUNT(*) FILTER (WHERE refunded = true AND voided = false) as devueltos,\n    COUNT(*) FILTER (WHERE wasted = true AND voided = false) as desperdicios,\n    COUNT(*) FILTER (WHERE total_discount > 0 AND voided = false AND wasted = false) as con_descuento,\n    COUNT(*) FILTER (WHERE adjustment_amount IS NOT NULL AND adjustment_amount != 0 AND voided = false) as con_ajuste\nFROM public.ticket \nWHERE DATE(create_date) = ''2025-10-20'';\")"
     ],
     "deny": [],
     "ask": []

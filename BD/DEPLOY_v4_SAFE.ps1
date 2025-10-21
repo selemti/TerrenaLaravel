@@ -166,6 +166,28 @@ try {
     exit 2
 }
 
+# Post-fix: asegurar vistas/funciones clave si hubo errores en el archivo grande
+$FixViews = Join-Path $ScriptDir "fix_views.sql"
+$FixFuncs = Join-Path $ScriptDir "fix_functions.sql"
+if (Test-Path $FixViews) {
+    Write-Info "\nAplicando fix_views.sql (post-fix de vistas clave)..."
+    try {
+        & "$PsqlPath" -h $HostName -p $Port -U $User -d $Database -f "$FixViews" 2>&1 | Out-Null
+        Write-Success "[OK] Vistas clave forzadas"
+    } catch {
+        Write-Warning2 "[WARN] No se pudo aplicar fix_views.sql: $_"
+    }
+}
+if (Test-Path $FixFuncs) {
+    Write-Info "Aplicando fix_functions.sql (post-fix de funciones clave)..."
+    try {
+        & "$PsqlPath" -h $HostName -p $Port -U $User -d $Database -f "$FixFuncs" 2>&1 | Out-Null
+        Write-Success "[OK] Funciones clave forzadas"
+    } catch {
+        Write-Warning2 "[WARN] No se pudo aplicar fix_functions.sql: $_"
+    }
+}
+
 # Analyze results
 Write-Info "`n================================================================"
 Write-Info "ANALISIS DE RESULTADOS"

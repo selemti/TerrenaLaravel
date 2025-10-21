@@ -4,6 +4,21 @@ import { $, esc, GET_FALLBACK, currentDate } from './helpers.js';
 import { els, state } from './state.js';
 import { abrirWizard } from './wizard.js';
 
+console.debug('[caja/mainTable] init', { type: typeof api?.cajas });
+
+function buildUrl(endpoint, qs) {
+  if (!endpoint) return null;
+  if (typeof endpoint === 'function') return endpoint(qs);
+  if (typeof endpoint === 'string') {
+    if (!qs) return endpoint;
+    const hasQuery = endpoint.includes('?');
+    const trailing = /[?&]$/.test(endpoint);
+    const sep = hasQuery ? (trailing ? '' : '&') : '?';
+    return `${endpoint}${sep}${qs}`;
+  }
+  return null;
+}
+
 // --- KPIs ---
 export function renderKPIs() {
   if (!state?.data) return;
@@ -102,10 +117,12 @@ export function renderTabla() {
 // --- data ---
 export async function cargarTabla() {
   const qs = new URLSearchParams({ date: currentDate() }).toString();
-  const j = await GET_FALLBACK([
-    api.cajas(qs),
-    api.legacy?.cajas ? api.legacy.cajas(qs) : null
-  ].filter(Boolean));
+  const primaryUrl = buildUrl(api?.cajas, qs);
+  const secondaryUrl = buildUrl(api?.legacy?.cajas, qs);
+  if (!primaryUrl) {
+    throw new Error('Endpoint de cajas no configurado');
+  }
+  const j = await GET_FALLBACK([primaryUrl, secondaryUrl].filter(Boolean));
   state.date = j?.date || currentDate();
   state.data = Array.isArray(j?.terminals) ? j.terminals : [];
   if (els.badgeFecha) els.badgeFecha.textContent = state.date;

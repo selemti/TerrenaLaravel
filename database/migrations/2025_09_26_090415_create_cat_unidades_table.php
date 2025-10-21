@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cat_unidades', function (Blueprint $table) {
-            $table->id();
-            $table->string('clave', 16)->unique();   // KG, LT, PZA...
-            $table->string('nombre', 64);
-            $table->boolean('activo')->default(true);
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('cat_unidades')) {
+            Schema::create('cat_unidades', function (Blueprint $table) {
+                $table->id();
+                $table->string('clave', 16)->unique();   // KG, LT, PZA...
+                $table->string('nombre', 64);
+                $table->boolean('activo')->default(true);
+                $table->timestamps();
+            });
+        }
     }
 
     /**

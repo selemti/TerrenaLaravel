@@ -1,4 +1,4 @@
-// Terrena JS – Layout + Dashboard
+﻿// Terrena JS â€“ Layout + Dashboard
 // Sucursales (fijo por ahora, luego desde BD)
 const BRANCHES = ['Principal','NB','Torre','Terrena'];
 
@@ -9,15 +9,15 @@ const LOGO_MINI = (window.__BASE__ || '') + '/assets/img/logo2.svg';
 document.addEventListener('DOMContentLoaded', () => {
   const sidebar             = document.getElementById('sidebar');
   const sidebarCollapseBtn  = document.getElementById('sidebarCollapse');        // desktop
-  const sidebarToggleMobile = document.getElementById('sidebarToggleMobile');    // móvil
+  const sidebarToggleMobile = document.getElementById('sidebarToggleMobile');    // mÃ³vil
   const logoImg             = document.getElementById('logoImg');                // <img> del logo
 
-  // ===== Toggle MÓVIL (off-canvas) =====
+  // ===== Toggle MÃ“VIL (off-canvas) =====
   sidebarToggleMobile?.addEventListener('click', (e) => {
     e.preventDefault();
     if (window.innerWidth < 992) sidebar?.classList.toggle('show');
   });
-  // Cierra tocando fuera (solo móvil)
+  // Cierra tocando fuera (solo mÃ³vil)
   document.addEventListener('click', (ev) => {
     if (window.innerWidth >= 992) return;
     if (!sidebar?.classList.contains('show')) return;
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!sidebar) return;
     sidebar.classList.toggle('collapsed');
 
-    // Cambia logo según estado
+    // Cambia logo segÃºn estado
     if (logoImg) {
       const isCollapsed = sidebar.classList.contains('collapsed');
       logoImg.src = isCollapsed ? LOGO_MINI : LOGO_FULL;
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderActivity();
   renderOrders();
 
-  // ===== Gráficas =====
+  // ===== GrÃ¡ficas =====
   initCharts();
 });
 
@@ -91,10 +91,7 @@ function setupFilters(){
   s.value = toISODate(weekAgo);
   e.value = toISODate(today);
 
-  btn?.addEventListener('click', () => {
-    toast('Filtros aplicados');
-    // TODO: fetch a PHP/PostgreSQL, refrescar KPIs/Charts/Tablas
-  });
+  btn?.addEventListener('click', () => {\n    const desde = s.value;\n    const hasta = e.value;\n    if (window.Terrena && typeof Terrena.initDashboardCharts === 'function') {\n      Terrena.initDashboardCharts({desde, hasta});\n    }\n    toast('Filtros aplicados');\n  });
 }
 function toISODate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 
@@ -109,7 +106,7 @@ function renderHeaderAlerts(){
     {type:'low',  icon:'fa-triangle-exclamation text-warning', txt:'Inventario bajo: Leche (10L)',       minutesAgo: 8},
     {type:'error',icon:'fa-circle-exclamation text-danger',    txt:'Diferencia en corte: Sucursal NB',   minutesAgo: 18},
     {type:'info', icon:'fa-tags text-primary',                 txt:'Descuento > $50 en ticket #521',     minutesAgo: 25},
-    {type:'low',  icon:'fa-triangle-exclamation text-warning', txt:'A punto de agotarse: Café de Altura',minutesAgo: 47},
+    {type:'low',  icon:'fa-triangle-exclamation text-warning', txt:'A punto de agotarse: CafÃ© de Altura',minutesAgo: 47},
     {type:'info', icon:'fa-ticket text-primary',               txt:'Tickets abiertos: 3 en Torre',       minutesAgo: 60},
   ].slice(0,5);
 
@@ -124,7 +121,7 @@ function renderHeaderAlerts(){
     </a>`).join('');
 }
 
-/* =============== KPIs – Estatus de cajas (tabla) =============== */
+/* =============== KPIs â€“ Estatus de cajas (tabla) =============== */
 function renderKpiRegisters(){
   const tbody = document.getElementById('kpi-registers');
   if (!tbody) return;
@@ -149,8 +146,8 @@ function renderActivity(){
   const ul = document.getElementById('activity-list');
   if (!ul) return;
   const items = [
-    {txt:'Admin cerró corte en Principal', minutesAgo:12},
-    {txt:'OC #1024 registrada a Lácteos MX', minutesAgo:28},
+    {txt:'Admin cerrÃ³ corte en Principal', minutesAgo:12},
+    {txt:'OC #1024 registrada a LÃ¡cteos MX', minutesAgo:28},
     {txt:'Descuento 15% aplicado en ticket #531', minutesAgo:39},
     {txt:'OP-001 (Tortas de pollo x20) generada', minutesAgo:52},
     {txt:'Costo actualizado: Leche 1.5L', minutesAgo:63},
@@ -162,7 +159,7 @@ function renderActivity(){
     </li>`).join('');
 }
 
-/* =============== Órdenes recientes =============== */
+/* =============== Ã“rdenes recientes =============== */
 function renderOrders(){
   const tb = document.getElementById('orders-table');
   if (!tb) return;
@@ -198,15 +195,15 @@ function toast(msg,type='success'){
 function initCharts(){
   if (typeof Chart === 'undefined') return;
 
-  // Tendencia 7 días
+  // Tendencia 7 dÃ­as
   if (document.getElementById('salesTrendChart')) {
     makeLine('salesTrendChart',
-      ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],
+      ['Lun','Mar','MiÃ©','Jue','Vie','SÃ¡b','Dom'],
       [{label:'Ventas Diarias ($)',data:[2450,3120,2980,4050,4780,6250,5820],bg:'rgba(233,122,58,.2)',stroke:'#E97A3A'}]
     );
   }
 
-  // Ventas por hora – barra apilada por sucursal
+  // Ventas por hora â€“ barra apilada por sucursal
   if (document.getElementById('salesByHourChart')) {
     const hours = ['08h','09h','10h','11h','12h','13h','14h','15h','16h','17h'];
     makeStackedBars('salesByHourChart', hours, [
@@ -217,7 +214,7 @@ function initCharts(){
     ]);
   }
 
-  // Top 5 productos – horizontal apilada por sucursal
+  // Top 5 productos â€“ horizontal apilada por sucursal
   if (document.getElementById('topProductsChart')) {
     const labels = ['Latte Vainilla','Capuchino','Torta Pollo','Americano','Croissant'];
     makeStackedHorizontalBars('topProductsChart', labels, [
@@ -323,7 +320,7 @@ function makeDoughnut(canvasId, labels, data, colors){
     options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' } } }
   });
 }
-/* === CAJA: Cortes de caja (Precorte → Corte → Postcorte) === */
+/* === CAJA: Cortes de caja (Precorte â†’ Corte â†’ Postcorte) === */
 
 (function () {
   const $ = (sel, ctx=document) => ctx.querySelector(sel);
@@ -361,7 +358,7 @@ function makeDoughnut(canvasId, labels, data, colors){
         r.status === 'pending' ? '<span class="badge text-bg-warning">Pendiente</span>' :
         '<span class="badge text-bg-success">Abierto</span>';
 
-      // Acciones según etapa
+      // Acciones segÃºn etapa
       let actions = '';
       if (r.stage === 'precorte' && r.status === 'open') {
         actions = `
@@ -409,7 +406,7 @@ function makeDoughnut(canvasId, labels, data, colors){
   function openPrecorteModal(e) {
     const id = e.currentTarget.dataset.id;
     currentPrecorte = { id };
-    // reiniciar conteo rápido
+    // reiniciar conteo rÃ¡pido
     $$('.den-qty').forEach(i => i.value = 0);
     $$('#tblDenominaciones .den-amount').forEach(td => td.textContent = money(0));
     $('#p_cash_total').textContent = money(0);
@@ -448,7 +445,7 @@ function makeDoughnut(canvasId, labels, data, colors){
     const { precorte_id } = await resp.json();
     currentPrecorte = { id: precorte_id };
 
-    // 2) subir conteo rápido
+    // 2) subir conteo rÃ¡pido
     const det = [];
     $$('.den-qty').forEach(inp => {
       const den = Number(inp.dataset.den);
@@ -481,7 +478,7 @@ function makeDoughnut(canvasId, labels, data, colors){
     // cargar sistema
     fetch(`${API}/caja/precorte/${id}/sistema`)
       .then(r => r.json()).then(sys => {
-        // MOCK: los declarados los tomamos de pantalla precorte (o backend cuando esté listo)
+        // MOCK: los declarados los tomamos de pantalla precorte (o backend cuando estÃ© listo)
         const decl_cash  = 250.00, decl_card = 1200.00, decl_trans = 150.00;
         const decl_total = decl_cash + decl_card + decl_trans;
         const sys_total  = (Number(sys.sys_cash)||0) + (Number(sys.sys_card)||0) + (Number(sys.sys_transfer)||0);
@@ -519,7 +516,7 @@ function makeDoughnut(canvasId, labels, data, colors){
 
   $('#btnConciliar')?.addEventListener('click', async () => {
     const id = $('#c_precorte_id').value;
-    const payload = { /* en real mandarías sys/decl */ };
+    const payload = { /* en real mandarÃ­as sys/decl */ };
     const r = await fetch(`${API}/caja/precorte/${id}/conciliar`, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
     await r.json();
     // En mock ya refleja diferencia; solo refresca listado
@@ -573,7 +570,7 @@ function makeDoughnut(canvasId, labels, data, colors){
   const tablaCajas = qs('#tabla-cajas');
   if (!tablaCajas) return; // no estamos en la vista de cortes
 
-  // 1) Selección de caja → setear hidden inputs (store/terminal) del form "abrir precorte"
+  // 1) SelecciÃ³n de caja â†’ setear hidden inputs (store/terminal) del form "abrir precorte"
   const formAbrir = document.querySelector('form[action$="/caja/cortes/abrir"]');
   const hidStore = qs('#form-abrir-store');
   const hidTerm = qs('#form-abrir-terminal');
@@ -581,10 +578,10 @@ function makeDoughnut(canvasId, labels, data, colors){
   function parseSel(val) {
     // val esperado: "Sucursal|Terminal"
     const [suc, termStr] = (val || '').split('|');
-    // Mapea sucursal -> id (mock). En real vendrá de BD (stores)
+    // Mapea sucursal -> id (mock). En real vendrÃ¡ de BD (stores)
     const map = { 'Principal': 1, 'NB': 2, 'Torre': 3, 'Terrena': 4 };
     return { store_id: map[suc] || null, terminal_id: parseInt(termStr || '0', 10) || null };
-    // Si ya tendrás store_id y terminal_id reales en el value del radio, omite el map.
+    // Si ya tendrÃ¡s store_id y terminal_id reales en el value del radio, omite el map.
   }
 
   function currentSel() {
@@ -610,7 +607,7 @@ function makeDoughnut(canvasId, labels, data, colors){
   });
   refreshHiddenTargets();
 
-  // 2) Navegación de tabs
+  // 2) NavegaciÃ³n de tabs
   function showTab(targetId) {
     const trigger = document.querySelector(`[data-bs-target="${targetId}"]`);
     if (!trigger) return;
@@ -624,7 +621,7 @@ function makeDoughnut(canvasId, labels, data, colors){
   const btnCorte = qs('#ir-a-corte');
   if (btnCorte) btnCorte.addEventListener('click', () => showTab('#pane-corte'));
 
-  // 3) Conteo rápido de denominaciones
+  // 3) Conteo rÃ¡pido de denominaciones
   const inpDenos = qsa('.inp-dq');
   const totalEfe = qs('#total-efectivo');
   const declCash = qs('#decl-cash');
@@ -665,7 +662,7 @@ function makeDoughnut(canvasId, labels, data, colors){
   // 4) Mock: cargar totales del sistema (hasta conectar BD)
   const btnSistema = qs('#btn-cargar-sistema');
   if (btnSistema) btnSistema.addEventListener('click', () => {
-    // Valores fake para demo; en vivo harás fetch a /caja/precorte/:id/sistema
+    // Valores fake para demo; en vivo harÃ¡s fetch a /caja/precorte/:id/sistema
     const sys = { cash: 240.00, card: 1200.00, transfer: 150.00 };
     qs('#res-sys-cash').textContent = formatMoney(sys.cash);
     qs('#res-sys-card').textContent = formatMoney(sys.card);
@@ -731,7 +728,7 @@ const fmtMoney = n => Number(n||0).toLocaleString('es-MX',{style:'currency',curr
   }
 })();
 
-// === Cortes de Caja: conteo rápido y conciliación ===
+// === Cortes de Caja: conteo rÃ¡pido y conciliaciÃ³n ===
 (function(){
   const tablaDenos = qs('#tabla-denominaciones');
   if(!tablaDenos) return; // no estamos en cortes.php
@@ -756,7 +753,7 @@ const fmtMoney = n => Number(n||0).toLocaleString('es-MX',{style:'currency',curr
   inpDenos.forEach(inp=>inp.addEventListener('input',recalcDenos));
   recalcDenos();
 
-  // Conciliación mock
+  // ConciliaciÃ³n mock
   const btnSistema=qs('#btn-cargar-sistema');
   if(btnSistema) btnSistema.addEventListener('click',()=>{
     const sys={cash:240,card:1200,transfer:150};
@@ -812,3 +809,73 @@ const fmtMoney = n => Number(n||0).toLocaleString('es-MX',{style:'currency',curr
     });
   });
 })();
+\n// === Auto-fetch basic datasets for demo ===\nif (typeof window.Terrena === 'undefined') window.Terrena = {};\nwindow.Terrena.initDashboardCharts = async function(range){\n  try{\n    const base = (window.__BASE__||'') + '/api/reports';\n    const today = new Date().toISOString().slice(0,10);\n    const [kpis, fam, hora, top] = await Promise.all([\n      fetch(base + '/kpis/sucursal?desde='+today+'&hasta='+today).then(r=>r.json()),\n      fetch(base + '/ventas/familia?desde='+today+'&hasta='+today).then(r=>r.json()),\n      fetch(base + '/ventas/hora?desde='+today+'&hasta='+today).then(r=>r.json()),\n      fetch(base + '/ventas/top?desde='+today+'&hasta='+today+'&limit=5').then(r=>r.json()),\n    ]);\n    console.log('KPIs sucursal', kpis);\n    console.log('Ventas familia', fam);\n    console.log('Ventas hora', hora);\n    console.log('Top productos', top);\n    // TODO: Render charts with Chart.js using the returned datasets\n  }catch(e){ console.error('Error cargando datasets', e); }\n};\n
+
+// Carga datasets reales y pinta gráficas (Chart.js)
+window.Terrena.initDashboardCharts = async function(range){
+  const base = (window.__BASE__||'') + '/api/reports';
+  const today = new Date().toISOString().slice(0,10);
+  const q = `?desde=${today}&hasta=${today}`;
+  try{
+    const [kpisSuc, ventasFam, ventasHora, topProd, tkAvg, itemsRes, formas] = await Promise.all([
+      fetch(base + '/kpis/sucursal'+q).then(r=>r.json()),
+      fetch(base + '/ventas/familia'+q).then(r=>r.json()),
+      fetch(base + '/ventas/hora'+q).then(r=>r.json()),
+      fetch(base + '/ventas/top'+q+'&limit=5').then(r=>r.json()),
+      fetch(base + '/ticket/promedio'+q).then(r=>r.json()),
+      fetch(base + '/ventas/items_resumen'+q).then(r=>r.json()),
+      fetch(base + '/ventas/formas'+q).then(r=>r.json()),
+    ]);
+    // KPIs
+    const totalVentasHoy = (kpisSuc.data||[]).reduce((s,r)=> s + (r.sistema_efectivo||0) + (r.sistema_no_efectivo||0), 0);
+    const kpiSales = document.getElementById('kpi-sales-today'); if(kpiSales) kpiSales.textContent = money(totalVentasHoy);
+    const kpiAvg = document.getElementById('kpi-avg-ticket'); if(kpiAvg) kpiAvg.textContent = money(tkAvg.ticket_promedio||0);
+    const kpiItems = document.getElementById('kpi-items-sold'); if(kpiItems) kpiItems.textContent = (itemsRes.unidades||0).toLocaleString('es-MX');
+    const kpiStar = document.getElementById('kpi-star-product'); if(kpiStar) kpiStar.textContent = (topProd.data&&topProd.data[0]) ? topProd.data[0].plu : '-';
+
+    // Ventas por hora
+    if (typeof Chart !== 'undefined'){
+      const ctxHora = document.getElementById('salesByHourChart');
+      if(ctxHora){
+        const labels = (ventasHora.data||[]).map(r=> new Date(r.hora).toLocaleTimeString('es-MX',{hour:'2-digit'}));
+        const data = (ventasHora.data||[]).map(r=> Number(r.venta_total||0));
+        new Chart(ctxHora.getContext('2d'), {
+          type: 'bar', data: { labels, datasets: [{ label: 'Venta', data, backgroundColor: '#4e79a7' }] },
+          options: { responsive:true, plugins:{ legend:{ display:false } } }
+        });
+      }
+      // Formas de pago (dona)
+      const ctxPay = document.getElementById('paymentChart');
+      if(ctxPay){
+        const labels = (formas.data||[]).map(r=> r.codigo_fp||'OTROS');
+        const data = (formas.data||[]).map(r=> Number(r.monto||0));
+        new Chart(ctxPay.getContext('2d'), {
+          type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: ['#59a14f','#e15759','#f28e2b','#76b7b2','#edc948'] }] },
+          options: { responsive:true }
+        });
+      }
+      // Ventas por sucursal (por familia) apilada
+      const ctxBranch = document.getElementById('branchPaymentsChart');
+      if(ctxBranch){
+        const rows = ventasFam.data||[];
+        const sucursales = [...new Set(rows.map(r=> r.sucursal_id||''))];
+        const familias = [...new Set(rows.map(r=> r.familia||'OTROS'))];
+        const datasets = familias.map((fam,i)=>({
+          label: fam,
+          data: sucursales.map(s=> Number((rows.find(r=> r.sucursal_id==s && r.familia==fam)||{}).venta_total||0)),
+          backgroundColor: ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f','#edc948','#b07aa1','#ff9da7'][i%8]
+        }));
+        new Chart(ctxBranch.getContext('2d'),{ type:'bar', data:{ labels: sucursales, datasets }, options:{ responsive:true, scales:{ x:{stacked:true}, y:{stacked:true} } } });
+      }
+      // Top productos
+      const ctxTop = document.getElementById('topProductsChart');
+      if(ctxTop){
+        const rows = topProd.data||[];
+        const labels = rows.map(r=> r.plu);
+        const data = rows.map(r=> Number(r.venta_total||0));
+        new Chart(ctxTop.getContext('2d'),{ type:'bar', data:{ labels, datasets:[{ label:'Venta', data, backgroundColor:'#9c755f' }] }, options:{ indexAxis:'y', plugins:{legend:{display:false}} } });
+      }
+    }
+  }catch(e){ console.error('Error cargando datasets', e); }
+};
+

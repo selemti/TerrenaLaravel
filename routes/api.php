@@ -22,6 +22,27 @@ use App\Http\Controllers\Api\Inventory\VendorController;
 
 /*
 |--------------------------------------------------------------------------
+| MÓDULO: REPORTES (Dashboards)
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\Api\ReportsController;
+Route::prefix('reports')->group(function () {
+    Route::get('/kpis/sucursal',        [ReportsController::class, 'kpisSucursalDia']);
+    Route::get('/kpis/terminal',        [ReportsController::class, 'kpisTerminalDia']);
+    Route::get('/ventas/familia',       [ReportsController::class, 'ventasFamilia']);
+    Route::get('/ventas/hora',          [ReportsController::class, 'ventasPorHora']);
+    Route::get('/ventas/top',           [ReportsController::class, 'ventasTopProductos']);
+    Route::get('/ventas/dia',           [ReportsController::class, 'ventasDiarias']);
+    Route::get('/ventas/items_resumen', [ReportsController::class, 'ventasItemsResumen']);
+    Route::get('/ventas/formas',        [ReportsController::class, 'formasPago']);
+    Route::get('/ticket/promedio',      [ReportsController::class, 'ticketPromedio']);
+    Route::get('/stock/val',            [ReportsController::class, 'stockValorizado']);
+    Route::get('/consumo/vr',           [ReportsController::class, 'consumoVsMovimientos']);
+    Route::get('/anomalias',            [ReportsController::class, 'anomalos']);
+});
+
+/*
+|--------------------------------------------------------------------------
 | Health Check
 |--------------------------------------------------------------------------
 */
@@ -44,9 +65,12 @@ Route::prefix('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('caja')->group(function () {
-    
+
     // === Cajas ===
     Route::get('/cajas', [CajasController::class, 'index']);
+
+    // === Tickets ===
+    Route::get('/ticket/{id}', [App\Http\Controllers\Api\Caja\CajaController::class, 'getTicketDetail']);
     
     // === Sesiones ===
     Route::get('/sesiones/activa', [SesionesController::class, 'getActiva']);

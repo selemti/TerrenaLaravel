@@ -21,13 +21,15 @@ class UnidadesController extends Controller
             });
         }
         $rows = $query->orderBy('codigo')->paginate(15)->withQueryString();
-        return view('catalogs.unidades.index', compact('rows','q'));
+        return view('catalogs.unidades.index', compact('rows','q'))
+            ->with('active', 'config');
     }
 
     public function create()
     {
-        $unidad = new Unidad();
-        return view('catalogs.unidades.create', compact('unidad'));
+        $unidad = new Unidad(['es_base' => false, 'factor_conversion_base' => 1]);
+        return view('catalogs.unidades.create', compact('unidad'))
+            ->with('active', 'config');
     }
 
     public function store(StoreUnidadRequest $request)
@@ -40,12 +42,14 @@ class UnidadesController extends Controller
 
     public function show(Unidad $unidad)
     {
-        return view('catalogs.unidades.show', compact('unidad'));
+        return view('catalogs.unidades.show', compact('unidad'))
+            ->with('active', 'config');
     }
 
     public function edit(Unidad $unidad)
     {
-        return view('catalogs.unidades.edit', compact('unidad'));
+        return view('catalogs.unidades.edit', compact('unidad'))
+            ->with('active', 'config');
     }
 
     public function update(UpdateUnidadRequest $request, Unidad $unidad)

@@ -5,10 +5,15 @@ export const els = {
   badgeFecha:  document.querySelector('#badgeFecha'),
 
   // KPIs
-  kpiAbiertas:  document.querySelector('#kpiAbiertas'),
-  kpiPrecortes: document.querySelector('#kpiPrecortes'),
-  kpiConcil:    document.querySelector('#kpiConcil'),
-  kpiDifProm:   document.querySelector('#kpiDifProm'),
+  kpiAbiertas:   document.querySelector('#kpiAbiertas'),
+  kpiPendientes: document.querySelector('#kpiPendientes'),
+  kpiPrecortes:  document.querySelector('#kpiPrecortes'),
+  kpiConcil:     document.querySelector('#kpiConcil'),
+  kpiDifProm:    document.querySelector('#kpiDifProm'),
+
+  // Tabs y filtros
+  cajaTabs:      document.querySelector('#cajaTabs'),
+  btnRefrescar:  document.querySelector('#btnRefrescar'),
 
   // wizard
   modal:              document.getElementById('czModalPrecorte'),

@@ -26,21 +26,39 @@ class CajasController extends Controller
               t.id, COALESCE(t.name, t.id::text) AS name, COALESCE(t.location, '') AS location,
               us.opening_float, us.closing_float, us.cajero_usuario_id AS assigned_user,
               u.first_name || ' ' || u.last_name AS assigned_name, us.id AS sesion_id,
+              us.apertura_ts, us.cierre_ts,
               (us.estatus = 'ACTIVA') AS activa, (us.cajero_usuario_id IS NOT NULL) AS asignada,
               EXISTS (SELECT 1 FROM selemti.precorte pr WHERE pr.sesion_id = us.id AND pr.estatus IN ('ENVIADO','APROBADO')) AS precorte_listo,
               NOT EXISTS (SELECT 1 FROM selemti.postcorte pc WHERE pc.sesion_id = us.id) AS sin_postcorte,
               (EXISTS (SELECT 1 FROM selemti.postcorte pc WHERE pc.sesion_id = us.id) AND us.cierre_ts IS NULL) AS postcorte_pendiente,
               COALESCE(us.skipped_precorte, FALSE) AS skipped_precorte
             FROM public.terminal t
-            LEFT JOIN ultimas_sesiones us ON us.terminal_id = t.id
+            INNER JOIN ultimas_sesiones us ON us.terminal_id = t.id
             LEFT JOIN public.users u ON u.auto_id = us.cajero_usuario_id
-            ORDER BY t.id
+            ORDER BY
+                CASE WHEN us.estatus = 'ACTIVA' THEN 1
+                     WHEN us.estatus = 'CERRADA' AND NOT EXISTS (SELECT 1 FROM selemti.precorte WHERE sesion_id = us.id AND estatus IN ('ENVIADO','APROBADO')) THEN 2
+                     WHEN EXISTS (SELECT 1 FROM selemti.precorte WHERE sesion_id = us.id AND estatus IN ('ENVIADO','APROBADO'))
+                          AND NOT EXISTS (SELECT 1 FROM selemti.postcorte WHERE sesion_id = us.id) THEN 3
+                     ELSE 4
+                END,
+                t.id
         ";
 
         try {
-            $results = DB::select($sql, ['day' => $date]);
+            $results = DB::connection('pgsql')->select($sql, ['day' => $date]);
 
             $terminals = collect($results)->map(function ($row) {
+                $activa = (bool) $row->activa;
+                $asignada = (bool) $row->asignada;
+                $precorteListo = (bool) $row->precorte_listo;
+                $sinPostcorte = (bool) $row->sin_postcorte;
+                $postcortePendiente = (bool) $row->postcorte_pendiente;
+                $skipped = (bool) $row->skipped_precorte;
+
+                // Calcular estado
+                $estado = $this->calcularEstado($activa, $asignada, $precorteListo, $sinPostcorte, $postcortePendiente, $skipped);
+
                 return [
                     'id' => (int) $row->id,
                     'name' => $row->name,
@@ -48,13 +66,16 @@ class CajasController extends Controller
                     'opening_float' => (float) ($row->opening_float ?? 0),
                     'assigned_user' => (int) ($row->assigned_user ?? 0),
                     'assigned_name' => $row->assigned_name ?? '—',
-                    'sesion_id' => $row->sesion_id ? (int) $row->sesion_id : null,  // Preserva null en lugar de 0
-                    'activa' => (bool) $row->activa,
-                    'asignada' => (bool) $row->asignada,
-                    'precorte_listo' => (bool) $row->precorte_listo,
-                    'sin_postcorte' => (bool) $row->sin_postcorte,
-                    'postcorte_pendiente' => (bool) $row->postcorte_pendiente,
-                    'skipped_precorte' => (bool) $row->skipped_precorte,
+                    'sesion_id' => $row->sesion_id ? (int) $row->sesion_id : null,
+                    'apertura_ts' => $row->apertura_ts ?? null,
+                    'cierre_ts' => $row->cierre_ts ?? null,
+                    'activa' => $activa,
+                    'asignada' => $asignada,
+                    'precorte_listo' => $precorteListo,
+                    'sin_postcorte' => $sinPostcorte,
+                    'postcorte_pendiente' => $postcortePendiente,
+                    'skipped_precorte' => $skipped,
+                    'estado' => $estado,
                 ];
             })->toArray();
 
@@ -63,5 +84,44 @@ class CajasController extends Controller
             \Log::error("Error en cajas (fecha: {$date}): " . $e->getMessage());
             return response()->json(['ok' => false, 'error' => 'server_error'], 500);
         }
+    }
+
+    /**
+     * Calcular estado de la sesión basado en el ciclo de vida
+     */
+    private function calcularEstado(bool $activa, bool $asignada, bool $precorteListo, bool $sinPostcorte, bool $postcortePendiente, bool $skipped): string
+    {
+        // 1. Requiere regularización urgente
+        if ($skipped) {
+            return 'REGULARIZAR';
+        }
+
+        // 2. Caja abierta y operando
+        if ($activa && $asignada) {
+            return 'ABIERTA';
+        }
+
+        // 3. Cerrada en POS pero falta precorte
+        if (!$activa && $asignada && !$precorteListo) {
+            return 'PRECORTE_PENDIENTE';
+        }
+
+        // 4. Precorte enviado, esperando validación (postcorte)
+        if ($precorteListo && $sinPostcorte) {
+            return 'VALIDACION';
+        }
+
+        // 5. Postcorte creado pero no validado
+        if ($precorteListo && !$sinPostcorte && $postcortePendiente) {
+            return 'EN_REVISION';
+        }
+
+        // 6. Todo completo
+        if ($precorteListo && !$sinPostcorte && !$postcortePendiente) {
+            return 'CONCILIADA';
+        }
+
+        // 7. Default - sesión sin actividad
+        return 'DISPONIBLE';
     }
 }

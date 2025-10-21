@@ -2,7 +2,8 @@
 
 namespace App\Livewire\Catalogs;
 
-use Illuminate\Support\Facades\DB;
+use App\Models\Catalogs\Almacen;
+use App\Models\Catalogs\Sucursal;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -21,28 +22,33 @@ class AlmacenesIndex extends Component
     protected function rules(): array
     {
         return [
-            'clave'       => ['required','max:16', Rule::unique('cat_almacenes','clave')->ignore($this->editId)],
-            'nombre'      => ['required','max:80'],
-            'sucursal_id' => ['nullable','integer'],
+            'clave'       => [
+                'required',
+                'string',
+                'max:16',
+                Rule::unique('cat_almacenes', 'clave')->ignore($this->editId),
+            ],
+            'nombre'      => ['required', 'string', 'max:80'],
+            'sucursal_id' => ['nullable', 'integer', 'exists:cat_sucursales,id'],
             'activo'      => ['boolean'],
         ];
     }
 
     public function create()
     {
-        $this->reset(['editId','clave','nombre','sucursal_id','activo']);
+        $this->reset(['editId', 'clave', 'nombre', 'sucursal_id', 'activo']);
         $this->activo = true;
     }
 
     public function edit(int $id)
     {
-        $r = DB::table('cat_almacenes')->where('id',$id)->first();
-        if (!$r) return;
-        $this->editId     = $r->id;
-        $this->clave      = $r->clave;
-        $this->nombre     = $r->nombre;
-        $this->sucursal_id= $r->sucursal_id;
-        $this->activo     = (bool)$r->activo;
+        $almacen = Almacen::findOrFail($id);
+
+        $this->editId      = $almacen->id;
+        $this->clave       = $almacen->clave;
+        $this->nombre      = $almacen->nombre;
+        $this->sucursal_id = $almacen->sucursal_id;
+        $this->activo      = (bool) $almacen->activo;
     }
 
     public function save()
@@ -50,45 +56,49 @@ class AlmacenesIndex extends Component
         $this->validate();
 
         $payload = [
-            'clave'       => $this->clave,
-            'nombre'      => $this->nombre,
-            'sucursal_id' => $this->sucursal_id,
-            'activo'      => $this->activo,
-            'updated_at'  => now(),
+            'clave'       => strtoupper(trim($this->clave)),
+            'nombre'      => trim($this->nombre),
+            'sucursal_id' => $this->sucursal_id ?: null,
+            'activo'      => (bool) $this->activo,
         ];
 
         if ($this->editId) {
-            DB::table('cat_almacenes')->where('id',$this->editId)->update($payload);
+            Almacen::findOrFail($this->editId)->update($payload);
         } else {
-            $payload['created_at'] = now();
-            DB::table('cat_almacenes')->insert($payload);
+            Almacen::create($payload);
         }
 
         $this->create();
-        session()->flash('ok','Almacén guardado');
+        session()->flash('ok', 'Almacén guardado');
     }
 
     public function delete(int $id)
     {
-        DB::table('cat_almacenes')->where('id',$id)->delete();
-        session()->flash('ok','Almacén eliminado');
+        Almacen::whereKey($id)->delete();
+        session()->flash('ok', 'Almacén eliminado');
     }
 
     public function render()
     {
-        $rows = DB::table('cat_almacenes as a')
-            ->leftJoin('cat_sucursales as s','s.id','=','a.sucursal_id')
-            ->select('a.*','s.nombre as sucursal')
-            ->when($this->search, fn($q) =>
-                $q->where('a.clave','ilike',"%{$this->search}%")
-                  ->orWhere('a.nombre','ilike',"%{$this->search}%")
-                  ->orWhere('s.nombre','ilike',"%{$this->search}%")
-            )
-            ->orderBy('a.clave')
+        $rows = Almacen::with('sucursal:id,nombre')
+            ->when($this->search !== '', function ($query) {
+                $needle = '%' . $this->search . '%';
+                $query->where(function ($sub) use ($needle) {
+                    $sub->where('clave', 'ilike', $needle)
+                        ->orWhere('nombre', 'ilike', $needle)
+                        ->orWhereHas('sucursal', fn ($s) => $s->where('nombre', 'ilike', $needle));
+                });
+            })
+            ->orderBy('clave')
             ->paginate(10);
 
-        $sucursales = DB::table('cat_sucursales')->orderBy('nombre')->get();
+        $sucursales = Sucursal::orderBy('nombre')->get(['id', 'nombre']);
 
-        return view('livewire.catalogs.almacenes-index', compact('rows','sucursales'));
+        return view('livewire.catalogs.almacenes-index', compact('rows', 'sucursales'))
+            ->layout('layouts.terrena', [
+                'active'    => 'config',
+                'title'     => 'Catálogo · Almacenes',
+                'pageTitle' => 'Almacenes',
+            ]);
     }
 }
