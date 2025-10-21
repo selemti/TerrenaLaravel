@@ -69,6 +69,8 @@ Route::view('/recetas',    'recetas')->name('recetas');
 /* =========================================================================
 |  Catálogos (Livewire pages)
 |========================================================================= */
+Route::view('/catalogos', 'catalogos-index')->name('catalogos.index'); // Índice de catálogos
+
 Route::prefix('catalogos')->group(function () {
     Route::get('/unidades',     CatalogUnidadesIndex::class)->name('cat.unidades');
     Route::get('/uom',          CatalogUomConversionIndex::class)->name('cat.uom');

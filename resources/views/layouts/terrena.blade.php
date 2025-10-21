@@ -32,32 +32,104 @@
       </div>
       <hr style="margin:0">
       <nav class="nav flex-column gap-1">
+        {{-- Dashboard --}}
         <a class="nav-link {{ ($active ?? '') === 'dashboard' ? 'active' : '' }}" href="{{ url('/dashboard') }}">
           <i class="fa-solid fa-gauge"></i> <span class="label">Dashboard</span>
         </a>
-				<a class="nav-link {{ ($active ?? '') === 'cortes' ? 'active' : '' }}" href="{{ route('caja.cortes') }}" class="{{ $active == 'cortes' ? 'active' : '' }}">
-						<i class="fa-solid fa-cash-register"></i> Cortes de Caja
+
+        {{-- Cortes de Caja --}}
+				<a class="nav-link {{ ($active ?? '') === 'cortes' ? 'active' : '' }}" href="{{ route('caja.cortes') }}">
+						<i class="fa-solid fa-cash-register"></i> <span class="label">Cortes de Caja</span>
 				</a>
-        <a class="nav-link {{ ($active ?? '') === 'inventario' ? 'active' : '' }}" href="{{ url('/inventario') }}">
-          <i class="fa-solid fa-boxes-stacked"></i> <span class="label">Inventario</span>
-        </a>
+
+        {{-- Inventario con submenú --}}
+        <div class="nav-item">
+          <a class="nav-link {{ in_array($active ?? '', ['inventario', 'items', 'lots', 'receptions']) ? 'active' : '' }}"
+             data-bs-toggle="collapse" href="#menuInventario" role="button" aria-expanded="false">
+            <i class="fa-solid fa-boxes-stacked"></i> <span class="label">Inventario</span>
+            <i class="fa-solid fa-chevron-down ms-auto submenu-arrow"></i>
+          </a>
+          <div class="collapse {{ in_array($active ?? '', ['inventario', 'items', 'lots', 'receptions']) ? 'show' : '' }}" id="menuInventario">
+            <div class="submenu">
+              <a class="nav-link submenu-link" href="{{ url('/inventario') }}">
+                <i class="fa-solid fa-chart-line"></i> <span class="label">Vista General</span>
+              </a>
+              <a class="nav-link submenu-link" href="{{ route('inventory.items.index') }}">
+                <i class="fa-solid fa-box"></i> <span class="label">Items</span>
+              </a>
+              <a class="nav-link submenu-link" href="{{ route('inv.lots') }}">
+                <i class="fa-solid fa-tag"></i> <span class="label">Lotes</span>
+              </a>
+              <a class="nav-link submenu-link" href="{{ route('inv.receptions') }}">
+                <i class="fa-solid fa-dolly"></i> <span class="label">Recepciones</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {{-- Compras --}}
         <a class="nav-link {{ ($active ?? '') === 'compras' ? 'active' : '' }}" href="{{ url('/compras') }}">
           <i class="fa-solid fa-truck"></i> <span class="label">Compras</span>
         </a>
-        <a class="nav-link {{ ($active ?? '') === 'recetas' ? 'active' : '' }}" href="{{ url('/recetas') }}">
+
+        {{-- Recetas --}}
+        <a class="nav-link {{ ($active ?? '') === 'recetas' ? 'active' : '' }}" href="{{ route('rec.index') }}">
           <i class="fa-solid fa-bowl-food"></i> <span class="label">Recetas</span>
         </a>
+
+        {{-- Producción --}}
         <a class="nav-link {{ ($active ?? '') === 'produccion' ? 'active' : '' }}" href="{{ url('/produccion') }}">
           <i class="fa-solid fa-industry"></i> <span class="label">Producción</span>
         </a>
+
+        {{-- Reportes --}}
         <a class="nav-link {{ ($active ?? '') === 'reportes' ? 'active' : '' }}" href="{{ url('/reportes') }}">
           <i class="fa-solid fa-chart-column"></i> <span class="label">Reportes</span>
         </a>
-        <a class="nav-link {{ ($active ?? '') === 'config' ? 'active' : '' }}" href="{{ url('/admin') }}">
-          <i class="fa-solid fa-gear"></i> <span class="label">Configuración</span>
-        </a>
+
+        {{-- Configuración con submenú --}}
+        <div class="nav-item">
+          <a class="nav-link {{ ($active ?? '') === 'config' ? 'active' : '' }}"
+             data-bs-toggle="collapse" href="#menuConfig" role="button" aria-expanded="false">
+            <i class="fa-solid fa-gear"></i> <span class="label">Configuración</span>
+            <i class="fa-solid fa-chevron-down ms-auto submenu-arrow"></i>
+          </a>
+          <div class="collapse {{ ($active ?? '') === 'config' ? 'show' : '' }}" id="menuConfig">
+            <div class="submenu">
+              <a class="nav-link submenu-link" href="{{ route('catalogos.index') }}">
+                <i class="fa-solid fa-book"></i> <span class="label">Catálogos</span>
+              </a>
+              <a class="nav-link submenu-link" href="{{ route('cat.sucursales') }}">
+                <i class="fa-solid fa-store"></i> <span class="label">Sucursales</span>
+              </a>
+              <a class="nav-link submenu-link" href="{{ route('cat.almacenes') }}">
+                <i class="fa-solid fa-warehouse"></i> <span class="label">Almacenes</span>
+              </a>
+              <a class="nav-link submenu-link" href="{{ route('cat.unidades') }}">
+                <i class="fa-solid fa-ruler"></i> <span class="label">Unidades</span>
+              </a>
+              <a class="nav-link submenu-link" href="{{ route('cat.proveedores') }}">
+                <i class="fa-solid fa-truck-field"></i> <span class="label">Proveedores</span>
+              </a>
+              <a class="nav-link submenu-link" href="{{ route('cat.stockpolicy') }}">
+                <i class="fa-solid fa-sliders"></i> <span class="label">Políticas Stock</span>
+              </a>
+              <hr class="my-2 opacity-25">
+              <a class="nav-link submenu-link" href="{{ url('/admin') }}">
+                <i class="fa-solid fa-cog"></i> <span class="label">Sistema</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {{-- Personal --}}
         <a class="nav-link {{ ($active ?? '') === 'personal' ? 'active' : '' }}" href="{{ url('/personal') }}">
           <i class="fa-solid fa-user-group"></i> <span class="label">Personal</span>
+        </a>
+
+        {{-- KDS --}}
+        <a class="nav-link {{ ($active ?? '') === 'kds' ? 'active' : '' }}" href="{{ route('kds.board') }}">
+          <i class="fa-solid fa-tv"></i> <span class="label">KDS</span>
         </a>
       </nav>
       <button class="btn btn-sm btn-outline-secondary d-none d-lg-inline-flex ms-2" id="sidebarCollapse" aria-label="Colapsar menú">
@@ -161,6 +233,19 @@
   <script src="{{ asset('assets/js/moneda.js') }}" defer></script>
   <script src="{{ asset('assets/js/terrena.js') }}" defer></script>
   @livewireScripts
+  <script>
+    // Configurar Livewire para subdirectorio
+    document.addEventListener('livewire:init', () => {
+      Livewire.hook('request', ({ uri, options, payload, respond, succeed, fail }) => {
+        // Asegurar que las peticiones usen el subdirectorio correcto
+        const basePath = '{{ config('app.url') }}';
+        if (uri.startsWith('/livewire/')) {
+          uri = basePath + uri;
+        }
+        return { uri, options, payload, respond, succeed, fail };
+      });
+    });
+  </script>
   @stack('scripts')
 </body>
 </html>

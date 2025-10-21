@@ -35,6 +35,8 @@ Route::prefix('reports')->group(function () {
     Route::get('/ventas/top',           [ReportsController::class, 'ventasTopProductos']);
     Route::get('/ventas/dia',           [ReportsController::class, 'ventasDiarias']);
     Route::get('/ventas/items_resumen', [ReportsController::class, 'ventasItemsResumen']);
+    Route::get('/ventas/categorias',    [ReportsController::class, 'ventasCategorias']);
+    Route::get('/ventas/sucursales',    [ReportsController::class, 'ventasPorSucursal']);
     Route::get('/ventas/ordenes_recientes', [ReportsController::class, 'ordenesRecientes']);
     Route::get('/ventas/formas',        [ReportsController::class, 'formasPago']);
     Route::get('/ticket/promedio',      [ReportsController::class, 'ticketPromedio']);

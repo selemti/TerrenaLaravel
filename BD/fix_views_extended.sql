@@ -386,7 +386,8 @@ SELECT
   base.sucursal_id,
   base.terminal_id,
   base.ticket_ref,
-  base.total
+  base.total,
+  base.closing_date
 FROM selemti.vw_dashboard_ticket_base base
 WHERE base.paid = TRUE
   AND base.voided = FALSE;

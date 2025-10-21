@@ -122,6 +122,7 @@ window.Terrena.initDashboardCharts = async function (range) {
       formasPago,
       alertasAnomalias,
       cajasStatus,
+      ventasSucursales,
       ordenesRecientes
     ] = await Promise.all([
       fetchReport(`/kpis/sucursal${buildQuery(rangeParams)}`),
@@ -135,6 +136,7 @@ window.Terrena.initDashboardCharts = async function (range) {
       fetchReport(`/ventas/formas${buildQuery(rangeParams)}`),
       fetchReport(`/anomalias${buildQuery({ limit: 6 })}`),
       fetchCajaStatus(hasta),
+      fetchReport(`/ventas/sucursales${buildQuery(rangeParams)}`),
       fetchReport(`/ventas/ordenes_recientes${buildQuery({ ...rangeParams, limit: 10 })}`)
     ]);
 
@@ -145,10 +147,9 @@ window.Terrena.initDashboardCharts = async function (range) {
     const totalsSource = kpiRows.length ? kpiRows : terminalRows;
 
     const totals = totalsSource.reduce((acc, row) => {
-      const efectivo = Number(row.sistema_efectivo || 0);
-      const noEfectivo = Number(row.sistema_no_efectivo || 0);
-      acc.venta += efectivo + noEfectivo;
-      acc.sesiones += Number(row.sesiones || 0);
+      const venta = Number(row.venta_total || row.total || 0);
+      acc.venta += venta;
+      acc.sesiones += Number(row.tickets || row.sesiones || 0);
       return acc;
     }, { venta: 0, sesiones: 0 });
 
@@ -173,6 +174,7 @@ window.Terrena.initDashboardCharts = async function (range) {
 
     renderHeaderAlerts(alerts);
     renderKpiRegisters(kpiRows, terminalRows, cajaRows, { fechaObjetivo: hasta, branchLookup, fallbackLatest: false });
+    renderBranchSummary(ventasSucursales.data || []);
 
     renderSalesTrendChart(ventasDia.data || [], { desde: trendDesde, hasta });
     renderSalesByHourChart(ventasHora.data || [], { startHour: 7, endHour: 19 });
@@ -191,6 +193,7 @@ window.Terrena.initDashboardCharts = async function (range) {
     setText('kpi-alerts', '0');
     renderHeaderAlerts([]);
     renderKpiRegisters([], [], []);
+    renderBranchSummary([]);
     renderOrders([]);
     ['salesTrendChart', 'salesByHourChart', 'branchPaymentsChart', 'topProductsChart', 'paymentChart'].forEach(destroyChart);
   }
@@ -239,25 +242,30 @@ function renderSalesTrendChart(rows, opts = {}) {
 
   const list = Array.isArray(rows) ? rows.filter(r => r && r.fecha) : [];
   const totalsByDate = new Map();
+  const ticketsByDate = new Map();
   list.forEach((row) => {
     const iso = toISODateOnly(row.fecha);
-    totalsByDate.set(iso, Number(row.venta_total || 0));
+    totalsByDate.set(iso, Number(row.venta_total || row.total || 0));
+    ticketsByDate.set(iso, Number(row.tickets || 0));
   });
 
   const startDate = parseISODate(opts.desde) || parseISODate(list[0]?.fecha);
   const endDate = parseISODate(opts.hasta) || startDate;
   const labels = [];
   const data = [];
+  const tickets = [];
 
   if (startDate && endDate) {
     for (let cursor = new Date(startDate); cursor <= endDate; cursor.setDate(cursor.getDate() + 1)) {
       const iso = toISODate(cursor);
       labels.push(formatDateLabel(iso));
       data.push(Number(totalsByDate.get(iso) || 0));
+      tickets.push(Number(ticketsByDate.get(iso) || 0));
     }
   } else {
     labels.push('—');
     data.push(0);
+    tickets.push(0);
   }
 
   destroyChart(canvas);
@@ -281,7 +289,19 @@ function renderSalesTrendChart(rows, opts = {}) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label(context) {
+              const venta = money(context.parsed.y ?? context.parsed.x ?? 0);
+              const idx = context.dataIndex;
+              const tk = tickets[idx] ?? 0;
+              return `Venta: ${venta} · Tickets: ${tk.toLocaleString('es-MX')}`;
+            }
+          }
+        }
+      },
       scales: {
         x: { grid: { display: false } },
         y: { beginAtZero: true }
@@ -797,8 +817,8 @@ function renderKpiRegisters(sucursalRows = [], terminalRows = [], cajaRows = [],
   filteredSucursales.forEach((row) => {
     const key = resolveBranchName(row, branchLookup);
     const current = ventasPorSucursal.get(key) || { vendido: 0, sesiones: 0 };
-    current.vendido += Number(row.sistema_efectivo || 0) + Number(row.sistema_no_efectivo || 0);
-    current.sesiones += Number(row.sesiones || 0);
+    current.vendido += Number(row.venta_total || row.total || 0);
+    current.sesiones += Number(row.tickets || row.sesiones || 0);
     ventasPorSucursal.set(key, current);
   });
 
@@ -807,8 +827,8 @@ function renderKpiRegisters(sucursalRows = [], terminalRows = [], cajaRows = [],
     const key = row.terminal_id || row.terminal || null;
     if (key == null) return;
     const current = ventasPorTerminal.get(key) || { vendido: 0, sesiones: 0 };
-    current.vendido += Number(row.sistema_efectivo || 0) + Number(row.sistema_no_efectivo || 0);
-    current.sesiones += Number(row.sesiones || 0);
+    current.vendido += Number(row.venta_total || row.total || 0);
+    current.sesiones += Number(row.tickets || row.sesiones || 0);
     ventasPorTerminal.set(key, current);
   });
 
@@ -904,6 +924,35 @@ function buildCajaStatusBadge(estadoRow, sesiones = 0) {
     return badge('Disponible', 'text-bg-info');
   }
   return defaultClosed;
+}
+
+function renderBranchSummary(rows = []){
+  const tbody = document.getElementById('branch-summary');
+  if (!tbody) return;
+
+  const data = Array.isArray(rows) ? rows.filter(Boolean) : [];
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted small">Sin información</td></tr>';
+    return;
+  }
+
+  const summary = new Map();
+  data.forEach((row) => {
+    const sucursal = (row.sucursal_id || row.sucursal || 'Sin sucursal').trim() || 'Sin sucursal';
+    const current = summary.get(sucursal) || { sucursal, tickets: 0, venta: 0 };
+    current.tickets += Number(row.tickets || 0);
+    current.venta += Number(row.venta_total || row.total || 0);
+    summary.set(sucursal, current);
+  });
+
+  const entries = Array.from(summary.values()).sort((a, b) => b.venta - a.venta);
+  tbody.innerHTML = entries.map(item => `
+    <tr>
+      <td>${escapeHtml(item.sucursal)}</td>
+      <td class="text-end">${Number(item.tickets || 0).toLocaleString('es-MX')}</td>
+      <td class="text-end">${money(Number(item.venta || 0))}</td>
+    </tr>
+  `).join('');
 }
 
 /* =============== Actividad reciente =============== */

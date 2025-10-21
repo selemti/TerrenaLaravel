@@ -6,12 +6,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Routing\Controller;
 use Carbon\Carbon;
+use Illuminate\Database\Connection;
 
 class ReportsController extends Controller
 {
     private function materializedCoversRange(string $table, string $dateColumn, string $desde, string $hasta): bool
     {
-        $stats = DB::table($table)
+        $stats = $this->pg()->table($table)
             ->selectRaw("MIN({$dateColumn}) AS min_fecha, MAX({$dateColumn}) AS max_fecha")
             ->first();
 
@@ -23,6 +24,11 @@ class ReportsController extends Controller
         $max = Carbon::parse($stats->max_fecha)->toDateString();
 
         return $min <= $desde && $max >= $hasta;
+    }
+
+    private function pg(): Connection
+    {
+        return DB::connection('pgsql');
     }
 
     private function range(Request $request): array
@@ -53,7 +59,7 @@ class ReportsController extends Controller
     public function kpisSucursalDia(Request $request)
     {
         [$desde, $hasta] = $this->range($request);
-        $rows = DB::table('selemti.vw_dashboard_resumen_sucursal')
+        $rows = $this->pg()->table('selemti.vw_dashboard_resumen_sucursal')
             ->whereBetween('fecha', [$desde, $hasta])
             ->orderBy('fecha')
             ->orderBy('sucursal_id')
@@ -64,7 +70,7 @@ class ReportsController extends Controller
     public function kpisTerminalDia(Request $request)
     {
         [$desde, $hasta] = $this->range($request);
-        $rows = DB::table('selemti.vw_dashboard_resumen_terminal')
+        $rows = $this->pg()->table('selemti.vw_dashboard_resumen_terminal')
             ->whereBetween('fecha', [$desde, $hasta])
             ->orderBy('fecha')
             ->orderBy('terminal_id')
@@ -75,7 +81,7 @@ class ReportsController extends Controller
     public function ventasFamilia(Request $request)
     {
         [$desde, $hasta] = $this->range($request);
-        $rows = DB::table('selemti.vw_dashboard_ventas_categorias')
+        $rows = $this->pg()->table('selemti.vw_dashboard_ventas_categorias')
             ->selectRaw('fecha, sucursal_id, categoria AS familia, unidades, venta_total')
             ->whereBetween('fecha', [$desde, $hasta])
             ->orderBy('fecha')
@@ -87,7 +93,7 @@ class ReportsController extends Controller
     public function ventasPorHora(Request $request)
     {
         [$desde, $hasta] = $this->range($request);
-        $rows = DB::table('selemti.vw_dashboard_ventas_hora')
+        $rows = $this->pg()->table('selemti.vw_dashboard_ventas_hora')
             ->whereBetween('fecha', [$desde, $hasta])
             ->orderBy('fecha')
             ->orderBy('hora')
@@ -104,7 +110,7 @@ class ReportsController extends Controller
         $start = Carbon::parse($desde, config('app.timezone'))->startOfDay();
         $end = Carbon::parse($hasta, config('app.timezone'))->endOfDay();
 
-        $rows = DB::table('public.ticket_item as ti')
+        $rows = $this->pg()->table('public.ticket_item as ti')
             ->selectRaw("
                 ti.item_id AS plu,
                 COALESCE(MAX(NULLIF(ti.item_name, '')), ti.item_id::text) AS descripcion,
@@ -134,7 +140,7 @@ class ReportsController extends Controller
     {
         [$desde, $hasta] = $this->range($request);
 
-        $rows = DB::table('selemti.vw_dashboard_resumen_sucursal')
+        $rows = $this->pg()->table('selemti.vw_dashboard_resumen_sucursal')
             ->select('fecha', DB::raw('SUM(venta_total) AS venta_total'), DB::raw('SUM(tickets) AS tickets'))
             ->whereBetween('fecha', [$desde, $hasta])
             ->groupBy('fecha')
@@ -146,38 +152,32 @@ class ReportsController extends Controller
 
     public function stockValorizado()
     {
-        $rows = DB::select("SELECT * FROM selemti.vw_stock_valorizado ORDER BY valor DESC");
+        $rows = $this->pg()->select("SELECT * FROM selemti.vw_stock_valorizado ORDER BY valor DESC");
         return response()->json(['ok' => true, 'data' => $rows]);
     }
 
     public function consumoVsMovimientos(Request $request)
     {
         [$desde, $hasta] = $this->range($request);
-        $rows = DB::select("SELECT * FROM selemti.vw_consumo_vs_movimientos WHERE fecha BETWEEN ? AND ? ORDER BY fecha DESC, sucursal_id", [$desde, $hasta]);
+        $rows = $this->pg()->select("SELECT * FROM selemti.vw_consumo_vs_movimientos WHERE fecha BETWEEN ? AND ? ORDER BY fecha DESC, sucursal_id", [$desde, $hasta]);
         return response()->json(['ok' => true, 'data' => $rows]);
     }
 
     public function anomalos(Request $request)
     {
         $limit = (int) ($request->query('limit', 200));
-        $rows = DB::select("SELECT * FROM selemti.vw_movimientos_anomalos ORDER BY ts DESC LIMIT $limit");
+        $rows = $this->pg()->select("SELECT * FROM selemti.vw_movimientos_anomalos ORDER BY ts DESC LIMIT $limit");
         return response()->json(['ok' => true, 'data' => $rows]);
     }
 
     public function ticketPromedio(Request $request)
     {
         [$desde, $hasta] = $this->range($request);
-        $start = Carbon::parse($desde, config('app.timezone'))->startOfDay();
-        $end = Carbon::parse($hasta, config('app.timezone'))->endOfDay();
-
-        $totals = DB::table('public.ticket as t')
-            ->selectRaw("
-                COUNT(DISTINCT t.id) AS tickets,
-                SUM(COALESCE(t.total_price, 0)) AS venta_total
-            ")
-            ->whereBetween('t.closing_date', [$start, $end])
-            ->where('t.paid', true)
-            ->where('t.voided', false)
+        $totals = $this->pg()->table('selemti.vw_dashboard_ticket_base')
+            ->selectRaw('COUNT(DISTINCT ticket_id) AS tickets, SUM(total) AS venta_total')
+            ->whereBetween('fecha', [$desde, $hasta])
+            ->where('paid', true)
+            ->where('voided', false)
             ->first();
 
         $tickets = (int) ($totals->tickets ?? 0);
@@ -197,24 +197,9 @@ class ReportsController extends Controller
     public function ventasItemsResumen(Request $request)
     {
         [$desde, $hasta] = $this->range($request);
-        $start = Carbon::parse($desde, config('app.timezone'))->startOfDay();
-        $end = Carbon::parse($hasta, config('app.timezone'))->endOfDay();
-
-        $tot = DB::table('public.ticket_item as ti')
-            ->selectRaw("
-                SUM(
-                    COALESCE(
-                        NULLIF(ti.item_quantity, 0),
-                        NULLIF(ti.item_count, 0),
-                        0
-                    )::numeric
-                ) AS unidades,
-                SUM(COALESCE(ti.total_price, 0)) AS venta_total
-            ")
-            ->join('public.ticket as t', 't.id', '=', 'ti.ticket_id')
-            ->whereBetween('t.closing_date', [$start, $end])
-            ->where('t.paid', true)
-            ->where('t.voided', false)
+        $tot = $this->pg()->table('selemti.vw_dashboard_ventas_productos')
+            ->selectRaw('SUM(unidades) AS unidades, SUM(venta_total) AS venta_total')
+            ->whereBetween('fecha', [$desde, $hasta])
             ->first();
 
         $units = (int) round((float) ($tot->unidades ?? 0));
@@ -232,45 +217,42 @@ class ReportsController extends Controller
     public function formasPago(Request $request)
     {
         [$desde, $hasta] = $this->range($request);
+        $query = $this->pg()->table('selemti.vw_dashboard_formas_pago')
+            ->select('codigo_fp', DB::raw('SUM(monto) AS monto'))
+            ->whereBetween('fecha', [$desde, $hasta]);
 
-        if ($this->materializedCoversRange('selemti.mv_dashboard_formas_pago', 'fecha', $desde, $hasta)) {
-            $rows = DB::table('selemti.mv_dashboard_formas_pago')
-                ->select('codigo_fp', DB::raw('SUM(monto) AS monto'))
-                ->whereBetween('fecha', [$desde, $hasta])
-                ->groupBy('codigo_fp')
-                ->orderByDesc(DB::raw('SUM(monto)'))
-                ->get();
-        } else {
-            $rows = collect(DB::select(<<<SQL
-                SELECT
-                    COALESCE(
-                        fp.codigo,
-                        selemti.fn_normalizar_forma_pago(
-                            t.payment_type,
-                            t.transaction_type,
-                            t.payment_sub_type,
-                            t.custom_payment_name
-                        )
-                    ) AS codigo_fp,
-                    SUM(t.amount)::numeric(12,2) AS monto
-                FROM public.transactions t
-                INNER JOIN selemti.sesion_cajon s
-                    ON t.transaction_time >= s.apertura_ts
-                   AND t.transaction_time < COALESCE(s.cierre_ts, now())
-                   AND t.terminal_id = s.terminal_id
-                   AND t.user_id = s.cajero_usuario_id
-                LEFT JOIN selemti.formas_pago fp
-                    ON fp.payment_type = t.payment_type
-                   AND COALESCE(fp.transaction_type, '') = COALESCE(t.transaction_type, '')
-                   AND COALESCE(fp.payment_sub_type, '') = COALESCE(t.payment_sub_type, '')
-                   AND COALESCE(fp.custom_name, '') = COALESCE(t.custom_payment_name, '')
-                   AND COALESCE(fp.custom_ref, '') = COALESCE(t.custom_payment_ref, '')
-                WHERE t.transaction_time::date BETWEEN ? AND ?
-                GROUP BY codigo_fp
-                ORDER BY SUM(t.amount) DESC
-            SQL, [$desde, $hasta]));
+        if ($request->filled('sucursal_id')) {
+            $query->where('sucursal_id', $request->query('sucursal_id'));
         }
 
+        $rows = $query
+            ->groupBy('codigo_fp')
+            ->orderByDesc(DB::raw('SUM(monto)'))
+            ->get();
+
+        return response()->json(['ok'=>true,'desde'=>$desde,'hasta'=>$hasta,'data'=>$rows]);
+    }
+
+    public function ventasCategorias(Request $request)
+    {
+        [$desde, $hasta] = $this->range($request);
+        $rows = $this->pg()->table('selemti.vw_dashboard_ventas_categorias')
+            ->whereBetween('fecha', [$desde, $hasta])
+            ->orderBy('fecha')
+            ->orderBy('categoria')
+            ->get();
+        return response()->json(['ok'=>true,'desde'=>$desde,'hasta'=>$hasta,'data'=>$rows]);
+    }
+
+    public function ventasPorSucursal(Request $request)
+    {
+        [$desde, $hasta] = $this->range($request);
+        $rows = $this->pg()->table('selemti.vw_dashboard_resumen_sucursal')
+            ->whereBetween('fecha', [$desde, $hasta])
+            ->select('fecha', 'sucursal_id', 'tickets', 'venta_total', 'sub_total')
+            ->orderBy('fecha')
+            ->orderBy('sucursal_id')
+            ->get();
         return response()->json(['ok'=>true,'desde'=>$desde,'hasta'=>$hasta,'data'=>$rows]);
     }
 
@@ -280,38 +262,21 @@ class ReportsController extends Controller
         $limit = (int) $request->query('limit', 10);
         $limit = max(1, min($limit, 50));
 
-        $start = Carbon::parse($desde, config('app.timezone'))->startOfDay();
-        $end = Carbon::parse($hasta, config('app.timezone'))->endOfDay();
-
-        $rows = DB::table('public.ticket as t')
-            ->leftJoin('public.terminal as term', 'term.id', '=', 't.terminal_id')
-            ->selectRaw("
-                COALESCE(
-                    NULLIF(t.daily_folio::text, ''),
-                    NULLIF(t.global_id::text, ''),
-                    (row_to_json(t)->>'ticket_number'),
-                    (row_to_json(t)->>'ticket'),
-                    t.id::text
-                ) AS ticket,
-                t.closing_date,
-                COALESCE(
-                    term.location,
-                    (row_to_json(t)->>'location'),
-                    (row_to_json(t)->>'branch_key'),
-                    ''
-                ) AS location,
-                COALESCE(term.name, '') AS terminal_name,
-                COALESCE(term.id, t.terminal_id) AS terminal_id,
-                COALESCE(t.total_price, 0) AS total
-            ")
-            ->whereBetween('t.closing_date', [$start, $end])
-            ->where('t.paid', true)
-            ->where('t.voided', false)
-            ->orderByDesc('t.closing_date')
+        $rows = $this->pg()->table('selemti.vw_dashboard_ordenes as o')
+            ->leftJoin('public.terminal as term', 'term.id', '=', 'o.terminal_id')
+            ->whereBetween('o.fecha', [$desde, $hasta])
+            ->orderByDesc('o.closing_date')
             ->limit($limit)
-            ->get()
+            ->get([
+                DB::raw("o.ticket_ref AS ticket"),
+                DB::raw("o.closing_date AS closing_date"),
+                DB::raw("COALESCE(term.location, o.sucursal_id) AS location"),
+                DB::raw("COALESCE(term.name, '') AS terminal_name"),
+                DB::raw("COALESCE(term.id, o.terminal_id) AS terminal_id"),
+                DB::raw("o.total AS total")
+            ])
             ->map(function ($row) {
-                $fecha = Carbon::parse($row->closing_date);
+                $fecha = Carbon::parse($row->closing_date, config('app.timezone'));
                 return [
                     'ticket' => $row->ticket,
                     'hora' => $fecha->format('H:i'),

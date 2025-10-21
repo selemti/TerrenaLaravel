@@ -488,3 +488,45 @@ body.collapsed .sidebar .logo-brand img {
     /*padding-bottom: 1rem !important;*/
 	
 }
+/* ===== Submenús en Sidebar ===== */
+.sidebar .submenu {
+  padding-left: 2.5rem;
+  margin-top: 0.25rem;
+}
+
+.sidebar .submenu-link {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.sidebar .submenu-link:hover {
+  color: #fff;
+  background: rgba(233, 122, 58, 0.2);
+}
+
+.sidebar .submenu-link.active {
+  background: var(--orange);
+  color: #fff;
+}
+
+.sidebar .submenu-arrow {
+  font-size: 0.75rem;
+  transition: transform 0.3s ease;
+}
+
+.sidebar .nav-link[aria-expanded="true"] .submenu-arrow {
+  transform: rotate(180deg);
+}
+
+/* Collapsed sidebar - hide submenu arrows */
+@media (min-width: 992px) {
+  .sidebar.collapsed .submenu-arrow {
+    display: none;
+  }
+  .sidebar.collapsed .submenu {
+    display: none !important;
+  }
+}

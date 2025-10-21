@@ -110,6 +110,24 @@
       </div>
     </div>
 
+    {{-- Desempeño por sucursal --}}
+    <div class="col-12 col-xl-5">
+      <div class="card-vo">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="card-title mb-0"><i class="fa-solid fa-chart-column"></i> Desempeño por sucursal</h5>
+          <a class="link-more" href="{{ url('/reportes') }}">Ver detalle <i class="fa-solid fa-chevron-right"></i></a>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0 align-middle">
+            <thead><tr><th>Sucursal</th><th class="text-end">Tickets</th><th class="text-end">Venta</th></tr></thead>
+            <tbody id="branch-summary">
+              <tr><td colspan="3" class="text-center text-muted small">Sin información</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     {{-- Ventas por sucursal (por tipo) --}}
     <div class="col-12 col-xl-7">
       <div class="chart-container">
