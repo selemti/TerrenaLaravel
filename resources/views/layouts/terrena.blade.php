@@ -232,6 +232,27 @@
   <script src="{{ asset('assets/vendor/cleave.min.js') }}"></script>
   <script src="{{ asset('assets/js/moneda.js') }}"></script>
   <script src="{{ asset('assets/js/terrena.js') }}"></script>
+  @livewireScripts
+  <script>
+    (function () {
+      const basePath = window.__BASE__ || '';
+      const livewireScript = document.querySelector('script[data-update-uri]');
+      if (basePath && livewireScript && livewireScript.dataset.updateUri?.startsWith('/livewire/')) {
+        livewireScript.dataset.updateUri = basePath + livewireScript.dataset.updateUri;
+      }
+      document.addEventListener('livewire:init', () => {
+        Livewire.hook('request', ({ options }) => {
+          if (!options) return;
+          const url = options.url || options.uri;
+          if (basePath && typeof url === 'string' && url.startsWith('/livewire/')) {
+            const newUrl = basePath + url;
+            options.url = newUrl;
+            options.uri = newUrl;
+          }
+        });
+      });
+    })();
+  </script>
   @stack('scripts')
 </body>
 </html>
