@@ -230,22 +230,8 @@
   <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
   <script src="{{ asset('assets/js/chart.umd.min.js') }}"></script>
   <script src="{{ asset('assets/vendor/cleave.min.js') }}"></script>
-  <script src="{{ asset('assets/js/moneda.js') }}" defer></script>
-  <script src="{{ asset('assets/js/terrena.js') }}" defer></script>
-  @livewireScripts
-  <script>
-    // Configurar Livewire para subdirectorio
-    document.addEventListener('livewire:init', () => {
-      Livewire.hook('request', ({ uri, options, payload, respond, succeed, fail }) => {
-        // Asegurar que las peticiones usen el subdirectorio correcto
-        const basePath = '{{ config('app.url') }}';
-        if (uri.startsWith('/livewire/')) {
-          uri = basePath + uri;
-        }
-        return { uri, options, payload, respond, succeed, fail };
-      });
-    });
-  </script>
+  <script src="{{ asset('assets/js/moneda.js') }}"></script>
+  <script src="{{ asset('assets/js/terrena.js') }}"></script>
   @stack('scripts')
 </body>
 </html>

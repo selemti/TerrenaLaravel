@@ -9,15 +9,38 @@ const LOGO_MINI = (window.__BASE__ || '') + '/assets/img/logo2.svg';
 document.addEventListener('DOMContentLoaded', () => {
   const sidebar             = document.getElementById('sidebar');
   const sidebarCollapseBtn  = document.getElementById('sidebarCollapse');        // desktop
-  const sidebarToggleMobile = document.getElementById('sidebarToggleMobile');    // mÃ³vil
+  const sidebarToggleMobile = document.getElementById('sidebarToggleMobile');    // móvil
   const logoImg             = document.getElementById('logoImg');                // <img> del logo
 
-  // ===== Toggle MÃ“VIL (off-canvas) =====
+  function syncLogo(isCollapsed){
+    if (!logoImg) return;
+    logoImg.src = isCollapsed ? LOGO_MINI : LOGO_FULL;
+    logoImg.alt = isCollapsed ? 'Terrena mini' : 'Terrena';
+  }
+
+  function ensureDesktopState(){
+    if (!sidebar) return;
+    if (window.innerWidth >= 992){
+      sidebar.classList.remove('show'); // oculta overlay si vuelve a desktop
+    }else{
+      // En móvil preferimos expandido completo
+      if (sidebar.classList.contains('collapsed')){
+        sidebar.classList.remove('collapsed');
+        document.body.classList.remove('collapsed');
+        syncLogo(false);
+      }
+    }
+  }
+
+  // ===== Toggle MÓVIL (off-canvas) =====
   sidebarToggleMobile?.addEventListener('click', (e) => {
     e.preventDefault();
-    if (window.innerWidth < 992) sidebar?.classList.toggle('show');
+    if (!sidebar) return;
+    if (window.innerWidth < 992) {
+      sidebar.classList.toggle('show');
+    }
   });
-  // Cierra tocando fuera (solo mÃ³vil)
+  // Cierra tocando fuera (solo móvil)
   document.addEventListener('click', (ev) => {
     if (window.innerWidth >= 992) return;
     if (!sidebar?.classList.contains('show')) return;
@@ -29,19 +52,21 @@ document.addEventListener('DOMContentLoaded', () => {
   sidebarCollapseBtn?.addEventListener('click', (e) => {
     e.preventDefault();
     if (!sidebar) return;
-    sidebar.classList.toggle('collapsed');
-
-    // Cambia logo segÃºn estado
-    if (logoImg) {
-      const isCollapsed = sidebar.classList.contains('collapsed');
-      logoImg.src = isCollapsed ? LOGO_MINI : LOGO_FULL;
-      logoImg.alt = isCollapsed ? 'Terrena mini' : 'Terrena';
-    }
+    const isCollapsed = !sidebar.classList.contains('collapsed');
+    sidebar.classList.toggle('collapsed', isCollapsed);
+    document.body.classList.toggle('collapsed', isCollapsed);
+    sidebar.classList.remove('show'); // por si estaba abierto en móvil
+    syncLogo(isCollapsed);
   });
   // Ajuste si recarga colapsado (por CSS server-side, si aplica)
-  if (logoImg && sidebar?.classList.contains('collapsed')) {
-    logoImg.src = LOGO_MINI;
+  if (sidebar?.classList.contains('collapsed') || document.body.classList.contains('collapsed')) {
+    sidebar?.classList.add('collapsed');
+    document.body.classList.add('collapsed');
+    syncLogo(true);
   }
+
+  window.addEventListener('resize', ensureDesktopState);
+  ensureDesktopState();
 
   // ===== Reloj / Fecha =====
   tickClock();
@@ -58,6 +83,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ===== GrÃ¡ficas =====
   initCharts();
+  if (window.Terrena && typeof Terrena.initDashboardCharts === 'function') {
+    Terrena.initDashboardCharts();
+  }
 });
 
 /* =============== Reloj =============== */
@@ -91,7 +119,14 @@ function setupFilters(){
   s.value = toISODate(weekAgo);
   e.value = toISODate(today);
 
-  btn?.addEventListener('click', () => {\n    const desde = s.value;\n    const hasta = e.value;\n    if (window.Terrena && typeof Terrena.initDashboardCharts === 'function') {\n      Terrena.initDashboardCharts({desde, hasta});\n    }\n    toast('Filtros aplicados');\n  });
+  btn?.addEventListener('click', () => {
+    const desde = s.value;
+    const hasta = e.value;
+    if (window.Terrena && typeof Terrena.initDashboardCharts === 'function') {
+      Terrena.initDashboardCharts({ desde, hasta });
+    }
+    toast('Filtros aplicados');
+  });
 }
 function toISODate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 
@@ -809,13 +844,14 @@ const fmtMoney = n => Number(n||0).toLocaleString('es-MX',{style:'currency',curr
     });
   });
 })();
-\n// === Auto-fetch basic datasets for demo ===\nif (typeof window.Terrena === 'undefined') window.Terrena = {};\nwindow.Terrena.initDashboardCharts = async function(range){\n  try{\n    const base = (window.__BASE__||'') + '/api/reports';\n    const today = new Date().toISOString().slice(0,10);\n    const [kpis, fam, hora, top] = await Promise.all([\n      fetch(base + '/kpis/sucursal?desde='+today+'&hasta='+today).then(r=>r.json()),\n      fetch(base + '/ventas/familia?desde='+today+'&hasta='+today).then(r=>r.json()),\n      fetch(base + '/ventas/hora?desde='+today+'&hasta='+today).then(r=>r.json()),\n      fetch(base + '/ventas/top?desde='+today+'&hasta='+today+'&limit=5').then(r=>r.json()),\n    ]);\n    console.log('KPIs sucursal', kpis);\n    console.log('Ventas familia', fam);\n    console.log('Ventas hora', hora);\n    console.log('Top productos', top);\n    // TODO: Render charts with Chart.js using the returned datasets\n  }catch(e){ console.error('Error cargando datasets', e); }\n};\n
 
 // Carga datasets reales y pinta gráficas (Chart.js)
 window.Terrena.initDashboardCharts = async function(range){
   const base = (window.__BASE__||'') + '/api/reports';
   const today = new Date().toISOString().slice(0,10);
-  const q = `?desde=${today}&hasta=${today}`;
+  const desde = range?.desde || today;
+  const hasta = range?.hasta || today;
+  const q = `?desde=${desde}&hasta=${hasta}`;
   try{
     const [kpisSuc, ventasFam, ventasHora, topProd, tkAvg, itemsRes, formas] = await Promise.all([
       fetch(base + '/kpis/sucursal'+q).then(r=>r.json()),

@@ -5,6 +5,7 @@ namespace App\Livewire\Inventory;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ItemsIndex extends Component
 {
@@ -222,8 +223,18 @@ class ItemsIndex extends Component
                 ->orderBy('producto')
                 ->paginate($this->perPage);
         } catch (\Throwable $e) {
-            // Si aún no existen las vistas, tabla vacía
-            $rows = collect([])->paginate($this->perPage);
+            // Si la vista no existe aún, evita lanzar un error de paginate()
+            $currentPage = max(1, (int) request()->query($this->getPageName(), 1));
+            $rows = new LengthAwarePaginator(
+                items: [],
+                total: 0,
+                perPage: $this->perPage,
+                currentPage: $currentPage,
+                options: [
+                    'path'  => request()->url(),
+                    'query' => request()->query(),
+                ],
+            );
         }
 
         return view('livewire.inventory.items-index', compact('rows'))

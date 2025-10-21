@@ -1,18 +1,46 @@
 @extends('layouts.terrena')
 
+@php($active = 'config')
 @section('title', 'Catálogos - TerrenaPOS')
 @section('page-title')
   <i class="fa-solid fa-book"></i> <span class="label">Catálogos del Sistema</span>
 @endsection
 
 @section('content')
-<div class="container-fluid">
+<div class="dashboard-grid py-3">
 
   {{-- Descripción --}}
   <div class="alert alert-info mb-4">
     <i class="fa-solid fa-circle-info me-2"></i>
     <strong>Centro de Catálogos:</strong> Gestiona todos los catálogos maestros del sistema.
     Los cambios aquí afectan a todo el sistema.
+  </div>
+  {{-- Acciones Rápidas --}}
+  <div class="row mt-4">
+    <div class="col-12" style="margin-bottom: 1.5rem;">
+      <div class="card border-0 shadow-sm bg-light">
+        <div class="card-body">
+          <h6 class="mb-3"><i class="fa-solid fa-bolt me-2"></i>Acciones Rápidas</h6>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="{{ route('cat.sucursales') }}" class="btn btn-sm btn-outline-primary">
+              <i class="fa-solid fa-plus me-1"></i>Nueva Sucursal
+            </a>
+            <a href="{{ route('cat.almacenes') }}" class="btn btn-sm btn-outline-success">
+              <i class="fa-solid fa-plus me-1"></i>Nuevo Almacén
+            </a>
+            <a href="{{ route('cat.unidades') }}" class="btn btn-sm btn-outline-info">
+              <i class="fa-solid fa-plus me-1"></i>Nueva Unidad
+            </a>
+            <a href="{{ route('cat.proveedores') }}" class="btn btn-sm btn-outline-danger">
+              <i class="fa-solid fa-plus me-1"></i>Nuevo Proveedor
+            </a>
+            <a href="{{ route('dashboard') }}" class="btn btn-sm btn-outline-secondary ms-auto">
+              <i class="fa-solid fa-arrow-left me-1"></i>Volver al Dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   {{-- Grid de Catálogos --}}
@@ -176,33 +204,6 @@
 
   </div>
 
-  {{-- Acciones Rápidas --}}
-  <div class="row mt-5">
-    <div class="col-12">
-      <div class="card border-0 shadow-sm bg-light">
-        <div class="card-body">
-          <h6 class="mb-3"><i class="fa-solid fa-bolt me-2"></i>Acciones Rápidas</h6>
-          <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route('cat.sucursales') }}" class="btn btn-sm btn-outline-primary">
-              <i class="fa-solid fa-plus me-1"></i>Nueva Sucursal
-            </a>
-            <a href="{{ route('cat.almacenes') }}" class="btn btn-sm btn-outline-success">
-              <i class="fa-solid fa-plus me-1"></i>Nuevo Almacén
-            </a>
-            <a href="{{ route('cat.unidades') }}" class="btn btn-sm btn-outline-info">
-              <i class="fa-solid fa-plus me-1"></i>Nueva Unidad
-            </a>
-            <a href="{{ route('cat.proveedores') }}" class="btn btn-sm btn-outline-danger">
-              <i class="fa-solid fa-plus me-1"></i>Nuevo Proveedor
-            </a>
-            <a href="{{ route('dashboard') }}" class="btn btn-sm btn-outline-secondary ms-auto">
-              <i class="fa-solid fa-arrow-left me-1"></i>Volver al Dashboard
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
 </div>
 
@@ -231,26 +232,25 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
-  // Cargar contadores
+  const apiBase = (window.__API_BASE__ || '') + '/api/catalogs';
+
   try {
-    const [sucursales, almacenes, proveedores] = await Promise.all([
-      fetch('/TerrenaLaravel/api/catalogs/sucursales').then(r => r.json()),
-      fetch('/TerrenaLaravel/api/catalogs/almacenes').then(r => r.json()),
-      fetch('/TerrenaLaravel/api/catalogs/sucursales').then(r => r.json()) // Temporal, cambiar cuando exista endpoint de proveedores
+    const [sucursales, almacenes] = await Promise.all([
+      fetch(`${apiBase}/sucursales`).then(r => r.json()).catch(() => null),
+      fetch(`${apiBase}/almacenes`).then(r => r.json()).catch(() => null),
     ]);
 
-    if (sucursales.ok) {
-      document.getElementById('count-sucursales').textContent = sucursales.data?.length || 0;
+    if (sucursales?.ok) {
+      document.getElementById('count-sucursales').textContent = sucursales.data?.length ?? 0;
     }
 
-    if (almacenes.ok) {
-      document.getElementById('count-almacenes').textContent = almacenes.data?.length || 0;
+    if (almacenes?.ok) {
+      document.getElementById('count-almacenes').textContent = almacenes.data?.length ?? 0;
     }
 
-    // Unidades (estimado, actualizar con endpoint real)
-    document.getElementById('count-unidades').textContent = '22';
-    document.getElementById('count-proveedores').textContent = '8';
-
+    // Valores temporales mientras se habilitan endpoints dedicados
+    document.getElementById('count-unidades').textContent = '--';
+    document.getElementById('count-proveedores').textContent = '--';
   } catch (err) {
     console.error('Error loading catalog counts:', err);
   }

@@ -9,36 +9,70 @@ document.addEventListener('DOMContentLoaded', () => {
   const sidebarToggleMobile = document.getElementById('sidebarToggleMobile');    // móvil
   const logoImg             = document.getElementById('logoImg');                // <img> del logo
 
+  const syncLogo = (isCollapsed) => {
+    if (!logoImg) return;
+    logoImg.src = isCollapsed ? LOGO_MINI : LOGO_FULL;
+    logoImg.alt = isCollapsed ? 'Terrena mini' : 'Terrena';
+  };
+
+  const toggleMobileSidebar = (force) => {
+    if (!sidebar) return;
+    const shouldShow = typeof force === 'boolean' ? force : !sidebar.classList.contains('show');
+    sidebar.classList.toggle('show', shouldShow);
+    document.body.classList.toggle('sidebar-open', shouldShow);
+    if (shouldShow) {
+      sidebar.classList.remove('collapsed');
+      document.body.classList.remove('collapsed');
+      syncLogo(false);
+    }
+  };
+
+  const ensureResponsiveState = () => {
+    if (!sidebar) return;
+    if (window.innerWidth >= 992) {
+      toggleMobileSidebar(false); // cierra overlay si se agranda la pantalla
+    } else {
+      sidebar.classList.remove('collapsed');
+      document.body.classList.remove('collapsed');
+      syncLogo(false);
+    }
+  };
+
   // ===== Toggle MÓVIL (off-canvas) =====
   sidebarToggleMobile?.addEventListener('click', (e) => {
     e.preventDefault();
-    if (window.innerWidth < 992) sidebar?.classList.toggle('show');
+    toggleMobileSidebar();
   });
   // Cierra tocando fuera (solo móvil)
   document.addEventListener('click', (ev) => {
     if (window.innerWidth >= 992) return;
     if (!sidebar?.classList.contains('show')) return;
     const clickedInside = sidebar.contains(ev.target) || sidebarToggleMobile?.contains(ev.target);
-    if (!clickedInside) sidebar.classList.remove('show');
+    if (!clickedInside) toggleMobileSidebar(false);
   });
 
   // ===== Collapse DESKTOP =====
   sidebarCollapseBtn?.addEventListener('click', (e) => {
     e.preventDefault();
     if (!sidebar) return;
-    sidebar.classList.toggle('collapsed');
-
-    // Cambia logo según estado
-    if (logoImg) {
-      const isCollapsed = sidebar.classList.contains('collapsed');
-      logoImg.src = isCollapsed ? LOGO_MINI : LOGO_FULL;
-      logoImg.alt = isCollapsed ? 'Terrena mini' : 'Terrena';
-    }
+    const willCollapse = !sidebar.classList.contains('collapsed');
+    sidebar.classList.toggle('collapsed', willCollapse);
+    document.body.classList.toggle('collapsed', willCollapse);
+    toggleMobileSidebar(false); // evita que se quede abierto en móvil
+    syncLogo(willCollapse);
   });
-  // Ajuste si recarga colapsado (por CSS server-side, si aplica)
-  if (logoImg && sidebar?.classList.contains('collapsed')) {
-    logoImg.src = LOGO_MINI;
+
+  const initialCollapsed = sidebar?.classList.contains('collapsed') || document.body.classList.contains('collapsed');
+  if (initialCollapsed) {
+    sidebar?.classList.add('collapsed');
+    document.body.classList.add('collapsed');
+    syncLogo(true);
+  } else {
+    syncLogo(false);
   }
+
+  window.addEventListener('resize', ensureResponsiveState);
+  ensureResponsiveState();
 
   // ===== Reloj / Fecha =====
   tickClock();
@@ -1387,23 +1421,6 @@ function toast(msg,type='success'){
 const qs = (s, el = document) => el.querySelector(s);
 const qsa = (s, el = document) => Array.from(el.querySelectorAll(s));
 const fmtMoney = n => Number(n||0).toLocaleString('es-MX',{style:'currency',currency:'MXN'});
-
-// === Sidebar toggle ===
-(function(){
-  const sidebar = qs('.sidebar');
-  const toggleDesktop = qs('#sidebarCollapse');
-  const toggleMobile = qs('#sidebarToggleMobile');
-  if(sidebar && toggleDesktop){
-    toggleDesktop.addEventListener('click',()=>{
-      document.body.classList.toggle('collapsed');
-    });
-  }
-  if(sidebar && toggleMobile){
-    toggleMobile.addEventListener('click',()=>{
-      sidebar.classList.toggle('show');
-    });
-  }
-})();
 
 // === Footer reloj/fecha ===
 (function(){
