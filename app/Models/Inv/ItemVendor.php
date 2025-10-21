@@ -17,13 +17,14 @@ class ItemVendor extends Model // O ItemProveedor
     protected $fillable = [
         'item_id', 'vendor_id', 'presentacion', 'unidad_presentacion_id', 
         'factor_a_canonica', 'costo_ultimo', 'moneda', 'lead_time_dias', 
-        'codigo_proveedor', 'activo', 'created_at'
+        'codigo_proveedor', 'activo', 'preferente', 'created_at'
     ];
 
     protected $casts = [
         'factor_a_canonica' => 'decimal:6',
         'costo_ultimo' => 'decimal:2',
         'activo' => 'boolean',
+        'preferente' => 'boolean',
         'lead_time_dias' => 'integer',
         'created_at' => 'datetime',
     ];

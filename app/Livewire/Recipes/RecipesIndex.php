@@ -61,6 +61,11 @@ class RecipesIndex extends Component
     {
         $recipes = Receta::query()
             ->with(['publishedVersion', 'latestVersion'])
+            ->where('id', 'not like', 'REC-MOD-%')
+            ->where(function (Builder $q) {
+                $q->whereNull('codigo_plato_pos')
+                  ->orWhere('codigo_plato_pos', 'not like', 'MOD-%');
+            })
             ->when($this->search !== '', function (Builder $query) {
                 $needle = '%' . mb_strtolower($this->search) . '%';
                 $query->where(function (Builder $inner) use ($needle) {
@@ -80,6 +85,11 @@ class RecipesIndex extends Component
 
         $categories = Receta::query()
             ->selectRaw('COALESCE(categoria_plato, \'\') AS categoria')
+            ->where('id', 'not like', 'REC-MOD-%')
+            ->where(function (Builder $q) {
+                $q->whereNull('codigo_plato_pos')
+                  ->orWhere('codigo_plato_pos', 'not like', 'MOD-%');
+            })
             ->distinct()
             ->orderBy('categoria')
             ->get()

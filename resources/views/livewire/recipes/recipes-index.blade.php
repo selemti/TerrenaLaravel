@@ -34,8 +34,8 @@
         <table class="table table-sm align-middle mb-0">
           <thead class="table-light">
             <tr>
-              <th style="width:120px">PLU</th>
-              <th>Receta</th>
+              <th style="width:180px">Receta</th>
+              <th>PLU</th>
               <th style="width:140px">Versión</th>
               <th style="width:150px" class="text-end">Costo estándar</th>
               <th style="width:150px" class="text-end">Precio sugerido</th>
@@ -49,11 +49,11 @@
                 $latest = $r->latestVersion;
               @endphp
               <tr>
-                <td class="font-monospace">{{ $r->codigo_plato_pos ?? '—' }}</td>
                 <td>
                   <div class="fw-semibold">{{ $r->nombre_plato }}</div>
-                  <div class="text-muted small">{{ $r->categoria_plato }}</div>
+                  <div class="text-muted small">{{ $r->id }}{{ $r->categoria_plato ? ' · '.$r->categoria_plato : '' }}</div>
                 </td>
+                <td class="font-monospace">{{ $r->codigo_plato_pos ?? '—' }}</td>
                 <td>
                   @if($published)
                     <span class="badge bg-success-subtle text-success">Publicado v{{ $published->version }}</span>

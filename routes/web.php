@@ -34,7 +34,7 @@ use App\Livewire\Catalogs\ProveedoresIndex   as CatalogProveedoresIndex;
 use App\Livewire\Catalogs\SucursalesIndex    as CatalogSucursalesIndex;
 use App\Livewire\Catalogs\StockPolicyIndex   as CatalogStockPolicyIndex;
 
-use App\Livewire\Inventory\ItemsIndex        as InventoryItemsIndex;
+use App\Livewire\Inventory\ItemsManage       as InventoryItemsManage;
 use App\Livewire\Inventory\ReceptionsIndex   as InventoryReceptionsIndex;
 use App\Livewire\Inventory\ReceptionCreate   as InventoryReceptionCreate;
 use App\Livewire\Inventory\LotsIndex         as InventoryLotsIndex;

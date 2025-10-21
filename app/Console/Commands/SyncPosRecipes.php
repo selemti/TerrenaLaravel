@@ -17,9 +17,11 @@ class SyncPosRecipes extends Command
         $dry = $this->option('dry-run');
         $withModifiers = $this->option('modifiers');
 
+        $conn = $this->resolvePosConnection();
+
         $this->info(($dry ? '[DRY RUN] ' : '') . 'Sincronizando productos del POS...');
 
-        $items = DB::connection()->table('public.menu_item as mi')
+        $items = $conn->table('public.menu_item as mi')
             ->leftJoin('public.menu_group as mg', 'mi.group_id', '=', 'mg.id')
             ->select('mi.id', 'mi.name', 'mi.price', 'mg.name as group_name', 'mi.visible')
             ->orderBy('mi.id')
@@ -83,17 +85,17 @@ class SyncPosRecipes extends Command
         $this->info("Versiones iniciales creadas: {$createdVersions}");
 
         if ($withModifiers) {
-            $this->syncModifiers($dry);
+            $this->syncModifiers($dry, $conn);
         }
 
         return Command::SUCCESS;
     }
 
-    protected function syncModifiers(bool $dry): void
+    protected function syncModifiers(bool $dry, $conn): void
     {
         $this->info(($dry ? '[DRY RUN] ' : '') . 'Sincronizando modificadores del POS...');
 
-        $modifiers = DB::connection()->table('public.menu_modifier as mm')
+        $modifiers = $conn->table('public.menu_modifier as mm')
             ->leftJoin('public.menu_modifier_group as mg', 'mm.group_id', '=', 'mg.id')
             ->select('mm.id', 'mm.name', 'mm.price', 'mg.name as group_name')
             ->orderBy('mm.id')
@@ -105,21 +107,6 @@ class SyncPosRecipes extends Command
         foreach ($modifiers as $mod) {
             $modCode = sprintf('MOD-%05d', $mod->id);
             $recipeId = sprintf('REC-MOD-%05d', $mod->id);
-
-            $exists = DB::table('selemti.modificadores_pos')->where('codigo_pos', $modCode)->first();
-            if (!$exists) {
-                $createdMods++;
-                if (!$dry) {
-                    DB::table('selemti.modificadores_pos')->insert([
-                        'codigo_pos' => $modCode,
-                        'nombre' => $mod->name,
-                        'tipo' => $mod->group_name ?? null,
-                        'precio_extra' => $mod->price ?? 0,
-                        'receta_modificador_id' => $recipeId,
-                        'activo' => true,
-                    ]);
-                }
-            }
 
             $recipeExists = DB::table('selemti.receta_cab')->where('id', $recipeId)->exists();
             if (!$recipeExists) {
@@ -148,11 +135,49 @@ class SyncPosRecipes extends Command
                     ]);
                 }
             }
+
+            $exists = DB::table('selemti.modificadores_pos')->where('codigo_pos', $modCode)->first();
+            if (!$exists) {
+                $createdMods++;
+            }
+            if (!$dry) {
+                DB::table('selemti.modificadores_pos')->updateOrInsert(
+                    ['codigo_pos' => $modCode],
+                    [
+                        'nombre' => $mod->name,
+                        'tipo' => 'AGREGADO',
+                        'precio_extra' => $mod->price ?? 0,
+                        'receta_modificador_id' => $recipeId,
+                        'activo' => true,
+                    ]
+                );
+            }
         }
 
         $this->info("Modificadores registrados: {$createdMods}");
         $this->info("Recetas placeholder para modificadores: {$createdModRecipes}");
 
         $this->info('Sincronización de modificadores completada (placeholders creados; pendientes vínculos de ingredientes reales).');
+    }
+
+    protected function resolvePosConnection()
+    {
+        $base = config('database.connections.pgsql');
+
+        $host = env('POS_DB_HOST', env('DB_HOST', '127.0.0.1'));
+        if ($host === '127.0.0.1') {
+            $host = '172.24.240.1';
+        }
+
+        $base['host'] = $host;
+        $base['port'] = env('POS_DB_PORT', env('DB_PORT', '5432'));
+        $base['database'] = env('POS_DB_DATABASE', env('DB_DATABASE', 'pos'));
+        $base['username'] = env('POS_DB_USERNAME', env('DB_USERNAME', 'postgres'));
+        $base['password'] = env('POS_DB_PASSWORD', env('DB_PASSWORD', ''));
+
+        config(['database.connections.pgsql' => $base]);
+        config(['database.connections.pos_pg' => $base]);
+
+        return DB::connection('pos_pg');
     }
 }
