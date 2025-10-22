@@ -183,23 +183,23 @@
           <div class="dropdown">
             <button class="btn btn-light d-inline-flex align-items-center gap-2" data-bs-toggle="dropdown">
               <span class="user-profile-icon"><i class="fa-solid fa-user"></i></span>
-              <span>{{ optional(auth()->user())->name ?? 'Juan Pérez' }}</span>
+              <span>{{ auth()->check() ? auth()->user()->name : 'Invitado' }}</span>
               <i class="fa-solid fa-chevron-down small"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="{{ url('/personal') }}">Mi perfil</a></li>
-              <li><a class="dropdown-item" href="{{ url('/admin') }}">Configuración</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li>
-                @auth
+              @auth
+                <li><a class="dropdown-item" href="{{ url('/personal') }}">Mi perfil</a></li>
+                <li><a class="dropdown-item" href="{{ url('/admin') }}">Configuración</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
                   <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button class="dropdown-item text-danger" type="submit">Cerrar sesión</button>
                   </form>
-                @else
-                  <a class="dropdown-item text-danger" href="{{ url('/logout') }}">Cerrar sesión</a>
-                @endauth
-              </li>
+                </li>
+              @else
+                <li><a class="dropdown-item" href="{{ route('login') }}">Iniciar sesión</a></li>
+              @endauth
             </ul>
           </div>
         </div>
