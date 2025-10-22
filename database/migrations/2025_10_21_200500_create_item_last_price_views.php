@@ -37,7 +37,7 @@ FROM selemti.items i
 LEFT JOIN selemti.item_vendor pv
   ON pv.item_id = i.id AND COALESCE(pv.preferente, false) = true
 LEFT JOIN selemti.vw_item_last_price lp
-  ON lp.item_id = i.id AND lp.vendor_id = pv.vendor_id;
+  ON lp.item_id = i.id AND lp.vendor_id::text = pv.vendor_id::text;
 SQL);
     }
 
