@@ -2,10 +2,12 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -56,15 +58,28 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        $credentials = $this->credentials();
+        $login = trim((string) $this->input('login', ''));
+        $password = (string) $this->input('password', '');
 
-        if (! Auth::attempt($credentials, $this->boolean('remember'))) {
+        $user = $this->resolveUser($login);
+
+        if (! $user || ! Hash::check($password, $user->getAuthPassword())) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
                 'login' => trans('auth.failed'),
             ]);
         }
+
+        if ($user->activo === false) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'login' => __('Esta cuenta está desactivada.'),
+            ]);
+        }
+
+        Auth::login($user, $this->boolean('remember'));
 
         RateLimiter::clear($this->throttleKey());
     }
@@ -102,22 +117,20 @@ class LoginRequest extends FormRequest
         return Str::transliterate($login.'|'.$this->ip());
     }
 
-    /**
-     * Build the credentials array for the authentication attempt.
-     */
-    protected function credentials(): array
+    protected function resolveUser(string $login): ?User
     {
-        $login = trim((string) $this->input('login', ''));
-
-        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-
-        if ($field === 'email') {
-            $login = strtolower($login);
+        if ($login === '') {
+            return null;
         }
 
-        return [
-            $field => $login,
-            'password' => $this->input('password', ''),
-        ];
+        $query = User::query();
+
+        if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
+            $query->whereRaw('LOWER(email) = ?', [Str::lower($login)]);
+        } else {
+            $query->whereRaw('LOWER(username) = ?', [Str::lower($login)]);
+        }
+
+        return $query->first();
     }
 }
