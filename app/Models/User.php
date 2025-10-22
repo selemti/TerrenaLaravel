@@ -17,8 +17,17 @@ class User extends Authenticatable
     protected $primaryKey = 'id';
     
     protected $fillable = [
-        'username', 'password_hash', 'email', 'nombre_completo', 'sucursal_id', 'activo',
-        'fecha_ultimo_login', 'intentos_login', 'bloqueado_hasta', 'created_at', 'updated_at'
+        'username',
+        'password_hash',
+        'email',
+        'nombre_completo',
+        'sucursal_id',
+        'activo',
+        'fecha_ultimo_login',
+        'intentos_login',
+        'bloqueado_hasta',
+        'created_at',
+        'updated_at',
     ];
 
     /**
@@ -48,8 +57,41 @@ class User extends Authenticatable
     {
         return $this->password_hash;
     }
+
+    public function getNameAttribute(): string
+    {
+        return $this->attributes['nombre_completo']
+            ?? $this->attributes['username']
+            ?? $this->attributes['email']
+            ?? '';
+    }
+
+    public function getEmailAttribute($value): ?string
+    {
+        return $value ?: null;
+    }
+
+    public function setEmailAttribute($value): void
+    {
+        $this->attributes['email'] = $value ? strtolower(trim($value)) : null;
+    }
+
+    public function getRememberToken()
+    {
+        return null;
+    }
+
+    public function setRememberToken($value): void
+    {
+        // Tabla nativa no utiliza remember_token.
+    }
+
+    public function getRememberTokenName(): string
+    {
+        return 'remember_token';
+    }
     
-    public function roles()
+    public function legacyRoles()
     {
         return $this->hasMany(Core\UserRole::class, 'user_id');
     }
