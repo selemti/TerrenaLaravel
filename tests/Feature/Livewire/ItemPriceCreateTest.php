@@ -4,7 +4,6 @@ namespace Tests\Feature\Livewire;
 
 use App\Livewire\Inventory\ItemPriceCreate;
 use Illuminate\Support\Facades\Auth;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class ItemPriceCreateTest extends TestCase
@@ -15,10 +14,13 @@ class ItemPriceCreateTest extends TestCase
         Auth::logout();
     }
 
-    public function test_guest_cannot_access_price_create_component(): void
+    public function test_guest_mount_does_not_throw_and_flags_as_unauthorized(): void
     {
-        $this->expectException(HttpException::class);
+        $component = app(ItemPriceCreate::class);
 
-        app(ItemPriceCreate::class)->mount();
+        $component->mount();
+
+        $this->assertFalse($component->authorized);
+        $this->assertFalse($component->open);
     }
 }

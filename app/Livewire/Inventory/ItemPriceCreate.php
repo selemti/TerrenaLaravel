@@ -16,6 +16,7 @@ class ItemPriceCreate extends Component
     use AuthorizesRequests;
 
     public bool $open = false;
+    public bool $authorized = false;
     public ?string $itemId = null;
     public ?string $vendorId = null;
     public ?string $price = null;
@@ -38,14 +39,24 @@ class ItemPriceCreate extends Component
 
     public function mount(): void
     {
-        abort_unless(Auth::check(), 403);
-        $this->authorize('inventory.prices.manage');
+        $this->authorized = Auth::check() && Auth::user()->can('inventory.prices.manage');
+
+        if (! $this->authorized) {
+            return;
+        }
+
         $this->resetForm();
         $this->hydrateItemOptions();
     }
 
     public function open(?string $itemId = null): void
     {
+        if (! $this->authorized) {
+            $this->dispatch('toast', type: 'warning', body: 'No tienes permiso para registrar precios.');
+
+            return;
+        }
+
         $this->authorize('inventory.prices.manage');
         $this->resetErrorBag();
         $this->resetValidation();
@@ -94,6 +105,12 @@ class ItemPriceCreate extends Component
 
     public function save(StoreVendorPrice $action)
     {
+        if (! $this->authorized) {
+            $this->dispatch('toast', type: 'warning', body: 'No tienes permiso para registrar precios.');
+
+            return;
+        }
+
         $this->authorize('inventory.prices.manage');
 
         $input = VendorPriceValidation::sanitize([
