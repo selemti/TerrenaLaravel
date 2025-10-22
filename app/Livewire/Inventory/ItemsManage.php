@@ -290,7 +290,11 @@ class ItemsManage extends Component
     {
         $items = DB::connection('pgsql')
             ->table(DB::raw('selemti.items as i'))
-            ->leftJoin(DB::raw("(SELECT item_id, costo_ultimo, vendor_id, presentacion FROM selemti.item_vendor WHERE preferente = true) as pv"), 'pv.item_id', '=', 'i.id')
+            ->leftJoin(DB::raw('selemti.vw_item_last_price_pref as lp'), 'lp.item_id', '=', 'i.id')
+            ->leftJoin(DB::raw('selemti.item_vendor as pv'), function ($join) {
+                $join->on('pv.item_id', '=', 'i.id');
+                $join->on(DB::raw('pv.vendor_id::text'), '=', 'lp.vendor_id');
+            })
             ->when($this->q !== '', function ($query) {
                 $needle = '%' . trim($this->q) . '%';
                 $query->where(function ($sub) use ($needle) {
@@ -302,6 +306,7 @@ class ItemsManage extends Component
             ->orderBy('i.nombre')
             ->select([
                 'i.id',
+                'i.item_code',
                 'i.nombre',
                 'i.categoria_id',
                 'i.unidad_medida_id',
@@ -310,8 +315,11 @@ class ItemsManage extends Component
                 'i.costo_promedio',
                 'i.perishable',
                 'i.activo',
-                'pv.vendor_id as preferente_vendor',
-                'pv.costo_ultimo as preferente_costo',
+                'lp.vendor_id as preferente_vendor',
+                'lp.price as preferente_price',
+                'lp.pack_qty as preferente_pack_qty',
+                'lp.pack_uom as preferente_pack_uom',
+                'lp.effective_from as preferente_effective_from',
                 'pv.presentacion as preferente_presentacion',
             ])
             ->paginate($this->perPage);
