@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Inventory;
 
+use App\Livewire\Inventory\ItemPriceCreate;
 use App\Models\Inv\HistorialCostoItem;
 use App\Models\Inv\Item as InvItem;
 use App\Models\Inv\ItemVendor;
@@ -66,6 +67,14 @@ class ItemsManage extends Component
 
     public function openPriceModal(?string $itemId = null): void
     {
+        $user = Auth::user();
+
+        if (! $user || ! $user->can('inventory.prices.manage')) {
+            $this->dispatch('toast', type: 'warning', body: 'No tienes permiso para registrar precios.');
+
+            return;
+        }
+
         $this->dispatch('openPriceCreate', itemId: $itemId)->to(ItemPriceCreate::class);
     }
 

@@ -8,9 +8,11 @@
       <button class="btn btn-primary" wire:click="openCreate">
         <i class="fa-solid fa-plus me-1"></i>Nuevo ítem
       </button>
-      <button class="btn btn-outline-secondary" wire:click="openPriceModal()">
-        <i class="fa-solid fa-tag me-1"></i>Cargar precio
-      </button>
+      @can('inventory.prices.manage')
+        <button class="btn btn-outline-secondary" wire:click="openPriceModal()">
+          <i class="fa-solid fa-tag me-1"></i>Cargar precio
+        </button>
+      @endcan
     </div>
     <div class="text-muted small d-flex align-items-center gap-2">
       <i class="fa-regular fa-circle-info"></i>
@@ -158,9 +160,11 @@
               <button class="btn btn-sm btn-outline-primary" wire:click="openEdit('{{ $row->id }}')">
                 <i class="fa-solid fa-pen-to-square"></i> Editar
               </button>
-              <button class="btn btn-sm btn-outline-secondary mt-1" wire:click="openPriceModal('{{ $row->id }}')">
-                <i class="fa-solid fa-tag"></i>
-              </button>
+                @can('inventory.prices.manage')
+                  <button class="btn btn-sm btn-outline-secondary mt-1" wire:click="openPriceModal('{{ $row->id }}')">
+                    <i class="fa-solid fa-tag"></i>
+                  </button>
+                @endcan
             </td>
           </tr>
         @empty
@@ -437,5 +441,7 @@
     <div class="modal-backdrop fade show"></div>
   @endif
 
-  <livewire:inventory.item-price-create />
+  @can('inventory.prices.manage')
+    <livewire:inventory.item-price-create />
+  @endcan
 </div>
