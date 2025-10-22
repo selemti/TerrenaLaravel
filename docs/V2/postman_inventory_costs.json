@@ -1,0 +1,67 @@
+{
+  "info": {
+    "name": "Terrena Inventory Costing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Colección base para precios de proveedor, costo de recetas y alertas."
+  },
+  "item": [
+    {
+      "name": "Registrar precio de proveedor",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/inventory/prices",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "inventory", "prices"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"item_id\": \"1\",\n  \"vendor_id\": \"1\",\n  \"price\": 215.5,\n  \"pack_qty\": 1,\n  \"pack_uom\": \"KG\",\n  \"source\": \"POSTMAN\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Costo de receta",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/recipes/1/cost?at=2024-10-21",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "recipes", "1", "cost"],
+          "query": [
+            { "key": "at", "value": "2024-10-21" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Alertas pendientes",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/alerts?handled=0",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "alerts"],
+          "query": [
+            { "key": "handled", "value": "0" }
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost" },
+    { "key": "token", "value": "" }
+  ]
+}

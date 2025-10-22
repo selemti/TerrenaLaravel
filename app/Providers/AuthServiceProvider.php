@@ -23,6 +23,12 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
+        Gate::before(function ($user, string $ability) {
+            if ($user && method_exists($user, 'hasRole') && $user->hasRole('Super Admin')) {
+                return true;
+            }
+        });
+
         // Define gates para los permisos del sistema
         // Estos coinciden con los usados en personal.blade.php
 
@@ -53,5 +59,53 @@ class AuthServiceProvider extends ServiceProvider
         // Gate::define('inventory.move', fn($user) => /* logica */);
         // Gate::define('purchasing.view', fn($user) => /* logica */);
         // Gate::define('cashcuts.view', fn($user) => /* logica */);
+
+        Gate::define('inventory.prices.manage', function ($user) {
+            if (! $user) {
+                return false;
+            }
+
+            if ($user->hasAnyRole(['Super Admin', 'Ops Manager', 'inventario.manager'])) {
+                return true;
+            }
+
+            return $user->can('inventory.prices.manage');
+        });
+
+        Gate::define('alerts.view', function ($user) {
+            if (! $user) {
+                return false;
+            }
+
+            if ($user->hasAnyRole(['Super Admin', 'Ops Manager', 'inventario.manager', 'viewer', 'purchasing', 'kitchen'])) {
+                return true;
+            }
+
+            return $user->can('alerts.view');
+        });
+
+        Gate::define('inventory.alerts.manage', function ($user) {
+            if (! $user) {
+                return false;
+            }
+
+            if ($user->hasAnyRole(['Super Admin', 'Ops Manager', 'inventario.manager'])) {
+                return true;
+            }
+
+            return $user->can('alerts.manage');
+        });
+
+        Gate::define('admin.access', function ($user) {
+            if (! $user) {
+                return false;
+            }
+
+            if (method_exists($user, 'hasRole') && $user->hasRole('Super Admin')) {
+                return true;
+            }
+
+            return method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('admin.access');
+        });
     }
 }
