@@ -20,13 +20,14 @@
       <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
-            <th>SKU</th>
+            <th>SKU / Código</th>
             <th>Nombre</th>
             <th>Categoría</th>
             <th>Unidad base</th>
             <th>Tipo</th>
-            <th class="text-end">Costo preferente</th>
+            <th class="text-end">Precio vigente</th>
             <th>Proveedor</th>
+            <th>Vigencia</th>
             <th>Estado</th>
             <th class="text-end">Acciones</th>
           </tr>
@@ -37,7 +38,10 @@
             $unit = $unitsIndex->get($row->unidad_medida_id);
           @endphp
           <tr>
-            <td class="font-monospace fw-semibold text-uppercase">{{ $row->id }}</td>
+            <td class="font-monospace fw-semibold text-uppercase">
+              {{ $row->id }}
+              <div class="small text-muted">{{ $row->item_code ?? '—' }}</div>
+            </td>
             <td>
               <div class="fw-semibold">{{ $row->nombre }}</div>
               <div class="small text-muted">
@@ -50,12 +54,32 @@
               <span class="badge text-bg-light">{{ $row->tipo ?? '—' }}</span>
             </td>
             <td class="text-end">
-              {{ $row->preferente_costo !== null ? '$ '.number_format($row->preferente_costo, 2) : '—' }}
+              @if(!is_null($row->preferente_price))
+                <div>
+                  $ {{ number_format($row->preferente_price, 2) }}
+                </div>
+                <div class="small text-muted">
+                  @if(!is_null($row->preferente_pack_qty) && $row->preferente_pack_uom)
+                    {{ rtrim(rtrim(number_format($row->preferente_pack_qty, 2), '0'), '.') }} {{ $row->preferente_pack_uom }}
+                  @else
+                    Presentación preferente
+                  @endif
+                </div>
+              @else
+                —
+              @endif
             </td>
             <td>
               @if($row->preferente_vendor)
                 <span class="badge text-bg-secondary">Proveedor #{{ $row->preferente_vendor }}</span>
                 <div class="small text-muted">{{ $row->preferente_presentacion ?? '' }}</div>
+              @else
+                <span class="text-muted">—</span>
+              @endif
+            </td>
+            <td>
+              @if($row->preferente_effective_from)
+                <span class="badge text-bg-light">{{ \Carbon\Carbon::parse($row->preferente_effective_from)->format('Y-m-d') }}</span>
               @else
                 <span class="text-muted">—</span>
               @endif
