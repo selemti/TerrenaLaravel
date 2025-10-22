@@ -169,7 +169,7 @@ Route::prefix('inventory')->group(function () {
     });
 
     // Precios de proveedores
-    Route::post('/prices', [PriceController::class, 'store']);
+    Route::post('/prices', [PriceController::class, 'store'])->middleware('throttle:30,1');
 });
 
 // Costeo de recetas

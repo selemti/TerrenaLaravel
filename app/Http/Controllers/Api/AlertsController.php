@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\DB;
 
 class AlertsController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'can:inventory.alerts.manage']);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $handledParam = $request->query('handled');

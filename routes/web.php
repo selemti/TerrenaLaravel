@@ -39,6 +39,7 @@ use App\Livewire\Inventory\ReceptionsIndex   as InventoryReceptionsIndex;
 use App\Livewire\Inventory\ReceptionCreate   as InventoryReceptionCreate;
 use App\Livewire\Inventory\LotsIndex         as InventoryLotsIndex;
 use App\Livewire\Inventory\ItemsManage       as InventoryItemsManage;
+use App\Livewire\Inventory\AlertsList        as InventoryAlertsList;
 
 
 use App\Livewire\Recipes\RecipesIndex        as RecipesIndexLW;
@@ -87,10 +88,11 @@ Route::prefix('catalogos')->group(function () {
 |========================================================================= */
 Route::prefix('inventory')->group(function () {
     //Route::get('/items',          InventoryItemsIndex::class)->name('inventory.items.index');
-		Route::get('/items',          InventoryItemsManage::class)->name('inventory.items.index');
+                Route::get('/items',          InventoryItemsManage::class)->name('inventory.items.index');
     Route::get('/receptions',     InventoryReceptionsIndex::class)->name('inv.receptions');
     Route::get('/receptions/new', InventoryReceptionCreate::class)->name('inv.receptions.new');
     Route::get('/lots',           InventoryLotsIndex::class)->name('inv.lots');
+    Route::get('/alerts',         InventoryAlertsList::class)->name('inv.alerts');
 });
 
 /* =========================================================================

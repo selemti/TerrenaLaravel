@@ -8,10 +8,61 @@
       <button class="btn btn-primary" wire:click="openCreate">
         <i class="fa-solid fa-plus me-1"></i>Nuevo ítem
       </button>
+      <button class="btn btn-outline-secondary" wire:click="openPriceModal()">
+        <i class="fa-solid fa-tag me-1"></i>Cargar precio
+      </button>
     </div>
     <div class="text-muted small d-flex align-items-center gap-2">
       <i class="fa-regular fa-circle-info"></i>
       <span>Recientes: {{ $items->total() }}</span>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-3">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">Categoría</label>
+          <select class="form-select" wire:model="categoryFilter">
+            <option value="">Todas</option>
+            @foreach($categoryOptions as $category)
+              <option value="{{ $category['id'] }}">
+                {{ $category['id'] }} · {{ $category['nombre'] }}
+              </option>
+            @endforeach
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Estado</label>
+          <select class="form-select" wire:model="statusFilter">
+            <option value="all">Todos</option>
+            <option value="active">Solo activos</option>
+            <option value="inactive">Solo inactivos</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Proveedor preferente</label>
+          <select class="form-select" wire:model="preferredFilter">
+            <option value="all">Todos</option>
+            <option value="with">Con proveedor</option>
+            <option value="without">Sin proveedor</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Ordenar por</label>
+          <select class="form-select" wire:model="sortField">
+            <option value="name">Nombre</option>
+            <option value="effective_from">Vigencia precio</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Dirección</label>
+          <select class="form-select" wire:model="sortDirection">
+            <option value="asc">Ascendente</option>
+            <option value="desc">Descendente</option>
+          </select>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -21,13 +72,27 @@
         <thead class="table-light">
           <tr>
             <th>SKU / Código</th>
-            <th>Nombre</th>
+            <th>
+              <button type="button" class="btn btn-link p-0 text-decoration-none" wire:click="sortBy('name')">
+                Nombre
+                @if($sortField === 'name')
+                  <i class="fa-solid fa-arrow-{{ $sortDirection === 'asc' ? 'up' : 'down' }}-a-z ms-1"></i>
+                @endif
+              </button>
+            </th>
             <th>Categoría</th>
             <th>Unidad base</th>
             <th>Tipo</th>
             <th class="text-end">Precio vigente</th>
             <th>Proveedor</th>
-            <th>Vigencia</th>
+            <th>
+              <button type="button" class="btn btn-link p-0 text-decoration-none" wire:click="sortBy('effective_from')">
+                Vigencia
+                @if($sortField === 'effective_from')
+                  <i class="fa-solid fa-arrow-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                @endif
+              </button>
+            </th>
             <th>Estado</th>
             <th class="text-end">Acciones</th>
           </tr>
@@ -71,7 +136,7 @@
             </td>
             <td>
               @if($row->preferente_vendor)
-                <span class="badge text-bg-secondary">Proveedor #{{ $row->preferente_vendor }}</span>
+                <div class="fw-semibold">{{ $row->preferente_vendor_name ?? ('Proveedor #' . $row->preferente_vendor) }}</div>
                 <div class="small text-muted">{{ $row->preferente_presentacion ?? '' }}</div>
               @else
                 <span class="text-muted">—</span>
@@ -92,6 +157,9 @@
             <td class="text-end">
               <button class="btn btn-sm btn-outline-primary" wire:click="openEdit('{{ $row->id }}')">
                 <i class="fa-solid fa-pen-to-square"></i> Editar
+              </button>
+              <button class="btn btn-sm btn-outline-secondary mt-1" wire:click="openPriceModal('{{ $row->id }}')">
+                <i class="fa-solid fa-tag"></i>
               </button>
             </td>
           </tr>
@@ -368,4 +436,6 @@
     </div>
     <div class="modal-backdrop fade show"></div>
   @endif
+
+  <livewire:inventory.item-price-create />
 </div>

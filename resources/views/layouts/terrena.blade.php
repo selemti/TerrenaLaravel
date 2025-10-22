@@ -44,12 +44,12 @@
 
         {{-- Inventario con submenú --}}
         <div class="nav-item">
-          <a class="nav-link {{ in_array($active ?? '', ['inventario', 'items', 'lots', 'receptions']) ? 'active' : '' }}"
+          <a class="nav-link {{ in_array($active ?? '', ['inventario', 'items', 'lots', 'receptions', 'alerts']) ? 'active' : '' }}"
              data-bs-toggle="collapse" href="#menuInventario" role="button" aria-expanded="false">
             <i class="fa-solid fa-boxes-stacked"></i> <span class="label">Inventario</span>
             <i class="fa-solid fa-chevron-down ms-auto submenu-arrow"></i>
           </a>
-          <div class="collapse {{ in_array($active ?? '', ['inventario', 'items', 'lots', 'receptions']) ? 'show' : '' }}" id="menuInventario">
+          <div class="collapse {{ in_array($active ?? '', ['inventario', 'items', 'lots', 'receptions', 'alerts']) ? 'show' : '' }}" id="menuInventario">
             <div class="submenu">
               <a class="nav-link submenu-link" href="{{ url('/inventario') }}">
                 <i class="fa-solid fa-chart-line"></i> <span class="label">Vista General</span>
@@ -62,6 +62,9 @@
               </a>
               <a class="nav-link submenu-link" href="{{ route('inv.receptions') }}">
                 <i class="fa-solid fa-dolly"></i> <span class="label">Recepciones</span>
+              </a>
+              <a class="nav-link submenu-link" href="{{ route('inv.alerts') }}">
+                <i class="fa-regular fa-bell"></i> <span class="label">Alertas de costo</span>
               </a>
             </div>
           </div>

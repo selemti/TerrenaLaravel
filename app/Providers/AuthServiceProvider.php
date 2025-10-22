@@ -53,5 +53,17 @@ class AuthServiceProvider extends ServiceProvider
         // Gate::define('inventory.move', fn($user) => /* logica */);
         // Gate::define('purchasing.view', fn($user) => /* logica */);
         // Gate::define('cashcuts.view', fn($user) => /* logica */);
+
+        Gate::define('inventory.prices.manage', function ($user) {
+            return $user && $user->hasRole('inventario.manager');
+        });
+
+        Gate::define('inventory.alerts.manage', function ($user) {
+            if (! $user) {
+                return false;
+            }
+
+            return $user->hasRole('inventario.manager') || $user->can('inventory.alerts.review');
+        });
     }
 }
