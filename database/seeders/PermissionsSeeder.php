@@ -29,6 +29,10 @@ class PermissionsSeeder extends Seeder
             'alerts.manage',
             'vendors.view',
             'vendors.manage',
+            'people.view',
+            'people.users.manage',
+            'people.roles.manage',
+            'people.permissions.manage',
             'admin.access',
         ];
 
@@ -57,6 +61,9 @@ class PermissionsSeeder extends Seeder
                 'alerts.manage',
                 'vendors.view',
                 'vendors.manage',
+                'people.view',
+                'people.users.manage',
+                'people.roles.manage',
             ],
             'inventario.manager' => [
                 'inventory.view',
@@ -69,6 +76,7 @@ class PermissionsSeeder extends Seeder
                 'alerts.view',
                 'alerts.manage',
                 'vendors.view',
+                'people.view',
             ],
             'purchasing' => [
                 'inventory.view',
@@ -76,6 +84,7 @@ class PermissionsSeeder extends Seeder
                 'inventory.prices.manage',
                 'vendors.view',
                 'vendors.manage',
+                'people.view',
             ],
             'kitchen' => [
                 'inventory.view',
@@ -84,10 +93,12 @@ class PermissionsSeeder extends Seeder
                 'recipes.costs.view',
                 'production.manage',
                 'alerts.view',
+                'people.view',
             ],
             'cashier' => [
                 'inventory.view',
                 'reports.view',
+                'people.view',
             ],
             'viewer' => [
                 'inventory.view',
@@ -95,6 +106,7 @@ class PermissionsSeeder extends Seeder
                 'reports.view',
                 'alerts.view',
                 'vendors.view',
+                'people.view',
             ],
         ];
 

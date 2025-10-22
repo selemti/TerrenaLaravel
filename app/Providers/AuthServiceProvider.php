@@ -32,33 +32,21 @@ class AuthServiceProvider extends ServiceProvider
         // Define gates para los permisos del sistema
         // Estos coinciden con los usados en personal.blade.php
 
-        Gate::define('people.employees.manage', function ($user) {
-            // Logica real: verificar rol/permisos desde BD
-            // Por ahora retornamos true para desarrollo
-            return $user && in_array($user->role ?? '', ['admin', 'gerente']);
+        Gate::define('people.view', function ($user) {
+            return $user && $user->can('people.view');
+        });
+
+        Gate::define('people.users.manage', function ($user) {
+            return $user && $user->can('people.users.manage');
         });
 
         Gate::define('people.roles.manage', function ($user) {
-            return $user && in_array($user->role ?? '', ['admin', 'gerente']);
+            return $user && $user->can('people.roles.manage');
         });
 
         Gate::define('people.permissions.manage', function ($user) {
-            return $user && ($user->role ?? '') === 'admin';
+            return $user && $user->can('people.permissions.manage');
         });
-
-        Gate::define('people.schedules.manage', function ($user) {
-            return $user && in_array($user->role ?? '', ['admin', 'gerente']);
-        });
-
-        Gate::define('people.audit.view', function ($user) {
-            return $user && in_array($user->role ?? '', ['admin', 'gerente']);
-        });
-
-        // Puedes agregar mas gates segun necesites:
-        // Gate::define('inventory.view', fn($user) => /* logica */);
-        // Gate::define('inventory.move', fn($user) => /* logica */);
-        // Gate::define('purchasing.view', fn($user) => /* logica */);
-        // Gate::define('cashcuts.view', fn($user) => /* logica */);
 
         Gate::define('inventory.prices.manage', function ($user) {
             if (! $user) {

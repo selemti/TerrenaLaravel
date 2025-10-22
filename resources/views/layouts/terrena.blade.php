@@ -127,9 +127,11 @@
         </div>
 
         {{-- Personal --}}
+        @can('people.view')
         <a class="nav-link {{ ($active ?? '') === 'personal' ? 'active' : '' }}" href="{{ url('/personal') }}">
           <i class="fa-solid fa-user-group"></i> <span class="label">Personal</span>
         </a>
+        @endcan
 
         {{-- KDS --}}
         <a class="nav-link {{ ($active ?? '') === 'kds' ? 'active' : '' }}" href="{{ route('kds.board') }}">

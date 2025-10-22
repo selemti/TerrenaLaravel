@@ -29,7 +29,12 @@
         }
 
         .auth-logo {
-            height: 64px;
+            height: 2.5rem;
+            opacity: 0.9;
+        }
+
+        .h-10 {
+            height: 2.5rem;
         }
     </style>
     @stack('styles')
@@ -37,7 +42,7 @@
 <body class="auth-layout">
     <main class="auth-card">
         <div class="text-center mb-4">
-            <img src="{{ asset('assets/img/logo.svg') }}" alt="Terrena" class="auth-logo">
+            <img src="{{ asset('assets/img/logo.svg') }}" alt="Terrena" class="auth-logo h-10 opacity-90">
         </div>
 
         @isset($slot)

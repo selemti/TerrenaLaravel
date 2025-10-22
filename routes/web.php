@@ -41,6 +41,7 @@ use App\Livewire\Inventory\ReceptionCreate   as InventoryReceptionCreate;
 use App\Livewire\Inventory\LotsIndex         as InventoryLotsIndex;
 use App\Livewire\Inventory\ItemsManage       as InventoryItemsManage;
 use App\Livewire\Inventory\AlertsList        as InventoryAlertsList;
+use App\Livewire\People\UsersIndex           as PeopleUsersIndex;
 
 
 use App\Livewire\Recipes\RecipesIndex        as RecipesIndexLW;
@@ -64,7 +65,9 @@ Route::middleware('auth')->group(function () {
     Route::view('/dashboard',  'dashboard')->name('dashboard');
     Route::view('/compras',    'compras')->name('compras');
     Route::view('/inventario', 'inventario')->name('inventario'); // TU vista Blade
-    Route::view('/personal',   'personal')->name('personal');
+    Route::get('/personal',    PeopleUsersIndex::class)
+        ->middleware('can:people.view')
+        ->name('personal');
     Route::view('/produccion', 'produccion')->name('produccion');
     Route::view('/recetas',    'recetas')->name('recetas');
 
