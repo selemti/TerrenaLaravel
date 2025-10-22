@@ -151,7 +151,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Usuario</label>
                                 <input type="text" class="form-control @error('userForm.username') is-invalid @enderror"
-                                       wire:model.defer="userForm.username" @disabled($editingUser)>
+                                       wire:model.defer="userForm.username" autocomplete="username" @disabled($editingUser)>
                                 @error('userForm.username')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -160,7 +160,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Correo electrónico <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control @error('userForm.email') is-invalid @enderror"
-                                       wire:model.defer="userForm.email" required @disabled($editingUser && ! empty($userForm['email']))>
+                                       wire:model.defer="userForm.email" autocomplete="email" required @disabled($editingUser && ! empty($userForm['email']))>
                                 @error('userForm.email')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -205,76 +205,11 @@
         </div>
 
         <div class="tab-pane fade @if($activeTab === 'roles') show active @endif" id="tab-roles">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">Roles registrados</h5>
-                @cannot('people.roles.manage')
-                    <span class="text-muted small">Solo lectura</span>
-                @endcannot
-            </div>
-
-            <div class="table-responsive mb-3">
-                <table class="table table-sm align-middle">
-                    <thead>
-                        <tr>
-                            <th>Rol</th>
-                            <th>Usuarios</th>
-                            <th class="text-end">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($roles as $role)
-                            <tr>
-                                <td>{{ $role->name }}</td>
-                                <td>{{ $role->users_count }}</td>
-                                <td class="text-end">
-                                    @can('people.roles.manage')
-                                        <button class="btn btn-sm btn-outline-secondary" wire:click="openRoleEditor({{ $role->id }})">
-                                            <i class="fa-solid fa-users-gear me-1"></i>Gestionar miembros
-                                        </button>
-                                    @else
-                                        <span class="text-muted small">Sin permisos</span>
-                                    @endcan
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="3" class="text-center text-muted py-4">No hay roles registrados.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            @if ($showRoleEditor && $roleEditorRoleId)
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3"><i class="fa-solid fa-users-gear me-1"></i>Asignar usuarios al rol</h5>
-                        <form wire:submit.prevent="saveRoleEditor">
-                            <div class="row g-2">
-                                @foreach ($allUsers as $candidate)
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" value="{{ $candidate->id }}"
-                                                   wire:model="roleEditorUsers" id="role-user-{{ $candidate->id }}">
-                                            <label class="form-check-label" for="role-user-{{ $candidate->id }}">
-                                                {{ $candidate->nombre_completo ?? $candidate->name }}
-                                                <span class="d-block text-muted small">{{ $candidate->email }}</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-
-                            <div class="d-flex justify-content-end gap-2 mt-3">
-                                <button type="button" class="btn btn-outline-secondary" wire:click="closeRoleEditor">Cancelar</button>
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fa-solid fa-floppy-disk me-1"></i>Guardar cambios
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    @include('partials.under-construction')
                 </div>
-            @endif
+            </div>
         </div>
 
         <div class="tab-pane fade @if($activeTab === 'permissions') show active @endif" id="tab-permissions">

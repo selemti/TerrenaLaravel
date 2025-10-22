@@ -244,8 +244,8 @@ class UsersIndex extends Component
     {
         $rules = $this->rules;
 
-        $uniqueUsername = Rule::unique('selemti.users', 'username');
-        $uniqueEmail = Rule::unique('selemti.users', 'email');
+        $uniqueUsername = Rule::unique('users', 'username');
+        $uniqueEmail = Rule::unique('users', 'email');
 
         if ($this->editingUser && $this->editingUserId) {
             $uniqueUsername = $uniqueUsername->ignore($this->editingUserId, 'id');

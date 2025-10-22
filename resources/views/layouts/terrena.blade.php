@@ -92,6 +92,7 @@
         </a>
 
         {{-- Configuración con submenú --}}
+        @can('admin.access')
         <div class="nav-item">
           <a class="nav-link {{ ($active ?? '') === 'config' ? 'active' : '' }}"
              data-bs-toggle="collapse" href="#menuConfig" role="button" aria-expanded="false">
@@ -125,6 +126,7 @@
             </div>
           </div>
         </div>
+        @endcan
 
         {{-- Personal --}}
         @can('people.view')

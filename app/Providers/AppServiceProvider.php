@@ -3,8 +3,9 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
@@ -40,8 +41,12 @@ class AppServiceProvider extends ServiceProvider
         // URL::forceScheme('https');
 
         // Forzar encoding UTF-8 en PostgreSQL
-        if (! $this->app->runningInConsole() && config('database.default') === 'pgsql') {
-            \DB::statement("SET NAMES 'UTF8'");
+        if (config('database.default') === 'pgsql') {
+            rescue(fn () => DB::connection('pgsql')->statement("SET search_path TO selemti,public"), report: false);
+
+            if (! $this->app->runningInConsole()) {
+                rescue(fn () => DB::connection('pgsql')->statement("SET NAMES 'UTF8'"), report: false);
+            }
         }
     }
 }

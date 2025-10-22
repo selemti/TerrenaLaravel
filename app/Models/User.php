@@ -13,7 +13,7 @@ class User extends Authenticatable
 
     protected $guard_name = 'web';
 
-    protected $table = 'selemti.users'; // Mapeo a la tabla principal
+    protected $table = 'users';
     protected $primaryKey = 'id';
     
     protected $fillable = [
