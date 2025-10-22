@@ -21,6 +21,7 @@ class AlertsList extends Component
     public ?string $dateTo = null;
     public ?string $recipeId = null;
     public int $perPage = 15;
+    public bool $canManage = false;
 
     protected $queryString = [
         'handled' => ['except' => 'pending'],
@@ -32,7 +33,9 @@ class AlertsList extends Component
     public function mount(): void
     {
         abort_unless(Auth::check(), 403);
-        $this->authorize('inventory.alerts.manage');
+
+        $this->authorize('alerts.view');
+        $this->canManage = Auth::user()?->can('inventory.alerts.manage') ?? false;
     }
 
     public function updatingHandled(): void
@@ -57,7 +60,9 @@ class AlertsList extends Component
 
     public function acknowledge(int $alertId): void
     {
-        $this->authorize('inventory.alerts.manage');
+        if (! $this->canManage) {
+            $this->authorize('inventory.alerts.manage');
+        }
 
         $updated = DB::connection('pgsql')
             ->table('selemti.alert_events')
@@ -79,6 +84,7 @@ class AlertsList extends Component
 
         return view('livewire.inventory.alerts-list', [
             'alerts' => $alerts,
+            'canManage' => $this->canManage,
         ])->layout('layouts.terrena', [
             'active' => 'alerts',
             'title' => 'Alertas de costos',

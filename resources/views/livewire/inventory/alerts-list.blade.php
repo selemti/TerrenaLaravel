@@ -48,7 +48,9 @@
             <th class="text-end">Costo nuevo</th>
             <th class="text-end">Δ %</th>
             <th>Estado</th>
-            <th class="text-end">Acciones</th>
+            @if($canManage)
+              <th class="text-end">Acciones</th>
+            @endif
           </tr>
         </thead>
         <tbody>
@@ -80,22 +82,24 @@
                 <span class="badge text-bg-warning text-dark">Pendiente</span>
               @endif
             </td>
-            <td class="text-end">
-              @if(!$alert->handled)
-                <button class="btn btn-sm btn-outline-success" wire:click="acknowledge({{ $alert->id }})">
-                  <i class="fa-solid fa-check"></i> Marcar atendida
-                </button>
-              @else
-                <span class="text-muted small">—</span>
-              @endif
-            </td>
+            @if($canManage)
+              <td class="text-end">
+                @if(!$alert->handled)
+                  <button class="btn btn-sm btn-outline-success" wire:click="acknowledge({{ $alert->id }})">
+                    <i class="fa-solid fa-check"></i> Marcar atendida
+                  </button>
+                @else
+                  <span class="text-muted small">—</span>
+                @endif
+              </td>
+            @endif
           </tr>
-        @empty
-          <tr>
-            <td colspan="8" class="text-center text-muted py-4">
-              Sin alertas registradas en el rango seleccionado.
-            </td>
-          </tr>
+          @empty
+            <tr>
+              <td colspan="{{ $canManage ? 8 : 7 }}" class="text-center text-muted py-4">
+                Sin alertas registradas en el rango seleccionado.
+              </td>
+            </tr>
         @endforelse
         </tbody>
       </table>

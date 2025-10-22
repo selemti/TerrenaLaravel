@@ -32,6 +32,21 @@ class LoginRequest extends FormRequest
         ];
     }
 
+    protected function prepareForValidation(): void
+    {
+        $login = $this->input('login');
+
+        if ($login === null && $this->filled('email')) {
+            $login = $this->input('email');
+        }
+
+        if ($login !== null) {
+            $this->merge([
+                'login' => trim((string) $login),
+            ]);
+        }
+    }
+
     /**
      * Attempt to authenticate the request's credentials.
      *
@@ -95,6 +110,10 @@ class LoginRequest extends FormRequest
         $login = trim((string) $this->input('login', ''));
 
         $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        if ($field === 'email') {
+            $login = strtolower($login);
+        }
 
         return [
             $field => $login,
