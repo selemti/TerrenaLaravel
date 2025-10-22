@@ -1,11 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
-
-return new class extends Migration {
-    public function up(): void {
-        DB::unprepared(<<<'SQL'
+return new class extends \Illuminate\Database\Migrations\Migration {
+    public function up(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 CREATE TABLE IF NOT EXISTS selemti.item_category_counters (
     category_id BIGINT PRIMARY KEY,
     last_val    BIGINT NOT NULL DEFAULT 0,
@@ -44,14 +42,16 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_items_assign_code') THEN
         CREATE TRIGGER trg_items_assign_code
         BEFORE INSERT ON selemti.items
-        FOR EACH ROW EXECUTE FUNCTION selemti.fn_assign_item_code();
+        FOR EACH ROW EXECUTE PROCEDURE selemti.fn_assign_item_code();
     END IF;
 END$$;
 SQL);
     }
-    public function down(): void {
-        DB::unprepared("DROP TRIGGER IF EXISTS trg_items_assign_code ON selemti.items");
-        DB::unprepared("DROP FUNCTION IF EXISTS selemti.fn_assign_item_code()");
-        DB::unprepared("DROP TABLE IF EXISTS selemti.item_category_counters");
+
+    public function down(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared("DROP TRIGGER IF EXISTS trg_items_assign_code ON selemti.items");
+        \Illuminate\Support\Facades\DB::unprepared("DROP FUNCTION IF EXISTS selemti.fn_assign_item_code()");
+        \Illuminate\Support\Facades\DB::unprepared("DROP TABLE IF EXISTS selemti.item_category_counters");
     }
 };

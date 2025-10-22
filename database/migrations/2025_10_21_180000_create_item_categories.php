@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
-
-return new class extends Migration {
-    public function up(): void {
-        DB::unprepared(<<<'SQL'
+return new class extends \Illuminate\Database\Migrations\Migration {
+    public function up(): void
+    {
+        // 1) Tabla + secuencia + función + trigger (PG 9.5 usa EXECUTE PROCEDURE)
+        \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 CREATE TABLE IF NOT EXISTS selemti.item_categories (
     id          BIGSERIAL PRIMARY KEY,
     nombre      VARCHAR(150) NOT NULL,
@@ -39,37 +38,63 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_item_categories_autocode') THEN
         CREATE TRIGGER trg_item_categories_autocode
         BEFORE INSERT ON selemti.item_categories
-        FOR EACH ROW EXECUTE FUNCTION selemti.fn_gen_cat_codigo();
+        FOR EACH ROW EXECUTE PROCEDURE selemti.fn_gen_cat_codigo();
     END IF;
 END$$;
 SQL);
-        DB::unprepared(<<<'SQL'
-ALTER TABLE selemti.items
-    ADD COLUMN IF NOT EXISTS category_id BIGINT;
 
+        // 2) Añadir columna category_id a items (sin IF NOT EXISTS nativo)
+        \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 DO $$
 BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.table_constraints
-        WHERE constraint_schema='selemti'
-          AND table_name='items'
-          AND constraint_name='items_category_fk'
-    ) THEN
-        ALTER TABLE selemti.items
-        ADD CONSTRAINT items_category_fk
-        FOREIGN KEY (category_id)
-        REFERENCES selemti.item_categories(id)
-        ON UPDATE CASCADE ON DELETE SET NULL;
-    END IF;
+IF NOT EXISTS (
+  SELECT 1 FROM information_schema.columns
+  WHERE table_schema='selemti' AND table_name='items' AND column_name='category_id'
+) THEN
+  ALTER TABLE selemti.items ADD COLUMN category_id BIGINT;
+END IF;
+END$$;
+SQL);
+
+        // 3) FK sólo si no existe (compatible 9.5)
+        \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
+DO $$
+BEGIN
+IF NOT EXISTS (
+  SELECT 1 FROM information_schema.table_constraints
+  WHERE constraint_schema='selemti'
+    AND table_name='items'
+    AND constraint_name='items_category_fk'
+) THEN
+  ALTER TABLE selemti.items
+  ADD CONSTRAINT items_category_fk
+  FOREIGN KEY (category_id)
+  REFERENCES selemti.item_categories(id)
+  ON UPDATE CASCADE ON DELETE SET NULL;
+END IF;
 END$$;
 SQL);
     }
-    public function down(): void {
-        DB::unprepared("ALTER TABLE selemti.items DROP CONSTRAINT IF EXISTS items_category_fk");
-        DB::unprepared("ALTER TABLE selemti.items DROP COLUMN IF EXISTS category_id");
-        DB::unprepared("DROP TRIGGER IF EXISTS trg_item_categories_autocode ON selemti.item_categories");
-        DB::unprepared("DROP FUNCTION IF EXISTS selemti.fn_gen_cat_codigo()");
-        DB::unprepared("DROP SEQUENCE IF EXISTS selemti.seq_cat_codigo");
-        DB::unprepared("DROP TABLE IF EXISTS selemti.item_categories");
+
+    public function down(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared("ALTER TABLE selemti.items DROP CONSTRAINT IF EXISTS items_category_fk");
+
+        \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
+DO $$
+BEGIN
+IF EXISTS (
+  SELECT 1 FROM information_schema.columns
+  WHERE table_schema='selemti' AND table_name='items' AND column_name='category_id'
+) THEN
+  ALTER TABLE selemti.items DROP COLUMN category_id;
+END IF;
+END$$;
+SQL);
+
+        \Illuminate\Support\Facades\DB::unprepared("DROP TRIGGER IF EXISTS trg_item_categories_autocode ON selemti.item_categories");
+        \Illuminate\Support\Facades\DB::unprepared("DROP FUNCTION IF EXISTS selemti.fn_gen_cat_codigo()");
+        \Illuminate\Support\Facades\DB::unprepared("DROP SEQUENCE IF EXISTS selemti.seq_cat_codigo");
+        \Illuminate\Support\Facades\DB::unprepared("DROP TABLE IF EXISTS selemti.item_categories");
     }
 };

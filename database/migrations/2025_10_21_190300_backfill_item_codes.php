@@ -1,11 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades.DB;
-
-return new class extends Migration {
-    public function up(): void {
-        DB::unprepared(<<<'SQL'
+return new class extends \Illuminate\Database\Migrations\Migration {
+    public function up(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 WITH base AS (
   SELECT i.id, i.category_id, c.prefijo,
          ROW_NUMBER() OVER (PARTITION BY i.category_id ORDER BY i.id) AS rn
@@ -29,5 +27,6 @@ FROM base b
 WHERE i.id = b.id;
 SQL);
     }
-    public function down(): void { /* no-op */ }
+
+    public function down(): void {/* sin reversa de códigos asignados */}
 };

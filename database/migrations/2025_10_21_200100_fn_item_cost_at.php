@@ -1,11 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades.DB;
-
-return new class extends Migration {
-  public function up(): void {
-    DB::unprepared(<<<'SQL'
+return new class extends \Illuminate\Database\Migrations\Migration {
+  public function up(): void
+  {
+    \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 CREATE OR REPLACE FUNCTION selemti.fn_uom_factor(from_uom text, to_uom text)
 RETURNS numeric AS $$
 DECLARE v numeric := 1;
@@ -49,8 +47,10 @@ BEGIN
 END$$ LANGUAGE plpgsql;
 SQL);
   }
-  public function down(): void {
-    DB::unprepared("DROP FUNCTION IF EXISTS selemti.fn_item_unit_cost_at(bigint,timestamp,text)");
-    DB::unprepared("DROP FUNCTION IF EXISTS selemti.fn_uom_factor(text,text)");
+
+  public function down(): void
+  {
+    \Illuminate\Support\Facades\DB::unprepared("DROP FUNCTION IF EXISTS selemti.fn_item_unit_cost_at(bigint,timestamp,text)");
+    \Illuminate\Support\Facades\DB::unprepared("DROP FUNCTION IF EXISTS selemti.fn_uom_factor(text,text)");
   }
 };
