@@ -1,11 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades.DB;
-
-return new class extends Migration {
-  public function up(): void {
-    DB::unprepared(<<<'SQL'
+return new class extends \Illuminate\Database\Migrations\Migration {
+  public function up(): void
+  {
+    \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 CREATE TABLE IF NOT EXISTS selemti.recipe_versions (
   id           BIGSERIAL PRIMARY KEY,
   recipe_id    BIGINT NOT NULL,
@@ -15,7 +13,15 @@ CREATE TABLE IF NOT EXISTS selemti.recipe_versions (
   valid_to     TIMESTAMP WITHOUT TIME ZONE,
   created_at   TIMESTAMP WITHOUT TIME ZONE DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS ux_recipe_version ON selemti.recipe_versions(recipe_id, version_no);
+
+DO $$
+BEGIN
+IF NOT EXISTS (
+  SELECT 1 FROM pg_indexes WHERE schemaname='selemti' AND indexname='ux_recipe_version'
+) THEN
+  CREATE UNIQUE INDEX ux_recipe_version ON selemti.recipe_versions(recipe_id, version_no);
+END IF;
+END$$;
 
 CREATE TABLE IF NOT EXISTS selemti.recipe_version_items (
   id                BIGSERIAL PRIMARY KEY,
@@ -24,7 +30,15 @@ CREATE TABLE IF NOT EXISTS selemti.recipe_version_items (
   qty               NUMERIC(14,6) NOT NULL,
   uom_receta        VARCHAR(20) NOT NULL
 );
-CREATE INDEX IF NOT EXISTS ix_rvi_rv ON selemti.recipe_version_items(recipe_version_id);
+
+DO $$
+BEGIN
+IF NOT EXISTS (
+  SELECT 1 FROM pg_indexes WHERE schemaname='selemti' AND indexname='ix_rvi_rv'
+) THEN
+  CREATE INDEX ix_rvi_rv ON selemti.recipe_version_items(recipe_version_id);
+END IF;
+END$$;
 
 CREATE TABLE IF NOT EXISTS selemti.recipe_cost_history (
   id               BIGSERIAL PRIMARY KEY,
@@ -39,12 +53,25 @@ CREATE TABLE IF NOT EXISTS selemti.recipe_cost_history (
   notes            TEXT,
   created_at       TIMESTAMP WITHOUT TIME ZONE DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS ix_rch_recipe_at ON selemti.recipe_cost_history(recipe_id, snapshot_at);
+
+DO $$
+BEGIN
+IF NOT EXISTS (
+  SELECT 1 FROM pg_indexes WHERE schemaname='selemti' AND indexname='ix_rch_recipe_at'
+) THEN
+  CREATE INDEX ix_rch_recipe_at ON selemti.recipe_cost_history(recipe_id, snapshot_at);
+END IF;
+END$$;
 SQL);
   }
-  public function down(): void {
-    DB::unprepared("DROP TABLE IF EXISTS selemti.recipe_cost_history");
-    DB::unprepared("DROP TABLE IF EXISTS selemti.recipe_version_items");
-    DB::unprepared("DROP TABLE IF EXISTS selemti.recipe_versions");
+
+  public function down(): void
+  {
+    \Illuminate\Support\Facades\DB::unprepared("DROP INDEX IF EXISTS selemti.ix_rch_recipe_at");
+    \Illuminate\Support\Facades\DB::unprepared("DROP TABLE IF EXISTS selemti.recipe_cost_history");
+    \Illuminate\Support\Facades\DB::unprepared("DROP INDEX IF EXISTS selemti.ix_rvi_rv");
+    \Illuminate\Support\Facades\DB::unprepared("DROP TABLE IF EXISTS selemti.recipe_version_items");
+    \Illuminate\Support\Facades\DB::unprepared("DROP INDEX IF EXISTS selemti.ux_recipe_version");
+    \Illuminate\Support\Facades\DB::unprepared("DROP TABLE IF EXISTS selemti.recipe_versions");
   }
 };

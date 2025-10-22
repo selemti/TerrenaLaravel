@@ -1,11 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
-
-return new class extends Migration {
-  public function up(): void {
-    DB::unprepared(<<<'SQL'
+return new class extends \Illuminate\Database\Migrations\Migration {
+  public function up(): void
+  {
+    \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 CREATE TABLE IF NOT EXISTS selemti.alert_rules (
   id            BIGSERIAL PRIMARY KEY,
   recipe_id     BIGINT,
@@ -25,11 +23,22 @@ CREATE TABLE IF NOT EXISTS selemti.alert_events (
   created_at       TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),
   handled          BOOLEAN NOT NULL DEFAULT FALSE
 );
-CREATE INDEX IF NOT EXISTS ix_alert_events_recipe ON selemti.alert_events(recipe_id, created_at);
+
+DO $$
+BEGIN
+IF NOT EXISTS (
+  SELECT 1 FROM pg_indexes WHERE schemaname='selemti' AND indexname='ix_alert_events_recipe'
+) THEN
+  CREATE INDEX ix_alert_events_recipe ON selemti.alert_events(recipe_id, created_at);
+END IF;
+END$$;
 SQL);
   }
-  public function down(): void {
-    DB::unprepared("DROP TABLE IF EXISTS selemti.alert_events");
-    DB::unprepared("DROP TABLE IF EXISTS selemti.alert_rules");
+
+  public function down(): void
+  {
+    \Illuminate\Support\Facades\DB::unprepared("DROP INDEX IF EXISTS selemti.ix_alert_events_recipe");
+    \Illuminate\Support\Facades\DB::unprepared("DROP TABLE IF EXISTS selemti.alert_events");
+    \Illuminate\Support\Facades\DB::unprepared("DROP TABLE IF EXISTS selemti.alert_rules");
   }
 };
