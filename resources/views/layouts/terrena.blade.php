@@ -44,12 +44,12 @@
 
         {{-- Inventario con submenú --}}
         <div class="nav-item">
-          <a class="nav-link {{ in_array($active ?? '', ['inventario', 'items', 'lots', 'receptions']) ? 'active' : '' }}"
+          <a class="nav-link {{ in_array($active ?? '', ['inventario', 'items', 'lots', 'receptions', 'alerts']) ? 'active' : '' }}"
              data-bs-toggle="collapse" href="#menuInventario" role="button" aria-expanded="false">
             <i class="fa-solid fa-boxes-stacked"></i> <span class="label">Inventario</span>
             <i class="fa-solid fa-chevron-down ms-auto submenu-arrow"></i>
           </a>
-          <div class="collapse {{ in_array($active ?? '', ['inventario', 'items', 'lots', 'receptions']) ? 'show' : '' }}" id="menuInventario">
+          <div class="collapse {{ in_array($active ?? '', ['inventario', 'items', 'lots', 'receptions', 'alerts']) ? 'show' : '' }}" id="menuInventario">
             <div class="submenu">
               <a class="nav-link submenu-link" href="{{ url('/inventario') }}">
                 <i class="fa-solid fa-chart-line"></i> <span class="label">Vista General</span>
@@ -62,6 +62,9 @@
               </a>
               <a class="nav-link submenu-link" href="{{ route('inv.receptions') }}">
                 <i class="fa-solid fa-dolly"></i> <span class="label">Recepciones</span>
+              </a>
+              <a class="nav-link submenu-link" href="{{ route('inv.alerts') }}">
+                <i class="fa-regular fa-bell"></i> <span class="label">Alertas de costo</span>
               </a>
             </div>
           </div>
@@ -180,23 +183,23 @@
           <div class="dropdown">
             <button class="btn btn-light d-inline-flex align-items-center gap-2" data-bs-toggle="dropdown">
               <span class="user-profile-icon"><i class="fa-solid fa-user"></i></span>
-              <span>{{ optional(auth()->user())->name ?? 'Juan Pérez' }}</span>
+              <span>{{ auth()->check() ? auth()->user()->name : 'Invitado' }}</span>
               <i class="fa-solid fa-chevron-down small"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="{{ url('/personal') }}">Mi perfil</a></li>
-              <li><a class="dropdown-item" href="{{ url('/admin') }}">Configuración</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li>
-                @auth
+              @auth
+                <li><a class="dropdown-item" href="{{ url('/personal') }}">Mi perfil</a></li>
+                <li><a class="dropdown-item" href="{{ url('/admin') }}">Configuración</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
                   <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button class="dropdown-item text-danger" type="submit">Cerrar sesión</button>
                   </form>
-                @else
-                  <a class="dropdown-item text-danger" href="{{ url('/logout') }}">Cerrar sesión</a>
-                @endauth
-              </li>
+                </li>
+              @else
+                <li><a class="dropdown-item" href="{{ route('login') }}">Iniciar sesión</a></li>
+              @endauth
             </ul>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Inventory;
 
+use App\Livewire\Inventory\ItemPriceCreate;
 use App\Models\Inv\HistorialCostoItem;
 use App\Models\Inv\Item as InvItem;
 use App\Models\Inv\ItemVendor;
@@ -20,6 +21,11 @@ class ItemsManage extends Component
     public bool $showForm = false;
     public bool $isEditing = false;
     public ?string $editingId = null;
+    public ?string $categoryFilter = null;
+    public string $statusFilter = 'all';
+    public string $preferredFilter = 'all';
+    public string $sortField = 'name';
+    public string $sortDirection = 'asc';
 
     public array $form = [
         'id' => '',
@@ -43,23 +49,87 @@ class ItemsManage extends Component
 
     public array $units = [];
     public array $providerOptions = [];
+    public array $categoryOptions = [];
     public array $tipoOptions = ['MATERIA_PRIMA', 'ELABORADO', 'ENVASADO'];
 
     protected $queryString = [
         'q' => ['except' => ''],
+        'categoryFilter' => ['except' => null],
+        'statusFilter' => ['except' => 'all'],
+        'preferredFilter' => ['except' => 'all'],
+        'sortField' => ['except' => 'name'],
+        'sortDirection' => ['except' => 'asc'],
     ];
 
     protected $listeners = [
         'refreshItems' => '$refresh',
     ];
 
+    public function openPriceModal(?string $itemId = null): void
+    {
+        $user = Auth::user();
+
+        if (! $user || ! $user->can('inventory.prices.manage')) {
+            $this->dispatch('toast', type: 'warning', body: 'No tienes permiso para registrar precios.');
+
+            return;
+        }
+
+        $this->dispatch('openPriceCreate', itemId: $itemId)->to(ItemPriceCreate::class);
+    }
+
+    public function sortBy(string $field): void
+    {
+        $allowed = ['name', 'effective_from'];
+
+        if (! in_array($field, $allowed, true)) {
+            return;
+        }
+
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sortDirection = $field === 'effective_from' ? 'desc' : 'asc';
+        }
+
+        $this->resetPage();
+    }
+
     public function mount(): void
     {
         $this->loadUnits();
         $this->loadProviders();
+        $this->loadCategories();
     }
 
     public function updatingQ(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedCategoryFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStatusFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPreferredFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSortField(): void
+    {
+        $this->sortDirection = $this->sortField === 'effective_from' ? 'desc' : 'asc';
+        $this->resetPage();
+    }
+
+    public function updatedSortDirection(): void
     {
         $this->resetPage();
     }
@@ -288,20 +358,46 @@ class ItemsManage extends Component
 
     public function render()
     {
-        $items = DB::connection('pgsql')
+        $itemsQuery = DB::connection('pgsql')
             ->table(DB::raw('selemti.items as i'))
-            ->leftJoin(DB::raw("(SELECT item_id, costo_ultimo, vendor_id, presentacion FROM selemti.item_vendor WHERE preferente = true) as pv"), 'pv.item_id', '=', 'i.id')
-            ->when($this->q !== '', function ($query) {
-                $needle = '%' . trim($this->q) . '%';
+            ->leftJoin(DB::raw('selemti.vw_item_last_price_pref as lp'), 'lp.item_id', '=', 'i.id')
+            ->leftJoin(DB::raw('selemti.item_vendor as pv'), function ($join) {
+                $join->on('pv.item_id', '=', 'i.id');
+                $join->on(DB::raw('pv.vendor_id::text'), '=', 'lp.vendor_id');
+                $join->where('pv.preferente', true);
+            })
+            ->leftJoin(DB::raw('selemti.cat_proveedores as prov'), function ($join) {
+                $join->on(DB::raw('prov.id::text'), '=', DB::raw('pv.vendor_id::text'));
+            })
+            ->when(trim($this->q) !== '', function ($query) {
+                $needle = '%' . str_replace(['%', '_'], ['\\%', '\\_'], trim($this->q)) . '%';
                 $query->where(function ($sub) use ($needle) {
                     $sub->where('i.id', 'ilike', $needle)
+                        ->orWhere('i.item_code', 'ilike', $needle)
                         ->orWhere('i.nombre', 'ilike', $needle)
                         ->orWhere('i.descripcion', 'ilike', $needle);
                 });
             })
-            ->orderBy('i.nombre')
+            ->when($this->categoryFilter, function ($query, $category) {
+                $query->where('i.categoria_id', $category);
+            })
+            ->when($this->statusFilter !== 'all', function ($query) {
+                if ($this->statusFilter === 'active') {
+                    $query->where('i.activo', true);
+                } elseif ($this->statusFilter === 'inactive') {
+                    $query->where('i.activo', false);
+                }
+            })
+            ->when($this->preferredFilter !== 'all', function ($query) {
+                if ($this->preferredFilter === 'with') {
+                    $query->whereNotNull('lp.vendor_id');
+                } elseif ($this->preferredFilter === 'without') {
+                    $query->whereNull('lp.vendor_id');
+                }
+            })
             ->select([
                 'i.id',
+                'i.item_code',
                 'i.nombre',
                 'i.categoria_id',
                 'i.unidad_medida_id',
@@ -310,17 +406,30 @@ class ItemsManage extends Component
                 'i.costo_promedio',
                 'i.perishable',
                 'i.activo',
-                'pv.vendor_id as preferente_vendor',
-                'pv.costo_ultimo as preferente_costo',
+                DB::raw('pv.vendor_id::text as preferente_vendor'),
+                'prov.nombre as preferente_vendor_name',
+                'lp.price as preferente_price',
+                'lp.pack_qty as preferente_pack_qty',
+                'lp.pack_uom as preferente_pack_uom',
+                'lp.effective_from as preferente_effective_from',
                 'pv.presentacion as preferente_presentacion',
-            ])
-            ->paginate($this->perPage);
+            ]);
+
+        if ($this->sortField === 'effective_from') {
+            $itemsQuery->orderByRaw('lp.effective_from ' . ($this->sortDirection === 'asc' ? 'asc' : 'desc'))
+                ->orderBy('i.nombre');
+        } else {
+            $itemsQuery->orderBy('i.nombre', $this->sortDirection === 'desc' ? 'desc' : 'asc');
+        }
+
+        $items = $itemsQuery->paginate($this->perPage);
 
         $unitsIndex = collect($this->units)->keyBy('id');
 
         return view('livewire.inventory.items-manage', [
             'items' => $items,
             'unitsIndex' => $unitsIndex,
+            'categoryOptions' => $this->categoryOptions,
         ])->layout('layouts.terrena', [
             'active' => 'inventario',
             'title' => 'Catálogo · Ítems',
@@ -510,6 +619,19 @@ class ItemsManage extends Component
             ->map(fn ($row) => [
                 'id' => (int) $row->id,
                 'nombre' => $row->nombre,
+            ])->toArray();
+    }
+
+    protected function loadCategories(): void
+    {
+        $this->categoryOptions = DB::connection('pgsql')
+            ->table(DB::raw('selemti.item_categories'))
+            ->orderBy('nombre')
+            ->get(['id', 'nombre', 'prefijo'])
+            ->map(fn ($row) => [
+                'id' => (string) $row->id,
+                'nombre' => $row->nombre,
+                'prefijo' => $row->prefijo,
             ])->toArray();
     }
 
