@@ -9,44 +9,52 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::connection('pgsql')->create('inv_consumo_pos', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->unsignedBigInteger('ticket_id');
-            $table->unsignedBigInteger('ticket_item_id')->nullable();
-            $table->unsignedBigInteger('sucursal_id')->nullable();
-            $table->unsignedBigInteger('terminal_id')->nullable();
-            $table->enum('estado', ['PENDIENTE', 'CONFIRMADO', 'ANULADO'])->default('PENDIENTE');
-            $table->boolean('expandido')->default(false);
-            $table->timestampTz('created_at')->useCurrent();
-            $table->timestampTz('updated_at')->nullable();
+        $schema = Schema::connection('pgsql');
 
-            $table->index(['ticket_id']);
-            $table->index(['estado']);
-        });
+        if (! $schema->hasTable('inv_consumo_pos')) {
+            $schema->create('inv_consumo_pos', function (Blueprint $table) {
+                $table->bigIncrements('id');
+                $table->unsignedBigInteger('ticket_id');
+                $table->unsignedBigInteger('ticket_item_id')->nullable();
+                $table->unsignedBigInteger('sucursal_id')->nullable();
+                $table->unsignedBigInteger('terminal_id')->nullable();
+                $table->enum('estado', ['PENDIENTE', 'CONFIRMADO', 'ANULADO'])->default('PENDIENTE');
+                $table->boolean('expandido')->default(false);
+                $table->timestampTz('created_at')->useCurrent();
+                $table->timestampTz('updated_at')->nullable();
 
-        Schema::connection('pgsql')->create('inv_consumo_pos_det', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->unsignedBigInteger('consumo_id');
-            $table->unsignedBigInteger('item_id');
-            $table->string('uom', 20)->nullable();
-            $table->decimal('cantidad', 18, 6);
-            $table->decimal('factor', 18, 6)->default(1);
-            $table->string('origen', 20)->default('RECETA');
-            $table->jsonb('meta')->nullable();
+                $table->index(['ticket_id']);
+                $table->index(['estado']);
+            });
+        }
 
-            $table->foreign('consumo_id')->references('id')->on('inv_consumo_pos')->onDelete('cascade');
-            $table->index(['item_id']);
-        });
+        if (! $schema->hasTable('inv_consumo_pos_det')) {
+            $schema->create('inv_consumo_pos_det', function (Blueprint $table) {
+                $table->bigIncrements('id');
+                $table->unsignedBigInteger('consumo_id');
+                $table->unsignedBigInteger('item_id');
+                $table->string('uom', 20)->nullable();
+                $table->decimal('cantidad', 18, 6);
+                $table->decimal('factor', 18, 6)->default(1);
+                $table->string('origen', 20)->default('RECETA');
+                $table->jsonb('meta')->nullable();
 
-        Schema::connection('pgsql')->create('inv_consumo_pos_log', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->unsignedBigInteger('ticket_id');
-            $table->string('accion', 20);
-            $table->timestampTz('registrado_en')->useCurrent();
-            $table->jsonb('payload')->nullable();
+                $table->foreign('consumo_id')->references('id')->on('inv_consumo_pos')->onDelete('cascade');
+                $table->index(['item_id']);
+            });
+        }
 
-            $table->index(['ticket_id']);
-        });
+        if (! $schema->hasTable('inv_consumo_pos_log')) {
+            $schema->create('inv_consumo_pos_log', function (Blueprint $table) {
+                $table->bigIncrements('id');
+                $table->unsignedBigInteger('ticket_id');
+                $table->string('accion', 20);
+                $table->timestampTz('registrado_en')->useCurrent();
+                $table->jsonb('payload')->nullable();
+
+                $table->index(['ticket_id']);
+            });
+        }
 
         DB::connection('pgsql')->unprepared(<<<'SQL'
 CREATE OR REPLACE FUNCTION selemti.fn_expandir_consumo_ticket(_ticket_id bigint)
