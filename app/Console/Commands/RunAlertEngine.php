@@ -9,6 +9,10 @@ use Illuminate\Console\Command;
 #[AsCommand(name: 'alerts:run', description: 'Evalúa reglas de alerta y genera eventos pendientes')]
 class RunAlertEngine extends Command
 {
+    protected $signature = 'alerts:run';
+
+    protected $description = 'Evalúa reglas de alerta y genera eventos pendientes';
+
     public function handle(AlertEngine $engine): int
     {
         $engine->run();
