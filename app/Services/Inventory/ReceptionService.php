@@ -3,8 +3,6 @@ namespace App\Services\Inventory;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Schema;
-
 class ReceptionService
 {
     /**
@@ -18,83 +16,115 @@ class ReceptionService
      */
     public function createReception(array $header, array $lines): int
     {
-        return DB::transaction(function() use ($header,$lines) {
+        return DB::transaction(function () use ($header, $lines) {
+            $now = now();
+            $numero = $this->buildSequentialNumber();
 
             $cabecera = [
-                'proveedor_id' => $header['supplier_id'],
-                'ts'           => now(),
+                'proveedor_id'        => $header['supplier_id'],
+                'sucursal_id'        => $header['branch_id'] ?? null,
+                'almacen_id'         => $header['warehouse_id'] ?? null,
+                'usuario_id'         => $header['user_id'] ?? null,
+                'numero_recepcion'   => $numero,
+                'fecha_recepcion'    => $now,
+                'estado'             => 'RECIBIDO',
+                'total_presentaciones' => 0,
+                'total_canonico'       => 0,
+                'created_at'           => $now,
+                'updated_at'           => $now,
             ];
-
-            if (Schema::hasColumn('recepcion_cab', 'sucursal_id')) {
-                $cabecera['sucursal_id'] = $header['branch_id'] ?? null;
-            }
-
-            if (Schema::hasColumn('recepcion_cab', 'almacen_id')) {
-                $cabecera['almacen_id'] = $header['warehouse_id'] ?? null;
-            }
-
-            if (Schema::hasColumn('recepcion_cab', 'usuario_id')) {
-                $cabecera['usuario_id'] = $header['user_id'];
-            }
 
             $receptionId = (int) DB::table('recepcion_cab')->insertGetId($cabecera);
 
-            foreach ($lines as $l) {
-                // normaliza cantidad a UOM canónica (qty_can = qty_pack * pack_size)
-                $qtyCan = (float)$l['qty_pack'] * (float)($l['pack_size'] ?? 1);
+            $totals = ['presentaciones' => 0.0, 'canonico' => 0.0];
 
-                // crea/obtiene batch (lote)
+            foreach ($lines as $line) {
+                $qtyPack = (float) ($line['qty_pack'] ?? 0);
+                $packSize = (float) ($line['pack_size'] ?? 1);
+                $qtyCanonical = $qtyPack * ($packSize ?: 1);
+
                 $batchId = (int) DB::table('inventory_batch')->insertGetId([
-                    'item_id'   => $l['item_id'],
-                    'lote'      => $l['lot'] ?: Str::uuid(),
-                    'caducidad' => $l['exp_date'] ?? null,
-                    'estado'    => 'ACTIVO',
-                    'metadata'  => json_encode([
-                        'temperatura' => $l['temp'] ?? null,
-                        'doc_url'     => $l['doc_url'] ?? null
+                    'item_id'               => $line['item_id'],
+                    'lote'                  => $line['lot'] ?: (string) Str::uuid(),
+                    'cantidad_original'     => $qtyCanonical,
+                    'cantidad_actual'       => $qtyCanonical,
+                    'uom_base'              => $line['uom_base'],
+                    'caducidad'             => $line['exp_date'] ?? null,
+                    'estado'                => 'ACTIVO',
+                    'temperatura_recepcion' => $line['temp'] ?? null,
+                    'doc_url'               => $line['doc_url'] ?? null,
+                    'sucursal_id'           => $header['branch_id'] ?? null,
+                    'almacen_id'            => $header['warehouse_id'] ?? null,
+                    'meta'                  => json_encode([
+                        'uom_purchase' => $line['uom_purchase'],
+                        'qty_pack'     => $qtyPack,
+                        'pack_size'    => $packSize,
                     ]),
-                    'created_at'=> now(),
+                    'created_at'            => $now,
+                    'updated_at'            => $now,
                 ]);
 
-                // detalle de recepción (si existe tu tabla recepcion_det)
                 DB::table('recepcion_det')->insert([
-                    'recepcion_id' => $receptionId,
-                    'item_id'      => $l['item_id'],
-                    'batch_id'     => $batchId,
-                    'qty_presentacion' => $l['qty_pack'],
-                    'pack_size'    => $l['pack_size'] ?? 1,
-                    'uom_compra'   => $l['uom_purchase'],
-                    'qty_canonica' => $qtyCan,
-                    'uom_base'     => $l['uom_base'],
-                    'precio_unit'  => $l['precio_unit'] ?? 0,
-                    'ts'           => now(),
+                    'recepcion_id'           => $receptionId,
+                    'item_id'                => $line['item_id'],
+                    'batch_id'               => $batchId,
+                    'lote_proveedor'         => $line['lot'] ?: null,
+                    'fecha_caducidad'        => $line['exp_date'] ?? null,
+                    'qty_presentacion'       => $qtyPack,
+                    'pack_size'              => $packSize,
+                    'uom_compra'             => $line['uom_purchase'],
+                    'qty_canonica'           => $qtyCanonical,
+                    'uom_base'               => $line['uom_base'],
+                    'precio_unit'            => $line['precio_unit'] ?? null,
+                    'temperatura_recepcion'  => $line['temp'] ?? null,
+                    'meta'                   => $line['doc_url'] ? json_encode(['doc_url' => $line['doc_url']]) : null,
+                    'created_at'             => $now,
+                    'updated_at'             => $now,
                 ]);
 
-                // movimiento de inventario (kardex) tipo RECEPCION
                 $movimiento = [
-                    'item_id'  => $l['item_id'],
-                    'batch_id' => $batchId,
-                    'tipo'     => 'RECEPCION',
-                    'qty'      => $qtyCan,           // positivo
-                    'uom'      => $l['uom_base'],    // GR/ML/PZ
-                    'ref_tipo' => 'RECEPCION',
-                    'ref_id'   => $receptionId,
-                    'ts'       => now(),
-                    'meta'     => json_encode(['temp'=>$l['temp'] ?? null])
+                    'item_id'    => $line['item_id'],
+                    'batch_id'   => $batchId,
+                    'tipo'       => 'RECEPCION',
+                    'qty'        => $qtyCanonical,
+                    'uom'        => $line['uom_base'],
+                    'sucursal_id'=> $header['branch_id'] ?? null,
+                    'almacen_id' => $header['warehouse_id'] ?? null,
+                    'ref_tipo'   => 'recepcion',
+                    'ref_id'     => $receptionId,
+                    'user_id'    => $header['user_id'] ?? null,
+                    'ts'         => $now,
+                    'meta'       => json_encode(['temperatura' => $line['temp'] ?? null]),
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ];
 
-                if (Schema::hasColumn('mov_inv', 'sucursal_id')) {
-                    $movimiento['sucursal_id'] = $header['branch_id'] ?? null;
-                }
-
-                if (Schema::hasColumn('mov_inv', 'almacen_id')) {
-                    $movimiento['almacen_id'] = $header['warehouse_id'] ?? null;
-                }
-
                 DB::table('mov_inv')->insert($movimiento);
+
+                $totals['presentaciones'] += $qtyPack;
+                $totals['canonico'] += $qtyCanonical;
             }
+
+            DB::table('recepcion_cab')
+                ->where('id', $receptionId)
+                ->update([
+                    'total_presentaciones' => $totals['presentaciones'],
+                    'total_canonico'       => $totals['canonico'],
+                    'updated_at'           => $now,
+                ]);
 
             return $receptionId;
         });
+    }
+
+    protected function buildSequentialNumber(): string
+    {
+        $today = now()->format('Ymd');
+
+        $count = DB::table('recepcion_cab')
+            ->whereDate('fecha_recepcion', now()->toDateString())
+            ->count();
+
+        return sprintf('RC-%s-%04d', $today, $count + 1);
     }
 }

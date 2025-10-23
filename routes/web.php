@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 /* =========================================================================
@@ -40,6 +42,7 @@ use App\Livewire\Inventory\ReceptionCreate   as InventoryReceptionCreate;
 use App\Livewire\Inventory\LotsIndex         as InventoryLotsIndex;
 use App\Livewire\Inventory\ItemsManage       as InventoryItemsManage;
 use App\Livewire\Inventory\AlertsList        as InventoryAlertsList;
+use App\Livewire\People\UsersIndex           as PeopleUsersIndex;
 
 
 use App\Livewire\Recipes\RecipesIndex        as RecipesIndexLW;
@@ -51,71 +54,80 @@ use App\Livewire\Kds\Board                   as KdsBoard;
 |  HOME (UNA sola definición, limpia y canónica)
 |========================================================================= */
 Route::get('/', function () {
-    return "Página de inicio - <a href='" . route('dashboard') . "'>Ir al Dashboard</a>";
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
 })->name('home');
 
-/*
-Route::get('/', function () {
-    return redirect()->route('dashboard'); // 302 hacia la ruta nombrada
-})->name('home');*/
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware('auth')->name('dashboard');
+
+Route::get('/logout', [AuthenticatedSessionController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('logout.fallback');
 
 /* =========================================================================
 |  BLADES “estáticos” del menú principal
 |========================================================================= */
-Route::view('/dashboard',  'dashboard')->name('dashboard');
-Route::view('/compras',    'compras')->name('compras');
-Route::view('/inventario', 'inventario')->name('inventario'); // TU vista Blade
-Route::view('/personal',   'personal')->name('personal');
-Route::view('/produccion', 'produccion')->name('produccion');
-Route::view('/recetas',    'recetas')->name('recetas');
+Route::middleware('auth')->group(function () {
+    Route::view('/compras',    'compras')->name('compras');
+    Route::view('/inventario', 'inventario')->name('inventario'); // TU vista Blade
+    Route::get('/personal',    PeopleUsersIndex::class)
+        ->middleware('can:people.view')
+        ->name('personal');
+    Route::view('/produccion', 'produccion')->name('produccion');
+    Route::view('/recetas',    'recetas')->name('recetas');
 
-/* =========================================================================
-|  Catálogos (Livewire pages)
-|========================================================================= */
-Route::view('/catalogos', 'catalogos-index')->name('catalogos.index'); // Índice de catálogos
+    /* =========================================================================
+    |  Catálogos (Livewire pages)
+    |========================================================================= */
+    Route::view('/catalogos', 'catalogos-index')->name('catalogos.index'); // Índice de catálogos
 
-Route::prefix('catalogos')->group(function () {
-    Route::get('/unidades',     CatalogUnidadesIndex::class)->name('cat.unidades');
-    Route::get('/uom',          CatalogUomConversionIndex::class)->name('cat.uom');
-    Route::get('/almacenes',    CatalogAlmacenesIndex::class)->name('cat.almacenes');
-    Route::get('/proveedores',  CatalogProveedoresIndex::class)->name('cat.proveedores');
-    Route::get('/sucursales',   CatalogSucursalesIndex::class)->name('cat.sucursales');
-    Route::get('/stock-policy', CatalogStockPolicyIndex::class)->name('cat.stockpolicy');
+    Route::prefix('catalogos')->group(function () {
+        Route::get('/unidades',     CatalogUnidadesIndex::class)->name('cat.unidades');
+        Route::get('/uom',          CatalogUomConversionIndex::class)->name('cat.uom');
+        Route::get('/almacenes',    CatalogAlmacenesIndex::class)->name('cat.almacenes');
+        Route::get('/proveedores',  CatalogProveedoresIndex::class)->name('cat.proveedores');
+        Route::get('/sucursales',   CatalogSucursalesIndex::class)->name('cat.sucursales');
+        Route::get('/stock-policy', CatalogStockPolicyIndex::class)->name('cat.stockpolicy');
+    });
+
+    /* =========================================================================
+    |  Inventario (Livewire pages dinámicas)
+    |========================================================================= */
+    Route::prefix('inventory')->group(function () {
+        Route::get('/items',          InventoryItemsManage::class)->name('inventory.items.index');
+        Route::get('/receptions',     InventoryReceptionsIndex::class)->name('inv.receptions');
+        Route::get('/receptions/new', InventoryReceptionCreate::class)->name('inv.receptions.new');
+        Route::get('/lots',           InventoryLotsIndex::class)->name('inv.lots');
+        Route::get('/alerts',         InventoryAlertsList::class)->name('inv.alerts');
+    });
+
+    /* =========================================================================
+    |  Recetas (Livewire)
+    |========================================================================= */
+    Route::get('/recipes',              RecipesIndexLW::class)->name('rec.index');
+    Route::get('/recipes/editor/{id?}', RecipeEditorLW::class)->name('rec.editor');
+
+    /* =========================================================================
+    |  KDS / Caja / Reportes / Admin
+    |========================================================================= */
+    Route::get('/kds', KdsBoard::class)->name('kds.board');
+    Route::get('/caja/cortes', [App\Http\Controllers\Api\Caja\CajaController::class, 'index'])->name('caja.cortes');
+    Route::view('/reportes', 'placeholder', ['title'=>'Reportes'])->name('reportes');
+
+    Route::view('/admin', 'placeholder', ['title' => 'Configuración'])
+        ->middleware('can:admin.access')
+        ->name('admin');
+
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 });
-
-/* =========================================================================
-|  Inventario (Livewire pages dinámicas)
-|========================================================================= */
-Route::prefix('inventory')->group(function () {
-    //Route::get('/items',          InventoryItemsIndex::class)->name('inventory.items.index');
-                Route::get('/items',          InventoryItemsManage::class)->name('inventory.items.index');
-    Route::get('/receptions',     InventoryReceptionsIndex::class)->name('inv.receptions');
-    Route::get('/receptions/new', InventoryReceptionCreate::class)->name('inv.receptions.new');
-    Route::get('/lots',           InventoryLotsIndex::class)->name('inv.lots');
-    Route::get('/alerts',         InventoryAlertsList::class)->name('inv.alerts');
-});
-
-/* =========================================================================
-|  Recetas (Livewire)
-|========================================================================= */
-Route::get('/recipes',              RecipesIndexLW::class)->name('rec.index');
-Route::get('/recipes/editor/{id?}', RecipeEditorLW::class)->name('rec.editor');
-
-/* =========================================================================
-|  KDS / Caja / Reportes / Admin
-|========================================================================= */
-Route::get('/kds', KdsBoard::class)->name('kds.board');
-Route::get('/caja/cortes', [App\Http\Controllers\Api\Caja\CajaController::class, 'index'])->name('caja.cortes');
-Route::view('/reportes', 'placeholder', ['title'=>'Reportes'])->name('reportes');
-Route::view('/admin',    'placeholder', ['title'=>'Configuración'])->name('admin');
 
 /* =========================================================================
 |  Auth
 |========================================================================= */
 require __DIR__.'/auth.php';
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
-});
+// Rutas de autenticación Breeze/Jetstream

@@ -20,26 +20,32 @@
       <table class="table table-striped table-sm align-middle mb-0">
         <thead class="table-light">
           <tr>
-            <th>ID</th>
+            <th>#</th>
             <th>Proveedor</th>
             <th>Sucursal</th>
             <th>Almacén</th>
+            <th>Estado</th>
             <th>Fecha</th>
+            <th class="text-end">Total (presentación)</th>
           </tr>
         </thead>
         <tbody>
-          @forelse($rows as $row)
+            @forelse($rows as $row)
             <tr>
-              <td class="fw-semibold">{{ $row->id }}</td>
+              <td class="fw-semibold">{{ $row->numero_recepcion ?? $row->id }}</td>
               <td>{{ $row->proveedor_nombre ?: $row->proveedor_id }}</td>
               <td>{{ $row->sucursal_nombre ?? '—' }}</td>
               <td>{{ $row->almacen_nombre ?? '—' }}</td>
-              <td>{{ \Carbon\Carbon::parse($row->ts)->format('d/m/Y H:i') }}</td>
+              <td>
+                <span class="badge bg-success-subtle text-success">{{ $row->estado ?? 'RECIBIDO' }}</span>
+              </td>
+              <td>{{ $row->fecha_recepcion ? \Carbon\Carbon::parse($row->fecha_recepcion)->format('d/m/Y H:i') : '—' }}</td>
+              <td class="text-end">{{ number_format($row->total_presentaciones ?? 0, 2) }}</td>
             </tr>
-          @empty
-            <tr>
-              <td colspan="5" class="text-center text-muted py-4">Sin recepciones registradas.</td>
-            </tr>
+            @empty
+              <tr>
+                <td colspan="7" class="text-center text-muted py-4">Sin recepciones registradas.</td>
+              </tr>
           @endforelse
         </tbody>
       </table>

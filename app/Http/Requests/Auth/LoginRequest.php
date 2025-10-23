@@ -7,7 +7,6 @@ use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -31,6 +30,7 @@ class LoginRequest extends FormRequest
         return [
             'login' => ['required', 'string'],
             'password' => ['required', 'string'],
+            'remember' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -63,7 +63,7 @@ class LoginRequest extends FormRequest
 
         $user = $this->resolveUser($login);
 
-        if (! $user || ! Hash::check($password, $user->getAuthPassword())) {
+        if (! $user) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -71,7 +71,7 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        if ($user->activo === false) {
+        if (! $user->activo) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -79,7 +79,15 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        Auth::login($user, $this->boolean('remember'));
+        $credentials = $this->credentialsFor($user, $login, $password);
+
+        if (! Auth::attempt($credentials, $this->boolean('remember'))) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'login' => trans('auth.failed'),
+            ]);
+        }
 
         RateLimiter::clear($this->throttleKey());
     }
@@ -132,5 +140,21 @@ class LoginRequest extends FormRequest
         }
 
         return $query->first();
+    }
+
+    protected function credentialsFor(User $user, string $login, string $password): array
+    {
+        $credentials = [
+            'password' => $password,
+            'activo' => true,
+        ];
+
+        if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
+            $credentials['email'] = $user->email;
+        } else {
+            $credentials['username'] = $user->username;
+        }
+
+        return $credentials;
     }
 }

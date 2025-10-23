@@ -13,12 +13,13 @@ class User extends Authenticatable
 
     protected $guard_name = 'web';
 
-    protected $table = 'selemti.users'; // Mapeo a la tabla principal
+    protected $table = 'users';
     protected $primaryKey = 'id';
     
     protected $fillable = [
         'username',
         'password_hash',
+        'remember_token',
         'email',
         'nombre_completo',
         'sucursal_id',
@@ -35,6 +36,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password_hash',
+        'remember_token',
     ];
 
     /**
@@ -76,21 +78,6 @@ class User extends Authenticatable
         $this->attributes['email'] = $value ? strtolower(trim($value)) : null;
     }
 
-    public function getRememberToken()
-    {
-        return null;
-    }
-
-    public function setRememberToken($value): void
-    {
-        // Tabla nativa no utiliza remember_token.
-    }
-
-    public function getRememberTokenName(): string
-    {
-        return 'remember_token';
-    }
-    
     public function legacyRoles()
     {
         return $this->hasMany(Core\UserRole::class, 'user_id');

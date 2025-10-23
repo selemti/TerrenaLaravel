@@ -6,6 +6,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -65,7 +66,7 @@ class AlertsList extends Component
         }
 
         $updated = DB::connection('pgsql')
-            ->table('selemti.alert_events')
+            ->table('alert_events')
             ->where('id', $alertId)
             ->update(['handled' => true]);
 
@@ -94,22 +95,34 @@ class AlertsList extends Component
 
     protected function buildQuery()
     {
-        $query = DB::connection('pgsql')
-            ->table(DB::raw('selemti.alert_events as ae'))
-            ->leftJoin(DB::raw('selemti.recipes as r'), 'r.id', '=', 'ae.recipe_id')
-            ->select([
-                'ae.id',
-                'ae.recipe_id',
-                'ae.snapshot_at',
-                'ae.old_portion_cost',
-                'ae.new_portion_cost',
-                'ae.delta_pct',
-                'ae.created_at',
-                'ae.handled',
-                'r.nombre as recipe_name',
-                'r.codigo as recipe_code',
-            ])
-            ->orderByDesc('ae.snapshot_at');
+        $query = DB::connection('pgsql')->table('alert_events as ae');
+
+        $select = [
+            'ae.id',
+            'ae.recipe_id',
+            'ae.snapshot_at',
+            'ae.old_portion_cost',
+            'ae.new_portion_cost',
+            'ae.delta_pct',
+            'ae.created_at',
+            'ae.handled',
+        ];
+
+        $recipesTableExists = rescue(
+            fn () => Schema::connection('pgsql')->hasTable('recipes'),
+            report: false
+        ) ?? false;
+
+        if ($recipesTableExists) {
+            $query->leftJoin('recipes as r', 'r.id', '=', 'ae.recipe_id');
+            $select[] = 'r.nombre as recipe_name';
+            $select[] = 'r.codigo as recipe_code';
+        } else {
+            $select[] = DB::raw('NULL::text as recipe_name');
+            $select[] = DB::raw('NULL::text as recipe_code');
+        }
+
+        $query->select($select)->orderByDesc('ae.snapshot_at');
 
         if ($this->handled === 'pending') {
             $query->where('ae.handled', false);

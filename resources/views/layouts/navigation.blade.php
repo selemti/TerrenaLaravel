@@ -34,9 +34,9 @@
                     </x-slot>
 
                     <x-slot name="content">
-                        @php($profileRouteExists = Route::has('profile.edit'))
+                        @php($profileRouteExists = Route::has('profile.index'))
                         @if($profileRouteExists)
-                            <x-dropdown-link :href="route('profile.edit')">
+                            <x-dropdown-link :href="route('profile.index')">
                                 {{ __('Profile') }}
                             </x-dropdown-link>
                         @endif
@@ -81,8 +81,8 @@
             </div>
 
             <div class="mt-3 space-y-1">
-                @if(Route::has('profile.edit'))
-                    <x-responsive-nav-link :href="route('profile.edit')">
+                @if(Route::has('profile.index'))
+                    <x-responsive-nav-link :href="route('profile.index')">
                         {{ __('Profile') }}
                     </x-responsive-nav-link>
                 @endif

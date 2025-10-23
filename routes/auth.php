@@ -56,4 +56,7 @@ Route::middleware('auth')->group(function () {
 
     Route::match(['post', 'get'], 'logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
+
+    Route::get('logout', [AuthenticatedSessionController::class, 'destroy'])
+        ->name('logout.get');
 });
