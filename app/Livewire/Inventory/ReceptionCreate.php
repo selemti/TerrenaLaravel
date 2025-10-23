@@ -94,10 +94,10 @@ class ReceptionCreate extends Component
     {
         return [
             'supplier_id'             => 'required|integer|exists:cat_proveedores,id',
-            'branch_id'               => 'nullable|string|exists:selemti.cat_sucursales,id',
-            'warehouse_id'            => 'nullable|string|exists:selemti.cat_almacenes,id',
+            'branch_id'               => 'nullable|string|exists:cat_sucursales,id',
+            'warehouse_id'            => 'nullable|string|exists:cat_almacenes,id',
             'lines'                   => 'required|array|min:1',
-            'lines.*.item_id'         => 'required|string|exists:selemti.items,id',
+            'lines.*.item_id'         => 'required|string|exists:items,id',
             'lines.*.qty_pack'        => 'required|numeric|min:0.0001',
             'lines.*.pack_size'       => 'nullable|numeric|min:0.0001',
             'lines.*.uom_purchase'    => 'required|string',
@@ -115,6 +115,7 @@ class ReceptionCreate extends Component
         $lines = [];
         foreach ($this->lines as $line) {
             $normalized = $line;
+            $normalized['item_id'] = $this->normalizeItemId($normalized['item_id'] ?? null);
             $normalized['qty_pack'] = isset($normalized['qty_pack']) ? (float) $normalized['qty_pack'] : 0;
             $normalized['pack_size'] = isset($normalized['pack_size']) && $normalized['pack_size'] !== null
                 ? (float) $normalized['pack_size']
@@ -125,6 +126,9 @@ class ReceptionCreate extends Component
             $normalized['precio_unit'] = isset($normalized['precio_unit']) && $normalized['precio_unit'] !== null
                 ? (float) $normalized['precio_unit']
                 : null;
+            $normalized['lot'] = isset($normalized['lot']) ? trim($normalized['lot']) : '';
+            $normalized['uom_purchase'] = isset($normalized['uom_purchase']) ? strtoupper($normalized['uom_purchase']) : null;
+            $normalized['uom_base'] = isset($normalized['uom_base']) ? strtoupper($normalized['uom_base']) : null;
 
             if (!empty($normalized['evidence'])) {
                 $path = $normalized['evidence']->store('evidencias', 'public');
@@ -191,6 +195,15 @@ class ReceptionCreate extends Component
             ->orderBy('nombre')
             ->limit(200)
             ->get(['id', 'nombre', 'descripcion']);
+    }
+
+    private function normalizeItemId($value): int
+    {
+        if (is_numeric($value)) {
+            return (int) $value;
+        }
+
+        return (int) preg_replace('/[^0-9]/', '', (string) $value);
     }
 
     public function render()

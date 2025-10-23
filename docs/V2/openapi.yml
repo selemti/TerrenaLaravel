@@ -1,0 +1,182 @@
+openapi: 3.0.3
+info:
+  title: Terrena Costing API
+  version: "1.0.0"
+  description: |
+    Endpoints para registrar precios de proveedores, consultar costos de recetas y gestionar alertas de variación.
+servers:
+  - url: https://{host}
+    variables:
+      host:
+        default: api.terrena.local
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: laravel_session
+paths:
+  /api/inventory/prices:
+    post:
+      security:
+        - sessionCookie: []
+      summary: Registrar un precio de proveedor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - item_id
+                - vendor_id
+                - price
+                - pack_qty
+                - pack_uom
+              properties:
+                item_id:
+                  type: string
+                  description: Identificador del ítem (coincide con selemti.items.id).
+                vendor_id:
+                  type: string
+                  description: Identificador del proveedor asociado al ítem.
+                price:
+                  type: number
+                  format: float
+                pack_qty:
+                  type: number
+                  format: float
+                pack_uom:
+                  type: string
+                  maxLength: 16
+                effective_from:
+                  type: string
+                  format: date-time
+                  description: Fecha de vigencia (opcional, por defecto `now()`).
+                notes:
+                  type: string
+                source:
+                  type: string
+                  maxLength: 50
+      responses:
+        '201':
+          description: Precio registrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      item_id:
+                        type: string
+                      vendor_id:
+                        type: string
+                      price:
+                        type: number
+                        format: float
+                      pack_qty:
+                        type: number
+                        format: float
+                      pack_uom:
+                        type: string
+                      effective_from:
+                        type: string
+                        format: date-time
+        '422':
+          description: Error de validación
+        '403':
+          description: Usuario sin permiso `inventory.prices.manage`
+  /api/recipes/{id}/cost:
+    get:
+      summary: Obtener costo de receta a fecha
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: at
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Fecha objetivo (por defecto `now()`).
+      responses:
+        '200':
+          description: Costo calculado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    description: Resultado de `fn_recipe_cost_at`.
+        '204':
+          description: Receta sin costo calculado
+        '404':
+          description: Receta no encontrada
+  /api/alerts:
+    get:
+      security:
+        - sessionCookie: []
+      summary: Listar alertas de costo
+      parameters:
+        - in: query
+          name: handled
+          schema:
+            type: string
+            enum: [0, 1]
+          description: Filtra por atendidas (1) o pendientes (0).
+      responses:
+        '200':
+          description: Listado de alertas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        recipe_id:
+                          type: integer
+                        snapshot_at:
+                          type: string
+                          format: date-time
+                        old_portion_cost:
+                          type: number
+                          format: float
+                        new_portion_cost:
+                          type: number
+                          format: float
+                        delta_pct:
+                          type: number
+                          format: float
+                        handled:
+                          type: boolean
+  /api/alerts/{id}/ack:
+    post:
+      security:
+        - sessionCookie: []
+      summary: Marcar alerta como atendida
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Alerta actualizada
+        '404':
+          description: Alerta no encontrada

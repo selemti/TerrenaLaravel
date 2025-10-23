@@ -2,16 +2,24 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\URL;
+use App\Support\Permissions\NullPermissionRegistrar;
+use Illuminate\Cache\CacheManager;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use Spatie\Permission\PermissionRegistrar;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // aquí lo que ya tengas de bindings/registrations
+        if ($this->app->runningUnitTests()) {
+            $this->app->extend(PermissionRegistrar::class, function ($service, $app) {
+                return new NullPermissionRegistrar($app->make(CacheManager::class));
+            });
+        }
     }
 
     public function boot(): void
@@ -40,8 +48,12 @@ class AppServiceProvider extends ServiceProvider
         // URL::forceScheme('https');
 
         // Forzar encoding UTF-8 en PostgreSQL
-        if (! $this->app->runningInConsole() && config('database.default') === 'pgsql') {
-            \DB::statement("SET NAMES 'UTF8'");
+        if (config('database.default') === 'pgsql') {
+            rescue(fn () => DB::connection('pgsql')->statement("SET search_path TO selemti,public"), report: false);
+
+            if (! $this->app->runningInConsole()) {
+                rescue(fn () => DB::connection('pgsql')->statement("SET NAMES 'UTF8'"), report: false);
+            }
         }
     }
 }

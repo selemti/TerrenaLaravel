@@ -31,6 +31,7 @@ class ViewServiceProvider extends ServiceProvider
                 'inventory.items.index' => 'inventario',
                 'inv.receptions' => 'inventario',
                 'inv.lots' => 'inventario',
+                'inv.alerts' => 'alerts',
             ];
 
             $view->with('active', $menuMap[$routeName] ?? '');

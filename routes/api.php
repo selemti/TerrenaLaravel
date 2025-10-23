@@ -16,10 +16,14 @@ use App\Http\Controllers\Api\Caja\HealthController;
 use App\Http\Controllers\Api\Unidades\UnidadController;
 use App\Http\Controllers\Api\Unidades\ConversionController;
 
+use App\Http\Controllers\Api\AlertsController;
 use App\Http\Controllers\Api\Inventory\ItemController;
+use App\Http\Controllers\Api\Inventory\PriceController;
+use App\Http\Controllers\Api\Inventory\RecipeCostController;
 use App\Http\Controllers\Api\Inventory\StockController;
 use App\Http\Controllers\Api\Inventory\VendorController;
 use App\Http\Controllers\Api\CatalogsController;
+use App\Http\Controllers\Api\Cash\CashFundController;
 
 /*
 |--------------------------------------------------------------------------
@@ -164,6 +168,24 @@ Route::prefix('inventory')->group(function () {
         Route::get('/{id}/vendors', [VendorController::class, 'byItem']);
         Route::post('/{id}/vendors', [VendorController::class, 'attach']);
     });
+
+    // Precios de proveedores
+    Route::post('/prices', [PriceController::class, 'store'])->middleware('throttle:30,1');
+});
+
+// Costeo de recetas
+Route::get('/recipes/{id}/cost', [RecipeCostController::class, 'show']);
+
+// Alertas de costos
+Route::get('/alerts', [AlertsController::class, 'index']);
+Route::post('/alerts/{id}/ack', [AlertsController::class, 'acknowledge']);
+
+Route::prefix('cash-funds')->group(function () {
+    Route::get('/', [CashFundController::class, 'index']);
+    Route::post('/', [CashFundController::class, 'store']);
+    Route::post('/{fund}/movements', [CashFundController::class, 'storeMovement']);
+    Route::post('/movements/{movement}/approve', [CashFundController::class, 'approve']);
+    Route::post('/{fund}/close', [CashFundController::class, 'close']);
 });
 
 /*
