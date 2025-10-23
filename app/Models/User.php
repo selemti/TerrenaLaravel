@@ -5,17 +5,30 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
 
-    protected $table = 'selemti.users'; // Mapeo a la tabla principal
+    protected $guard_name = 'web';
+
+    protected $table = 'users';
     protected $primaryKey = 'id';
     
     protected $fillable = [
-        'username', 'password_hash', 'email', 'nombre_completo', 'sucursal_id', 'activo',
-        'fecha_ultimo_login', 'intentos_login', 'bloqueado_hasta', 'created_at', 'updated_at'
+        'username',
+        'password_hash',
+        'remember_token',
+        'email',
+        'nombre_completo',
+        'sucursal_id',
+        'activo',
+        'fecha_ultimo_login',
+        'intentos_login',
+        'bloqueado_hasta',
+        'created_at',
+        'updated_at',
     ];
 
     /**
@@ -23,6 +36,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password_hash',
+        'remember_token',
     ];
 
     /**
@@ -45,8 +59,26 @@ class User extends Authenticatable
     {
         return $this->password_hash;
     }
-    
-    public function roles()
+
+    public function getNameAttribute(): string
+    {
+        return $this->attributes['nombre_completo']
+            ?? $this->attributes['username']
+            ?? $this->attributes['email']
+            ?? '';
+    }
+
+    public function getEmailAttribute($value): ?string
+    {
+        return $value ?: null;
+    }
+
+    public function setEmailAttribute($value): void
+    {
+        $this->attributes['email'] = $value ? strtolower(trim($value)) : null;
+    }
+
+    public function legacyRoles()
     {
         return $this->hasMany(Core\UserRole::class, 'user_id');
     }

@@ -22,7 +22,8 @@
 </head>
 <body>
   <div class="container-fluid p-0 d-flex" style="min-height:100vh">
-    
+
+    @auth
     {{-- Sidebar (réplica exacta del layout.php) --}}
     <aside class="sidebar flex-column" id="sidebar">
       <div class="logo-brand mb-3 d-flex align-items-center justify-content-center">
@@ -44,12 +45,12 @@
 
         {{-- Inventario con submenú --}}
         <div class="nav-item">
-          <a class="nav-link {{ in_array($active ?? '', ['inventario', 'items', 'lots', 'receptions']) ? 'active' : '' }}"
+          <a class="nav-link {{ in_array($active ?? '', ['inventario', 'items', 'lots', 'receptions', 'alerts']) ? 'active' : '' }}"
              data-bs-toggle="collapse" href="#menuInventario" role="button" aria-expanded="false">
             <i class="fa-solid fa-boxes-stacked"></i> <span class="label">Inventario</span>
             <i class="fa-solid fa-chevron-down ms-auto submenu-arrow"></i>
           </a>
-          <div class="collapse {{ in_array($active ?? '', ['inventario', 'items', 'lots', 'receptions']) ? 'show' : '' }}" id="menuInventario">
+          <div class="collapse {{ in_array($active ?? '', ['inventario', 'items', 'lots', 'receptions', 'alerts']) ? 'show' : '' }}" id="menuInventario">
             <div class="submenu">
               <a class="nav-link submenu-link" href="{{ url('/inventario') }}">
                 <i class="fa-solid fa-chart-line"></i> <span class="label">Vista General</span>
@@ -62,6 +63,9 @@
               </a>
               <a class="nav-link submenu-link" href="{{ route('inv.receptions') }}">
                 <i class="fa-solid fa-dolly"></i> <span class="label">Recepciones</span>
+              </a>
+              <a class="nav-link submenu-link" href="{{ route('inv.alerts') }}">
+                <i class="fa-regular fa-bell"></i> <span class="label">Alertas de costo</span>
               </a>
             </div>
           </div>
@@ -88,6 +92,7 @@
         </a>
 
         {{-- Configuración con submenú --}}
+        @can('admin.access')
         <div class="nav-item">
           <a class="nav-link {{ ($active ?? '') === 'config' ? 'active' : '' }}"
              data-bs-toggle="collapse" href="#menuConfig" role="button" aria-expanded="false">
@@ -121,11 +126,14 @@
             </div>
           </div>
         </div>
+        @endcan
 
         {{-- Personal --}}
+        @can('people.view')
         <a class="nav-link {{ ($active ?? '') === 'personal' ? 'active' : '' }}" href="{{ url('/personal') }}">
           <i class="fa-solid fa-user-group"></i> <span class="label">Personal</span>
         </a>
+        @endcan
 
         {{-- KDS --}}
         <a class="nav-link {{ ($active ?? '') === 'kds' ? 'active' : '' }}" href="{{ route('kds.board') }}">
@@ -136,10 +144,12 @@
         <i class="fa-solid fa-angles-left"></i>
       </button>
     </aside>
+    @endauth
 
     {{-- Contenido principal --}}
-    <main class="main-content flex-grow-1">
-      
+    <main class="main-content flex-grow-1 {{ auth()->check() ? '' : 'w-100' }}">
+
+      @auth
       {{-- Top Bar (header superior) --}}
       <div class="top-bar sticky-top">
         <div class="d-flex align-items-center gap-2">
@@ -180,27 +190,26 @@
           <div class="dropdown">
             <button class="btn btn-light d-inline-flex align-items-center gap-2" data-bs-toggle="dropdown">
               <span class="user-profile-icon"><i class="fa-solid fa-user"></i></span>
-              <span>{{ optional(auth()->user())->name ?? 'Juan Pérez' }}</span>
+              <span>{{ auth()->user()->name }}</span>
               <i class="fa-solid fa-chevron-down small"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="{{ url('/personal') }}">Mi perfil</a></li>
+              <li><a class="dropdown-item" href="{{ url('/profile') }}">Mi perfil</a></li>
+              @can('admin.access')
               <li><a class="dropdown-item" href="{{ url('/admin') }}">Configuración</a></li>
+              @endcan
               <li><hr class="dropdown-divider"></li>
               <li>
-                @auth
-                  <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button class="dropdown-item text-danger" type="submit">Cerrar sesión</button>
-                  </form>
-                @else
-                  <a class="dropdown-item text-danger" href="{{ url('/logout') }}">Cerrar sesión</a>
-                @endauth
+                <form method="POST" action="{{ route('logout') }}">
+                  @csrf
+                  <button class="dropdown-item text-danger" type="submit">Cerrar sesión</button>
+                </form>
               </li>
             </ul>
           </div>
         </div>
       </div>
+      @endauth
 
       {{-- Contenido de cada vista --}}
       <div class="p-3">
@@ -212,6 +221,7 @@
       </div>
 
       {{-- Footer / Status Bar --}}
+      @auth
       <footer class="status-bar mt-auto">
         <div class="container-status">
           <div class="d-flex align-items-center gap-2">
@@ -223,6 +233,7 @@
           </div>
         </div>
       </footer>
+      @endauth
     </main>
   </div>
 

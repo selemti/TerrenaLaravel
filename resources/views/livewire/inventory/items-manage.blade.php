@@ -8,10 +8,63 @@
       <button class="btn btn-primary" wire:click="openCreate">
         <i class="fa-solid fa-plus me-1"></i>Nuevo ítem
       </button>
+      @can('inventory.prices.manage')
+        <button class="btn btn-outline-secondary" wire:click="openPriceModal()">
+          <i class="fa-solid fa-tag me-1"></i>Cargar precio
+        </button>
+      @endcan
     </div>
     <div class="text-muted small d-flex align-items-center gap-2">
       <i class="fa-regular fa-circle-info"></i>
       <span>Recientes: {{ $items->total() }}</span>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-3">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">Categoría</label>
+          <select class="form-select" wire:model="categoryFilter">
+            <option value="">Todas</option>
+            @foreach($categoryOptions as $category)
+              <option value="{{ $category['id'] }}">
+                {{ $category['id'] }} · {{ $category['nombre'] }}
+              </option>
+            @endforeach
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Estado</label>
+          <select class="form-select" wire:model="statusFilter">
+            <option value="all">Todos</option>
+            <option value="active">Solo activos</option>
+            <option value="inactive">Solo inactivos</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Proveedor preferente</label>
+          <select class="form-select" wire:model="preferredFilter">
+            <option value="all">Todos</option>
+            <option value="with">Con proveedor</option>
+            <option value="without">Sin proveedor</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Ordenar por</label>
+          <select class="form-select" wire:model="sortField">
+            <option value="name">Nombre</option>
+            <option value="effective_from">Vigencia precio</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Dirección</label>
+          <select class="form-select" wire:model="sortDirection">
+            <option value="asc">Ascendente</option>
+            <option value="desc">Descendente</option>
+          </select>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -20,13 +73,28 @@
       <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
-            <th>SKU</th>
-            <th>Nombre</th>
+            <th>SKU / Código</th>
+            <th>
+              <button type="button" class="btn btn-link p-0 text-decoration-none" wire:click="sortBy('name')">
+                Nombre
+                @if($sortField === 'name')
+                  <i class="fa-solid fa-arrow-{{ $sortDirection === 'asc' ? 'up' : 'down' }}-a-z ms-1"></i>
+                @endif
+              </button>
+            </th>
             <th>Categoría</th>
             <th>Unidad base</th>
             <th>Tipo</th>
-            <th class="text-end">Costo preferente</th>
+            <th class="text-end">Precio vigente</th>
             <th>Proveedor</th>
+            <th>
+              <button type="button" class="btn btn-link p-0 text-decoration-none" wire:click="sortBy('effective_from')">
+                Vigencia
+                @if($sortField === 'effective_from')
+                  <i class="fa-solid fa-arrow-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                @endif
+              </button>
+            </th>
             <th>Estado</th>
             <th class="text-end">Acciones</th>
           </tr>
@@ -37,7 +105,10 @@
             $unit = $unitsIndex->get($row->unidad_medida_id);
           @endphp
           <tr>
-            <td class="font-monospace fw-semibold text-uppercase">{{ $row->id }}</td>
+            <td class="font-monospace fw-semibold text-uppercase">
+              {{ $row->id }}
+              <div class="small text-muted">{{ $row->item_code ?? '—' }}</div>
+            </td>
             <td>
               <div class="fw-semibold">{{ $row->nombre }}</div>
               <div class="small text-muted">
@@ -50,12 +121,32 @@
               <span class="badge text-bg-light">{{ $row->tipo ?? '—' }}</span>
             </td>
             <td class="text-end">
-              {{ $row->preferente_costo !== null ? '$ '.number_format($row->preferente_costo, 2) : '—' }}
+              @if(!is_null($row->preferente_price))
+                <div>
+                  $ {{ number_format($row->preferente_price, 2) }}
+                </div>
+                <div class="small text-muted">
+                  @if(!is_null($row->preferente_pack_qty) && $row->preferente_pack_uom)
+                    {{ rtrim(rtrim(number_format($row->preferente_pack_qty, 2), '0'), '.') }} {{ $row->preferente_pack_uom }}
+                  @else
+                    Presentación preferente
+                  @endif
+                </div>
+              @else
+                —
+              @endif
             </td>
             <td>
               @if($row->preferente_vendor)
-                <span class="badge text-bg-secondary">Proveedor #{{ $row->preferente_vendor }}</span>
+                <div class="fw-semibold">{{ $row->preferente_vendor_name ?? ('Proveedor #' . $row->preferente_vendor) }}</div>
                 <div class="small text-muted">{{ $row->preferente_presentacion ?? '' }}</div>
+              @else
+                <span class="text-muted">—</span>
+              @endif
+            </td>
+            <td>
+              @if($row->preferente_effective_from)
+                <span class="badge text-bg-light">{{ \Carbon\Carbon::parse($row->preferente_effective_from)->format('Y-m-d') }}</span>
               @else
                 <span class="text-muted">—</span>
               @endif
@@ -69,6 +160,11 @@
               <button class="btn btn-sm btn-outline-primary" wire:click="openEdit('{{ $row->id }}')">
                 <i class="fa-solid fa-pen-to-square"></i> Editar
               </button>
+                @can('inventory.prices.manage')
+                  <button class="btn btn-sm btn-outline-secondary mt-1" wire:click="openPriceModal('{{ $row->id }}')">
+                    <i class="fa-solid fa-tag"></i>
+                  </button>
+                @endcan
             </td>
           </tr>
         @empty
@@ -344,4 +440,8 @@
     </div>
     <div class="modal-backdrop fade show"></div>
   @endif
+
+  @can('inventory.prices.manage')
+    <livewire:inventory.item-price-create />
+  @endcan
 </div>
