@@ -1,0 +1,19 @@
+# (Opcional pero MUY recomendado) 1) Copia de seguridad por si acaso
+git branch backup/$(Get-Date -Format "yyyyMMdd-HHmm")
+git push origin backup/$(Get-Date -Format "yyyyMMdd-HHmm")
+
+# 2) No subas archivos locales/generados
+git restore --worktree -- .claude/settings.local.json bootstrap/cache/packages.php bootstrap/cache/services.php
+
+# 3) Ignora en adelante lo local/generado (no afecta a Codex)
+Add-Content .gitignore "`n# Local AI tooling"
+Add-Content .gitignore ".claude/"
+Add-Content .gitignore "*.local.json"
+Add-Content .gitignore "`n# Laravel caches"
+Add-Content .gitignore "bootstrap/cache/*.php"
+Add-Content .gitignore "NUL"
+
+# 4) Sube tu trabajo real (todo lo demás)
+git add .
+git commit -m "Integración local (Claude+Codex): modelos, migraciones, vistas y docs"
+git push origin codex/update-inventory-item-pricing-logic-g57lxk
