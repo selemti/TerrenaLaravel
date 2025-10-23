@@ -34,22 +34,24 @@ class ReceptionsIndex extends Component
 
     protected function fetchRows()
     {
-        $hasSucursal = Schema::hasColumn('recepcion_cab', 'sucursal_id');
-        $hasAlmacen  = Schema::hasColumn('recepcion_cab', 'almacen_id');
-
         $query = DB::table('recepcion_cab as r')
             ->leftJoin('cat_proveedores as p', 'p.id', '=', 'r.proveedor_id')
             ->select([
                 'r.id',
-                'r.ts',
+                'r.numero_recepcion',
                 'r.proveedor_id',
+                'r.sucursal_id',
+                'r.almacen_id',
+                'r.fecha_recepcion',
+                'r.estado',
+                'r.total_presentaciones',
+                'r.total_canonico',
                 DB::raw("COALESCE(p.nombre, '') as proveedor_nombre"),
             ]);
 
-        if ($hasSucursal) {
-            $query->addSelect('r.sucursal_id');
-            $query->leftJoin(DB::raw('selemti.cat_sucursales as s'), function ($join) {
-                $join->on(DB::raw('s.id::text'), '=', 'r.sucursal_id');
+        if (Schema::hasTable('cat_sucursales')) {
+            $query->leftJoin('cat_sucursales as s', function ($join) {
+                $join->on(DB::raw('s.id::text'), '=', DB::raw('r.sucursal_id::text'));
             });
             $query->addSelect([
                 's.nombre as sucursal_nombre',
@@ -57,10 +59,9 @@ class ReceptionsIndex extends Component
             ]);
         }
 
-        if ($hasAlmacen) {
-            $query->addSelect('r.almacen_id');
-            $query->leftJoin(DB::raw('selemti.cat_almacenes as a'), function ($join) {
-                $join->on(DB::raw('a.id::text'), '=', 'r.almacen_id');
+        if (Schema::hasTable('cat_almacenes')) {
+            $query->leftJoin('cat_almacenes as a', function ($join) {
+                $join->on(DB::raw('a.id::text'), '=', DB::raw('r.almacen_id::text'));
             });
             $query->addSelect([
                 'a.nombre as almacen_nombre',
@@ -69,25 +70,17 @@ class ReceptionsIndex extends Component
         }
 
         return $query
-            ->orderByDesc('r.ts')
+            ->orderByDesc('r.fecha_recepcion')
             ->limit(50)
             ->get()
-            ->map(function ($row) use ($hasSucursal, $hasAlmacen) {
-                if ($hasSucursal) {
-                    $row->sucursal_nombre = $row->sucursal_nombre
-                        ? trim(($row->sucursal_clave ? "{$row->sucursal_clave} · " : '') . $row->sucursal_nombre)
-                        : null;
-                } else {
-                    $row->sucursal_nombre = null;
-                }
+            ->map(function ($row) {
+                $row->sucursal_nombre = isset($row->sucursal_nombre)
+                    ? trim(($row->sucursal_clave ? "{$row->sucursal_clave} · " : '') . ($row->sucursal_nombre ?? ''))
+                    : null;
 
-                if ($hasAlmacen) {
-                    $row->almacen_nombre = $row->almacen_nombre
-                        ? trim(($row->almacen_clave ? "{$row->almacen_clave} · " : '') . $row->almacen_nombre)
-                        : null;
-                } else {
-                    $row->almacen_nombre = null;
-                }
+                $row->almacen_nombre = isset($row->almacen_nombre)
+                    ? trim(($row->almacen_clave ? "{$row->almacen_clave} · " : '') . ($row->almacen_nombre ?? ''))
+                    : null;
 
                 return $row;
             });
