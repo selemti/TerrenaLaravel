@@ -1,0 +1,18 @@
+Modulo,Tarea,Responsable,Prioridad,Entregable,Notas
+DB/Inventario,Crear staging consumo POS: inv_consumo_pos + inv_consumo_pos_det,Backend (Codex),ALTA,SQL migraciones,Necesario para trigger VENTA_TEO
+DB/Caja,"Crear módulo caja_fondo (+usuario, mov, adj, arqueo)",Backend (Codex),ALTA,SQL migraciones,Flujo caja chica diario
+DB/Producción,Crear tablas prod_cab/prod_det y sol_prod_cab/sol_prod_det,Backend (Codex),ALTA,SQL migraciones,Solicitudes→OP→Ejecución
+DB/Transfer,Crear transfer_cab/transfer_det con estados,Backend (Codex),MEDIA,SQL migraciones,Recepción parcial soportada
+DB/Almacenes,Asegurar almacen vinculado a sucursal/terminal,Backend (Codex),MEDIA,SQL migraciones,Salida por terminal a almacén por defecto
+DB/Recetas,Verificar receta_detalle con modificadores/combos,Backend (Codex),MEDIA,SQL migraciones,Base para expansión de consumo
+Triggers,Implementar trigger en public.ticket (paid/voided),Backend (Codex),ALTA,PL/pgSQL,Usar staging + confirmar + reverso
+Jobs,Job nocturno reconciliación consumo POS,Backend (Codex),MEDIA,Laravel Job + schedule,Reprocesa tickets pagados no confirmados
+API,Endpoints caja-fondo y reportes,Backend (Codex),ALTA,routes/api.php + Controllers,Alineado a OpenAPI v1.3
+API,Endpoints solicitudes/ordenes/transferencias,Backend (Codex),ALTA,routes/api.php + Controllers,Alineado a OpenAPI v1.3
+Frontend-Caja,"UI caja chica: apertura, movimientos, aprobación, arqueo, cierre",Frontend (Claude),ALTA,Vistas + Estados,Carga drag&drop de comprobantes
+Frontend-Prod,Bandeja solicitudes y OP; checklist de insumos,Frontend (Claude),ALTA,Vistas + Estados,Botón generar OC si falta MP
+Frontend-Transfer,Flujo despachar/recibir (parciales),Frontend (Claude),MEDIA,Vistas + Estados,Etiquetas de guía
+Frontend-Descuentos,Auditoría de descuentos y visualización impacto,Frontend (Claude),MEDIA,Vistas + Reportes,Neto vs bruto
+QA,"Pruebas feature: consumo POS (idempotencia, reverso)",Producto/QA (Gustavo),ALTA,Casos de prueba y datos,Tickets con modificadores y combos
+QA,Pruebas caja chica (sin comprobante → aprobación),Producto/QA (Gustavo),ALTA,Casos de prueba,Escenarios de diferencia en arqueo
+QA,UAT flujo integral 20 tortas (solicitud→OP→transferencia→venta),Producto/QA (Gustavo),ALTA,Plan de pruebas,Validar alertas en cada hito
