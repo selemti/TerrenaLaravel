@@ -38,10 +38,24 @@
           <i class="fa-solid fa-gauge"></i> <span class="label">Dashboard</span>
         </a>
 
-        {{-- Cortes de Caja --}}
-				<a class="nav-link {{ ($active ?? '') === 'cortes' ? 'active' : '' }}" href="{{ route('caja.cortes') }}">
-						<i class="fa-solid fa-cash-register"></i> <span class="label">Cortes de Caja</span>
-				</a>
+        {{-- Caja con submenú --}}
+        <div class="nav-item">
+          <a class="nav-link {{ in_array($active ?? '', ['caja', 'cortes', 'cajachica']) ? 'active' : '' }}"
+             data-bs-toggle="collapse" href="#menuCaja" role="button" aria-expanded="false">
+            <i class="fa-solid fa-cash-register"></i> <span class="label">Caja</span>
+            <i class="fa-solid fa-chevron-down ms-auto submenu-arrow"></i>
+          </a>
+          <div class="collapse {{ in_array($active ?? '', ['caja', 'cortes', 'cajachica']) ? 'show' : '' }}" id="menuCaja">
+            <div class="submenu">
+              <a class="nav-link submenu-link" href="{{ route('caja.cortes') }}">
+                <i class="fa-solid fa-receipt"></i> <span class="label">Cortes de Caja</span>
+              </a>
+              <a class="nav-link submenu-link" href="{{ route('cashfund.index') }}">
+                <i class="fa-solid fa-wallet"></i> <span class="label">Caja Chica</span>
+              </a>
+            </div>
+          </div>
+        </div>
 
         {{-- Inventario con submenú --}}
         <div class="nav-item">
@@ -66,6 +80,9 @@
               </a>
               <a class="nav-link submenu-link" href="{{ route('inv.alerts') }}">
                 <i class="fa-regular fa-bell"></i> <span class="label">Alertas de costo</span>
+              </a>
+              <a class="nav-link submenu-link" href="{{ route('transfers.index') }}">
+                <i class="fa-solid fa-truck-ramp-box"></i> <span class="label">Transferencias</span>
               </a>
             </div>
           </div>

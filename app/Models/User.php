@@ -12,8 +12,8 @@ class User extends Authenticatable
     use HasFactory, Notifiable, HasRoles;
 
     protected $guard_name = 'web';
-
-    protected $table = 'users';
+    protected $connection = 'pgsql';
+    protected $table = 'selemti.users';
     protected $primaryKey = 'id';
     
     protected $fillable = [

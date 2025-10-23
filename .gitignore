@@ -25,3 +25,11 @@ Thumbs.db
 *.zip
 *.rar
 DEPLOY_CONSOLIDADO_FULL_PG95-v4-FIXED.sql
+
+# Local AI tooling
+.claude/
+*.local.json
+
+# Laravel caches
+bootstrap/cache/*.php
+NUL
