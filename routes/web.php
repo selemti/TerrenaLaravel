@@ -50,6 +50,13 @@ use App\Livewire\Recipes\RecipeEditor        as RecipeEditorLW;
 
 use App\Livewire\Kds\Board                   as KdsBoard;
 
+use App\Livewire\CashFund\Index             as CashFundIndex;
+use App\Livewire\CashFund\Open              as CashFundOpen;
+use App\Livewire\CashFund\Movements         as CashFundMovements;
+use App\Livewire\CashFund\Arqueo            as CashFundArqueo;
+
+use App\Livewire\Transfers\Create           as TransfersCreate;
+
 /* =========================================================================
 |  HOME (UNA sola definición, limpia y canónica)
 |========================================================================= */
@@ -115,6 +122,26 @@ Route::middleware('auth')->group(function () {
     |========================================================================= */
     Route::get('/kds', KdsBoard::class)->name('kds.board');
     Route::get('/caja/cortes', [App\Http\Controllers\Api\Caja\CajaController::class, 'index'])->name('caja.cortes');
+
+    /* =========================================================================
+    |  Caja Chica (Livewire)
+    |========================================================================= */
+    Route::prefix('cashfund')->group(function () {
+        Route::get('/',                    CashFundIndex::class)->name('cashfund.index');
+        Route::get('/open',                CashFundOpen::class)->name('cashfund.open');
+        Route::get('/{id}/movements',      CashFundMovements::class)->name('cashfund.movements');
+        Route::get('/{id}/arqueo',         CashFundArqueo::class)->name('cashfund.arqueo');
+        // TODO: agregar ruta approvals cuando esté lista
+    });
+
+    /* =========================================================================
+    |  Transferencias (Livewire)
+    |========================================================================= */
+    Route::prefix('transfers')->group(function () {
+        Route::get('/',                    \App\Livewire\Transfers\Index::class)->name('transfers.index');
+        Route::get('/create',              TransfersCreate::class)->name('transfers.create');
+        // TODO: agregar rutas dispatch, receive cuando estén listas
+    });
     Route::view('/reportes', 'placeholder', ['title'=>'Reportes'])->name('reportes');
 
     Route::view('/admin', 'placeholder', ['title' => 'Configuración'])
