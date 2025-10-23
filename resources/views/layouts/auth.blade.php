@@ -19,6 +19,14 @@
             padding: 2rem 1rem;
         }
 
+        .auth-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            width: 100%;
+        }
+
         .auth-card {
             background: #ffffff;
             border-radius: 1rem;
@@ -29,28 +37,25 @@
         }
 
         .auth-logo {
-            height: 2.5rem;
-            opacity: 0.9;
-        }
-
-        .h-10 {
-            height: 2.5rem;
+            height: 40px;
+            filter: brightness(0) invert(1);
         }
     </style>
     @stack('styles')
 </head>
 <body class="auth-layout">
-    <main class="auth-card">
-        <div class="text-center mb-4">
-            <img src="{{ asset('assets/img/logo.svg') }}" alt="Terrena" class="auth-logo h-10 opacity-90">
-        </div>
+    <div class="auth-container">
+        <img src="{{ asset('assets/img/logo.svg') }}" alt="Terrena"
+             class="auth-logo" loading="eager" decoding="async">
 
-        @isset($slot)
-            {{ $slot }}
-        @else
-            @yield('content')
-        @endisset
-    </main>
+        <main class="auth-card">
+            @isset($slot)
+                {{ $slot }}
+            @else
+                @yield('content')
+            @endisset
+        </main>
+    </div>
 
     <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
     @stack('scripts')
