@@ -1,0 +1,13 @@
+# API Spec v1.3 (extracto)
+- Caja chica
+  - POST /api/caja-fondo
+  - POST /api/caja-fondo/{id}/mov
+  - POST /api/caja-fondo/mov/{id}/aprobar
+  - POST /api/caja-fondo/{id}/arqueo
+  - POST /api/caja-fondo/{id}/cerrar
+  - GET  /api/caja-fondo/reportes
+- Producción
+  - /produccion/solicitudes (REST)
+  - /produccion/ordenes (REST) + POST /produccion/ordenes/{id}/aprobar
+- Transferencias
+  - /transferencias (REST) + despachar/recibir
