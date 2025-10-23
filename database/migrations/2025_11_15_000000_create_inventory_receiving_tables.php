@@ -7,11 +7,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    protected string $connection = 'pgsql';
-
     public function up(): void
     {
-        $schema = Schema::connection($this->connection);
+        $schema = Schema::connection('pgsql');
 
         if (! $schema->hasTable('recepcion_cab')) {
             $schema->create('recepcion_cab', function (Blueprint $table) {
@@ -140,7 +138,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        $schema = Schema::connection($this->connection);
+        $schema = Schema::connection('pgsql');
 
         foreach (['recepcion_adjuntos', 'mov_inv', 'recepcion_det', 'inventory_batch', 'recepcion_cab'] as $table) {
             if ($schema->hasTable($table)) {

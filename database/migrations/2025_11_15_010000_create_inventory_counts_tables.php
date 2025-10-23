@@ -6,11 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    protected string $connection = 'pgsql';
-
     public function up(): void
     {
-        $schema = Schema::connection($this->connection);
+        $schema = Schema::connection('pgsql');
 
         if (! $schema->hasTable('inventory_counts')) {
             $schema->create('inventory_counts', function (Blueprint $table) {
@@ -61,7 +59,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        $schema = Schema::connection($this->connection);
+        $schema = Schema::connection('pgsql');
 
         foreach (['inventory_count_lines', 'inventory_counts'] as $table) {
             if ($schema->hasTable($table)) {
