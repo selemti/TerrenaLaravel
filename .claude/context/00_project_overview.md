@@ -5,8 +5,9 @@ TerrenaLaravel reescribe el POS Terrena sobre Laravel 12 + Livewire 3 con una ar
 Estado actual por dominio:
 - **Caja** (`app/Http/Controllers/Api/Caja`, `app/Models/Caja`): wizard de precorte → conciliación → postcorte funcionando contra tablas v3 `sesion_cajon`, `precorte`, `postcorte`. Mantiene rutas modernizadas y un prefijo `/api/legacy/*` para clientes Slim.
 - **Inventario** (`app/Models/Inv`, `App\Services\Inventory\ReceptionService`): CRUD de items, lotes y kardex usa objetos `selemti.items`, `inventory_batch`, `mov_inv`. Las vistas KPI (`vw_stock_actual`, `vw_stock_valorizado`) se generan desde los parches v3 y se consumen en `/api/inventory/*`.
+- **Recetas** (`app/Models/Rec`, Livewire `/recipes`): el blueprint funcional V1.2 (`docs/v3/Terrena Pos Funcional V1 2.pdf`) define versionado (`RecetaVersion`, `RecetaDetalle`), sincronía con POS (`RecetaShadow`, `scripts/sync_menu_recipes.php`) y costeo histórico (`historial_costos_receta`). UI lista y edita sobre PostgreSQL `selemti`.
 - **Catálogos** (`app/Models/Catalogs`, Livewire `resources/views/catalogos`): tablas `public.cat_*` complementan catálogos POS; la sincronización con `selemti` sigue abierta y debe documentarse por cambio.
 - **Reportes** (`App\Http\Controllers\Api\ReportsController`): endpoints listados en `routes/api.php` dependen de vistas aún en construcción; marcar como experimental.
 - **Autenticación**: `Api\Caja\AuthController` ya usa tokens Sanctum aunque el proyecto mantiene `tymon/jwt-auth` para la futura estandarización JWT.
 
-El monorepo también incluye recetas, compras y KDS, pero su documentación permanece en `docs/V2/04_Frontend` y no es prioritaria para la CLI. Antes de cualquier release ejecutar `composer test`, `npm run build` y `php artisan catalogs:verify-tables --details` para comprobar integridad entre código y base de datos.
+El monorepo también incluye compras y KDS, con documentación en `docs/V2/04_Frontend` aún pendiente de pulir. Antes de liberar, ejecutar `composer test`, `npm run build` y `php artisan catalogs:verify-tables --details` para validar integridad entre código y base.

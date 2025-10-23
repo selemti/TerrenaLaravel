@@ -11,7 +11,7 @@
 - Mantén sincronizados los catálogos duplicados (`cat_*`, `conversiones_unidad`, `stock_policy`) ejecutando scripts de `BD/patches/` antes de habilitar módulos.
 
 **Organización clave**
-- Modelos divididos por dominio en `app/Models/{Caja,Inv,Catalogs,Rec}`; controladores REST bajo `app/Http/Controllers/Api/*` reflejan `routes/api.php`.
+- Modelos divididos por dominio en `app/Models/{Caja,Inv,Catalogs,Rec}`; controladores REST bajo `app/Http/Controllers/Api/*` reflejan `routes/api.php`. El paquete `Rec` implementa el blueprint Terrena POS V1.2 (`Receta`, `RecetaVersion`, `RecetaDetalle`, `RecetaShadow`, `Modificador`, `OrdenProduccion`) consumido por Livewire `/recipes`.
 - Servicios críticos: `App\Services\Inventory\ReceptionService` (recepciones + lotes), controladores de caja con SQL legada (`DB::selectOne` sobre `selemti`).
 - Assets Livewire en `resources/views` y `app/Livewire`; scripts POS heredados en `public/assets/js`.
 

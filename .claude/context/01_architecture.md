@@ -6,7 +6,7 @@
 - Migraciones Laravel solo crean catálogos en `public` (`cat_unidades`, `cat_uom_conversion`, `cat_proveedores`, `inv_stock_policy`). La sincronización con tablas POS queda como tarea explícita en `schema_public.md`.
 
 **Organización del código**
-- `app/Models` está particionado por dominio (`Caja`, `Inv`, `Catalogs`, `Rec`, `Pos`). Muchos modelos heredan `Model` sin factories; revisar `fillable/casts` antes de habilitar mass assignment.
+- `app/Models` está particionado por dominio (`Caja`, `Inv`, `Catalogs`, `Rec`, `Pos`). Muchos modelos heredan `Model` sin factories; revisar `fillable/casts` antes de habilitar mass assignment. El subdominio `Rec` implementa el diseño de Terrena POS Funcional V1.2 (`Receta`, `RecetaVersion`, `RecetaDetalle`, `RecetaShadow`, `Modificador`, `OrdenProduccion`), todos apuntando a tablas `selemti.*`.
 - Controladores API residen en `app/Http/Controllers/Api/<Dominio>` y coinciden con los grupos definidos en `routes/api.php` (caja, inventario, unidades, reportes, legacy).
 - Servicios: `App\Services\Inventory\ReceptionService` agrupa transacciones multitabla; no hay servicios equivalentes para caja (la lógica vive en controladores con SQL crudo `DB::connection('pgsql')`).
 - Frontend: Livewire en `app/Livewire`, blades en `resources/views`, scripts heredados en `public/assets/js` (especialmente `caja/`).

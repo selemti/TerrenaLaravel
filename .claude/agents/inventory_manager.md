@@ -11,7 +11,6 @@
 
 **Políticas y parámetros**
 - `PoliticaStock` (`public.inv_stock_policy`): mínimo/máximo/reorder por `item_id` + `sucursal_id`. Coordina con `selemti.stock_policy` según estrategia de despliegue.
-- `ParametroSucursal` (catálogo POS) vincula almacenes y terminales; consulta antes de mover stock multi-sucursal.
 
 **Flujos y endpoints**
 - Recepciones: `App\Services\Inventory\ReceptionService` crea `recepcion_cab/det`, lotes y `mov_inv` en una transacción PostgreSQL. Referencia reglas operativas en `docs/V2/03_Backend/INVENTORY_MODULE.md` y valida funciones v3 (`fn_generar_lote`, `fn_mov_inv_bi`).
@@ -19,6 +18,17 @@
   - KPIs `/api/inventory/kpis`, stock consolidado `/stock`, listado detallado `/stock/list` (dependen de vistas `vw_stock_actual`, `vw_stock_valorizado` definidas en parches v3).
   - `POST /api/inventory/movements` normaliza cantidades según la unidad seleccionada antes de persistir en `mov_inv`.
   - `GET /api/inventory/items/{id}/kardex` y `/batches` consultan movimientos y lotes vigentes.
+
+**Recetas y costeo (`App\Models\Rec`)**
+- `Receta` (`receta_cab`) centraliza metadata del plato y flags `activo`.
+- Versionado: `RecetaVersion` (`selemti.receta_version`) + `RecetaDetalle` (`selemti.receta_det`) siguen Terrena POS Funcional V1.2 (`docs/v3/Terrena Pos Funcional V1 2.pdf`): `version_publicada`, BOM ordenado (`item_id`, `cantidad`, `unidad_medida`, `merma_porcentaje`). Relaciones `versiones`, `publishedVersion`, `detalles` permiten recuperar el estado vigente.
+- Complementos POS: `RecetaShadow` y `Modificador` vinculan `menu_item` y `menu_modifiers`; `scripts/sync_menu_recipes.php` crea datos iniciales.
+- Costos y consumo: `hist_costos_receta`, `ticket_det_consumo`, `ticket_venta_det` (ver ERD) soportan conciliación; planifica comando `recipes:cost-sync` tras cambios de precios.
+
+**Buenas prácticas Recetas**
+- Cada `RecetaDetalle` debe apuntar a `Item` activo y unidad convertible.
+- Antes de publicar, recalcula costo con mermas del PDF funcional y guarda snapshot en `historial_costos_receta`.
+- Escribe `menu_item.recepie` con la versión publicada y agenda `recipes:sync-pos` cuando haya nuevos PLU/modificadores.
 
 **Buenas prácticas**
 - Antes de descontar, comprueba `cantidad_actual` del lote; bloquear si quedará negativa y registrar incidente.

@@ -18,6 +18,7 @@
 - **Inventario**: `StockController` (kpis, stock, movimientos), `ItemController`, `VendorController`. Vistas `vw_stock_actual`, `vw_stock_valorizado`, `vw_stock_brechas` deben existir (ver `BD/DEPLOY_CONSOLIDADO_FULL_PG95-v3-20251017-180148-safe.sql`).
 - **Unidades**: CRUD sobre `public.cat_unidades` y `public.cat_uom_conversion`; conversión Legacy vs Terrena documentada en `docs/V2/02_Database/schema_public.md`.
 - **Reportes**: endpoints declarados pero muchos dependen de materializaciones pendientes; mantener bandera experimental.
+- **Recetas (web)**: Livewire `/recipes` consume `Receta::with('publishedVersion.detalles')` siguiendo el flujo funcional V1.2 (`docs/v3/Terrena Pos Funcional V1 2.pdf`). Cualquier API futura debe reutilizar este modelo y reflejar flags `version_publicada`, `merma_porcentaje`.
 - **Legacy**: `/api/legacy/*` mantiene URLs `.php` para clientes antiguos; comparten la misma lógica que los controladores modernos.
 
 **Buenas prácticas**

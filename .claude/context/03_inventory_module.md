@@ -13,6 +13,14 @@
 - Movimientos manuales: `POST /api/inventory/movements` valida `tipo`, normaliza cantidad según la unidad seleccionada (`ConversionUnidad`) y escribe en `mov_inv`.
 - Consultas por ítem: `GET /api/inventory/items/{id}/kardex` y `/batches` cruzan `mov_inv`, `inventory_batch`, `items`. Respetar filtros `from`, `to`, `lote_id`.
 
+**Recetas y costeo (Terrena POS Funcional V1.2)**
+- Modelos `App\Models\Rec` consumen tablas `receta_cab`, `receta_version`, `receta_det`, `receta_shadow`, `modificadores_pos` descritas en `docs/v3/Terrena Pos Funcional V1 2.pdf` y en el ERD `docs/DOC_ERD_INVENTARIO_RECETAS-20251017-081732.md`.
+- `Receta` conserva metadata del plato y los métodos `publishedVersion()`/`latestVersion()` para transitar de borrador a publicado.
+- `RecetaVersion` controla `version`, `version_publicada`, `fecha_efectiva`, `usuario_publicador`; su BOM `RecetaDetalle` ordenado (`item_id`, `cantidad`, `unidad_medida`, `merma_porcentaje`) debe apuntar a `App\Models\Inv\Item`.
+- Integración POS: `RecetaShadow` enlaza modificadores y combos; `scripts/sync_menu_recipes.php` genera versiones iniciales y escribe `menu_item.recepie` con la publicación activa.
+- Costeo: `historial_costos_receta`, `ticket_det_consumo` y `ticket_venta_det` soportan conciliación ventas vs consumo. El plan V1.2 exige recalcular costos tras cambios de precio/merma y publicar el snapshot.
+- Ordenes de producción: `App\Models\Rec\OrdenProduccion` vincula versiones con producción; registrar `mov_inv` `TRASPASO`/`SALIDA` según escenario (central vs sucursal).
+
 **Riesgos y tareas**
 - Sincronizar catálogos `public` ↔︎ `selemti` para evitar unidades divergentes; ver tareas abiertas en `docs/V2/02_Database/schema_public.md`.
 - Bloquear egresos cuando `cantidad_actual` quedaría negativa; actualmente depende de validación manual.
