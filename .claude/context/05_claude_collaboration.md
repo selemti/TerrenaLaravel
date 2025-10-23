@@ -1,45 +1,45 @@
 # Claude CLI · Colaboración híbrida
 
 ## Configuración inicial
-- Resume en 200-240 palabras el contexto usando `.claude/context/*.md` y la sección de `docs/v3/README.md` vinculada.
-- Formula el prompt como `Objetivo → Entradas → Restricciones → Entregables → Checklist`, citando rutas y rangos, y exige bloque `Verificar`.
-- Tras cada iteración guarda 5-7 bullets en `docs/SESSION_NOTES.md` para rehidratar futuras sesiones.
+- Mantén un resumen maestro (≤220 palabras) en `docs/SESSION_NOTES.md` con el estado backend/frontend y últimos commits.
+- Antes de cada sesión con Claude, envía: objetivo puntual, rutas de referencia (`resources/views/...`, `app/Http/Livewire/...`), contrato de APIs relevantes y commit base.
+- Usa la plantilla `Objetivo → Entradas → Restricciones → Entregables → Checklist Verificar`, exigiendo un bloque final "Resumen reutilizable" (≤5 bullets, ≤80 palabras).
+- Repite a Claude que trabaja solo en archivos locales sin git, y que el backend se mantiene en este repositorio.
 
-### Plantilla sugerida
+### Prompt tipo (frontend)
 ```
-Objetivo: {tarea puntual}.
-Entradas: {.claude/context/03_inventory_module.md, docs/v3/README.md §X, app/...}.
-Restricciones: Laravel 12 + Livewire 3, PG 9.5 + SQLite.
-Entregables: {lista}. Checklist «Verificar»: {tests/comandos}.
-Límite: 300 palabras; cierra con 5 bullets resumen reutilizable.
+Objetivo: {feature UI específica} conectada a {endpoint/service backend}.
+Entradas: {.claude/context/00_project_overview.md, docs/v3/README.md §X, resources/views/... , app/Http/Livewire/...}.
+Restricciones: Laravel 12, Livewire 3, Tailwind, API JSON protegida por JWT.
+Entregables: {componentes Blade/Livewire, estados, validaciones UI}.
+Checklist Verificar: {casos UX, eventos, contratos con backend}.
+Límite: 280 palabras + bloque "Resumen reutilizable".
 ```
 
 ## División de trabajo
-| Dominio | Claude CLI (local) | Yo (Git) |
+| Dominio | Claude CLI (frontend local) | Yo (backend con Git) |
 | --- | --- | --- |
-| Recepciones | Migraciones, flujo Livewire, aprobaciones duales. | Ajustes dual DB, servicios, seeds, tests feature. |
-| Movimientos & conteos | Tipos IN/OUT/ADJ/PROD, wireframes `MovementsIndex`/`Counts`. | Repositorios, policies, filtros, valorización. |
-| Producción & mermas | Flujo solicitud→producción→consumo, triggers, catálogo mermas. | Listeners, reversas, QA integral. |
-| Costeo extendido | Fórmulas MP+MO+CIF, snapshots deseados. | Cron jobs, históricos, endpoints. |
-| Ventas & menú | ETL POS→backoffice, reglas Star/Plowhorse/Puzzle/Dog. | `etl_pos_sync`, dashboards, exportes. |
-| Caja chica | Formularios y alertas críticas. | Modelos, Livewire, auditoría. |
-| Alertas/Reportes/Seguridad | Matrices alertas, permisos, layout reportes. | Canales productivos, motor configurable, NOM-151, APIs. |
+| Recepciones | Diseñar Livewire forms, adjuntos UI, estados aprobados/rechazados, validaciones en cliente. | Migraciones dual DB, servicios, eventos, pruebas feature, endpoints REST. |
+| Movimientos & conteos | Dashboards Kardex, componentes Counts, filtros visuales, accesibilidad. | Policies, repositorios, cálculos de valorización, sincronía multialmacén. |
+| Producción & mermas | Flujos UI paso a paso, tablas dinámicas, alerts. | Workflows, triggers PG/SQLite, auditoría, reversas. |
+| Costeo & BI | Tableros comparativos, gráficos, export UX. | Cron snapshots, cálculos MP+MO+CIF, APIs de reportes. |
+| Ventas & menú | Layout dashboards Star/Plowhorse, drill-downs, export selectors. | ETL POS, agregaciones, recomendaciones, endpoints. |
+| Caja & alertas | Formularios, estados visuales, timeline de alertas. | Modelos, colas, motores de alerta, NOM-151, notificaciones. |
 
-**Asignación inmediata**
-- Claude: bosquejar migraciones pendientes, flujos Livewire, pseudo-servicios, matrices permisos/alertas.
-- Yo: integrar en ramas feature, probar en PostgreSQL/SQLite, documentar hallazgos.
-- Compartido: mover resúmenes/checklists a `docs/SESSION_NOTES.md` o nuevos briefs (≤320 palabras) en `.claude/context/`.
-
-## Ciclo operativo
-1. Define 2-3 entregables y dependencias antes de cada sesión.
-2. Ejecuta el prompt, valida el checklist, sintetiza la salida en ≤90 palabras.
-3. Integro y corro `php artisan test --filter=Reception`, `npm run lint` u otros; regreso con ajustes y próximos pasos.
+## Flujo operativo sin conflictos
+1. Yo publico commit hash y listado de endpoints/listeners listos en `docs/SESSION_NOTES.md`.
+2. Claude trabaja en copia local; al terminar, entrega snippets por archivo con rutas claras + checklist Verificar.
+3. Importo los fragmentos relevantes, adapto a backend y subo commits; documento diferencias en el resumen maestro.
+4. Para cambios locales tuyos, vuelve a pegar solo los fragmentos actualizados con fecha y commit base al arrancar nueva sesión.
 
 ## Optimización de tokens
-- Usa referencias en lugar de pegar archivos completos; comparte solo bloques críticos.
-- Divide tareas grandes, solicita resúmenes parciales y aclara que Claude trabaje con snippets aislados.
+- Referencia archivos por secciones (`sed -n` o `rg`) en lugar de pegar todo; usa pseudocódigo cuando el HTML sea repetitivo.
+- Solicita iteraciones por componente (vista, estado, interacción) y valida cada checklist antes de seguir.
+- Pide a Claude autogenerar diffs sintéticos (`FILE: ruta
++ cambio`) para acelerar integración.
+- Mantén histórico reducido: guarda resúmenes de sesión anteriores y reenvíalos solo si cambiaron dependencias.
 
 ## Sincronización
-- Conserva outputs en archivos temporales (`*_claude.sql`, `*_draft.md`) y entrégalos junto al resumen y checklist.
-- Actualiza el prompt con el commit base vigente (`considera cambios hasta abc123`) y marca archivos nuevos cuando aún no existan en Git.
-- Al cerrar un módulo comparte: objetivo cumplido, archivos generados, dependencias pendientes y bloque `Verificar` para la integración.
+- Anota decisiones clave en `docs/SESSION_NOTES.md` y distribúyelas a Claude como contexto mínimo.
+- Cuando reciba nueva API/back de mi parte, crea un bloque "Backend actualizado" con endpoints y contratos; así evitas contextos obsoletos.
+- Al finalizar cada módulo, consolidamos: checklist cumplida, archivos validados, pendientes y próximos pasos.
