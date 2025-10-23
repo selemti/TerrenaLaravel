@@ -23,8 +23,16 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        Gate::before(function ($user, string $ability) {
-            if ($user && method_exists($user, 'hasRole') && $user->hasRole('Super Admin')) {
+        $safe = static function (callable $callback, bool $default = false) {
+            return rescue($callback, $default, report: false);
+        };
+
+        Gate::before(function ($user, string $ability) use ($safe) {
+            if (! $user) {
+                return null;
+            }
+
+            if ($safe(fn () => method_exists($user, 'hasRole') && $user->hasRole('Super Admin'))) {
                 return true;
             }
         });
@@ -32,68 +40,84 @@ class AuthServiceProvider extends ServiceProvider
         // Define gates para los permisos del sistema
         // Estos coinciden con los usados en personal.blade.php
 
-        Gate::define('people.view', function ($user) {
-            return $user && $user->can('people.view');
-        });
-
-        Gate::define('people.users.manage', function ($user) {
-            return $user && $user->can('people.users.manage');
-        });
-
-        Gate::define('people.roles.manage', function ($user) {
-            return $user && $user->can('people.roles.manage');
-        });
-
-        Gate::define('people.permissions.manage', function ($user) {
-            return $user && $user->can('people.permissions.manage');
-        });
-
-        Gate::define('inventory.prices.manage', function ($user) {
+        Gate::define('people.view', function ($user) use ($safe) {
             if (! $user) {
                 return false;
             }
 
-            if ($user->hasAnyRole(['Super Admin', 'Ops Manager', 'inventario.manager'])) {
-                return true;
-            }
-
-            return $user->can('inventory.prices.manage');
+            return $safe(fn () => method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('people.view'));
         });
 
-        Gate::define('alerts.view', function ($user) {
+        Gate::define('people.users.manage', function ($user) use ($safe) {
             if (! $user) {
                 return false;
             }
 
-            if ($user->hasAnyRole(['Super Admin', 'Ops Manager', 'inventario.manager', 'viewer', 'purchasing', 'kitchen'])) {
-                return true;
-            }
-
-            return $user->can('alerts.view');
+            return $safe(fn () => method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('people.users.manage'));
         });
 
-        Gate::define('inventory.alerts.manage', function ($user) {
+        Gate::define('people.roles.manage', function ($user) use ($safe) {
             if (! $user) {
                 return false;
             }
 
-            if ($user->hasAnyRole(['Super Admin', 'Ops Manager', 'inventario.manager'])) {
-                return true;
-            }
-
-            return $user->can('alerts.manage');
+            return $safe(fn () => method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('people.roles.manage'));
         });
 
-        Gate::define('admin.access', function ($user) {
+        Gate::define('people.permissions.manage', function ($user) use ($safe) {
             if (! $user) {
                 return false;
             }
 
-            if (method_exists($user, 'hasRole') && $user->hasRole('Super Admin')) {
+            return $safe(fn () => method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('people.permissions.manage'));
+        });
+
+        Gate::define('inventory.prices.manage', function ($user) use ($safe) {
+            if (! $user) {
+                return false;
+            }
+
+            if ($safe(fn () => method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['Super Admin', 'Ops Manager', 'inventario.manager']))){
                 return true;
             }
 
-            return method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('admin.access');
+            return $safe(fn () => method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('inventory.prices.manage'));
+        });
+
+        Gate::define('alerts.view', function ($user) use ($safe) {
+            if (! $user) {
+                return false;
+            }
+
+            if ($safe(fn () => method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['Super Admin', 'Ops Manager', 'inventario.manager', 'viewer', 'purchasing', 'kitchen']))){
+                return true;
+            }
+
+            return $safe(fn () => method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('alerts.view'));
+        });
+
+        Gate::define('inventory.alerts.manage', function ($user) use ($safe) {
+            if (! $user) {
+                return false;
+            }
+
+            if ($safe(fn () => method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['Super Admin', 'Ops Manager', 'inventario.manager']))){
+                return true;
+            }
+
+            return $safe(fn () => method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('alerts.manage'));
+        });
+
+        Gate::define('admin.access', function ($user) use ($safe) {
+            if (! $user) {
+                return false;
+            }
+
+            if ($safe(fn () => method_exists($user, 'hasRole') && $user->hasRole('Super Admin'))) {
+                return true;
+            }
+
+            return $safe(fn () => method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('admin.access'));
         });
     }
 }

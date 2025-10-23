@@ -2,17 +2,24 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use App\Support\Permissions\NullPermissionRegistrar;
+use Illuminate\Cache\CacheManager;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use Spatie\Permission\PermissionRegistrar;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // aquí lo que ya tengas de bindings/registrations
+        if ($this->app->runningUnitTests()) {
+            $this->app->extend(PermissionRegistrar::class, function ($service, $app) {
+                return new NullPermissionRegistrar($app->make(CacheManager::class));
+            });
+        }
     }
 
     public function boot(): void
