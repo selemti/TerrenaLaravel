@@ -81,6 +81,9 @@
               <a class="nav-link submenu-link" href="{{ route('inv.alerts') }}">
                 <i class="fa-regular fa-bell"></i> <span class="label">Alertas de costo</span>
               </a>
+              <a class="nav-link submenu-link" href="{{ route('inv.counts.index') }}">
+                <i class="fa-solid fa-clipboard-check"></i> <span class="label">Conteos</span>
+              </a>
               <a class="nav-link submenu-link" href="{{ route('transfers.index') }}">
                 <i class="fa-solid fa-truck-ramp-box"></i> <span class="label">Transferencias</span>
               </a>

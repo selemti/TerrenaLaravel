@@ -42,6 +42,11 @@ use App\Livewire\Inventory\ReceptionCreate   as InventoryReceptionCreate;
 use App\Livewire\Inventory\LotsIndex         as InventoryLotsIndex;
 use App\Livewire\Inventory\ItemsManage       as InventoryItemsManage;
 use App\Livewire\Inventory\AlertsList        as InventoryAlertsList;
+use App\Livewire\InventoryCount\Index        as InventoryCountIndex;
+use App\Livewire\InventoryCount\Create       as InventoryCountCreate;
+use App\Livewire\InventoryCount\Capture      as InventoryCountCapture;
+use App\Livewire\InventoryCount\Review       as InventoryCountReview;
+use App\Livewire\InventoryCount\Detail       as InventoryCountDetail;
 use App\Livewire\People\UsersIndex           as PeopleUsersIndex;
 
 
@@ -111,6 +116,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/receptions/new', InventoryReceptionCreate::class)->name('inv.receptions.new');
         Route::get('/lots',           InventoryLotsIndex::class)->name('inv.lots');
         Route::get('/alerts',         InventoryAlertsList::class)->name('inv.alerts');
+
+        // Conteos de Inventario
+        Route::get('/counts',              InventoryCountIndex::class)->name('inv.counts.index');
+        Route::get('/counts/create',       InventoryCountCreate::class)->name('inv.counts.create');
+        Route::get('/counts/{id}/capture', InventoryCountCapture::class)->name('inv.counts.capture');
+        Route::get('/counts/{id}/review',  InventoryCountReview::class)->name('inv.counts.review');
+        Route::get('/counts/{id}/detail',  InventoryCountDetail::class)->name('inv.counts.detail');
     });
 
     /* =========================================================================
