@@ -64,6 +64,12 @@ use App\Livewire\CashFund\Detail            as CashFundDetail;
 
 use App\Livewire\Transfers\Create           as TransfersCreate;
 
+use App\Livewire\Purchasing\Requests\Index  as PurchasingRequestsIndex;
+use App\Livewire\Purchasing\Requests\Create as PurchasingRequestsCreate;
+use App\Livewire\Purchasing\Requests\Detail as PurchasingRequestsDetail;
+use App\Livewire\Purchasing\Orders\Index    as PurchasingOrdersIndex;
+use App\Livewire\Purchasing\Orders\Detail   as PurchasingOrdersDetail;
+
 /* =========================================================================
 |  HOME (UNA sola definición, limpia y canónica)
 |========================================================================= */
@@ -159,6 +165,21 @@ Route::middleware('auth')->group(function () {
         Route::get('/create',              TransfersCreate::class)->name('transfers.create');
         // TODO: agregar rutas dispatch, receive cuando estén listas
     });
+
+    /* =========================================================================
+    |  Purchasing / Compras (Livewire)
+    |========================================================================= */
+    Route::prefix('purchasing')->group(function () {
+        // Solicitudes de Compra
+        Route::get('/requests',              PurchasingRequestsIndex::class)->name('purchasing.requests.index');
+        Route::get('/requests/create',       PurchasingRequestsCreate::class)->name('purchasing.requests.create');
+        Route::get('/requests/{id}/detail',  PurchasingRequestsDetail::class)->name('purchasing.requests.detail');
+
+        // Órdenes de Compra
+        Route::get('/orders',                PurchasingOrdersIndex::class)->name('purchasing.orders.index');
+        Route::get('/orders/{id}/detail',    PurchasingOrdersDetail::class)->name('purchasing.orders.detail');
+    });
+
     Route::view('/reportes', 'placeholder', ['title'=>'Reportes'])->name('reportes');
 
     Route::view('/admin', 'placeholder', ['title' => 'Configuración'])

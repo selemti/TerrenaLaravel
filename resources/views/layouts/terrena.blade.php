@@ -91,10 +91,27 @@
           </div>
         </div>
 
-        {{-- Compras --}}
-        <a class="nav-link {{ ($active ?? '') === 'compras' ? 'active' : '' }}" href="{{ url('/compras') }}">
-          <i class="fa-solid fa-truck"></i> <span class="label">Compras</span>
-        </a>
+        {{-- Compras con submenú --}}
+        <div class="nav-item">
+          <a class="nav-link {{ in_array($active ?? '', ['compras', 'purchasing']) ? 'active' : '' }}"
+             data-bs-toggle="collapse" href="#menuCompras" role="button" aria-expanded="false">
+            <i class="fa-solid fa-truck"></i> <span class="label">Compras</span>
+            <i class="fa-solid fa-chevron-down ms-auto submenu-arrow"></i>
+          </a>
+          <div class="collapse {{ in_array($active ?? '', ['compras', 'purchasing']) ? 'show' : '' }}" id="menuCompras">
+            <div class="submenu">
+              <a class="nav-link submenu-link" href="{{ route('purchasing.requests.index') }}">
+                <i class="fa-solid fa-file-invoice"></i> <span class="label">Solicitudes</span>
+              </a>
+              <a class="nav-link submenu-link" href="{{ route('purchasing.orders.index') }}">
+                <i class="fa-solid fa-file-contract"></i> <span class="label">Órdenes de Compra</span>
+              </a>
+              <a class="nav-link submenu-link" href="{{ url('/compras') }}">
+                <i class="fa-solid fa-chart-line"></i> <span class="label">Vista General</span>
+              </a>
+            </div>
+          </div>
+        </div>
 
         {{-- Recetas --}}
         <a class="nav-link {{ ($active ?? '') === 'recetas' ? 'active' : '' }}" href="{{ route('rec.index') }}">
