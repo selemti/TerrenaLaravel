@@ -9,8 +9,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Tech Stack:**
 - Laravel 12 (PHP 8.2+)
 - Livewire 3.7 (beta) for reactive UI components
-- Vite + Tailwind CSS 3 + Alpine.js for frontend
-- PostgreSQL for POS/Caja module (legacy integration)
+- Vite + Bootstrap 5 + Alpine.js for frontend (some legacy Tailwind CSS 3)
+- PostgreSQL 9.5 for POS/Caja module (legacy Floreant POS integration)
 - SQLite for local development
 - JWT authentication (tymon/jwt-auth)
 - Spatie Laravel Permission for RBAC
@@ -117,8 +117,24 @@ The application is organized into domain modules under `app/Models/`:
 - **Core/** - Cross-cutting concerns
   - Models: `Auditoria`, `SesionCaja`, `PreCorte`, `PostCorte`, `UserRole`, `PerdidaLog`
 
+- **Purchasing/** - Procurement management (NEW - Oct 2025)
+  - Models: `PurchaseRequest`, `PurchaseRequestLine`, `VendorQuote`, `VendorQuoteLine`, `PurchaseOrder`, `PurchaseOrderLine`, `PurchaseDocument`
+  - Complete procurement workflow from requisition to order
+  - Integrates with `PurchasingService` (backend by Codex)
+  - UI: 5 Livewire components with Bootstrap 5
+
 - **Catalogs/** - Master data catalogs
   - Unit of measure, warehouses, suppliers, branches, stock policies
+
+- **CashFund/** - Petty cash management (Caja Chica)
+  - Models: `CashFund`, `CashFundMovement`, `CashFundSettlement`
+  - Complete audit trail with state machine
+  - 6 Livewire components with full CRUD
+
+- **InventoryCount/** - Physical inventory counting
+  - Models: `InventoryCount`, `InventoryCountLine`
+  - Integrates with `InventoryCountService` (backend by Codex)
+  - 5 Livewire components for count workflow
 
 ### Dual Database Architecture
 
@@ -126,17 +142,23 @@ The application is organized into domain modules under `app/Models/`:
 - Used for: Inventory, Recipes, Catalogs, Users
 - Connection: `database` (default)
 
-**PostgreSQL** (legacy Floreant POS):
-- Used for: Caja module (cash register operations)
+**PostgreSQL 9.5** (legacy Floreant POS):
+- Used for: Caja module (cash register operations), Purchasing, Inventory operations
 - Connection: `pgsql`
 - Models explicitly set: `protected $connection = 'pgsql';`
-- Schema: `selemti`
+- Schemas:
+  - `selemti` - Work schema (freely modifiable, managed by Gemini CLI)
+  - `public` - Floreant POS production (READ-ONLY, no modifications without confirmation)
 
-**Important**: When creating models in the Caja module, always specify the connection:
+**Important**: When creating models that use PostgreSQL, always specify the connection:
 ```php
 protected $connection = 'pgsql';
-protected $table = 'table_name';
+protected $table = 'selemti.table_name';  // or just 'table_name' if using selemti schema
 ```
+
+**Schema Access Rules** (Multi-Agent Coordination):
+- `selemti` - Working schema for new features, freely modifiable
+- `public` - Legacy POS system in production, requires explicit confirmation for any write operation
 
 ### API Structure
 
@@ -169,29 +191,45 @@ Helper available: `CajaHelper::J()` for creating responses (though prefer Larave
 **Livewire Components** - Primary UI layer:
 - Located in: `app/Livewire/`
 - Catalogs: `UnidadesIndex`, `AlmacenesIndex`, `ProveedoresIndex`, `StockPolicyIndex`
-- Inventory: `ItemsIndex`, `ReceptionsIndex`, `ReceptionCreate`, `LotsIndex`
+- Inventory: `ItemsIndex`, `ReceptionsIndex`, `ReceptionCreate`, `LotsIndex`, Count components
+- Purchasing: `Requests/Index`, `Requests/Create`, `Requests/Detail`, `Orders/Index`, `Orders/Detail`
+- CashFund: `Index`, `Detail`, `Create`, `Movements`, `Settlements`, `Approvals`
 - Recipes: `RecipesIndex`, `RecipeEditor`
 - KDS: `Board` (Kitchen Display System)
 
 **Blade Views**:
-- Main layout: `resources/views/layouts/app.blade.php`
+- Main layout: `resources/views/layouts/terrena.blade.php` (Bootstrap 5 with sidebar navigation)
+- Legacy layout: `resources/views/layouts/app.blade.php` (Tailwind CSS)
 - Static pages: `dashboard.blade.php`, `inventario.blade.php`, `compras.blade.php`, etc.
 - Livewire views: `resources/views/livewire/`
+- **Design Standard**: Bootstrap 5 for all new components (responsive, cards, modals, badges)
 
 **JavaScript**:
 - Minimal custom JS (Alpine.js handles interactivity)
 - Entry: `resources/js/app.js`
 - Libraries: Alpine.js, Cleave.js (input formatting), Bootstrap 5, Popper.js
+- Chart.js for data visualization
 
 ### Service Layer Pattern
 
-Services are used for complex business logic. Example:
+Services are used for complex business logic. Key services:
 
 **`app/Services/Inventory/ReceptionService.php`**:
 - Handles inventory reception transactions
 - Creates reception records, batch entries, and kardex movements atomically
 - Pattern: `createReception(array $header, array $lines): int`
 - Always uses DB transactions for multi-table operations
+
+**`app/Services/Purchasing/PurchasingService.php`** (Codex):
+- Manages complete procurement workflow
+- Methods: `createRequest()`, `addQuote()`, `createOrderFromQuote()`
+- State transitions for requests and orders
+- Integrates with inventory system
+
+**`app/Services/Inventory/InventoryCountService.php`** (Codex):
+- Physical count workflow management
+- Variance calculation and adjustment creation
+- Multi-warehouse support
 
 ### Unit Conversion System
 
@@ -278,11 +316,48 @@ Using Spatie Laravel Permission:
 - Assign permissions to roles, not directly to users
 - Check with: `$user->hasPermissionTo('edit-items')` or `@can('edit-items')`
 
+## Multi-Agent Coordination
+
+This project uses multiple AI agents for development:
+
+**Claude Code** (this instance):
+- Role: UI/UX, Livewire components, Blade views, frontend integration
+- Creates complete module UIs with Bootstrap 5
+- Integrates with backend services created by Codex
+- Documents modules comprehensively
+- See: `.claude/` configuration
+
+**Codex** (GitHub Copilot Agent):
+- Role: Backend services, business logic, API development
+- Creates Service layer classes with complex business logic
+- Develops Eloquent models with relationships
+- Creates database migrations
+- Backend PRs merged from separate branches
+
+**Gemini CLI**:
+- Role: Database operations, schema management, bug fixes
+- Direct PostgreSQL operations on `selemti` schema
+- Fixes database-code inconsistencies
+- Optimizes queries and indexes
+- See: `.gemini/GEMINI.md` and `.gemini/WORK_ASSIGNMENTS.md`
+
+**Coordination Guidelines**:
+1. **Before creating new UI**: Verify backend service and models exist
+2. **Database changes**: Coordinate with Gemini via `.gemini/WORK_ASSIGNMENTS.md`
+3. **Model creation**: Check if Codex already created models in a PR
+4. **Module development flow**: Backend (Codex) → DB validation (Gemini) → UI (Claude)
+5. **Schema modifications**: Only `selemti` schema is freely modifiable; `public` requires confirmation
+
+**Reference**: `.gemini/WORK_ASSIGNMENTS.md` tracks ongoing work by each agent
+
 ## Common Pitfalls
 
-1. **Forgetting database connection in Caja models** - Always set `protected $connection = 'pgsql';`
+1. **Forgetting database connection in PostgreSQL models** - Always set `protected $connection = 'pgsql';` for Caja, Purchasing, and Inventory models
 2. **Hard-coding URLs** - Use named routes and `url()` helper for subdirectory compatibility
 3. **Skipping transactions for multi-table operations** - Use `DB::transaction()` for data integrity
 4. **Not normalizing UOM quantities** - Always convert to base UOM when recording in kardex
 5. **Mixing query param and body params** - Use `CajaHelper::qp()` for legacy endpoint compatibility
-6. **Testing with SQLite when Caja uses PostgreSQL** - Configure test database connections appropriately
+6. **Testing with SQLite when using PostgreSQL models** - Configure test database connections appropriately
+7. **Creating UI before validating backend** - Always verify Service layer, models, and database tables exist before creating Livewire components
+8. **Wrong layout** - Use `terrena.blade.php` for new Bootstrap 5 components, not `app.blade.php` (Tailwind legacy)
+9. **Modifying `public` schema without coordination** - The `public` schema is Floreant POS production; coordinate with team before any modifications
