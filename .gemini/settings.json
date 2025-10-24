@@ -1,0 +1,133 @@
+{
+  "model": "gemini-2.5-pro",
+
+  "confirmActions": true,
+  "checkpointing": true,
+  "language": "es",
+  "sandbox": false,
+  "maxOutputTokens": 8192,
+
+  "persona": "Eres el Database Engineer & Bug Fixer del equipo Terrena (Laravel 12 + Livewire 3 + PostgreSQL 9.5 en Windows/XAMPP). Tu especialidad es operaciones de base de datos, corrección de inconsistencias entre código y esquema, optimización de queries y debugging SQL. Tienes LIBERTAD TOTAL para trabajar y modificar el esquema 'selemti' en PostgreSQL (crear/alterar tablas, ejecutar migraciones, insertar/actualizar/eliminar datos, optimizar índices). El esquema 'public' pertenece a Floreant POS en producción activa y es SOLO LECTURA (requiere autorización explícita para cualquier modificación). Antes de hacer operaciones destructivas irreversibles (DROP, TRUNCATE) en cualquier tabla, debes explicar el riesgo y pedir confirmación. Lee GEMINI.md y WORK_ASSIGNMENTS.md para entender tu rol y coordinar con Claude y Codex.",
+
+  "coreTools": [
+    "FileSystemTool",
+    "GitTool",
+    "ShellTool"
+  ],
+
+  "allowedCommands": [
+    "git status",
+    "git log",
+    "git diff",
+    "git branch",
+    "git add",
+    "git commit",
+    "dir",
+    "ls",
+    "type",
+    "cat",
+    "php artisan migrate",
+    "php artisan migrate:status",
+    "php artisan migrate:rollback",
+    "php artisan db:seed",
+    "php artisan make:migration",
+    "php artisan make:seeder",
+    "php artisan config:clear",
+    "php artisan cache:clear",
+    "php artisan view:clear",
+    "php artisan optimize:clear",
+    "\"C:\\Program Files (x86)\\PostgreSQL\\9.5\\bin\\psql.exe\""
+  ],
+
+  "blockedCommands": [
+    "rm -rf",
+    "del /f /q /s",
+    "rmdir /s /q",
+    "format",
+    "git push --force",
+    "git reset --hard",
+    "DROP DATABASE",
+    "DROP SCHEMA public"
+  ],
+
+  "autoApprovedActions": [
+    {
+      "description": "Ejecutar migraciones Laravel en desarrollo",
+      "patterns": ["php artisan migrate", "php artisan db:seed"]
+    },
+    {
+      "description": "Consultas SELECT en cualquier esquema",
+      "patterns": ["psql.*SELECT", "psql.*\\\\d", "psql.*\\\\dt"]
+    },
+    {
+      "description": "Operaciones de escritura en esquema selemti",
+      "patterns": [
+        "psql.*INSERT INTO selemti",
+        "psql.*UPDATE selemti",
+        "psql.*DELETE FROM selemti",
+        "psql.*ALTER TABLE selemti",
+        "psql.*CREATE TABLE selemti",
+        "psql.*CREATE INDEX.*selemti"
+      ]
+    },
+    {
+      "description": "Comandos git básicos",
+      "patterns": ["git status", "git log", "git diff", "git add", "git commit"]
+    },
+    {
+      "description": "Limpiar cachés Laravel",
+      "patterns": ["php artisan.*clear"]
+    }
+  ],
+
+  "requireConfirmation": [
+    {
+      "description": "Operaciones destructivas en selemti (requiere explicación de riesgo)",
+      "patterns": [
+        "psql.*DROP.*selemti",
+        "psql.*TRUNCATE.*selemti",
+        "psql.*DROP COLUMN.*selemti"
+      ]
+    },
+    {
+      "description": "CUALQUIER operación de escritura en esquema public (Floreant POS)",
+      "patterns": [
+        "psql.*INSERT INTO public",
+        "psql.*UPDATE public",
+        "psql.*DELETE FROM public",
+        "psql.*ALTER TABLE public",
+        "psql.*CREATE.*public",
+        "psql.*DROP.*public",
+        "psql.*TRUNCATE.*public"
+      ]
+    },
+    {
+      "description": "Rollback de migraciones (puede perder datos)",
+      "patterns": ["php artisan migrate:rollback"]
+    },
+    {
+      "description": "Push a repositorio remoto",
+      "patterns": ["git push"]
+    }
+  ],
+
+  "workflowRules": [
+    "1. Antes de iniciar trabajo, revisar .gemini/WORK_ASSIGNMENTS.md para ver si alguien más está trabajando en el área",
+    "2. Actualizar sección EN PROGRESO de WORK_ASSIGNMENTS.md con tu tarea",
+    "3. Al detectar error SQLSTATE[42703] (columna no existe): analizar código → verificar BD → determinar fix (agregar columna vs ajustar código) → explicar decisión → aplicar",
+    "4. Siempre usar ruta completa para psql: \"C:\\Program Files (x86)\\PostgreSQL\\9.5\\bin\\psql.exe\" -h localhost -p 5433 -U postgres -d pos",
+    "5. PostgreSQL 9.5: usar sintaxis clásica, evitar features modernas (GENERATED, IF NOT EXISTS en ALTER, etc.)",
+    "6. Antes de commit: verificar que solo afecta selemti (o tienes autorización para public), probar migración, verificar que no rompe queries, documentar cambio",
+    "7. Comunicación con otros agentes: usar @claude o @codex en mensajes de commit, actualizar WORK_ASSIGNMENTS.md"
+  ],
+
+  "theme": "dark",
+
+  "contextFiles": [
+    "CLAUDE.md",
+    ".gemini/GEMINI.md",
+    ".gemini/WORK_ASSIGNMENTS.md",
+    "docs/FondoCaja/README.md",
+    "docs/InventoryCounts/README.md"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "model": "gemini-2.5-pro",
+  "confirmActions": true,
+  "checkpointing": true,
+  "sandbox": false,
+  "maxOutputTokens": 8192
+}
