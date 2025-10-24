@@ -41,7 +41,9 @@
       "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.cash_fund_movement_audit_log\")",
       "Bash(dir:*)",
       "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT id, responsable_user_id, created_by_user_id FROM selemti.cash_funds WHERE id = 4;\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git merge:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
