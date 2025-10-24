@@ -67,15 +67,18 @@ class Arqueo extends Component
                 $saldoTeorico = $this->fondo->saldo_disponible;
                 $diferencia = $efectivoContado - $saldoTeorico;
 
-                // Crear registro de arqueo
-                CashFundArqueo::create([
-                    'cash_fund_id' => $this->fondo->id,
-                    'monto_esperado' => $saldoTeorico,
-                    'monto_contado' => $efectivoContado,
-                    'diferencia' => $diferencia,
-                    'observaciones' => $this->arqueoForm['observaciones'] ?: null,
-                    'created_by_user_id' => Auth::id(),
-                ]);
+                // Crear o actualizar registro de arqueo
+                // (Si el fondo fue reabierto, actualiza el arqueo existente)
+                CashFundArqueo::updateOrCreate(
+                    ['cash_fund_id' => $this->fondo->id],
+                    [
+                        'monto_esperado' => $saldoTeorico,
+                        'monto_contado' => $efectivoContado,
+                        'diferencia' => $diferencia,
+                        'observaciones' => $this->arqueoForm['observaciones'] ?: null,
+                        'created_by_user_id' => Auth::id(),
+                    ]
+                );
 
                 // Cambiar estado del fondo a EN_REVISION
                 $this->fondo->update([
@@ -117,7 +120,7 @@ class Arqueo extends Component
         $efectivoContado = (float) ($this->arqueoForm['efectivo_contado'] ?: 0);
         $diferencia = $efectivoContado - $saldoTeorico;
 
-        // Obtener movimientos
+        // Obtener movimientos con información completa
         $movimientos = $this->fondo->movements()
             ->with('createdBy')
             ->orderBy('created_at', 'desc')
@@ -127,10 +130,35 @@ class Arqueo extends Component
                     'id' => $mov->id,
                     'tipo' => $mov->tipo,
                     'concepto' => $mov->concepto,
+                    'proveedor_nombre' => $mov->proveedor_nombre,
                     'monto' => $mov->monto,
+                    'metodo' => $mov->metodo,
+                    'fecha_hora' => $mov->created_at->format('Y-m-d H:i'),
+                    'tiene_comprobante' => $mov->tiene_comprobante,
+                    'adjunto_path' => $mov->adjunto_path,
+                    'estatus' => $mov->estatus,
                     'creado_por' => $mov->createdBy->nombre_completo ?? 'Sistema',
                 ];
             });
+
+        // Calcular resúmenes financieros
+        $resumenPorTipo = [
+            'EGRESO' => $movimientos->where('tipo', 'EGRESO')->sum('monto'),
+            'REINTEGRO' => $movimientos->where('tipo', 'REINTEGRO')->sum('monto'),
+            'DEPOSITO' => $movimientos->where('tipo', 'DEPOSITO')->sum('monto'),
+        ];
+
+        $resumenPorMetodo = [
+            'EFECTIVO' => $movimientos->where('metodo', 'EFECTIVO')->sum('monto'),
+            'TRANSFER' => $movimientos->where('metodo', 'TRANSFER')->sum('monto'),
+        ];
+
+        $totalSinComprobante = $movimientos->where('tiene_comprobante', false)->count();
+        $totalPorAprobar = $movimientos->where('estatus', 'POR_APROBAR')->count();
+        $totalConComprobante = $movimientos->where('tiene_comprobante', true)->count();
+        $porcentajeComprobacion = $movimientos->count() > 0
+            ? ($totalConComprobante / $movimientos->count()) * 100
+            : 100;
 
         // Obtener nombre de sucursal
         $sucursalNombre = $this->getSucursalNombre($this->fondo->sucursal_id);
@@ -142,6 +170,12 @@ class Arqueo extends Component
             'efectivoContado' => $efectivoContado,
             'diferencia' => $diferencia,
             'movimientos' => $movimientos,
+            'resumenPorTipo' => $resumenPorTipo,
+            'resumenPorMetodo' => $resumenPorMetodo,
+            'totalSinComprobante' => $totalSinComprobante,
+            'totalPorAprobar' => $totalPorAprobar,
+            'totalConComprobante' => $totalConComprobante,
+            'porcentajeComprobacion' => $porcentajeComprobacion,
             'fondo' => [
                 'id' => $this->fondo->id,
                 'sucursal_nombre' => $sucursalNombre,

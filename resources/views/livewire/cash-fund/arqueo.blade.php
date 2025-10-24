@@ -24,6 +24,32 @@
                 </div>
             </div>
 
+            {{-- Alertas visuales --}}
+            @if($totalSinComprobante > 0 || $totalPorAprobar > 0)
+                <div class="alert alert-warning d-flex align-items-start mb-3">
+                    <i class="fa-solid fa-triangle-exclamation me-2 mt-1"></i>
+                    <div>
+                        <strong>Atención antes de cerrar:</strong>
+                        <ul class="mb-0 mt-2">
+                            @if($totalSinComprobante > 0)
+                                <li>{{ $totalSinComprobante }} movimiento(s) sin comprobante adjunto</li>
+                            @endif
+                            @if($totalPorAprobar > 0)
+                                <li>{{ $totalPorAprobar }} movimiento(s) pendiente(s) de aprobación gerencial</li>
+                            @endif
+                        </ul>
+                        <small class="text-muted d-block mt-2">
+                            Estos movimientos requerirán revisión antes del cierre definitivo del fondo.
+                        </small>
+                    </div>
+                </div>
+            @elseif($porcentajeComprobacion === 100)
+                <div class="alert alert-success d-flex align-items-center mb-3">
+                    <i class="fa-solid fa-circle-check me-2"></i>
+                    <span>Todos los movimientos tienen comprobante. El fondo está listo para arqueo.</span>
+                </div>
+            @endif
+
             {{-- Resumen del fondo --}}
             <div class="row g-3 mb-3">
                 <div class="col-md-3">
@@ -173,41 +199,183 @@
                 </div>
             </div>
 
-            {{-- Resumen de movimientos --}}
+            {{-- Resúmenes financieros --}}
             <div class="card shadow-sm mt-3">
-                <div class="card-header bg-white">
+                <div class="card-header bg-white border-bottom">
                     <h6 class="mb-0 fw-bold">
-                        <i class="fa-solid fa-list-check me-2"></i>
-                        Resumen de movimientos ({{ count($movimientos) }})
+                        <i class="fa-solid fa-chart-pie me-2"></i>
+                        Resúmenes Financieros
                     </h6>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>Tipo</th>
-                                    <th class="text-end">Monto</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($movimientos as $mov)
-                                    <tr>
-                                        <td>{{ $mov['id'] }}</td>
-                                        <td>
-                                            @if($mov['tipo'] === 'EGRESO')
-                                                <span class="badge text-bg-danger">Egreso</span>
-                                            @else
-                                                <span class="badge text-bg-success">{{ $mov['tipo'] }}</span>
-                                            @endif
-                                        </td>
-                                        <td class="text-end">${{ number_format($mov['monto'], 2) }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                    <div class="row g-3">
+                        {{-- Por tipo de movimiento --}}
+                        <div class="col-md-6">
+                            <h6 class="text-muted small mb-3">Por tipo de movimiento</h6>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span><i class="fa-solid fa-arrow-down text-danger me-1"></i> Egresos</span>
+                                <strong class="text-danger">${{ number_format($resumenPorTipo['EGRESO'], 2) }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span><i class="fa-solid fa-arrow-up text-success me-1"></i> Reintegros</span>
+                                <strong class="text-success">${{ number_format($resumenPorTipo['REINTEGRO'], 2) }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span><i class="fa-solid fa-plus text-info me-1"></i> Depósitos</span>
+                                <strong class="text-info">${{ number_format($resumenPorTipo['DEPOSITO'], 2) }}</strong>
+                            </div>
+                        </div>
+
+                        {{-- Por método de pago --}}
+                        <div class="col-md-6">
+                            <h6 class="text-muted small mb-3">Por método de pago</h6>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span><i class="fa-solid fa-money-bill me-1"></i> Efectivo</span>
+                                <strong>${{ number_format($resumenPorMetodo['EFECTIVO'], 2) }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span><i class="fa-solid fa-building-columns me-1"></i> Transferencia</span>
+                                <strong>${{ number_format($resumenPorMetodo['TRANSFER'], 2) }}</strong>
+                            </div>
+                        </div>
+
+                        {{-- Estatus de comprobación --}}
+                        <div class="col-12">
+                            <hr>
+                            <h6 class="text-muted small mb-3">Estatus de comprobación</h6>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="border rounded p-3">
+                                        <h4 class="text-success mb-1">{{ $totalConComprobante }}</h4>
+                                        <small class="text-muted">Con comprobante</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="border rounded p-3">
+                                        <h4 class="text-danger mb-1">{{ $totalSinComprobante }}</h4>
+                                        <small class="text-muted">Sin comprobante</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="border rounded p-3">
+                                        <h4 class="text-warning mb-1">{{ $totalPorAprobar }}</h4>
+                                        <small class="text-muted">Por aprobar</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <small class="text-muted">Porcentaje de comprobación</small>
+                                    <small class="fw-semibold">{{ number_format($porcentajeComprobacion, 1) }}%</small>
+                                </div>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar {{ $porcentajeComprobacion === 100 ? 'bg-success' : ($porcentajeComprobacion >= 80 ? 'bg-warning' : 'bg-danger') }}"
+                                         role="progressbar"
+                                         style="width: {{ $porcentajeComprobacion }}%">
+                                        {{ number_format($porcentajeComprobacion, 0) }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </div>
+
+            {{-- Detalle completo de movimientos --}}
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fa-solid fa-list-check me-2"></i>
+                        Detalle de Movimientos ({{ count($movimientos) }})
+                    </h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 4%;">#</th>
+                                <th style="width: 10%;">Fecha/Hora</th>
+                                <th style="width: 9%;">Tipo</th>
+                                <th style="width: 22%;">Concepto</th>
+                                <th style="width: 12%;">Proveedor</th>
+                                <th style="width: 9%;" class="text-end">Monto</th>
+                                <th style="width: 8%;">Método</th>
+                                <th style="width: 8%;" class="text-center">Comprobante</th>
+                                <th style="width: 10%;">Usuario</th>
+                                <th style="width: 8%;" class="text-center">Estatus</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($movimientos as $mov)
+                                <tr class="{{ !$mov['tiene_comprobante'] ? 'table-warning' : '' }}">
+                                    <td class="font-monospace small text-muted">#{{ $mov['id'] }}</td>
+                                    <td class="small">{{ $mov['fecha_hora'] }}</td>
+                                    <td>
+                                        @if($mov['tipo'] === 'EGRESO')
+                                            <span class="badge text-bg-danger"><i class="fa-solid fa-arrow-down me-1"></i>Egreso</span>
+                                        @elseif($mov['tipo'] === 'REINTEGRO')
+                                            <span class="badge text-bg-success"><i class="fa-solid fa-arrow-up me-1"></i>Reintegro</span>
+                                        @else
+                                            <span class="badge text-bg-info"><i class="fa-solid fa-plus me-1"></i>Depósito</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div style="max-width: 300px;" title="{{ $mov['concepto'] }}">
+                                            {{ $mov['concepto'] }}
+                                        </div>
+                                    </td>
+                                    <td class="small text-muted">{{ $mov['proveedor_nombre'] ?? '—' }}</td>
+                                    <td class="text-end fw-semibold">
+                                        ${{ number_format($mov['monto'], 2) }}
+                                    </td>
+                                    <td>
+                                        <span class="badge text-bg-light">
+                                            @if($mov['metodo'] === 'EFECTIVO')
+                                                <i class="fa-solid fa-money-bill me-1"></i>Efectivo
+                                            @else
+                                                <i class="fa-solid fa-building-columns me-1"></i>Transfer.
+                                            @endif
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if($mov['tiene_comprobante'])
+                                            <a href="{{ asset('storage/' . $mov['adjunto_path']) }}"
+                                               target="_blank"
+                                               class="text-success"
+                                               title="Ver comprobante">
+                                                <i class="fa-solid fa-circle-check fs-5"></i>
+                                            </a>
+                                        @else
+                                            <i class="fa-solid fa-circle-xmark text-danger fs-5" title="Sin comprobante"></i>
+                                        @endif
+                                    </td>
+                                    <td class="small">{{ $mov['creado_por'] ?? 'Sistema' }}</td>
+                                    <td class="text-center">
+                                        @if($mov['estatus'] === 'APROBADO')
+                                            <span class="badge text-bg-success">Aprobado</span>
+                                        @elseif($mov['estatus'] === 'POR_APROBAR')
+                                            <span class="badge text-bg-warning">Por aprobar</span>
+                                        @else
+                                            <span class="badge text-bg-danger">Rechazado</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="10" class="text-center text-muted py-4">
+                                        No hay movimientos registrados en este fondo.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="5" class="text-end fw-bold">TOTAL:</td>
+                                <td class="text-end fw-bold">${{ number_format($movimientos->sum('monto'), 2) }}</td>
+                                <td colspan="4"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
             </div>
         </div>

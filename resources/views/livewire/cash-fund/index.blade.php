@@ -9,6 +9,11 @@
             <a href="{{ route('cashfund.open') }}" class="btn btn-success">
                 <i class="fa-solid fa-plus me-1"></i>Abrir fondo
             </a>
+            @can('approve-cash-funds')
+                <a href="{{ route('cashfund.approvals') }}" class="btn btn-warning">
+                    <i class="fa-solid fa-check-double me-1"></i>Aprobaciones
+                </a>
+            @endcan
         </div>
         <div class="text-muted small d-flex align-items-center gap-2">
             <i class="fa-regular fa-circle-info"></i>
@@ -53,7 +58,12 @@
                 <tbody>
                     @forelse($fondos as $fondo)
                         <tr>
-                            <td class="font-monospace fw-semibold">#{{ $fondo['id'] }}</td>
+                            <td class="font-monospace fw-semibold">
+                                #{{ $fondo['id'] }}
+                                @if($fondo['descripcion'])
+                                    <div class="small text-muted fw-normal">{{ $fondo['descripcion'] }}</div>
+                                @endif
+                            </td>
                             <td>{{ $fondo['sucursal_nombre'] }}</td>
                             <td>{{ \Carbon\Carbon::parse($fondo['fecha'])->format('d/m/Y') }}</td>
                             <td class="small">
@@ -74,10 +84,26 @@
                                 @endif
                             </td>
                             <td class="text-end">
-                                <a href="{{ route('cashfund.movements', ['id' => $fondo['id']]) }}"
-                                   class="btn btn-sm btn-outline-primary">
-                                    <i class="fa-solid fa-eye"></i> Ver
-                                </a>
+                                @if($fondo['estado'] === 'ABIERTO')
+                                    <a href="{{ route('cashfund.movements', ['id' => $fondo['id']]) }}"
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="Gestionar movimientos">
+                                        <i class="fa-solid fa-edit"></i> Gestionar
+                                    </a>
+                                @elseif($fondo['estado'] === 'EN_REVISION')
+                                    <a href="{{ route('cashfund.movements', ['id' => $fondo['id']]) }}"
+                                       class="btn btn-sm btn-outline-warning"
+                                       title="Ver movimientos (solo lectura)">
+                                        <i class="fa-solid fa-eye"></i> Ver
+                                    </a>
+                                @else
+                                    {{-- CERRADO --}}
+                                    <a href="{{ route('cashfund.detail', ['id' => $fondo['id']]) }}"
+                                       class="btn btn-sm btn-outline-secondary"
+                                       title="Ver detalle completo">
+                                        <i class="fa-solid fa-file-lines"></i> Detalle
+                                    </a>
+                                @endif
                             </td>
                         </tr>
                     @empty

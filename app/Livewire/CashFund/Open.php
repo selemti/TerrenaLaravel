@@ -20,6 +20,7 @@ class Open extends Component
         'fecha' => '',
         'monto_inicial' => '',
         'moneda' => 'MXN',
+        'descripcion' => '',
         'responsable_user_id' => null,
     ];
 
@@ -56,6 +57,7 @@ class Open extends Component
                     'fecha' => $this->form['fecha'],
                     'monto_inicial' => $this->form['monto_inicial'],
                     'moneda' => $this->form['moneda'],
+                    'descripcion' => $this->form['descripcion'] ?: null,
                     'estado' => 'ABIERTO',
                     'responsable_user_id' => $this->form['responsable_user_id'],
                     'created_by_user_id' => Auth::id(),
@@ -96,6 +98,7 @@ class Open extends Component
             'form.fecha' => 'required|date|before_or_equal:today',
             'form.monto_inicial' => 'required|numeric|min:0.01|max:999999.99',
             'form.moneda' => 'required|in:MXN,USD',
+            'form.descripcion' => 'nullable|string|max:255',
             'form.responsable_user_id' => 'required|exists:users,id',
         ];
     }

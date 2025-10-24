@@ -70,6 +70,25 @@
                                 </small>
                             </div>
 
+                            {{-- Descripción (opcional) --}}
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">
+                                    Descripción <span class="text-muted small">(opcional)</span>
+                                </label>
+                                <input type="text"
+                                       class="form-control @error('form.descripcion') is-invalid @enderror"
+                                       wire:model.defer="form.descripcion"
+                                       placeholder="Ej: Fondo para pagos proveedores semana 42"
+                                       maxlength="255"
+                                       {{ $loading ? 'disabled' : '' }}>
+                                @error('form.descripcion')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">
+                                    Nombre o descripción breve para identificar el fondo fácilmente
+                                </small>
+                            </div>
+
                             {{-- Monto inicial --}}
                             <div class="col-md-8">
                                 <label class="form-label fw-semibold">

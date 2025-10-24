@@ -28,6 +28,7 @@ class CashFund extends Model
         'fecha',
         'monto_inicial',
         'moneda',
+        'descripcion',
         'estado',
         'responsable_user_id',
         'created_by_user_id',

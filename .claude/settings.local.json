@@ -37,7 +37,11 @@
       "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT \n    (SELECT COUNT(*) FROM selemti.cat_sucursales) as sucursales,\n    (SELECT COUNT(*) FROM selemti.cat_almacenes) as almacenes,\n    (SELECT COUNT(*) FROM selemti.unidades_medida) as unidades,\n    (SELECT COUNT(*) FROM selemti.cat_proveedores) as proveedores;\")",
       "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\":*)",
       "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT id, nombre, rfc FROM selemti.cat_sucursales ORDER BY clave;\")",
-      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT codigo, nombre, tipo FROM selemti.unidades_medida ORDER BY tipo, codigo LIMIT 10;\")"
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT codigo, nombre, tipo FROM selemti.unidades_medida ORDER BY tipo, codigo LIMIT 10;\")",
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.cash_fund_movement_audit_log\")",
+      "Bash(dir:*)",
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT id, responsable_user_id, created_by_user_id FROM selemti.cash_funds WHERE id = 4;\")",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

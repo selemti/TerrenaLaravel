@@ -66,6 +66,7 @@ class Index extends Component
                 'fecha' => $fondo->fecha->format('Y-m-d'),
                 'monto_inicial' => $fondo->monto_inicial,
                 'moneda' => $fondo->moneda,
+                'descripcion' => $fondo->descripcion,
                 'estado' => $fondo->estado,
                 'total_egresos' => $fondo->total_egresos,
                 'saldo_disponible' => $fondo->saldo_disponible,

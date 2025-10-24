@@ -54,6 +54,8 @@ use App\Livewire\CashFund\Index             as CashFundIndex;
 use App\Livewire\CashFund\Open              as CashFundOpen;
 use App\Livewire\CashFund\Movements         as CashFundMovements;
 use App\Livewire\CashFund\Arqueo            as CashFundArqueo;
+use App\Livewire\CashFund\Approvals         as CashFundApprovals;
+use App\Livewire\CashFund\Detail            as CashFundDetail;
 
 use App\Livewire\Transfers\Create           as TransfersCreate;
 
@@ -131,7 +133,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/open',                CashFundOpen::class)->name('cashfund.open');
         Route::get('/{id}/movements',      CashFundMovements::class)->name('cashfund.movements');
         Route::get('/{id}/arqueo',         CashFundArqueo::class)->name('cashfund.arqueo');
-        // TODO: agregar ruta approvals cuando esté lista
+        Route::get('/{id}/detail',         CashFundDetail::class)->name('cashfund.detail');
+        Route::get('/approvals',           CashFundApprovals::class)
+            ->middleware('can:approve-cash-funds')
+            ->name('cashfund.approvals');
     });
 
     /* =========================================================================
