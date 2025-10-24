@@ -100,6 +100,9 @@
           </a>
           <div class="collapse {{ in_array($active ?? '', ['compras', 'purchasing']) ? 'show' : '' }}" id="menuCompras">
             <div class="submenu">
+              <a class="nav-link submenu-link" href="{{ route('purchasing.replenishment.dashboard') }}">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> <span class="label">Pedidos Sugeridos</span>
+              </a>
               <a class="nav-link submenu-link" href="{{ route('purchasing.requests.index') }}">
                 <i class="fa-solid fa-file-invoice"></i> <span class="label">Solicitudes</span>
               </a>

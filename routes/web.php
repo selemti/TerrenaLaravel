@@ -70,6 +70,8 @@ use App\Livewire\Purchasing\Requests\Detail as PurchasingRequestsDetail;
 use App\Livewire\Purchasing\Orders\Index    as PurchasingOrdersIndex;
 use App\Livewire\Purchasing\Orders\Detail   as PurchasingOrdersDetail;
 
+use App\Livewire\Replenishment\Dashboard   as ReplenishmentDashboard;
+
 /* =========================================================================
 |  HOME (UNA sola definición, limpia y canónica)
 |========================================================================= */
@@ -170,6 +172,9 @@ Route::middleware('auth')->group(function () {
     |  Purchasing / Compras (Livewire)
     |========================================================================= */
     Route::prefix('purchasing')->group(function () {
+        // Pedidos Sugeridos (Reposición Automática)
+        Route::get('/replenishment',         ReplenishmentDashboard::class)->name('purchasing.replenishment.dashboard');
+
         // Solicitudes de Compra
         Route::get('/requests',              PurchasingRequestsIndex::class)->name('purchasing.requests.index');
         Route::get('/requests/create',       PurchasingRequestsCreate::class)->name('purchasing.requests.create');
