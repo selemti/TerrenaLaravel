@@ -34,8 +34,8 @@ class ReceptionsIndex extends Component
 
     protected function fetchRows()
     {
-        $query = DB::table('recepcion_cab as r')
-            ->leftJoin('cat_proveedores as p', 'p.id', '=', 'r.proveedor_id')
+        $query = DB::table('selemti.recepcion_cab as r')
+            ->leftJoin('selemti.cat_proveedores as p', 'p.id', '=', 'r.proveedor_id')
             ->select([
                 'r.id',
                 'r.numero_recepcion',
@@ -49,8 +49,8 @@ class ReceptionsIndex extends Component
                 DB::raw("COALESCE(p.nombre, '') as proveedor_nombre"),
             ]);
 
-        if (Schema::hasTable('cat_sucursales')) {
-            $query->leftJoin('cat_sucursales as s', function ($join) {
+        if (Schema::hasTable('selemti.cat_sucursales')) {
+            $query->leftJoin('selemti.cat_sucursales as s', function ($join) {
                 $join->on(DB::raw('s.id::text'), '=', DB::raw('r.sucursal_id::text'));
             });
             $query->addSelect([
@@ -59,8 +59,8 @@ class ReceptionsIndex extends Component
             ]);
         }
 
-        if (Schema::hasTable('cat_almacenes')) {
-            $query->leftJoin('cat_almacenes as a', function ($join) {
+        if (Schema::hasTable('selemti.cat_almacenes')) {
+            $query->leftJoin('selemti.cat_almacenes as a', function ($join) {
                 $join->on(DB::raw('a.id::text'), '=', DB::raw('r.almacen_id::text'));
             });
             $query->addSelect([

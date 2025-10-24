@@ -47,7 +47,22 @@
       "Bash(git commit -m \"$(cat <<''EOF''\nMerge PR #10 (Codex work) + Caja Chica (Claude work)\n\nIntegración completa de:\n\n**De PR #10 (Codex):**\n- Actions: StoreVendorPrice\n- Commands: RunAlertEngine\n- Controllers: AlertsController, PriceController, RecipeCostController\n- Services: AlertEngine, RecipeCostingService, InventoryCountService, \n  PosConsumptionService, ProductionService, MenuEngineeringService,\n  PosSyncService, PurchasingService, ReportService\n- Migraciones: item_last_price_views, remember_token, inventory_receiving,\n  inventory_counts, production, pos_consumption, purchasing, costing_extension,\n  pos_sync, menu_engineering, extend_alert, reporting\n- Seeders: AdminUserSeeder, PermissionsSeeder\n- Livewire: AlertsList, ItemPriceCreate, UsersIndex\n- Docs: V2/, V3/\n\n**De trabajo con Claude (preservado):**\n- Sistema completo de Caja Chica con 6 componentes\n- Documentación completa en docs/FondoCaja/ (~170 páginas)\n- Permisos y auditoría\n- Vistas Detail y Approvals\n\nConflictos resueltos manualmente manteniendo:\n- Versión completa de Caja Chica (más reciente)\n- Todas las rutas de ambos sistemas\n\n🤖 Generated with Claude Code\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git rm:*)",
       "Bash(git commit:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d recepcion_cab\")",
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT table_name FROM information_schema.tables WHERE table_name LIKE ''%recep%'' ORDER BY table_name;\")",
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d public.recepcion_cab\")",
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT schemaname, tablename FROM pg_tables WHERE tablename = ''recepcion_cab'';\")",
+      "Bash(\"/c/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.recepcion_cab\")",
+      "Bash(findstr:*)",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\":*)",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.purchase_requests\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.purchase_orders\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.production_orders\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.stock_policy\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.items\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d users\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.cat_sucursales\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.cat_almacenes\")"
     ],
     "deny": [],
     "ask": []

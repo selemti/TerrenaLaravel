@@ -11,10 +11,10 @@ return new class extends Migration
     {
         $schema = Schema::connection('pgsql');
 
-        if (! $schema->hasTable('recepcion_cab')) {
-            $schema->create('recepcion_cab', function (Blueprint $table) {
-                $table->bigIncrements('id');
-                $table->string('numero_recepcion', 40)->nullable()->unique();
+        if (! $schema->hasTable('selemti.recepcion_cab')) {
+            $schema->create('selemti.recepcion_cab', function (Blueprint $table) {
+                $table->increments('id');
+                $table->string('numero_recepcion', 20)->nullable()->unique();
                 $table->unsignedBigInteger('proveedor_id');
                 $table->string('sucursal_id', 36)->nullable();
                 $table->string('almacen_id', 36)->nullable();

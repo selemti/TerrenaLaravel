@@ -1,0 +1,16 @@
+
+ ▐▛███▜▌   Claude Code v2.0.25
+▝▜█████▛▘  Sonnet 4.5 · Claude Pro
+  ▘▘ ▝▝    C:\xampp3\htdocs\TerrenaLaravel
+═════════════════════════════ Conversation compacted · ctrl+o for history ════════════════════════════
+  ⎿  Referenced file docs\Purchasing\README.md
+  ⎿  Read resources\views\livewire\purchasing\orders\detail.blade.php (109 lines)
+  ⎿  Read resources\views\livewire\purchasing\orders\index.blade.php (141 lines)
+  ⎿  Read resources\views\livewire\purchasing\requests\detail.blade.php (132 lines)
+  ⎿  Read resources\views\layouts\terrena.blade.php (307 lines)
+  ⎿  Todo list read (4 items)
+  ⎿  Session limit reached ∙ resets 5am
+     /upgrade to increase your usage limit.
+
+
+
