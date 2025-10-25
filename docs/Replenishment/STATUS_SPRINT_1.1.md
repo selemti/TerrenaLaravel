@@ -43,5 +43,25 @@ Schema `selemti`, definir relaciones y atributos `fillable`.
 
 ---
 
+## 🧭 Handoff de Sesión
+
+**Fecha de cierre:** 2025-10-24  
+**Estado al cierre:** 🟨 En progreso – Migrations ejecutadas exitosamente  
+**Completado:**
+- Diseño v2.1 aprobado (COMPRAS → PRODUCCIÓN → TRANSFERENCIAS)
+- Sistema de permisos dinámicos implementado (purchasing.*, inventory.*)
+- Migrations creadas y ejecutadas: `purchase_suggestions`, `purchase_suggestion_lines`, `purchase_requests` alterada
+- FKs formales a `selemti.users` (no `public.users`)
+- Constraint UNIQUE en líneas para evitar duplicados por item
+
+**Siguiente paso inmediato (Etapa 6):**
+- Crear modelos Eloquent (`PurchaseSuggestion`, `PurchaseSuggestionLine`, actualizar `PurchaseRequest`)
+- Definir relaciones, scopes y atributos `fillable`
+- Luego: servicios de negocio y endpoints API
+
+**Responsable siguiente:** Claude / ChatGPT – Sprint 1.1 continuidad  
+
+---
+
 **Última actualización:** 2025-10-24  
 **Responsable:** Gustavo Selem
