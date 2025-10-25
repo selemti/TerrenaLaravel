@@ -53,6 +53,8 @@ Schema `selemti`, definir relaciones y atributos `fillable`.
 - Migrations creadas y ejecutadas: `purchase_suggestions`, `purchase_suggestion_lines`, `purchase_requests` alterada
 - FKs formales a `selemti.users` (no `public.users`)
 - Constraint UNIQUE en líneas para evitar duplicados por item
+- Tablas selemti.purchase_suggestions y selemti.purchase_suggestion_lines ya existen.
+
 
 **Siguiente paso inmediato (Etapa 6):**
 - Crear modelos Eloquent (`PurchaseSuggestion`, `PurchaseSuggestionLine`, actualizar `PurchaseRequest`)
@@ -65,3 +67,43 @@ Schema `selemti`, definir relaciones y atributos `fillable`.
 
 **Última actualización:** 2025-10-24  
 **Responsable:** Gustavo Selem
+
+Estado de validación (Sprint 1.1 - Compras)
+
+
+
+Implementación:
+
+API /api/purchasing/suggestions creada e integrada a Laravel.
+Controlador PurchaseSuggestionController y PurchasingService actualizados.
+Rutas index / approve / convert registradas y visibles en php artisan route:list.
+Inserción exitosa en selemti.purchase_suggestions (registro ID=3) usando FKs reales (sucursal_id=22, almacen_id=58, sugerido_por_user_id=2).
+Respuesta del endpoint GET /api/purchasing/suggestions válida (ok: true, sin error 500).
+
+
+
+Pendiente para completar prueba funcional end-to-end:
+
+Poblar catálogos operativos mínimos:
+selemti.items (al menos 1 insumo comprable con UOM válida).
+selemti.cat_proveedores (al menos 1 proveedor activo).
+Crear línea en selemti.purchase_suggestion_lines ligada a la sugerencia ID=3.
+Re-ejecutar:
+POST /api/purchasing/suggestions/{id}/approve
+POST /api/purchasing/suggestions/{id}/convert
+Validar que se cree selemti.purchase_requests y selemti.purchase_request_lines.
+Validar cambio de estado de la sugerencia a CONVERTIDA.
+
+
+
+Decisión de operación:
+
+No se ejecuta la prueba completa todavía porque aún se está alimentando inventario base (recetas, insumos, proveedores). No queremos probar con datos falsos en este momento.
+Cuando existan insumos/proveedores reales cargados, se repite la prueba y se marca Sprint 1.1 como "VALIDADO EN OPERACIÓN".
+
+
+
+Conclusión Sprint 1.1:
+
+Código del flujo CORE de Compras está implementado y conectado a BD real.
+Falta solo la carga de datos maestros para cerrar la prueba operativa.
