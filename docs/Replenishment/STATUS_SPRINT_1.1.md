@@ -107,3 +107,33 @@ Conclusión Sprint 1.1:
 
 Código del flujo CORE de Compras está implementado y conectado a BD real.
 Falta solo la carga de datos maestros para cerrar la prueba operativa.
+
+
+
+### Control de versión / Handoff técnico
+
+- Rama activa: integrate/web-prs-20251023-1922
+- Último commit de control Sprint 1.1: 844c9ce
+  Mensaje: "Sprint 1.1 (Compras): API /purchasing/suggestions + servicio PurchasingService actualizado, controlador PurchaseSuggestionController, modelos Purchasing*, migrations selemti.*, rutas API y documentación de flujo y permisos."
+
+- Este commit marca:
+  1. Que el flujo CORE de Compras (sugerencias → aprobación → conversión a solicitud) ya está implementado en código Laravel y expuesto vía API (`/api/purchasing/suggestions` + `/approve` + `/convert`).
+  2. Que el servicio PurchasingService ya incorpora lógica para:
+     - listar sugerencias con líneas
+     - aprobar sugerencias
+     - convertir sugerencia → purchase_request (+ líneas)
+  3. Que quedó documentado el modelo de permisos dinámicos en lugar de roles fijos.
+  4. Que la BD ya tiene al menos una sugerencia insertada manualmente (ID=3) dentro de `selemti.purchase_suggestions`, validando integridad de FKs reales (`sucursal_id`, `almacen_id`, `sugerido_por_user_id`).
+
+- Pendiente post-commit:
+  - Cargar datos maestros (items, proveedores, etc.) y `purchase_suggestion_lines` para poder probar `approve` y `convert`.
+  - Confirmar en código local que existen físicamente:
+    - database/migrations/2025_10_24_120000_create_purchase_suggestions_table.php
+    - database/migrations/2025_10_24_120001_create_purchase_suggestion_lines_table.php
+    - database/migrations/2025_10_24_120002_alter_purchase_requests_add_fields.php
+    - app/Http/Controllers/Purchasing/PurchaseSuggestionController.php
+    - app/Services/Purchasing/PurchasingService.php con los métodos list/approve/convert
+    - app/Models/Purchasing/PurchaseRequestLine.php
+    - docs/Replenishment/PERMISOS_RESPONSABILIDADES_FASE1.md
+
+Este archivo (STATUS_SPRINT_1.1.md) es ahora la fuente oficial de en qué se quedó Compras y desde dónde arranca el siguiente sprint.
