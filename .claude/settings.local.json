@@ -62,7 +62,20 @@
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.items\")",
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d users\")",
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.cat_sucursales\")",
-      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.cat_almacenes\")"
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.cat_almacenes\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\dt replenishment_suggestions\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT COUNT(*) as total_sucursales FROM selemti.cat_sucursales;\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\dt selemti.replenishment_suggestions\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\dv selemti.vw_replenishment_dashboard\")",
+      "Bash(php:*)",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT COUNT(*) as total_items FROM selemti.items WHERE activo = true;\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT COUNT(*) as total FROM selemti.items LIMIT 5;\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\dt selemti.*\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.cat_proveedores\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.users\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.user_roles\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.purchase_suggestions\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.purchase_suggestion_lines\")"
     ],
     "deny": [],
     "ask": []

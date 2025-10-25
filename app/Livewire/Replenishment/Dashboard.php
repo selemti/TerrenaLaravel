@@ -316,28 +316,46 @@ class Dashboard extends Component
 
     public function render()
     {
-        // Estadísticas generales
-        $stats = [
-            'total' => ReplenishmentSuggestion::count(),
-            'pendientes' => ReplenishmentSuggestion::pendiente()->count(),
-            'urgentes' => ReplenishmentSuggestion::urgentes()->count(),
-            'compras' => ReplenishmentSuggestion::compra()->pendiente()->count(),
-            'producciones' => ReplenishmentSuggestion::produccion()->pendiente()->count(),
-            'convertidas_hoy' => ReplenishmentSuggestion::convertida()
-                ->whereDate('convertido_en', today())
-                ->count(),
-        ];
+        try {
+            // Estadísticas globales (sin filtros, para dar contexto general)
+            $stats = [
+                'total' => ReplenishmentSuggestion::count(),
+                'pendientes' => ReplenishmentSuggestion::pendiente()->count(),
+                'urgentes' => ReplenishmentSuggestion::urgentes()->count(),
+                'compras' => ReplenishmentSuggestion::compra()->pendiente()->count(),
+                'producciones' => ReplenishmentSuggestion::produccion()->pendiente()->count(),
+                'convertidas_hoy' => ReplenishmentSuggestion::convertida()
+                    ->whereDate('convertido_en', today())
+                    ->count(),
+            ];
 
-        // Sugerencias con paginación
-        $suggestions = $this->getSuggestions()->paginate(20);
+            // Sugerencias con filtros aplicados (para la tabla)
+            $suggestions = $this->getSuggestions()->paginate(20);
 
-        // Sucursales para filtro
-        $sucursales = Sucursal::where('activo', true)->orderBy('nombre')->get();
+            // Sucursales para filtro
+            $sucursales = Sucursal::where('activo', true)->orderBy('nombre')->get();
 
-        return view('livewire.replenishment.dashboard', [
-            'suggestions' => $suggestions,
-            'stats' => $stats,
-            'sucursales' => $sucursales,
-        ]);
+            return view('livewire.replenishment.dashboard', [
+                'suggestions' => $suggestions,
+                'stats' => $stats,
+                'sucursales' => $sucursales,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error en Dashboard render: ' . $e->getMessage());
+
+            // Retornar vista con datos vacíos en caso de error
+            return view('livewire.replenishment.dashboard', [
+                'suggestions' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20),
+                'stats' => [
+                    'total' => 0,
+                    'pendientes' => 0,
+                    'urgentes' => 0,
+                    'compras' => 0,
+                    'producciones' => 0,
+                    'convertidas_hoy' => 0,
+                ],
+                'sucursales' => collect([]),
+            ]);
+        }
     }
 }

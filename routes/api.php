@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\Inventory\RecipeCostController;
 use App\Http\Controllers\Api\Inventory\StockController;
 use App\Http\Controllers\Api\Inventory\VendorController;
 use App\Http\Controllers\Api\CatalogsController;
+use App\Http\Controllers\Purchasing\PurchaseSuggestionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -190,6 +191,17 @@ Route::prefix('catalogs')->group(function () {
     Route::get('/sucursales', [CatalogsController::class, 'sucursales']);
     Route::get('/unidades', [CatalogsController::class, 'unidades']);
     Route::get('/movement-types', [CatalogsController::class, 'movementTypes']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| MÓDULO: PURCHASING (COMPRAS)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('purchasing')->group(function () {
+    Route::get('/suggestions', [PurchaseSuggestionController::class, 'index']);
+    Route::post('/suggestions/{id}/approve', [PurchaseSuggestionController::class, 'approve']);
+    Route::post('/suggestions/{id}/convert', [PurchaseSuggestionController::class, 'convert']);
 });
 
 /*

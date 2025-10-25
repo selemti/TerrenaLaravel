@@ -1,12 +1,17 @@
 {
-  "model": "gemini-2.5-flash",
+  "general": {
+    "checkpointing": true
+  },
+  "model": {
+    "name": "gemini-2.5-pro"
+  },
+  "tools": {
+    "sandbox": false
+  },
   "language": "es",
   "confirmActions": false,
-  "checkpointing": true,
-  "sandbox": false,
   "maxOutputTokens": 8192,
   "persona": "Eres el ingeniero senior del proyecto Terrena. Respondes SIEMPRE en español técnico neutro. Tienes autonomía completa sobre el esquema 'selemti' en PostgreSQL 9.5: puedes crear/alterar tablas, insertar, actualizar, borrar y generar migraciones y seeders sin pedir permiso. El esquema 'public' es crítico de producción y sólo se puede consultar con SELECT. Cualquier intento de modificar 'public', eliminar datos de manera irreversible o hacer git push requiere confirmación humana. Puedes usar psql ubicado en \"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" pasando -c \"...\" para ejecutar una sola consulta y salir.",
-
   "autoApprovedActions": [
     "type",
     "dir",
@@ -14,61 +19,50 @@
     "findstr",
     "readFile",
     "readFolder",
-
     "git status",
     "git diff",
     "git branch",
     "git log",
-
     "php artisan tinker",
     "php artisan optimize:clear",
     "php artisan migrate",
     "php artisan db:seed",
     "php artisan config:cache",
     "php artisan route:list",
-
     "\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c SELECT",
     "\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c INSERT",
     "\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c UPDATE",
     "\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c DELETE",
     "\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\\\d\"",
     "\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\\\d selemti\"",
-
     "writeFile",
     "editFile",
     "createFile",
     "deleteFile"
   ],
-
   "requireConfirmation": [
     "\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c INSERT INTO public.",
     "\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c UPDATE public.",
     "\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c DELETE public.",
     "\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c ALTER TABLE public",
     "\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c COMMENT ON public",
-
     "\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c DROP",
     "\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c TRUNCATE",
     "\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c DROP SCHEMA",
-
     "php artisan migrate:rollback",
-
     "git push",
     "git push origin",
     "git push --set-upstream",
-
     "composer install",
     "composer update",
     "npm install",
     "npm update"
   ],
-
   "blockedCommands": [
     "rm -rf",
     "rmdir /s /q",
     "del /f /q /s",
     "git push --force",
-
     "\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c DROP SCHEMA public",
     "\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c ALTER SCHEMA public OWNER TO"
   ]

@@ -20,7 +20,7 @@
     </div>
 
     {{-- Estadísticas --}}
-    <div class="row g-3 mb-4" wire:poll.30s>
+    <div class="row g-3 mb-4" {{-- wire:poll.30s --}}>
         <div class="col-md-2">
             <div class="card shadow-sm text-center">
                 <div class="card-body py-3">
@@ -78,18 +78,18 @@
                 <div class="col-md-3">
                     <input type="text"
                            class="form-control"
-                           wire:model.live.debounce.300ms="search"
+                           wire:model.defer="search"
                            placeholder="Buscar por folio o item...">
                 </div>
                 <div class="col-md-2">
-                    <select class="form-select" wire:model.live="tipoFilter">
+                    <select class="form-select" wire:model.defer="tipoFilter">
                         <option value="all">Todos los tipos</option>
                         <option value="COMPRA">Compras</option>
                         <option value="PRODUCCION">Producciones</option>
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select class="form-select" wire:model.live="prioridadFilter">
+                    <select class="form-select" wire:model.defer="prioridadFilter">
                         <option value="all">Todas las prioridades</option>
                         <option value="URGENTE">Urgente</option>
                         <option value="ALTA">Alta</option>
@@ -98,7 +98,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select class="form-select" wire:model.live="estadoFilter">
+                    <select class="form-select" wire:model.defer="estadoFilter">
                         <option value="all">Todos los estados</option>
                         <option value="PENDIENTE">Pendiente</option>
                         <option value="REVISADA">Revisada</option>
@@ -108,7 +108,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select class="form-select" wire:model.live="sucursalFilter">
+                    <select class="form-select" wire:model.defer="sucursalFilter">
                         <option value="all">Todas las sucursales</option>
                         @foreach($sucursales as $sucursal)
                             <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
@@ -128,13 +128,18 @@
                     <div class="form-check">
                         <input class="form-check-input"
                                type="checkbox"
-                               wire:model.live="urgenciasOnly"
+                               wire:model.defer="urgenciasOnly"
                                id="urgenciasOnly">
                         <label class="form-check-label" for="urgenciasOnly">
                             <i class="fa-solid fa-triangle-exclamation text-warning me-1"></i>
                             Solo urgencias
                         </label>
                     </div>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary" wire:click="$refresh">
+                        <i class="fa-solid fa-sync me-1"></i>Aplicar Filtros
+                    </button>
                 </div>
             </div>
         </div>
@@ -172,7 +177,7 @@
                             <th style="width: 40px;">
                                 <input type="checkbox"
                                        class="form-check-input"
-                                       wire:model.live="selectAll">
+                                       wire:model.defer="selectAll">
                             </th>
                             <th>Folio</th>
                             <th>Item</th>
@@ -193,7 +198,7 @@
                                     @if($suggestion->puede_aprobarse)
                                     <input type="checkbox"
                                            class="form-check-input"
-                                           wire:model.live="selectedIds"
+                                           wire:model.defer="selectedIds"
                                            value="{{ $suggestion->id }}">
                                     @endif
                                 </td>
@@ -297,7 +302,7 @@
         @endif
     </div>
 
-    {{-- Loading overlay --}}
+    {{-- Loading overlay - DESHABILITADO TEMPORALMENTE
     <div wire:loading.flex
          wire:target="generarSugerencias,aprobarSeleccionadas,convertirSeleccionadasACompra"
          class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
@@ -306,6 +311,7 @@
             <span class="visually-hidden">Procesando...</span>
         </div>
     </div>
+    --}}
 </div>
 
 @push('scripts')
