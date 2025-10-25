@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\Inventory\StockController;
 use App\Http\Controllers\Api\Inventory\VendorController;
 use App\Http\Controllers\Api\CatalogsController;
 use App\Http\Controllers\Purchasing\PurchaseSuggestionController;
+use App\Http\Controllers\Purchasing\ReceivingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -202,6 +203,13 @@ Route::prefix('purchasing')->group(function () {
     Route::get('/suggestions', [PurchaseSuggestionController::class, 'index']);
     Route::post('/suggestions/{id}/approve', [PurchaseSuggestionController::class, 'approve']);
     Route::post('/suggestions/{id}/convert', [PurchaseSuggestionController::class, 'convert']);
+
+    Route::prefix('receptions')->group(function () {
+        Route::post('/create-from-po/{purchase_order_id}', [ReceivingController::class, 'createFromPO']);
+        Route::post('/{recepcion_id}/lines', [ReceivingController::class, 'setLines']);
+        Route::post('/{recepcion_id}/validate', [ReceivingController::class, 'validateReception']);
+        Route::post('/{recepcion_id}/post', [ReceivingController::class, 'postReception']);
+    });
 });
 
 /*
