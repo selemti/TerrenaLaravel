@@ -1,0 +1,19 @@
+
+---
+
+Listo ✅
+
+Siguiente paso recomendado ahora mismo:
+
+1. Crea todos esos archivos `.md` en `docs/Replenishment/`.
+2. `git add docs/Replenishment/STATUS_SPRINT_1.*.md`
+3. `git commit -m "docs(sprint-plan): add STATUS_SPRINT_1.3-1.8 roadmap for inventory & ops"`
+
+Después de eso ya puedes decirle a Codex algo súper corto como:
+
+> Usa docs/Replenishment/STATUS_SPRINT_1.3.md sección 3.1.  
+> Actualiza ReceivingService::validateReception() y ::postToInventory() para reflejar esa lógica de estados/tolerancia/Kardex.  
+> No escribas SQL real, sólo TODOs y returns con la forma indicada.  
+> Después actualiza ReceivingController para usar esas versiones.
+
+Y Codex debería seguir el guion sin que tú le tengas que volver a explicar todo el negocio 🥂
