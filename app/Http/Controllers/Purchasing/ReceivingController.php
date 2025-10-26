@@ -44,7 +44,7 @@ class ReceivingController extends Controller
 
     public function validateReception(int $recepcion_id, Request $request): JsonResponse
     {
-        // TODO: autorización por permiso inventory.receptions.*
+        // TODO: autorización por permiso inventory.receptions.validate
         $userId = (int) ($request->user()->id ?? $request->input('user_id'));
         $data = $this->receivingService->validateReception($recepcion_id, $userId);
 
@@ -57,7 +57,7 @@ class ReceivingController extends Controller
 
     public function postReception(int $recepcion_id, Request $request): JsonResponse
     {
-        // TODO: autorización por permiso inventory.receptions.*
+        // TODO: autorización por permiso inventory.receptions.post
         $userId = (int) ($request->user()->id ?? $request->input('user_id'));
         $data = $this->receivingService->postToInventory($recepcion_id, $userId);
 

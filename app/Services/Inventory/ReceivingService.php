@@ -53,7 +53,7 @@ class ReceivingService
 
     /**
      * Moves reception from EN_PROCESO to VALIDADA once quantities are confirmed (flow step 4) and
-     * flags those beyond tolerance for review.
+     * flags those beyond tolerance for review per STATUS_SPRINT_1.3 §2.1.
      *
      * @param int $recepcionId Reception identifier being validated.
      * @param int $userId Approver validating the reception.
@@ -64,16 +64,22 @@ class ReceivingService
         $this->guardPositiveId($recepcionId, 'recepcion');
         $this->guardPositiveId($userId, 'user');
 
-        // TODO: Check EN_PROCESO state, evaluate tolerance vs config('inventory.reception_tolerance_pct').
+        // TODO: Load recepcion EN_PROCESO with lines, join purchase_order det to compute qty_ordenada.
+        // TODO: Calculate diferencia_pct per line vs config('inventory.reception_tolerance_pct', 5).
+        // TODO: Set requiere_aprobacion=true if any line exceeds tolerance and block posting until approved.
+        // TODO: Persist estado=VALIDADA, validator user/time, and requiere_aprobacion flag.
+        $requiresApproval = false;
+
         return [
             'recepcion_id' => $recepcionId,
             'status' => 'VALIDADA',
+            'requiere_aprobacion' => $requiresApproval,
         ];
     }
 
     /**
      * Posts validated reception to inventory by creating selemti.mov_inv COMPRA rows and closes the
-     * process (flow steps 5-6). Makes inventory immutable and finalizes estado POSTEADA_A_INVENTARIO → CERRADA.
+     * process (flow steps 5-6) per STATUS_SPRINT_1.3 §3.1, ensuring tolerance approvals are honored.
      *
      * @param int $recepcionId Reception identifier ready for posting.
      * @param int $userId User executing the posting (almacenista / supervisor).
@@ -84,10 +90,16 @@ class ReceivingService
         $this->guardPositiveId($recepcionId, 'recepcion');
         $this->guardPositiveId($userId, 'user');
 
-        // TODO: Generate mov_inv lines (tipo COMPRA), update reception states, mark immutable.
+        // TODO: Assert estado actual == VALIDADA; if not, throw domain exception.
+        // TODO: If requiere_aprobacion=true && no approval recorded, throw domain exception (block posting).
+        // TODO: Generate mov_inv rows (tipo COMPRA) per recepcion_det with qty/costo, mark immutable.
+        // TODO: Set estado POSTEADA_A_INVENTARIO ➜ CERRADA, stamp user/time, and prevent further edits.
+        $movimientosGenerados = 0;
+
         return [
             'recepcion_id' => $recepcionId,
-            'status' => 'POSTEADA_A_INVENTARIO',
+            'movimientos_generados' => $movimientosGenerados,
+            'status' => 'CERRADA',
         ];
     }
 
