@@ -1,19 +1,19 @@
-# Sprint Recetas 1.1 - Producci¨®n posteable a inventario
+# Sprint Recetas 1.1 - Producciï¿½ï¿½n posteable a inventario
 
 ## ?? Objetivo
-Que cocina pueda producir un lote de una subreceta (ej. Salsa Verde Base, Pollo Deshebrado) y que esa producci¨®n:
-1. Descuente autom¨¢ticamente las materias primas utilizadas.
+Que cocina pueda producir un lote de una subreceta (ej. Salsa Verde Base, Pollo Deshebrado) y que esa producciï¿½ï¿½n:
+1. Descuente automï¿½ï¿½ticamente las materias primas utilizadas.
 2. Genere inventario del producto elaborado (batch con lote/caducidad).
 3. Quede lista para ser usada en venta POS.
 
-Este sprint conecta Recetas ? Producci¨®n ? Inventario.
+Este sprint conecta Recetas ? Producciï¿½ï¿½n ? Inventario.
 
 ---
 
 ## ?? Alcance funcional
 
-1. **Orden de Producci¨®n**
-   - Crear `Orden de Producci¨®n` desde una receta tipo ELABORADO.
+1. **Orden de Producciï¿½ï¿½n**
+   - Crear `Orden de Producciï¿½ï¿½n` desde una receta tipo ELABORADO.
    - Campos:
      - receta_id (ej. Salsa Verde Base)
      - cantidad_objetivo (ej. 3.0 kg)
@@ -22,13 +22,13 @@ Este sprint conecta Recetas ? Producci¨®n ? Inventario.
      - usuario_crea / usuario_cierra
      - fecha_produccion
 
-2. **Explosi¨®n de insumos**
-   - El sistema calcula insumos requeridos seg¨²n la receta versi¨®n activa:
+2. **Explosiï¿½ï¿½n de insumos**
+   - El sistema calcula insumos requeridos segï¿½ï¿½n la receta versiï¿½ï¿½n activa:
      - jitomate 2.5 kg
      - chile serrano 0.3 kg
      - etc.
 
-3. **Captura de producci¨®n real**
+3. **Captura de producciï¿½ï¿½n real**
    - Al cerrar la orden:
      - cantidad_real_producida
      - merma_real (kg o %)
@@ -64,13 +64,18 @@ Este sprint conecta Recetas ? Producci¨®n ? Inventario.
 ## ????? Roles operativos
 - Cocina: crea y completa la orden.
 - Gerente/supervisor: autoriza posteo inventario.
-- Sistema: bloquea edici¨®n despu¨¦s de "POSTEADA_A_INVENTARIO".
+- Sistema: bloquea ediciï¿½ï¿½n despuï¿½ï¿½s de "POSTEADA_A_INVENTARIO".
 
 ---
 
 ## ?? Entregables Sprint 1.1
 - Modelo Eloquent `ProductionOrder`, `ProductionOrderLine`.
 - Servicio `ProductionPostingService`.
-- Migraci¨®n para tipo de movimiento inventario de producci¨®n.
-- Pantalla `/produccion/{id}` con flujo BORRADOR ¡ú EN_PROCESO ¡ú TERMINADA ¡ú POSTEADA_A_INVENTARIO.
+- Migraciï¿½ï¿½n para tipo de movimiento inventario de producciï¿½ï¿½n.
+- Pantalla `/produccion/{id}` con flujo BORRADOR ï¿½ï¿½ EN_PROCESO ï¿½ï¿½ TERMINADA ï¿½ï¿½ POSTEADA_A_INVENTARIO.
 
+### Nuevos tipos de movimiento
+- `PRODUCCION_SALIDA_CRUDO`: Salida de materia prima para una orden de producciÃ³n.
+- `PRODUCCION_ENTRADA_ELABORADO`: Entrada de producto terminado (sub-receta) a inventario.
+- `AJUSTE_RECETA_ERRONEA`: Movimiento de correcciÃ³n (entrada o salida) para anular el impacto de una producciÃ³n que se basÃ³ en una receta con cantidades o insumos incorrectos. Permite sanear el inventario sin eliminar la transacciÃ³n original.
+- `AJUSTE_COSTO_BATCH`: Un movimiento no-fÃ­sico que se utiliza para revaluar el costo de un lote (`inventory_batch`) cuando el costo de sus componentes ha cambiado. No afecta las cantidades en stock, solo el valor contable.

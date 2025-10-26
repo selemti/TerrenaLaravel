@@ -1,17 +1,17 @@
 # Operaciones Avanzadas (Futuro / Dise?o aprobado)
 
-Este documento describe features avanzados que el sistema debe soportar. No todos son ¡°d¨ªa 1¡±, pero deben ser contemplados al dise?ar tablas, jobs y pantallas.
+Este documento describe features avanzados que el sistema debe soportar. No todos son ï¿½ï¿½dï¿½ï¿½a 1ï¿½ï¿½, pero deben ser contemplados al dise?ar tablas, jobs y pantallas.
 
 ---
 
 ## 1?? Costo de mano de obra (labor cost) por receta
 
 ### Objetivo
-Incluir costo de preparaci¨®n (minutos de chef / auxiliar / barra) dentro del costo total de una receta y de una producci¨®n.
+Incluir costo de preparaciï¿½ï¿½n (minutos de chef / auxiliar / barra) dentro del costo total de una receta y de una producciï¿½ï¿½n.
 
-### C¨®mo se modela
+### Cï¿½ï¿½mo se modela
 - Tabla `labor_roles`
-  - rol: Cocinero L¨ªnea / Auxiliar Barra / Reposter¨ªa
+  - rol: Cocinero Lï¿½ï¿½nea / Auxiliar Barra / Reposterï¿½ï¿½a
   - rate_per_hour
 
 - Tabla propuesta `recipe_labor`
@@ -19,11 +19,11 @@ Incluir costo de preparaci¨®n (minutos de chef / auxiliar / barra) dentro del co
   - labor_role_id
   - minutos_estimados
 
-- Al calcular costo est¨¢ndar de la receta:
-  costo_insumos + ¦² (minutos_estimados * rate_per_hour / 60)
+- Al calcular costo estï¿½ï¿½ndar de la receta:
+  costo_insumos + ï¿½ï¿½ (minutos_estimados * rate_per_hour / 60)
 
 ### Uso
-- En `ProductionOrder`: ¡°esta salsa tard¨® 15 min de cocinero + 5 min de auxiliar¡±
+- En `ProductionOrder`: ï¿½ï¿½esta salsa tardï¿½ï¿½ 15 min de cocinero + 5 min de auxiliarï¿½ï¿½
 - En costeo final de PLU: ya incluye mano de obra.
 
 ---
@@ -33,10 +33,10 @@ Incluir costo de preparaci¨®n (minutos de chef / auxiliar / barra) dentro del co
 ### Problema
 No todo lo que compras se convierte 1:1 en producto usable.
 Ej:
-- Pechuga cruda ¡ú Pechuga limpia (sin grasa)
-- Cebolla entera ¡ú Cebolla fileteada
-- Cilantro ¡ú Hojas limpias
-- Pi?a entera ¡ú Pi?a pelada usable
+- Pechuga cruda ï¿½ï¿½ Pechuga limpia (sin grasa)
+- Cebolla entera ï¿½ï¿½ Cebolla fileteada
+- Cilantro ï¿½ï¿½ Hojas limpias
+- Pi?a entera ï¿½ï¿½ Pi?a pelada usable
 
 ### Propuesta
 - Tabla `prep_steps`
@@ -48,25 +48,25 @@ Ej:
   - step_id
   - item_raw_id (ej. Pechuga cruda)
   - item_prepped_id (ej. Pechuga limpia fileteable)
-  - merma_tipo (hueso, c¨¢scara, etc.)
+  - merma_tipo (hueso, cï¿½ï¿½scara, etc.)
 
 ### Uso
-- Producci¨®n puede registrar:
-  - ¡°Recib¨ª 10 kg de pechuga cruda¡±
-  - ¡°Obtuve 8.2 kg de pechuga limpia¡±
-- Esa pechuga limpia se convierte en el item que usan las recetas (y el costo por kg sube autom¨¢ticamente porque ya absorbi¨® la merma).
+- Producciï¿½ï¿½n puede registrar:
+  - ï¿½ï¿½Recibï¿½ï¿½ 10 kg de pechuga crudaï¿½ï¿½
+  - ï¿½ï¿½Obtuve 8.2 kg de pechuga limpiaï¿½ï¿½
+- Esa pechuga limpia se convierte en el item que usan las recetas (y el costo por kg sube automï¿½ï¿½ticamente porque ya absorbiï¿½ï¿½ la merma).
 
-Esto es clave para costeo real y para cuando un gerente pregunta ¡°por qu¨¦ el pollo ¡®me cuesta¡¯ m¨¢s caro que al proveedor¡±.
+Esto es clave para costeo real y para cuando un gerente pregunta ï¿½ï¿½por quï¿½ï¿½ el pollo ï¿½ï¿½me cuestaï¿½ï¿½ mï¿½ï¿½s caro que al proveedorï¿½ï¿½.
 
 ---
 
 ## 3?? Multi-sucursal y transferencias internas
 
 ### Objetivo
-Permitir que una cocina central produzca subrecetas y las env¨ªe a otra sucursal con trazabilidad de lote.
+Permitir que una cocina central produzca subrecetas y las envï¿½ï¿½e a otra sucursal con trazabilidad de lote.
 
 ### Flujo
-1. Sucursal A genera producci¨®n (ej. 10 L Salsa Verde Base).
+1. Sucursal A genera producciï¿½ï¿½n (ej. 10 L Salsa Verde Base).
 2. Crea una **Orden de Transferencia** hacia Sucursal B:
    - lote_id
    - cantidad_enviada
@@ -78,7 +78,7 @@ Permitir que una cocina central produzca subrecetas y las env¨ªe a otra sucursal
 ### Notas
 - Esto requiere una tabla `transfer_orders` (+ `transfer_order_lines`) con estados:
   - BORRADOR / ENVIADA / RECIBIDA.
-- Las salidas/entradas deben mantener `inventory_batch_id` para mantener trazabilidad sanitaria (¡°qu¨¦ lote se us¨® en qu¨¦ ticket en qu¨¦ sucursal¡±).
+- Las salidas/entradas deben mantener `inventory_batch_id` para mantener trazabilidad sanitaria (ï¿½ï¿½quï¿½ï¿½ lote se usï¿½ï¿½ en quï¿½ï¿½ ticket en quï¿½ï¿½ sucursalï¿½ï¿½).
 
 ---
 
@@ -89,17 +89,17 @@ Evitar que cocina/venta use producto caducado o en retiro sanitario.
 
 ### Estados de batch en `inventory_batch.estado`:
 - `ACTIVO`: se puede consumir.
-- `BLOQUEADO`: no usar temporalmente (ej. sospecha de contaminaci¨®n).
+- `BLOQUEADO`: no usar temporalmente (ej. sospecha de contaminaciï¿½ï¿½n).
 - `RECALL`: debe retirarse de TODAS las sucursales.
 
 ### Reglas
 - `VENTA_POS` no puede consumir de un batch BLOQUEADO o RECALL.
-- Producci¨®n no puede usar insumo BLOQUEADO/RECALL.
+- Producciï¿½ï¿½n no puede usar insumo BLOQUEADO/RECALL.
 - Interfaz para gerente: marcar un lote como BLOQUEADO y capturar motivo.
 
 ### Opcional
 - Job nocturno que revise caducidad:
-  - Si `fecha_caducidad` < hoy ¡ú mover batch a BLOQUEADO autom¨¢ticamente.
+  - Si `fecha_caducidad` < hoy ï¿½ï¿½ mover batch a BLOQUEADO automï¿½ï¿½ticamente.
   - Generar `alert_events` para gerente.
 
 ---
@@ -107,7 +107,7 @@ Evitar que cocina/venta use producto caducado o en retiro sanitario.
 ## 5?? Etiquetado sanitario de lote
 (Futuro, pero ya se debe contemplar el campo)
 
-- Cada `inventory_batch` deber¨ªa poder almacenar:
+- Cada `inventory_batch` deberï¿½ï¿½a poder almacenar:
   - `codigo_lote_interno`
   - `fecha_preparacion`
   - `fecha_caducidad`
@@ -117,20 +117,53 @@ Evitar que cocina/venta use producto caducado o en retiro sanitario.
 
 ---
 
-## 6?? Auditor¨ªa de producci¨®n vs consumo
+## 6?? Auditorï¿½ï¿½a de producciï¿½ï¿½n vs consumo
 
 Cruzar:
-- ?Cu¨¢nto Salsa Verde producimos esta ma?ana?
-- ?Cu¨¢ntos tickets con Salsa Verde se vendieron despu¨¦s?
-- ?Cu¨¢nto stock deber¨ªa quedar?
-- ?Cu¨¢nto stock queda f¨ªsicamente?
+- ?Cuï¿½ï¿½nto Salsa Verde producimos esta ma?ana?
+- ?Cuï¿½ï¿½ntos tickets con Salsa Verde se vendieron despuï¿½ï¿½s?
+- ?Cuï¿½ï¿½nto stock deberï¿½ï¿½a quedar?
+- ?Cuï¿½ï¿½nto stock queda fï¿½ï¿½sicamente?
 
 Esto permite detectar fuga (robo, sobre-porcionado, fallas en captura) sin esperar al inventario mensual.
 
 ---
 
-## Estado de este documento
-- Este documento describe features de nivel ¡°madurez cadena¡±.
-- La base de datos actual (production_order, mov_inv, inventory_batch, alert_rules, etc.) ya es compatible con casi todo, s¨®lo requiere completar servicios y pantallas.
-- Esto sirve de gu¨ªa a ingenier¨ªa para Sprint Recetas 2.1+ y tambi¨¦n para auditor¨ªa / inocuidad.
 
+---
+
+## 7.0 Costo por Lote y RevaluaciÃ³n de Inventarios
+
+Para un control financiero preciso, el sistema maneja un esquema de costeo dual que separa el costo real de producciÃ³n del costo estÃ¡ndar para anÃ¡lisis.
+
+### 7.1 Costo por Lote (Costo Real)
+
+-   **Concepto:** Cada lote (`inventory_batch`) que se produce o se recibe de un proveedor tiene su propio costo unitario (`unit_cost`). Este es el costo "real" y se utiliza para la valoraciÃ³n contable del inventario.
+-   **CÃ¡lculo en ProducciÃ³n:** Cuando se crea un lote de una sub-receta, su `unit_cost` se calcula basÃ¡ndose en el costo promedio ponderado de los insumos consumidos en esa orden de producciÃ³n especÃ­fica.
+-   **Impacto:** Este es el costo que se utiliza para calcular el Costo de MercancÃ­a Vendida (CMV) cuando un producto final se vende.
+
+### 7.2 RevaluaciÃ³n de Lotes
+
+-   **Escenario:** A veces, el costo de un lote debe ser ajustado post-producciÃ³n. Por ejemplo, si se descubre un error en el precio de compra de una materia prima clave.
+-   **Mecanismo:** Se utiliza el tipo de movimiento `AJUSTE_COSTO_BATCH`. Este es un movimiento no fÃ­sico (no altera la cantidad en stock) que modifica el `unit_cost` del lote y genera un asiento contable para registrar la revaluaciÃ³n del inventario.
+
+### 7.3 Costo EstÃ¡ndar y Snapshots Diarios
+
+-   **Concepto:** El costo estÃ¡ndar es un costo de referencia o "ideal" para una receta, calculado con los precios mÃ¡s actuales de los insumos. No se utiliza para la contabilidad del inventario, sino para el anÃ¡lisis y la toma de decisiones.
+-   **Proceso:** El job `RecipeCostSnapshotJob` se ejecuta cada noche.
+    1.  Obtiene los costos mÃ¡s recientes de todas las materias primas.
+    2.  Recalcula el costo de cada receta y sub-receta.
+    3.  Guarda este costo en la tabla `recipe_cost_history` con la fecha del dÃ­a.
+-   **Uso:**
+    -   **IngenierÃ­a de MenÃº:** Analizar la rentabilidad de los platos con un costo consistente.
+    -   **FijaciÃ³n de Precios:** Tomar decisiones de precios basÃ¡ndose en un costo estable y actualizado.
+    -   **DetecciÃ³n de Variaciones:** Comparar el costo real de producciÃ³n de un lote con el costo estÃ¡ndar del dÃ­a para identificar ineficiencias, mermas excesivas o problemas de compra.
+
+---
+
+## Estado de este documento
+- Este documento describe features de nivel "madurez cadena".
+- La base de datos actual (production_order, mov_inv, inventory_batch, alert_rules, etc.) ya es compatible con casi todo, sÃ³lo requiere completar servicios y pantallas.
+- Esto sirve de guÃ­a a ingenierÃ­a para Sprint Recetas 2.1+ y tambiÃ©n para auditorÃ­a / inocuidad.
+
+*VersiÃ³n 2.1 â€” Octubre 2025*

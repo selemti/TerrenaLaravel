@@ -1,62 +1,81 @@
-# Sprint Recetas 1.2 - Consumo POS autom®¢tico
+# Sprint Recetas 1.2 - Dashboard de Control y Alertas
 
-## ?? Objetivo
-Cuando se vende algo en el POS (ej. "Enchiladas Rellenas con Salsa Verde y Pollo"), el sistema debe:
-1. Identificar la receta base del producto vendido.
-2. Identificar los modificadores seleccionados (salsa, prote®™na, empaque para llevar).
-3. Calcular las cantidades de cada insumo/subreceta.
-4. Registrar la salida de inventario (`mov_inv`) asociada al ticket.
+*Versi√≥n 1.0 ‚Äî Octubre 2025*
 
----
+## üéØ Objetivo
+Proporcionar al equipo de Costos y Operaciones una herramienta centralizada para monitorear la salud del sistema de recetas, identificar problemas de mapeo, gestionar el reprocesamiento de ventas y actuar sobre alertas cr√≠ticas de inventario.
 
-## ?? Alcance funcional
-
-1. **Enlace POS °˙ Receta**
-   - Cada `menu_item` apunta a una `recipe_version`.
-   - Cada modificador POS apunta a una `recipe_version` (ej. "Salsa Verde Base", "Prote®™na Pollo Deshebrado", "Empaque Platillo Caliente").
-
-2. **Explosi®Æn de receta al momento de venta**
-   - Para cada `ticket_item`:
-     - Consumir receta base (tortilla, crema, queso, frijol, etc.).
-   - Para cada `ticket_item_modifier`:
-     - Consumir receta_modificador_id asignada (salsa espec®™fica, prote®™na espec®™fica, empaque si aplica).
-
-3. **Descarga de inventario**
-   - Consolidar todas las cantidades por item_id.
-   - Generar `mov_inv` tipo `VENTA_POS` con detalle:
-     - item_id
-     - cantidad_salida
-     - batch_id (seg®≤n FEFO / PEPS por sucursal)
-     - referencia ticket
-
-4. **Empaque / to-go**
-   - Si el ticket trae flag "para llevar", inyectar receta `Empaque Platillo Caliente`:
-     - Charola t®¶rmica
-     - Cubiertos desechables
-     - Servilleta
-     - Vasito salsa
+Este sprint se enfoca en la visibilidad y la capacidad de acci√≥n.
 
 ---
 
-## ?? Tablas / campos usados
-- `tickets`, `ticket_items`, `ticket_item_modifiers`
-- `recipes`, `recipe_versions`, `recipe_version_items`
-- `modificadores_pos` (campo `receta_modificador_id`)
-- `inventory_batch`
-- `mov_inv` tipo `VENTA_POS`
+## üõ†Ô∏è Alcance Funcional
+
+### 1.0 Dashboard de Mapeo POS ‚Üî Recetas
+
+El dashboard ser√° la pantalla principal y mostrar√° los siguientes indicadores clave (widgets):
+
+-   **Widget 1: Estado del Mapeo de Productos**
+    -   **M√©trica Principal:** Porcentaje de `menu_items` activos que est√°n correctamente mapeados a una receta.
+    -   **Detalle:**
+        -   Total de productos vendidos hoy.
+        -   N√∫mero de productos vendidos sin receta.
+        -   Lista de los 10 productos m√°s vendidos sin receta (para priorizar el mapeo).
+    -   **Acci√≥n:** Enlace directo para mapear los productos faltantes.
+
+-   **Widget 2: Ventas Pendientes de Reproceso**
+    -   **M√©trica Principal:** N√∫mero total de `ticket_items` marcados con `requiere_reproceso = true`.
+    -   **Detalle:**
+        -   Agrupaci√≥n por `menu_item`.
+        -   Fecha de la venta m√°s antigua y m√°s reciente pendiente.
+    -   **Acci√≥n:** Bot√≥n para iniciar el `ReprocessSalesJob` para los productos que ya han sido mapeados.
+
+-   **Widget 3: Alertas del Sistema (`alert_events`)**
+    -   **M√©trica Principal:** Conteo de alertas abiertas por tipo.
+    -   **Detalle:**
+        -   `VENTA_SIN_RECETA`: Listado de ventas.
+        -   `MODIFICADOR_SIN_RECETA`: Listado de modificadores.
+        -   `STOCK_NEGATIVO_ERROR`: Alerta cr√≠tica si un reproceso o producci√≥n intenta llevar un insumo a stock negativo.
+    -   **Acci√≥n:** Enlaces para resolver cada tipo de alerta (ej. "Mapear Receta", "Ver Lote Afectado").
 
 ---
 
-## ?? Notas importantes
-- Este consumo POS es lo que permite que stock en c®¢mara / almac®¶n baje en tiempo real sin captura manual.
-- Esto tambi®¶n alimenta costo de venta por PLU, margen, ingenier®™a de men®≤.
-- Requiere que ya exista stock posteado desde Producci®Æn (Sprint 1.1) para subrecetas tipo Salsa Verde, Pollo Deshebrado, etc.
+## 2.0 Modelo de Datos / Tablas Involucradas
+
+-   `menu_items`: Para identificar productos del POS.
+-   `pos_map`: La tabla central del mapeo.
+-   `ticket_items`: Para buscar ventas con `requiere_reproceso = true`.
+-   `alert_events`: La fuente de datos para el widget de alertas.
+-   `mov_inv`: Para rastrear el impacto de los reprocesos.
+-   `inventory_batch`: Para verificar existencias antes de procesar.
 
 ---
 
-## ?? Entregables Sprint 1.2
-- Servicio `PosConsumptionService`.
-- Funci®Æn para mapear ticket_item °˙ recipe_version °˙ insumos.
-- Generaci®Æn autom®¢tica de `mov_inv` tipo `VENTA_POS`.
-- Estrategia FEFO al seleccionar lotes de `inventory_batch`.
-- Dashboard t®¶cnico de auditor®™a: "ticket vs consumo registrado".
+## 3.0 Roles Operativos
+
+-   **Analista de Costos:**
+    -   Monitorea el dashboard diariamente.
+    -   Responsable de mantener el porcentaje de mapeo > 99%.
+    -   Ejecuta el reprocesamiento despu√©s de mapear productos.
+    -   Investiga y resuelve alertas de stock.
+-   **Gerente de Operaciones:**
+    -   Supervisa los indicadores clave para asegurar la integridad del inventario.
+    -   Utiliza la informaci√≥n para detectar problemas operativos (ej. un producto nuevo lanzado sin notificar a Costos).
+
+> El bot√≥n **Reprocesar** solo est√° disponible para roles con permiso `can_reprocess_sales`. Caja y barista no tienen acceso a esta acci√≥n.
+
+---
+
+## 4.0 Entregables Sprint 1.2
+
+-   **Livewire Component:** `RecipeControlDashboard.php`.
+-   **Vista Blade:** `recipe-control-dashboard.blade.php`.
+-   **Servicios de Backend:**
+    -   `DashboardMetricsService`: Para calcular los KPIs.
+    -   `AlertNotificationService`: Para agrupar y presentar las alertas.
+-   **Ruta:** `/control/recetas` protegida por el permiso `view_recipe_dashboard`.
+-   **Jobs:**
+    -   `CheckUnmappedSalesJob` (ya definido, se asegura que alimente el dashboard).
+    -   `ReprocessSalesJob` (ya definido, se invoca desde el dashboard).
+
+*Versi√≥n 2.1 ‚Äî Octubre 2025*

@@ -90,3 +90,45 @@ Cada opción de modificador POS tiene un campo `receta_modificador_id` que apunt
 ---
 
 📍 *Autor: Equipo SelemTI · Versión 1.0 (Octubre 2025)*
+
+---
+
+## 10.0 Control POS ↔ Recetas ↔ Inventario (Versión 2.1)
+
+A partir de la versión 2.1, el sistema introduce un conjunto de herramientas avanzadas para garantizar la integridad entre las ventas del punto de venta, las recetas y el inventario físico.
+
+### 10.1 Mapeo POS ↔ Recetas y Modificadores
+
+El núcleo del control de inventario es el mapeo preciso entre lo que se vende y lo que se consume. El sistema formaliza este vínculo a través de la tabla `pos_map`, que conecta cada `menu_item` del POS con su `recipe` correspondiente.
+
+-   **Ventas sin Receta:** El sistema detecta y alerta sobre productos vendidos que no tienen una receta asignada.
+-   **Modificadores con Impacto:** Los modificadores (ej. "agregar aguacate") se vinculan a sus propias mini-recetas para ajustar el consumo de insumos en tiempo real.
+-   **Dashboard de Control:** Una pantalla centralizada (`STATUS_RECETAS_1.2.md`) muestra el estado de salud del mapeo y las acciones requeridas.
+
+➡️ **Documento de referencia:** [`POS_MAPPING.md`](POS_MAPPING.md)
+
+### 10.2 Reprocesamiento Retroactivo de Ventas
+
+Para manejar el desfase operativo entre el lanzamiento de un producto en el POS y la creación de su receta, el sistema implementa un flujo de reprocesamiento.
+
+-   **Detección Automática:** Las ventas de productos no mapeados se marcan automáticamente como `requiere_reproceso`.
+-   **Ajuste Retroactivo:** Una vez que la receta se mapea, un job puede ejecutarse para generar los movimientos de inventario (`AJUSTE_REPROCESO_POS`) correspondientes a esas ventas pasadas.
+-   **Fecha de Corte:** El reprocesamiento respeta los periodos contables cerrados para mantener la integridad financiera.
+
+➡️ **Documento de referencia:** [`POS_REPROCESSING.md`](POS_REPROCESSING.md)
+
+### 10.3 Control de Costos por Lote y Estándar
+
+El sistema evoluciona hacia un modelo de costeo dual para permitir tanto una valoración precisa del inventario como un análisis de rentabilidad robusto.
+
+-   **Costo Real (por Lote):** Cada `inventory_batch` almacena el costo real de su producción. Este costo se usa para la contabilidad y el CMV.
+-   **Costo Estándar (Snapshot):** Diariamente, el `RecipeCostSnapshotJob` calcula el costo "ideal" de cada receta con los precios de insumos más recientes y lo guarda en `recipe_cost_history` para análisis de tendencias y rentabilidad.
+-   **Ajustes y Correcciones:** Se introducen movimientos como `AJUSTE_RECETA_ERRONEA` y `AJUSTE_COSTO_BATCH` para corregir errores y revaluar inventarios.
+
+➡️ **Documentos de referencia:**
+-   [`STATUS_RECETAS_2.0.md`](STATUS_RECETAS_2.0.md)
+-   [`ADVANCED_OPERATIONS.md`](ADVANCED_OPERATIONS.md)
+
+---
+
+*Versión 2.1 — Octubre 2025*
