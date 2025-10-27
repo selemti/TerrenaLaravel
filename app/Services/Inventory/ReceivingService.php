@@ -104,6 +104,31 @@ class ReceivingService
     }
 
     /**
+     * Applies final costing per STATUS_SPRINT_1.4 §3.2 by valuating the reception and refreshing item costs.
+     *
+     * @param int $recepcionId Reception identifier already posteada.
+     * @param int $userId User finalizing costing (compras / finanzas).
+     * @return array Aggregate totals for UI confirmation.
+     */
+    public function finalizeCosting(int $recepcionId, int $userId): array
+    {
+        $this->guardPositiveId($recepcionId, 'recepcion');
+        $this->guardPositiveId($userId, 'user');
+
+        // TODO: Load recepcion lines (qty_recibida, costo_unitario_final) and cabecera currency.
+        // TODO: Calculate total_valorizado = sum(qty_recibida * costo_unitario_final).
+        // TODO: Update recepcion_cab set total_valorizado, last_cost_applied=true, status=COSTO_FINAL_APLICADO, user/time.
+        // TODO: Update latest purchase cost for each item/vendor to feed future suggestions.
+        $totalValorizado = 0.0;
+
+        return [
+            'recepcion_id' => $recepcionId,
+            'total_valorizado' => $totalValorizado,
+            'status' => 'COSTO_FINAL_APLICADO',
+        ];
+    }
+
+    /**
      * Basic guard for positive identifiers.
      */
     protected function guardPositiveId(int $id, string $label): void

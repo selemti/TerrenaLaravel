@@ -67,4 +67,17 @@ class ReceivingController extends Controller
             'message' => 'Recepción posteada al inventario.',
         ]);
     }
+
+    public function finalizeCosting(int $recepcion_id, Request $request): JsonResponse
+    {
+        // TODO: autorización por permiso inventory.receptions.cost_finalize
+        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+        $data = $this->receivingService->finalizeCosting($recepcion_id, $userId);
+
+        return response()->json([
+            'ok' => true,
+            'data' => $data,
+            'message' => 'Costeo final aplicado.',
+        ]);
+    }
 }

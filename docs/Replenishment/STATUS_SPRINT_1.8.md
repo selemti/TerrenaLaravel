@@ -1,10 +1,15 @@
+
+---
+
+### 6. `docs/Replenishment/STATUS_SPRINT_1.8.md`
+
+```md
 # 🧭 STATUS SPRINT 1.8 – Reportes y KPIs Operativos
 
-Objetivo: Exponer métricas básicas para dirección/operaciones desde datos que ya capturamos.
-
-Estado general: Planificado  
-Fecha: 2025-10-25  
-Esquema BD: `selemti`
+**Objetivo:** Exponer métricas básicas para dirección/operaciones usando los datos ya capturados.  
+**Estado general:** 📋 Planificado  
+**Fecha:** 2025-10-25  
+**Esquema BD:** `selemti`
 
 ---
 
@@ -12,24 +17,52 @@ Esquema BD: `selemti`
 - % de recepción fuera de tolerancia por proveedor
 - Tiempo promedio entre PO → Recepción posteada
 - Rotación aproximada de inventario por categoría
-- Top 10 insumos urgentes (prioridad URGENTE)
+- Top 10 insumos urgentes (prioridad `URGENTE`)
+
+Estos KPIs alimentan dashboards internos / Livewire.
 
 ---
 
 ## 2. Trabajo técnico Sprint 1.8
-- `ReportsController` bajo `/api/reports/...`
-  Endpoints read-only, sin mutar BD.
-  Ejemplo:
-  - `/api/reports/purchasing/late-po`
-  - `/api/reports/inventory/over-tolerance`
-  - `/api/reports/inventory/top-urgent`
 
-- Cada método arma un query builder (DB::table(...)) y regresa JSON consumible por dashboard interno Livewire más tarde.
+### 2.1 Nuevo controlador:
+`app/Http/Controllers/Reports/ReportsController.php`
 
-- No necesitamos cache todavía, pero dejar TODO para caching/report snapshots futuro.
+Acciones READ-ONLY que devuelven JSON, ejemplos:
+```php
+purchasingLatePO(): JsonResponse
+inventoryOverTolerance(): JsonResponse
+inventoryTopUrgent(): JsonResponse
+Cada método:
 
----
+arma un query builder (DB::table(...))
 
-## 3. Permisos
-- reports.view.purchasing
-- reports.view.inventory
+return response()->json(['ok' => true, 'data' => $rows])
+
+// TODO caching/report snapshots
+
+2.2 Rutas
+
+Bajo /api/reports/...:
+
+GET /api/reports/purchasing/late-po
+
+GET /api/reports/inventory/over-tolerance
+
+GET /api/reports/inventory/top-urgent
+
+2.3 Permisos
+
+reports.view.purchasing
+
+reports.view.inventory
+
+3. Criterio de cierre Sprint 1.8
+
+ReportsController creado.
+
+Rutas GET creadas.
+
+Cada acción arma el esqueleto de query builder (sin lógica compleja todavía).
+
+Comentado el TODO de cache/snapshots para futuro.

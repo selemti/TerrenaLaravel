@@ -22,9 +22,12 @@ use App\Http\Controllers\Api\Inventory\PriceController;
 use App\Http\Controllers\Api\Inventory\RecipeCostController;
 use App\Http\Controllers\Api\Inventory\StockController;
 use App\Http\Controllers\Api\Inventory\VendorController;
+use App\Http\Controllers\Inventory\TransferController;
 use App\Http\Controllers\Api\CatalogsController;
+use App\Http\Controllers\Production\ProductionController;
 use App\Http\Controllers\Purchasing\PurchaseSuggestionController;
 use App\Http\Controllers\Purchasing\ReceivingController;
+use App\Http\Controllers\Purchasing\ReturnController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +51,9 @@ Route::prefix('reports')->group(function () {
     Route::get('/stock/val',            [ReportsController::class, 'stockValorizado']);
     Route::get('/consumo/vr',           [ReportsController::class, 'consumoVsMovimientos']);
     Route::get('/anomalias',            [ReportsController::class, 'anomalos']);
+    Route::get('/purchasing/late-po', [\App\Http\Controllers\Reports\ReportsController::class, 'purchasingLatePO']);
+    Route::get('/inventory/over-tolerance', [\App\Http\Controllers\Reports\ReportsController::class, 'inventoryOverTolerance']);
+    Route::get('/inventory/top-urgent', [\App\Http\Controllers\Reports\ReportsController::class, 'inventoryTopUrgent']);
 });
 
 /*
@@ -155,6 +161,14 @@ Route::prefix('inventory')->group(function () {
     // Movements
     Route::post('/movements', [StockController::class, 'createMovement']);
 
+    Route::prefix('transfers')->group(function () {
+        Route::post('/create', [TransferController::class, 'create']);
+        Route::post('/{transfer_id}/approve', [TransferController::class, 'approve']);
+        Route::post('/{transfer_id}/ship', [TransferController::class, 'ship']);
+        Route::post('/{transfer_id}/receive', [TransferController::class, 'receive']);
+        Route::post('/{transfer_id}/post', [TransferController::class, 'post']);
+    });
+
     // Items
     Route::prefix('items')->group(function () {
         Route::get('/', [ItemController::class, 'index']);
@@ -176,6 +190,18 @@ Route::prefix('inventory')->group(function () {
 
 // Costeo de recetas
 Route::get('/recipes/{id}/cost', [RecipeCostController::class, 'show']);
+
+/*
+|--------------------------------------------------------------------------
+| MÓDULO: PRODUCCIÓN INTERNA
+|--------------------------------------------------------------------------
+*/
+Route::prefix('production')->group(function () {
+    Route::post('/batch/plan', [ProductionController::class, 'plan']);
+    Route::post('/batch/{batch_id}/consume', [ProductionController::class, 'consume']);
+    Route::post('/batch/{batch_id}/complete', [ProductionController::class, 'complete']);
+    Route::post('/batch/{batch_id}/post', [ProductionController::class, 'post']);
+});
 
 // Alertas de costos
 Route::get('/alerts', [AlertsController::class, 'index']);
@@ -209,6 +235,16 @@ Route::prefix('purchasing')->group(function () {
         Route::post('/{recepcion_id}/lines', [ReceivingController::class, 'setLines']);
         Route::post('/{recepcion_id}/validate', [ReceivingController::class, 'validateReception']);
         Route::post('/{recepcion_id}/post', [ReceivingController::class, 'postReception']);
+        Route::post('/{recepcion_id}/costing', [ReceivingController::class, 'finalizeCosting']);
+    });
+
+    Route::prefix('returns')->group(function () {
+        Route::post('/create-from-po/{purchase_order_id}', [ReturnController::class, 'createFromPO']);
+        Route::post('/{return_id}/approve', [ReturnController::class, 'approve']);
+        Route::post('/{return_id}/ship', [ReturnController::class, 'ship']);
+        Route::post('/{return_id}/confirm', [ReturnController::class, 'confirm']);
+        Route::post('/{return_id}/post', [ReturnController::class, 'post']);
+        Route::post('/{return_id}/credit-note', [ReturnController::class, 'creditNote']);
     });
 });
 
