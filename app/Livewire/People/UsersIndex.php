@@ -207,6 +207,29 @@ class UsersIndex extends Component
         $this->refreshSelectedUserState($user);
         $this->loadUsersList();
         $this->loadRoleList();
+        
+        // TODO auditoría de cambios de acceso:
+        // Registrar en selemti.audit_log quién modificó los permisos/roles de este usuario.
+        //
+        // try {
+        //     $this->auditLogService->logAction(
+        //         userId: (int) auth()->id(), // el admin que hizo el cambio
+        //         accion: 'USER_PERMISSIONS_UPDATE',
+        //         entidad: 'user',
+        //         entidadId: (int) $this->selectedUserId, // ID del usuario que fue editado
+        //         motivo: 'Actualización de accesos desde panel de administración',
+        //         evidenciaUrl: null,
+        //         payload: [
+        //             'assigned_roles' => $this->editRoles ?? [],          // array de IDs de roles asignados
+        //             'direct_permissions' => [],    // array de nombres de permiso directos
+        //         ],
+        //     );
+        // } catch (\Throwable $e) {
+        //     // IMPORTANTE:
+        //     // Nunca rompemos la UI si falla el log.
+        //     // El fallo de auditoría NO debe bloquear al usuario final.
+        //     // Podemos agregar un log interno aquí si el proyecto ya tiene logging.
+        // }
     }
 
     public function saveUserOverrides(): void
@@ -237,6 +260,29 @@ class UsersIndex extends Component
 
         $user->load('roles.permissions', 'permissions');
         $this->refreshSelectedUserState($user);
+        
+        // TODO auditoría de cambios de acceso:
+        // Registrar en selemti.audit_log quién modificó los permisos/roles de este usuario.
+        //
+        // try {
+        //     $this->auditLogService->logAction(
+        //         userId: (int) auth()->id(), // el admin que hizo el cambio
+        //         accion: 'USER_PERMISSIONS_UPDATE',
+        //         entidad: 'user',
+        //         entidadId: (int) $this->selectedUserId, // ID del usuario que fue editado
+        //         motivo: 'Actualización de accesos desde panel de administración',
+        //         evidenciaUrl: null,
+        //         payload: [
+        //             'assigned_roles' => [],          // array de slugs/nombres de rol
+        //             'direct_permissions' => array_keys(array_filter($this->editMatrix ?? [])),    // array de nombres de permiso directos
+        //         ],
+        //     );
+        // } catch (\Throwable $e) {
+        //     // IMPORTANTE:
+        //     // Nunca rompemos la UI si falla el log.
+        //     // El fallo de auditoría NO debe bloquear al usuario final.
+        //     // Podemos agregar un log interno aquí si el proyecto ya tiene logging.
+        // }
     }
 
     public function updatingUserSearch(): void
@@ -340,16 +386,29 @@ class UsersIndex extends Component
 
         $this->closeUserModal();
         session()->flash('user-notice', $this->editingUser ? 'Usuario actualizado correctamente.' : 'Usuario creado correctamente.');
-        // TODO auditoría:
-        // AuditLogService->logAction(
-        //     auth()->id(),
-        //     'USER_PERMISSIONS_UPDATE',
-        //     'user',
-        //     $this->editingUser ? $this->editingUser->id : $newUserId,
-        //     'Actualización de usuario desde panel de administración',
-        //     null,
-        //     [/* diff de roles/permisos aplicados */]
-        // );
+        
+        // TODO auditoría de cambios de acceso:
+        // Registrar en selemti.audit_log quién modificó los permisos/roles de este usuario.
+        //
+        // try {
+        //     $this->auditLogService->logAction(
+        //         userId: (int) auth()->id(), // el admin que hizo el cambio
+        //         accion: 'USER_PERMISSIONS_UPDATE',
+        //         entidad: 'user',
+        //         entidadId: (int) ($this->editingUser ? $this->editingUserId : $newUserId), // ID del usuario que fue editado / creado
+        //         motivo: 'Actualización de accesos desde panel de administración',
+        //         evidenciaUrl: null,
+        //         payload: [
+        //             'assigned_roles' => [],          // array de slugs/nombres de rol
+        //             'direct_permissions' => [],    // array de nombres de permiso
+        //         ],
+        //     );
+        // } catch (\Throwable $e) {
+        //     // IMPORTANTE:
+        //     // Nunca rompemos la UI si falla el log.
+        //     // El fallo de auditoría NO debe bloquear al usuario final.
+        //     // Podemos agregar un log interno aquí si el proyecto ya tiene logging.
+        // }
     }
 
     public function toggleActive(int $userId): void
