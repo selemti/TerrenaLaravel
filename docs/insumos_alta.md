@@ -30,17 +30,14 @@
 
 ## Flujo de alta individual
 1. Seleccionar Categoría (CAT) y Subcategoría (SUB) en la UI de alta.
-2. Completar datos obligatorios: nombre, unidad de medida, banderas (perecible, merma, SKU opcional).
-3. El sistema muestra un “Código sugerido” con el formato `CAT-SUB-#####`.
+2. Completar datos obligatorios: nombre, unidad base, banderas (perecible, merma, SKU opcional).
+3. El sistema valida la unidad base (solo `KG`, `L`, `PZA`) y completa los datos obligatorios.
 4. Al guardar se invoca el servicio `InsumoCodeService`, se genera el consecutivo y se persiste en `selemti.insumo`.
 5. El backend devuelve `{ ok: true, id, codigo }` y la interfaz limpia el formulario.
 
 ## Notas de UI
-- El dropdown de unidades (`UOM`) se alimenta dinámicamente del catálogo `selemti.unidades_medida` y valida que el ID exista.
-- El código sugerido se muestra en un campo de solo lectura como `CAT-SUB-##### (provisional)` y se actualiza al cambiar la categoría o subcategoría.
-- El campo **Meta (JSON)** incluye ayuda contextual y valida que el contenido sea JSON válido antes de enviar la petición.
+- La “Unidad base (KG/L/PZA)” del formulario se carga desde `selemti.cat_unidades` y solo permite seleccionar esas tres claves.
 
 ## Consideraciones adicionales
-- `um_id` referencia el catálogo de unidades existente y se selecciona a través del dropdown cargado desde `selemti.unidades_medida`.
-- `meta` permite adjuntar datos adicionales en JSON (ej. proveedor preferente, notas internas).
+- `um_id` referencia el catálogo de unidades existente y se selecciona a través del dropdown filtrado de `selemti.cat_unidades`.
 - `perecible` y `merma_pct` ayudan al costeo y a la política FEFO/PEPS en inventario.

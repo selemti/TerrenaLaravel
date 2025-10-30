@@ -1,0 +1,164 @@
+SET
+====================================================================
+VERIFICACIÓN 1: Conteo de UOM y Conversiones
+====================================================================
+             metrica             | valor 
+---------------------------------+-------
+ Total UOM activas               |    29
+ Conversiones totales            |    26
+ Conversiones exactas            |    14
+ Conversiones aproximadas        |    12
+ Conversiones globales           |    14
+ Conversiones culinarias (house) |    12
+(6 filas)
+
+
+====================================================================
+VERIFICACIÓN 2: Catálogo Completo de UOM
+====================================================================
+psql:C:/xampp3/htdocs/TerrenaLaravel/BD/UOM_Verification_Queries.sql:94: ERROR:  no existe la columna «categoria»
+L�NEA 19:         WHEN categoria = 'Masa' THEN 1
+                      ^
+
+====================================================================
+VERIFICACIÓN 3: Roundtrip Tests (Ida y Vuelta)
+====================================================================
+      ruta      |   kg_to_g   | g_to_kg  | roundtrip_factor |      status       
+----------------+-------------+----------+------------------+-------------------
+ KG → G → KG    | 1000.000000 | 0.001000 |   1.000000000000 | ✓ EXACTO
+ L → ML → L     | 1000.000000 | 0.001000 |   1.000000000000 | ✓ EXACTO
+ CUP → ML → CUP |  240.000000 | 0.004167 |   1.000080000000 | ✓ APROXIMADO (OK)
+(3 filas)
+
+
+====================================================================
+VERIFICACIÓN 4: Vistas de Compatibilidad
+====================================================================
+     table_name      | table_type | status 
+---------------------+------------+--------
+ conversiones_unidad | VIEW       | ✓ OK
+ unidad_medida       | VIEW       | ✓ OK
+ unidades_medida     | VIEW       | ✓ OK
+ uom_conversion      | VIEW       | ✓ OK
+(4 filas)
+
+
+====================================================================
+VERIFICACIÓN 5: Tablas Legacy Renombradas
+====================================================================
+         table_name         | table_type | status 
+----------------------------+------------+--------
+ conversiones_unidad_legacy | BASE TABLE | ✓ OK
+ unidad_medida_legacy       | BASE TABLE | ✓ OK
+ unidades_medida_legacy     | BASE TABLE | ✓ OK
+ uom_conversion_legacy      | BASE TABLE | ✓ OK
+(4 filas)
+
+
+====================================================================
+VERIFICACIÓN 6: Conversiones Métricas (Masa)
+====================================================================
+ desde | hasta |   factor    |  tipo  | scope  |      notes       
+-------+-------+-------------+--------+--------+------------------
+ G     | KG    |    0.001000 | Exacta | global | Métrica estándar
+ G     | MG    | 1000.000000 | Exacta | global | Métrica estándar
+ KG    | G     | 1000.000000 | Exacta | global | Métrica estándar
+ MG    | G     |    0.001000 | Exacta | global | Métrica estándar
+(4 filas)
+
+
+====================================================================
+VERIFICACIÓN 7: Conversiones Métricas (Volumen)
+====================================================================
+ desde | hasta |   factor    |  tipo  | scope  |      notes       
+-------+-------+-------------+--------+--------+------------------
+ L     | M3    |    0.001000 | Exacta | global | Métrica estándar
+ L     | ML    | 1000.000000 | Exacta | global | Métrica estándar
+ M3    | L     | 1000.000000 | Exacta | global | Métrica estándar
+ ML    | L     |    0.001000 | Exacta | global | Métrica estándar
+(4 filas)
+
+
+====================================================================
+VERIFICACIÓN 8: Conversiones Imperiales
+====================================================================
+ desde | hasta |   factor    |  tipo  | scope  |                         notes                         
+-------+-------+-------------+--------+--------+-------------------------------------------------------
+ G     | LB    |    0.002205 | Exacta | global | Conversión imperial exacta
+ G     | OZ    |    0.035274 | Exacta | global | Conversión avoirdupois ounce exacta
+ KG    | G     | 1000.000000 | Exacta | global | Métrica estándar
+ LB    | G     |  453.592370 | Exacta | global | Conversión imperial exacta (definición internacional)
+ LB    | OZ    |   16.000000 | Exacta | global | 1 libra = 16 onzas exactas
+ MG    | G     |    0.001000 | Exacta | global | Métrica estándar
+ OZ    | G     |   28.349523 | Exacta | global | Conversión avoirdupois ounce exacta
+ OZ    | LB    |    0.062500 | Exacta | global | 1 onza = 1/16 libra
+(8 filas)
+
+
+====================================================================
+VERIFICACIÓN 9: Conversiones Culinarias (House Scope)
+====================================================================
+ desde | hasta |   factor   | tipo  | scope |                     notes                      
+-------+-------+------------+-------+-------+------------------------------------------------
+ CUP   | ML    | 240.000000 | Aprox | house | Taza US estándar (aproximado, varía 236-250ml)
+ CUP   | TBSP  |  16.000000 | Aprox | house | 1 taza = 16 cucharadas (aproximado)
+ TBSP  | CUP   |   0.062500 | Aprox | house | 1 cucharada = 1/16 taza (aproximado)
+ TBSP  | ML    |  15.000000 | Aprox | house | Cucharada US (aproximado, varía 14.7-15ml)
+ TBSP  | TSP   |   3.000000 | Aprox | house | 1 cucharada = 3 cucharaditas (aproximado)
+ TSP   | ML    |   5.000000 | Aprox | house | Cucharadita US (aproximado, varía 4.9-5ml)
+ TSP   | TBSP  |   0.333333 | Aprox | house | 1 cucharadita = 1/3 cucharada (aproximado)
+ FLOZ  | ML    |  29.573500 | Aprox | house | US customary fluid ounce (aproximado)
+ ML    | CUP   |   0.004167 | Aprox | house | Taza US estándar (aproximado)
+ ML    | FLOZ  |   0.033814 | Aprox | house | US customary fluid ounce (aproximado)
+ ML    | TBSP  |   0.066667 | Aprox | house | Cucharada US (aproximado)
+ ML    | TSP   |   0.200000 | Aprox | house | Cucharadita US (aproximado)
+(12 filas)
+
+
+====================================================================
+VERIFICACIÓN 10: Foreign Keys en cat_uom_conversion
+====================================================================
+            constraint_name            |     table_name     | column_name | foreign_table_name | foreign_column_name | status 
+---------------------------------------+--------------------+-------------+--------------------+---------------------+--------
+ cat_uom_conversion_origen_id_foreign  | cat_uom_conversion | origen_id   | cat_unidades       | id                  | ✓ OK
+ cat_uom_conversion_destino_id_foreign | cat_uom_conversion | destino_id  | cat_unidades       | id                  | ✓ OK
+(2 filas)
+
+
+====================================================================
+VERIFICACIÓN 11: Índices en Tablas Canónicas
+====================================================================
+     tablename      |                   indexname                    |                                                           indexdef                                                           | status 
+--------------------+------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------+--------
+ cat_unidades       | cat_unidades_clave_unique                      | CREATE UNIQUE INDEX cat_unidades_clave_unique ON cat_unidades USING btree (clave)                                            | ✓ OK
+ cat_unidades       | cat_unidades_pkey                              | CREATE UNIQUE INDEX cat_unidades_pkey ON cat_unidades USING btree (id)                                                       | ✓ OK
+ cat_unidades       | idx_cat_unidades_activo                        | CREATE INDEX idx_cat_unidades_activo ON cat_unidades USING btree (activo)                                                    | ✓ OK
+ cat_unidades       | idx_cat_unidades_clave                         | CREATE INDEX idx_cat_unidades_clave ON cat_unidades USING btree (clave)                                                      | ✓ OK
+ cat_uom_conversion | cat_uom_conversion_origen_id_destino_id_unique | CREATE UNIQUE INDEX cat_uom_conversion_origen_id_destino_id_unique ON cat_uom_conversion USING btree (origen_id, destino_id) | ✓ OK
+ cat_uom_conversion | cat_uom_conversion_pkey                        | CREATE UNIQUE INDEX cat_uom_conversion_pkey ON cat_uom_conversion USING btree (id)                                           | ✓ OK
+ cat_uom_conversion | cat_uom_conversion_unique                      | CREATE UNIQUE INDEX cat_uom_conversion_unique ON cat_uom_conversion USING btree (origen_id, destino_id)                      | ✓ OK
+ cat_uom_conversion | idx_cat_uom_conversion_destino                 | CREATE INDEX idx_cat_uom_conversion_destino ON cat_uom_conversion USING btree (destino_id)                                   | ✓ OK
+ cat_uom_conversion | idx_cat_uom_conversion_origen                  | CREATE INDEX idx_cat_uom_conversion_origen ON cat_uom_conversion USING btree (origen_id)                                     | ✓ OK
+ cat_uom_conversion | idx_cat_uom_conversion_scope                   | CREATE INDEX idx_cat_uom_conversion_scope ON cat_uom_conversion USING btree (scope)                                          | ✓ OK
+(10 filas)
+
+
+====================================================================
+VERIFICACIÓN FINAL: Resumen de Estado
+====================================================================
+                item                | resultado | status 
+------------------------------------+-----------+--------
+ Conversiones totales               | 26        | ✓ PASS
+ Foreign Keys en cat_uom_conversion | 2         | ✓ PASS
+ Tablas legacy renombradas          | 4         | ✓ PASS
+ UOM activas                        | 29        | ✓ PASS
+ Vistas de compatibilidad           | 4         | ✓ PASS
+(5 filas)
+
+
+====================================================================
+VERIFICACIÓN COMPLETA
+====================================================================
+Si todos los status muestran ✓, la normalización fue exitosa.
+Ver documentación completa en: docs/UOM_STRATEGY_TERRENA.md
+====================================================================

@@ -58,16 +58,17 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold">Unidad de medida (UOM)</label>
+                    <label class="form-label fw-semibold">Unidad base (KG/L/PZA)</label>
                     <select class="form-select" wire:model.lazy="um_id" required>
                         <option value="">Selecciona…</option>
                         @foreach($units as $unit)
-                            <option value="{{ $unit['id'] }}">{{ $unit['codigo'] }} — {{ $unit['nombre'] }}</option>
+                            <option value="{{ $unit['id'] }}">{{ $unit['clave'] }} — {{ $unit['nombre'] }}</option>
                         @endforeach
                     </select>
                     @error('um_id')
                         <div class="text-danger small">{{ $message }}</div>
                     @enderror
+                    <small class="text-muted">Las presentaciones de compra y factores se definen en Proveedor–Insumo.</small>
                 </div>
 
                 <div class="col-md-8">
@@ -105,20 +106,6 @@
                     @enderror
                 </div>
 
-                <div class="col-12">
-                    <label class="form-label">Meta (JSON opcional)</label>
-                    <textarea class="form-control" rows="2" wire:model.lazy="metaInput" placeholder='{"proveedor":"Acme"}'></textarea>
-                    @error('metaInput')
-                        <div class="text-danger small">{{ $message }}</div>
-                    @enderror
-                    <small class="text-muted">Usa este campo solo si sabes JSON. Ej.: {"proveedor":"Acme"}</small>
-                </div>
-
-                <div class="col-12">
-                    <label class="form-label fw-semibold">Código sugerido</label>
-                    <input type="text" class="form-control" value="{{ $previewCodigo ?? '' }}" readonly placeholder="Se asignará al guardar (ej. CAT-SUB-00001)">
-                    <small class="text-muted">El código definitivo se confirma al guardar.</small>
-                </div>
             </fieldset>
         </div>
 

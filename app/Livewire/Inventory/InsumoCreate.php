@@ -18,11 +18,9 @@ class InsumoCreate extends Component
     public int|string $um_id = '';
     public bool $perecible = false;
     public float $merma_pct = 0.0;
-    public string $metaInput = '';
     public array $units = [];
 
     public bool $authorized = false;
-    public ?string $previewCodigo = null;
 
     protected array $categorias = [
         'MP'  => 'Materia Prima',
@@ -57,6 +55,8 @@ class InsumoCreate extends Component
         ],
     ];
 
+    protected array $allowedUnitKeys = ['KG', 'L', 'PZA'];
+
     public function mount(): void
     {
         $user = Auth::user();
@@ -74,28 +74,6 @@ class InsumoCreate extends Component
     public function updatedCategoria(): void
     {
         $this->subcategoria = '';
-        $this->previewCodigo = null;
-    }
-
-    public function updatedSubcategoria(): void
-    {
-        $this->updatePreview();
-    }
-
-    protected function updatePreview(): void
-    {
-        if (! $this->categoria || ! $this->subcategoria) {
-            $this->previewCodigo = null;
-            return;
-        }
-
-        try {
-            $code = app(InsumoCodeService::class)->generateCode($this->categoria, $this->subcategoria);
-            $this->previewCodigo = "{$code['codigo']} (provisional)";
-        } catch (\Throwable $e) {
-            report($e);
-            $this->previewCodigo = 'No disponible';
-        }
     }
 
     public function save(): void
@@ -114,7 +92,6 @@ class InsumoCreate extends Component
                 'sku'          => $this->sku,
                 'perecible'    => $this->perecible,
                 'merma_pct'    => $this->merma_pct,
-                'metaInput'    => $this->metaInput,
             ],
             [
                 'categoria'    => ['required', 'string', 'max:4'],
@@ -124,7 +101,6 @@ class InsumoCreate extends Component
                 'sku'          => ['nullable', 'string', 'max:120'],
                 'perecible'    => ['boolean'],
                 'merma_pct'    => ['required', 'numeric', 'between:0,100', 'decimal:0,3'],
-                'metaInput'    => ['nullable'],
             ],
             [],
             [
@@ -132,24 +108,8 @@ class InsumoCreate extends Component
                 'subcategoria' => 'subcategoría',
                 'um_id'        => 'unidad de medida',
                 'merma_pct'    => 'merma %',
-                'metaInput'    => 'meta',
             ]
-        )->after(function ($validator) {
-            $metaRaw = trim($this->metaInput);
-            if ($metaRaw === '') {
-                return;
-            }
-
-            json_decode($metaRaw, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                $validator->errors()->add('metaInput', 'Meta debe ser JSON válido.');
-            }
-        })->validate();
-
-        $meta = null;
-        if (trim((string) $validated['metaInput']) !== '') {
-            $meta = json_decode((string) $validated['metaInput'], true);
-        }
+        )->validate();
 
         try {
             $codes = app(InsumoCodeService::class)->generateCode($this->categoria, $this->subcategoria);
@@ -165,13 +125,13 @@ class InsumoCreate extends Component
                 'perecible'           => (bool) $this->perecible,
                 'merma_pct'           => (float) $this->merma_pct,
                 'activo'              => true,
-                'meta'                => $meta !== null ? json_encode($meta) : null,
+                'meta'                => null,
             ];
 
             // TODO: Esta tabla vive realmente en el esquema selemti. Ajustar conexión/schema en prod si es necesario.
             DB::table('insumo')->insert($payload);
 
-            session()->flash('success', "Insumo {$codes['codigo']} creado correctamente.");
+            session()->flash('success', 'Insumo creado correctamente.');
 
             $this->reset([
                 'categoria',
@@ -181,8 +141,6 @@ class InsumoCreate extends Component
                 'um_id',
                 'perecible',
                 'merma_pct',
-                'metaInput',
-                'previewCodigo',
             ]);
             $this->merma_pct = 0.0;
         } catch (\Throwable $e) {
@@ -196,7 +154,6 @@ class InsumoCreate extends Component
         return view('livewire.inventory.insumo-create', [
             'categorias'    => $this->categorias,
             'subcategorias' => $this->categoria ? ($this->subcategorias[$this->categoria] ?? []) : [],
-            'previewCodigo' => $this->previewCodigo,
             'units'         => $this->units,
         ])->layout('layouts.terrena', [
             'active'    => 'inventario',
@@ -216,12 +173,13 @@ class InsumoCreate extends Component
     protected function loadUnits(): void
     {
         $this->units = DB::connection('pgsql')
-            ->table(DB::raw('selemti.unidades_medida'))
-            ->orderBy('nombre')
-            ->get(['id', 'codigo', 'nombre'])
+            ->table('cat_unidades')
+            ->whereIn('clave', $this->allowedUnitKeys)
+            ->orderBy('clave')
+            ->get(['id', 'clave', 'nombre'])
             ->map(fn ($row) => [
-                'id'     => (int) $row->id,
-                'codigo' => $row->codigo,
+                'id'    => (int) $row->id,
+                'clave' => $row->clave,
                 'nombre' => $row->nombre,
             ])->toArray();
     }
