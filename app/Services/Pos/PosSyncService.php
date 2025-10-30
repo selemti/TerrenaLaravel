@@ -93,6 +93,10 @@ class PosSyncService
      */
     protected function upsertTicket(array $ticket): void
     {
+        if (! config('app.allow_pos_writes', false)) {
+            throw new RuntimeException('Direct writes to public.* están prohibidas por la política A de seguridad operativa. Implementar integración mediante APIs del POS.');
+        }
+
         $ticketId = Arr::get($ticket, 'id');
         $paid = (bool) Arr::get($ticket, 'paid');
         $voided = (bool) Arr::get($ticket, 'voided');

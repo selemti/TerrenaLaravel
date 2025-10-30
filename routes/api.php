@@ -21,7 +21,9 @@ use App\Http\Controllers\Api\Inventory\ItemController;
 use App\Http\Controllers\Api\Inventory\PriceController;
 use App\Http\Controllers\Api\Inventory\RecipeCostController;
 use App\Http\Controllers\Api\Inventory\StockController;
+use App\Http\Controllers\Api\MeController;
 use App\Http\Controllers\Api\Inventory\VendorController;
+use App\Http\Controllers\Inventory\InsumoController;
 use App\Http\Controllers\Inventory\TransferController;
 use App\Http\Controllers\Api\CatalogsController;
 use App\Http\Controllers\Production\ProductionController;
@@ -220,6 +222,18 @@ Route::prefix('catalogs')->group(function () {
     Route::get('/movement-types', [CatalogsController::class, 'movementTypes']);
 });
 
+Route::middleware(['auth:sanctum', 'permission:inventory.items.manage'])
+    ->post('/inventory/insumos', [InsumoController::class, 'store'])
+    ->name('api.insumos.store');
+
+Route::middleware(['auth:sanctum', 'permission:inventory.items.manage'])
+    ->post('/inventory/insumos/bulk-import', [InsumoController::class, 'bulkImport'])
+    ->name('api.insumos.bulkImport');
+
+Route::middleware('auth:sanctum')
+    ->get('/me/permissions', [MeController::class, 'permissions'])
+    ->name('api.me.permissions');
+
 /*
 |--------------------------------------------------------------------------
 | MÓDULO: PURCHASING (COMPRAS)
@@ -280,6 +294,16 @@ Route::prefix('legacy')->group(function () {
     Route::post('/postcortes[/{id}]', [PostcorteController::class, 'createOrUpdateLegacy'])
         ->where('id', '[0-9]+');
 });
+
+// Rutas de auditoría operacional
+Route::middleware(['auth:sanctum', 'permission:audit.view'])
+    ->prefix('audit-log')
+    ->group(function () {
+        Route::get('/', [App\Http\Controllers\Audit\LogController::class, 'list'])->name('api.audit.log.list');
+        Route::get('/{id}', [App\Http\Controllers\Audit\LogController::class, 'show'])->name('api.audit.log.show');
+        Route::get('/users', [App\Http\Controllers\Audit\LogController::class, 'users'])->name('api.audit.log.users');
+        Route::get('/modules', [App\Http\Controllers\Audit\LogController::class, 'modules'])->name('api.audit.log.modules');
+    });
 
 /*
 |--------------------------------------------------------------------------

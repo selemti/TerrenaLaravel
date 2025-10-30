@@ -90,6 +90,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ======================= Datos reales (API) =======================
 window.Terrena = window.Terrena || {};
+
+/**
+ * Helper for making authenticated API GET requests
+ * Includes Authorization header with Sanctum token if available
+ */
+window.Terrena.apiGet = async function(url) {
+  const headers = {
+    'Accept': 'application/json',
+  };
+
+  if (window.TerrenaApiToken) {
+    headers['Authorization'] = 'Bearer ' + window.TerrenaApiToken;
+  }
+
+  const res = await fetch(url, {
+    method: 'GET',
+    headers,
+  });
+
+  if (res.status === 401) {
+    console.warn('[Terrena] No autenticado en API (401):', url);
+    // Could dispatch a global event here to show a login modal
+  }
+  if (res.status === 403) {
+    console.warn('[Terrena] Sin permiso (403):', url);
+    toast('No tienes permiso para acceder a este recurso.', 'warning');
+  }
+
+  return res;
+};
+
 window.Terrena.initDashboardCharts = async function (range) {
   const baseReports = (window.__BASE__ || '') + '/api/reports';
   const baseCaja = (window.__BASE__ || '') + '/api/caja';
@@ -111,7 +142,7 @@ window.Terrena.initDashboardCharts = async function (range) {
   };
 
   const fetchReport = async (path) => {
-    const res = await fetch(baseReports + path, { headers: { Accept: 'application/json' } });
+    const res = await window.Terrena.apiGet(baseReports + path);
     if (!res.ok) {
       const err = new Error(`GET ${path} → ${res.status}`);
       err.status = res.status;
@@ -128,7 +159,7 @@ window.Terrena.initDashboardCharts = async function (range) {
 
   const fetchCajaStatus = async (date) => {
     const query = buildQuery({ date: toISODateOnly(date) });
-    const res = await fetch(baseCaja + `/cajas${query}`, { headers: { Accept: 'application/json' } });
+    const res = await window.Terrena.apiGet(baseCaja + `/cajas${query}`);
     if (!res.ok) {
       const err = new Error(`GET /caja/cajas → ${res.status}`);
       err.status = res.status;
@@ -785,7 +816,8 @@ function setupFilters(){
     triggerRefresh(true);
   });
 
-  triggerRefresh(false);
+  // NO llamar triggerRefresh() aquí - dejar que dashboard.blade.php lo dispare después de cargar el token
+  // triggerRefresh(false);
 }
 function toISODate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 
@@ -1055,7 +1087,8 @@ function toast(msg,type='success'){
   if (!$('#tblCortes')) return;
 
   const base = (window.__BASE__ || (document.body.dataset.base || '')).replace(/\/+$/,'');
-  const API = base + '/api/v1';
+  const API = base + '/api';
+  // TODO: migrar cada acción a los endpoints definitivos /api/caja/precortes cuando estén listos en backend
 
   // Estado local para modales
   let currentPrecorte = null;
@@ -1063,7 +1096,7 @@ function toast(msg,type='success'){
   // Listado principal
   async function loadCortes() {
     const bdate = $('#f_bdate')?.value || '';
-    const url = new URL(API + '/caja/abiertas', window.location.origin);
+    const url = new URL(API + '/caja/cajas', window.location.origin);
     if (bdate) url.searchParams.set('bdate', bdate);
 
     const res = await fetch(url, {headers:{'Accept':'application/json'}});
@@ -1161,6 +1194,7 @@ function toast(msg,type='success'){
     const terminal = Number($('#p_terminal').value||0);
     const cajero = $('#p_cajero').value;
 
+    // TODO: reemplazar por POST /api/caja/precortes cuando se exponga endpoint consolidado
     let resp = await fetch(API + '/caja/precorte', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -1176,6 +1210,7 @@ function toast(msg,type='success'){
       const qty = Number(inp.value||0);
       if (qty>0) det.push({ den, qty });
     });
+    // TODO: migrar a /api/caja/precortes/{id}/conteo (pendiente backend)
     await fetch(`${API}/caja/precorte/${precorte_id}/conteo`, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify(det)
@@ -1185,6 +1220,7 @@ function toast(msg,type='success'){
     const cash = recalcDenoms();
     const card = Number($('#p_card').value||0);
     const transfer = Number($('#p_transfer').value||0);
+    // TODO: migrar a /api/caja/precortes/{id}/declarado cuando esté disponible
     await fetch(`${API}/caja/precorte/${precorte_id}/decl`, {
       method:'PUT', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ cash, card, transfer, notes: $('#p_notes').value })
@@ -1200,6 +1236,7 @@ function toast(msg,type='success'){
     currentPrecorte = { id };
     $('#c_precorte_id').value = id;
     // cargar sistema
+    // TODO: migrar a /api/caja/precortes/${id}/sistema cuando backend esté listo
     fetch(`${API}/caja/precorte/${id}/sistema`)
       .then(r => r.json()).then(sys => {
         // MOCK: los declarados los tomamos de pantalla precorte (o backend cuando esté listo)
@@ -1223,6 +1260,7 @@ function toast(msg,type='success'){
   }
 
   $('#btnCerrarTicketsCero')?.addEventListener('click', async () => {
+    // TODO: confirmar ruta final para cerrar tickets cero (legacy Slim)
     await fetch(`${API}/caja/cerrar-tickets-cero`, {method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ bdate: $('#f_bdate').value })
     });
@@ -1241,6 +1279,7 @@ function toast(msg,type='success'){
   $('#btnConciliar')?.addEventListener('click', async () => {
     const id = $('#c_precorte_id').value;
     const payload = { /* en real mandarías sys/decl */ };
+    // TODO: migrar a /api/caja/precortes/${id}/conciliar cuando se exponga endpoint nuevo
     const r = await fetch(`${API}/caja/precorte/${id}/conciliar`, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
     await r.json();
     // En mock ya refleja diferencia; solo refresca listado
@@ -1249,6 +1288,7 @@ function toast(msg,type='success'){
 
   $('#btnCerrarCorte')?.addEventListener('click', async () => {
     const id = $('#c_precorte_id').value;
+    // TODO: migrar a /api/caja/precortes/${id}/cerrar
     await fetch(`${API}/caja/precorte/${id}/cerrar`, {method:'PUT'});
     bootstrap.Modal.getInstance($('#modalCorte')).hide();
     loadCortes();
@@ -1267,6 +1307,7 @@ function toast(msg,type='success'){
     ev.preventDefault();
     const id = $('#post_precorte_id').value;
     const notes = $('#post_notes').value;
+    // TODO: migrar a /api/caja/postcortes/${id} cuando se publique el endpoint definitivo
     await fetch(`${API}/caja/precorte/${id}/postcorte`, {
       method:'PUT', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ notes })

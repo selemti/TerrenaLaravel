@@ -9,6 +9,7 @@ class Kernel extends ConsoleKernel
 {
     protected $commands = [
         \App\Console\Commands\InspectCatalogos::class,
+        \App\Console\Commands\CheckLegacyLinks::class,
     ];
 
     protected function schedule(Schedule $schedule):

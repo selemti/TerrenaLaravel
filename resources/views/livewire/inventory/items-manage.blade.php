@@ -5,9 +5,9 @@
         <input type="text" class="form-control" placeholder="Buscar por SKU, nombre o descripción"
                wire:model.debounce.400ms="q">
       </div>
-      <button class="btn btn-primary" wire:click="openCreate">
-        <i class="fa-solid fa-plus me-1"></i>Nuevo ítem
-      </button>
+      <a href="{{ route('inventory.items.new') }}" class="btn btn-primary">
+        <i class="fa-solid fa-plus me-1"></i>Nuevo insumo (CAT-SUB-#####)
+      </a>
       @can('inventory.prices.manage')
         <button class="btn btn-outline-secondary" wire:click="openPriceModal()">
           <i class="fa-solid fa-tag me-1"></i>Cargar precio
@@ -17,11 +17,19 @@
     <div class="text-muted small d-flex align-items-center gap-2">
       <i class="fa-regular fa-circle-info"></i>
       <span>Recientes: {{ $items->total() }}</span>
-    </div>
-  </div>
+       </div>
+      </div>
 
   <div class="card shadow-sm mb-3">
     <div class="card-body">
+      <div class="alert alert-info d-flex align-items-start gap-2 mb-4">
+        <i class="fa-solid fa-circle-info mt-1"></i>
+        <div>
+          El alta de insumos sigue el flujo documentado (código interno CAT‑SUB‑##### generado automáticamente).
+          Usa el botón <strong>“Nuevo insumo”</strong> para crear registros en <code>selemti.insumo</code>.
+        </div>
+      </div>
+
       <div class="row g-3 align-items-end">
         <div class="col-md-4">
           <label class="form-label">Categoría</label>

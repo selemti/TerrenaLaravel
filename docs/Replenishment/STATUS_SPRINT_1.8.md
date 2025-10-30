@@ -1,68 +1,27 @@
-
----
-
-### 6. `docs/Replenishment/STATUS_SPRINT_1.8.md`
-
-```md
 # 🧭 STATUS SPRINT 1.8 – Reportes y KPIs Operativos
 
-**Objetivo:** Exponer métricas básicas para dirección/operaciones usando los datos ya capturados.  
-**Estado general:** 📋 Planificado  
-**Fecha:** 2025-10-25  
-**Esquema BD:** `selemti`
+Estado general: 🟨 En progreso  
+Fecha: 2025-10-26
 
----
+## 1. Rutas expuestas (Laravel)
+- GET /api/reports/purchasing/late-po -> Reports\ReportsController@purchasingLatePO
+- GET /api/reports/inventory/over-tolerance -> Reports\ReportsController@inventoryOverTolerance
+- GET /api/reports/inventory/top-urgent -> Reports\ReportsController@inventoryTopUrgent
 
-## 1. KPI iniciales
-- % de recepción fuera de tolerancia por proveedor
-- Tiempo promedio entre PO → Recepción posteada
-- Rotación aproximada de inventario por categoría
-- Top 10 insumos urgentes (prioridad `URGENTE`)
+## 2. Backend
+- `App\Http\Controllers\Reports\ReportsController` creado con métodos read-only que construyen query builders básicos (`purchase_orders`, `recepcion_det`, `purchase_suggestions`).
+- Cada método responde `{ok, data}` y deja TODO de caching/snapshots; se planea protegerlos con `reports.view.*`.
+- Rutas viven junto al grupo `/api/reports` existente, compartiendo namespace con los dashboards actuales.
 
-Estos KPIs alimentan dashboards internos / Livewire.
+## 3. Pendiente para cerrar sprint
+- Definir policies/permisos y asegurar que sólo roles de dirección accedan a los endpoints.
+- Completar queries con métricas reales (por proveedor, categoría, SLA).
+- Añadir paginación/caching para no impactar producción.
 
----
+## 4. Riesgos / Bloqueantes
+- Dependemos de datos consistentes de recepciones y sugerencias; sin ellos los KPIs quedarán vacíos.
+- Consultas sin índices podrían degradar rendimiento.
+- Falta de snapshots diarios puede generar discrepancias históricas.
 
-## 2. Trabajo técnico Sprint 1.8
-
-### 2.1 Nuevo controlador:
-`app/Http/Controllers/Reports/ReportsController.php`
-
-Acciones READ-ONLY que devuelven JSON, ejemplos:
-```php
-purchasingLatePO(): JsonResponse
-inventoryOverTolerance(): JsonResponse
-inventoryTopUrgent(): JsonResponse
-Cada método:
-
-arma un query builder (DB::table(...))
-
-return response()->json(['ok' => true, 'data' => $rows])
-
-// TODO caching/report snapshots
-
-2.2 Rutas
-
-Bajo /api/reports/...:
-
-GET /api/reports/purchasing/late-po
-
-GET /api/reports/inventory/over-tolerance
-
-GET /api/reports/inventory/top-urgent
-
-2.3 Permisos
-
-reports.view.purchasing
-
-reports.view.inventory
-
-3. Criterio de cierre Sprint 1.8
-
-ReportsController creado.
-
-Rutas GET creadas.
-
-Cada acción arma el esqueleto de query builder (sin lógica compleja todavía).
-
-Comentado el TODO de cache/snapshots para futuro.
+## 5. Siguiente paso inmediato
+Implementar middleware/policies `reports.view.*` y optimizar queries con filtros por fecha.

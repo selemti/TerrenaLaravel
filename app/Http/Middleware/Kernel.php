@@ -17,4 +17,7 @@ protected $middlewareGroups = [
 protected $middlewareAliases = [
     // ... otros alias
     'api.response' => \App\Http\Middleware\ApiResponseMiddleware::class,
+    'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
+    'perm' => \App\Http\Middleware\CheckPermission::class,
+
 ];

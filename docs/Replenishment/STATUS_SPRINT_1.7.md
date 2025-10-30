@@ -1,74 +1,28 @@
-
----
-
-### 5. `docs/Replenishment/STATUS_SPRINT_1.7.md`
-
-```md
 # 🧭 STATUS SPRINT 1.7 – Producción Interna y Consumo
 
-**Objetivo:** Registrar consumo interno de insumos para producir recetas / preparados y reflejarlo en inventario.  
-**Estado general:** 📋 Planificado  
-**Fecha:** 2025-10-25  
-**Esquema BD:** `selemti`
+Estado general: 🟨 En progreso  
+Fecha: 2025-10-26
 
----
+## 1. Rutas expuestas (Laravel)
+- POST /api/production/batch/plan -> Production\ProductionController@plan
+- POST /api/production/batch/{batch_id}/consume -> Production\ProductionController@consume
+- POST /api/production/batch/{batch_id}/complete -> Production\ProductionController@complete
+- POST /api/production/batch/{batch_id}/post -> Production\ProductionController@post
 
-## 1. Flujo
-1. Cocina planea producir un batch de una receta.
-2. Se descuentan insumos (harina, leche, etc.) del inventario de cocina.
-3. Se ingresa producto terminado (ej. jarabe base, salsa) al inventario destino (barra / almacén).
+## 2. Backend
+- `ProductionService` contiene stubs para planificar, consumir insumos, completar y postear batches; valida IDs/cantidades y deja TODOs para mov_inv negativos/positivos.
+- `ProductionController` inyecta el servicio, normaliza arreglos `lines`, responde `{ok, data, message}` y mantiene `TODO` de permisos `production.batch.*`.
+- El módulo está aislado bajo `/api/production`, listo para conectar con recetas y menús POS.
 
-Estados:
-`PLANIFICADA → EN_PROCESO → COMPLETADA → POSTEADA`
+## 3. Pendiente para cerrar sprint
+- Calcular insumos con base en recipe_versions y validar inventario antes de consumir.
+- Persistir producción real (cabecera/detalle) y métricas de rendimiento.
+- Generar movimientos `mov_inv` negativos (insumos) y positivos (producto terminado) en el posteo.
 
----
+## 4. Riesgos / Bloqueantes
+- Dependencia de catálogos de recetas y equivalencias UOM; sin ellos no se puede calcular consumo.
+- Falta de policies permitiría planear batches sin autorización del área de producción.
+- Riesgo contable si se postea producción dos veces sin bloqueo transaccional.
 
-## 2. Trabajo técnico Sprint 1.7
-
-### 2.1 Nuevo servicio:
-`app/Services/Production/ProductionService.php`
-
-Métodos stub esperados:
-```php
-planBatch(int $recipeId, float $qtyTarget, int $userId): array
-consumeIngredients(int $batchId, array $consumedLines, int $userId): array
-completeBatch(int $batchId, array $producedLines, int $userId): array
-postBatchToInventory(int $batchId, int $userId): array
-// postBatchToInventory genera mov_inv negativo (insumos) y positivo (producto terminado)
-
-
-2.2 Nuevo controlador:
-
-app/Http/Controllers/Production/ProductionController.php
-
-Acciones REST, respuestas { ok, data, message }, y comentarios // TODO autorización con permisos:
-
-Permisos esperados:
-
-production.batch.plan
-
-production.batch.consume
-
-production.batch.post
-
-2.3 Rutas
-
-Bajo /api/production/...
-
-Ejemplos:
-
-POST /api/production/batch/plan
-
-POST /api/production/batch/{batch_id}/consume
-
-POST /api/production/batch/{batch_id}/complete
-
-POST /api/production/batch/{batch_id}/post
-
-3. Criterio de cierre Sprint 1.7
-
-ProductionService y ProductionController creados con stubs.
-
-Rutas creadas.
-
-Documentado que el sistema genera mov_inv negativo (insumos) y positivo (producto terminado) al postear.
+## 5. Siguiente paso inmediato
+Integrar recipe BOMs en `ProductionService::consumeIngredients()` para descontar insumos reales.

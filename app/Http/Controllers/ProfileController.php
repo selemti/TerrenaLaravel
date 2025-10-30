@@ -34,4 +34,12 @@ class ProfileController extends Controller
 
         return back()->with('status', 'profile-updated');
     }
+
+    public function destroy(Request $request): RedirectResponse
+    {
+        return back()->withErrors(
+            ['password' => 'La eliminación de cuentas está deshabilitada.'],
+            'userDeletion'
+        );
+    }
 }

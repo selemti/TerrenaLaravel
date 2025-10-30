@@ -23,6 +23,15 @@ class RecetasPermissionsSeeder extends Seeder
             'can_reprocess_sales',
             'can_view_recipe_dashboard',
             'can_edit_production_order',
+            'can_manage_purchasing',
+            'can_modify_recipe',
+            'inventory.receptions.validate',
+            'inventory.receptions.override_tolerance',
+            'inventory.receptions.post',
+            'inventory.transfers.approve',
+            'inventory.transfers.ship',
+            'inventory.transfers.receive',
+            'inventory.transfers.post',
         ];
 
         foreach ($permissions as $permission) {

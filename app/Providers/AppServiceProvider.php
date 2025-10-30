@@ -24,6 +24,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        require_once app_path('Support/features.php');
+
         // Fuerza la raíz para que route(), url(), asset() respeten /TerrenaLaravel
         if ($root = config('app.url')) {
             URL::forceRootUrl($root);

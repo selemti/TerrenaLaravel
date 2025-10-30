@@ -22,27 +22,17 @@ return new class extends Migration
 
         if (!$schema->hasTable('selemti.ticket_item_modifiers')) {
             $schema->create('selemti.ticket_item_modifiers', function (Blueprint $table) {
-                // This table records every modifier chosen for a specific item in a ticket.
-                // It is crucial for accurately costing each sale, deducting inventory for add-ons
-                // (like extra protein, sauces, to-go packaging), and enabling the retroactive
-                // reprocessing of historical sales.
                 $table->bigIncrements('id');
-                $table->unsignedBigInteger('ticket_item_id')->index()->comment('The ticket line item this modifier belongs to.');
-                $table->string('pos_code')->index()->comment('Code/ID of the modifier from the POS.');
-                $table->unsignedBigInteger('recipe_version_id')->nullable()->comment('The recipe version representing this modifier for inventory consumption.');
-                $table->decimal('precio_extra', 12, 4)->default(0)->comment('Upcharge applied by the POS for this modifier.');
-
-                // Reprocessing flags, similar to ticket_items, to ensure modifiers are
-                // processed even if their recipe is mapped after the sale.
-                $table->boolean('requiere_reproceso')->default(true)->index()->comment('Indicates this modifier has not yet been processed for inventory consumption.');
-                $table->boolean('procesado')->default(false)->index()->comment('True when inventory has been consumed for this modifier.');
-                $table->timestamp('fecha_proceso')->nullable()->comment('Timestamp of when inventory was consumed.');
-
+                $table->unsignedBigInteger('ticket_id')->index('ticket_item_modifiers_ticket_id_idx');
+                $table->unsignedBigInteger('ticket_item_id')->index('ticket_item_modifiers_ticket_item_id_idx');
+                $table->unsignedBigInteger('sucursal_id')->nullable();
+                $table->unsignedBigInteger('terminal_id')->nullable();
+                $table->boolean('procesado')->default(false);
+                $table->timestamp('fecha_proceso')->nullable();
+                $table->string('pos_code')->nullable()->comment('Código/modificador POS (opcional).');
+                $table->unsignedBigInteger('recipe_version_id')->nullable()->comment('Versión de receta aplicada al modificador.');
+                $table->decimal('precio_extra', 12, 4)->default(0)->comment('Sobrecargo aplicado por el POS.');
                 $table->timestamps();
-
-                // Foreign key constraints (commented out for schema flexibility)
-                // $table->foreign('ticket_item_id')->references('id')->on('selemti.ticket_items')->onDelete('cascade');
-                // $table->foreign('recipe_version_id')->references('id')->on('selemti.recipe_versions')->onDelete('set null');
             });
         }
     }

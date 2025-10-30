@@ -1,63 +1,28 @@
 # 🧭 STATUS SPRINT 1.2 – Recepciones de Compra & Kardex
 
-**Objetivo:**  
-Registrar recepciones físicas de material comprado, validarlas y postearlas a `mov_inv` (Kardex) como movimientos INMUTABLES tipo `COMPRA`.  
-Después de este sprint, el sistema ya "mete inventario real" cuando llega mercancía.
+Estado general: 🟨 En progreso  
+Fecha: 2025-10-26
 
-**Estado general:** ⬜ No iniciado  
-**Fecha de arranque:** 2025-10-25  
-**Contexto:** Sprint 1.1 (Sugerencias → Solicitud) está implementado a nivel código y API, pendiente solo la prueba operativa con datos reales (items/proveedores). No queremos bloquear 1.2 por eso.
+## 1. Rutas expuestas (Laravel)
+- POST /api/purchasing/receptions/create-from-po/{purchase_order_id} -> Purchasing\ReceivingController@createFromPO
+- POST /api/purchasing/receptions/{recepcion_id}/lines -> Purchasing\ReceivingController@setLines
+- POST /api/purchasing/receptions/{recepcion_id}/validate -> Purchasing\ReceivingController@validateReception
+- POST /api/purchasing/receptions/{recepcion_id}/post -> Purchasing\ReceivingController@postReception
 
----
+## 2. Backend
+- Service: `App\Services\Inventory\ReceivingService` ya expone createDraftReception() y updateReceptionLines() con validaciones básicas de IDs y TODOs para persistencia.
+- Controller: `App\Http\Controllers\Purchasing\ReceivingController` inyecta el servicio por constructor, responde con `{ok, data, message}` y deja comentarios `TODO` para autorización `inventory.receptions.*`.
+- Los endpoints reciben Request, normalizan arrays (`lines`) y están listos para enganchar policies una vez definidas.
 
-## 🔄 Flujo que cubre este sprint
+## 3. Pendiente para cerrar sprint
+- Persistir recepción EN_PROCESO en `recepcion_cab`/`recepcion_det` a partir de la purchase order.
+- Implementar actualización real de líneas con tolerancias preliminares.
+- Conectar con catálogos (proveedores, almacenes, items) antes de QA end-to-end.
 
-1. Existe una orden de compra (purchase_order) aprobada / enviada al proveedor.
-2. El proveedor entrega físicamente mercancía en un almacén destino.
-3. El almacenista crea una Recepción:
-   - Cabecera (`recepcion_cab`): proveedor, almacén, fecha, referencia de PO.
-   - Detalle (`recepcion_det`): item_id, qty_recibida, qty_ordenada, costo_unitario, uom.
-   - Estado inicial: `EN_PROCESO`.
-4. Se confirman cantidades → estado `VALIDADA`.
-5. Se postea → estado `POSTEADA_A_INVENTARIO`.
-   - Aquí se generan renglones en `selemti.mov_inv` con tipo `COMPRA`.
-   - Esos renglones NO se editan ni se borran.
-6. Recepción queda `CERRADA`.
-7. Si hubo diferencias por arriba de la tolerancia configurada (`config('inventory.reception_tolerance_pct')`), se marca para revisión / aprobación adicional.
+## 4. Riesgos / Bloqueantes
+- Dependencia total de datos maestros (POs reales, items con costos) para probar el flujo.
+- Riesgo de generar recepciones duplicadas si no se valida el estado de la purchase order.
+- Falta de policies podría exponer endpoints sensibles en ambientes compartidos.
 
----
-
-## 🧩 Alcance técnico Sprint 1.2
-
-1. **Service nuevo:**  
-   `app/Services/Inventory/ReceivingService.php`  
-   Debe exponer (mínimo):
-   - `createDraftReception($purchaseOrderId, $userId)`  
-     Crea recepción EN_PROCESO a partir de una purchase_order.
-   - `updateReceptionLines($recepcionId, [...lineItems...])`  
-     Captura cantidades reales recibidas por item.
-   - `validateReception($recepcionId, $userId)`  
-     Pasa a VALIDADA.
-   - `postToInventory($recepcionId, $userId)`  
-     Genera `mov_inv` con tipo `COMPRA`, llena costos, cambia a POSTEADA_A_INVENTARIO y luego CERRADA.
-
-   Nota: `postToInventory` es crítico. Este método es el que mete el inventario físicamente al sistema.
-
-2. **Controlador API nuevo:**  
-   `app/Http/Controllers/Purchasing/ReceivingController.php`  
-   Endpoints REST (todas bajo `/api/purchasing/receptions`):
-   - `POST /create-from-po/{purchase_order_id}`
-   - `POST /{recepcion_id}/lines` (captura/actualiza cantidades físicas)
-   - `POST /{recepcion_id}/validate`
-   - `POST /{recepcion_id}/post` (esta hace el Kardex / mov_inv)
-   Estos endpoints trabajan SOLO con recepción de compra. Transferencias y producción van en otros sprints.
-
-3. **Rutas:**  
-   Agregar en `routes/api.php` dentro del grupo `Route::prefix('purchasing')`:
-   ```php
-   Route::prefix('receptions')->group(function () {
-       Route::post('/create-from-po/{purchase_order_id}', [ReceivingController::class, 'createFromPO']);
-       Route::post('/{recepcion_id}/lines', [ReceivingController::class, 'setLines']);
-       Route::post('/{recepcion_id}/validate', [ReceivingController::class, 'validateReception']);
-       Route::post('/{recepcion_id}/post', [ReceivingController::class, 'postReception']);
-   });
+## 5. Siguiente paso inmediato
+Implementar persistencia real en `ReceivingService::createDraftReception()` para que genere cabecera/detalle EN_PROCESO a partir de la PO.

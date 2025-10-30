@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use App\Models\User;
 use Spatie\Permission\PermissionRegistrar;
 
 class PermissionsSeeder extends Seeder
@@ -18,9 +19,16 @@ class PermissionsSeeder extends Seeder
             'inventory.items.manage',
             'inventory.prices.manage',
             'inventory.receivings.manage',
+            'inventory.receptions.validate',
+            'inventory.receptions.override_tolerance',
+            'inventory.receptions.post',
             'inventory.counts.manage',
             'inventory.moves.manage',
             'inventory.lots.view',
+            'inventory.transfers.approve',
+            'inventory.transfers.ship',
+            'inventory.transfers.receive',
+            'inventory.transfers.post',
             'recipes.view',
             'recipes.manage',
             'recipes.costs.view',
@@ -35,6 +43,7 @@ class PermissionsSeeder extends Seeder
             'alerts.view',
             'alerts.manage',
             'alerts.assign',
+            'audit.view',
             'vendors.view',
             'vendors.manage',
             'pos.sync.manage',
@@ -45,6 +54,13 @@ class PermissionsSeeder extends Seeder
             'people.roles.manage',
             'people.permissions.manage',
             'admin.access',
+            // Permisos API específicos
+            'can_view_recipe_dashboard',
+            'can_reprocess_sales',
+            'can_edit_production_order',
+            'can_manage_purchasing',
+            'can_modify_recipe',
+            'kitchen.view_kds',
         ];
 
         foreach ($permissions as $name) {
@@ -156,6 +172,15 @@ class PermissionsSeeder extends Seeder
                 $role->syncPermissions($rolePermissions);
             }
         }
+
+        // --- Super Admin bootstrap -----------------------------------------------
+        // TODO: cualquier permiso nuevo debe quedar accesible para 'Super Admin'.
+        // Ya que MeController trata 'Super Admin' como acceso total, aquí sólo
+        // reforzamos que el usuario soporte SIEMPRE tenga ese rol.
+        // El usuario 'soporte' siempre mantiene el rol Super Admin como acceso raíz del sistema.
+        $super = User::where('username', 'soporte')->first();
+        if ($super && ! $super->hasRole('Super Admin')) {
+            $super->assignRole('Super Admin');
+        }
     }
 }
-
