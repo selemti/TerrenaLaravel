@@ -432,8 +432,8 @@ class ItemsManage extends Component
             'categoryOptions' => $this->categoryOptions,
         ])->layout('layouts.terrena', [
             'active' => 'inventario',
-            'title' => 'Catálogo · Ítems',
-            'pageTitle' => 'Ítems de inventario',
+            'title' => 'Inventario · Gestión de Items',
+            'pageTitle' => 'Gestión de Items',
         ]);
     }
 

@@ -89,7 +89,8 @@
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -f \"C:/xampp3/htdocs/TerrenaLaravel/BD/UOM_Normalization_PG95.sql\")",
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT COUNT(*) as total_uom, COUNT(*) FILTER (WHERE activo = true) as activas FROM selemti.cat_unidades;\")",
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT clave, nombre FROM selemti.cat_unidades ORDER BY clave;\")",
-      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT COUNT(*) as total FROM selemti.unidades_medida;\")"
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT COUNT(*) as total FROM selemti.unidades_medida;\")",
+      "Bash(gh pr view:*)"
     ],
     "deny": [],
     "ask": []
