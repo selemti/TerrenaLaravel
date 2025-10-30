@@ -1,0 +1,137 @@
+openapi: 3.0.3
+info:
+  title: Terrena POS API
+  version: 1.4.0
+servers:
+- url: https://api.terrena.local/api
+paths:
+  /caja-fondo:
+    post:
+      summary: Apertura fondo
+      tags:
+      - CajaFondo
+      responses:
+        '200':
+          description: OK
+  /caja-fondo/{id}/mov:
+    post:
+      summary: Crear movimiento
+      tags:
+      - CajaFondo
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+  /caja-fondo/mov/{id}/aprobar:
+    post:
+      summary: Aprobar movimiento
+      tags:
+      - CajaFondo
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+  /caja-fondo/{id}/arqueo:
+    post:
+      summary: Arqueo
+      tags:
+      - CajaFondo
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+  /caja-fondo/{id}/cerrar:
+    post:
+      summary: Cerrar fondo
+      tags:
+      - CajaFondo
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+  /produccion/solicitudes:
+    post:
+      summary: Crear solicitud
+      tags:
+      - Produccion
+      responses:
+        '200':
+          description: OK
+  /produccion/ordenes:
+    post:
+      summary: Crear OP
+      tags:
+      - Produccion
+      responses:
+        '200':
+          description: OK
+  /produccion/ordenes/{id}/aprobar:
+    post:
+      summary: Aprobar OP
+      tags:
+      - Produccion
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+  /transferencias:
+    post:
+      summary: Crear transferencia
+      tags:
+      - Transferencias
+      responses:
+        '200':
+          description: OK
+  /transferencias/{id}/despachar:
+    post:
+      summary: Despachar
+      tags:
+      - Transferencias
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+  /transferencias/{id}/recibir:
+    post:
+      summary: Recibir
+      tags:
+      - Transferencias
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK

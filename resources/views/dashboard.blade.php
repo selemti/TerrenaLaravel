@@ -180,13 +180,19 @@
 
 @push('scripts')
 <script>
-// Inicializa las gráficas cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', function() {
-  // Verifica que terrena.js se haya cargado
-  if (window.Terrena && typeof Terrena.initDashboardCharts === 'function') {
-    Terrena.initDashboardCharts();
+document.addEventListener('DOMContentLoaded', async () => {
+  // Esperar a que los permisos estén listos (ya cargados por el layout)
+  if (!window.TerrenaPermissionsLoaded) {
+    await new Promise(resolve => {
+      document.addEventListener('terrena:perms-ready', resolve, { once: true });
+    });
+  }
+
+  // Inicializar charts del dashboard
+  if (window.Terrena && typeof window.Terrena.initDashboardCharts === 'function') {
+    window.Terrena.initDashboardCharts();
   } else {
-    console.warn('terrena.js no se ha cargado correctamente');
+    console.warn('[Dashboard] terrena.js no se ha cargado correctamente');
   }
 });
 </script>

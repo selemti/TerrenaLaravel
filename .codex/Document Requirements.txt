@@ -1,0 +1,1582 @@
+ Document Requirements
+
+  - Title the document "Repository Guidelines".
+  - Use Markdown headings (#, ##, etc.) for structure.
+  - Keep the document concise. 200-400 words is optimal.
+  - Keep explanations short, direct, and specific to this repository.
+  - Provide examples where helpful (commands, directory paths, naming patterns).
+  - Maintain a professional, instructional tone.
+
+  Recommended Sections
+
+  Project Structure & Module Organization
+
+  - Outline the project structure, including where the source code, tests, and assets are located.
+
+  Build, Test, and Development Commands
+
+  - List key commands for building, testing, and running locally (e.g., npm test, make build).
+  - Briefly explain what each command does.
+
+  Coding Style & Naming Conventions
+
+  - Specify indentation rules, language-specific style preferences, and naming patterns.
+  - Include any formatting or linting tools used.
+
+  Testing Guidelines
+
+  - Identify testing frameworks and coverage requirements.
+  - State test naming conventions and how to run tests.
+
+  Commit & Pull Request Guidelines
+
+  - Summarize commit message conventions found in the project’s Git history.
+  - Outline pull request requirements (descriptions, linked issues, screenshots, etc.).
+
+  (Optional) Add other sections if relevant, such as Security & Configuration Tips, Architecture
+  Overview, or Agent-Specific Instructions.
+
+
+• Explored
+  └ List ls
+    Read README.md, package.json
+
+• Ran git log -5 --oneline
+  └ 893ffda Sprint 1.1 - Cierre sesión 2025-10-24: migrations ejecutadas, listo para modelos
+    4695060 Sprint 1.1 - cierre sesión Claude 2025-10-24 (migrations completadas, siguiente: modelos)
+    c98ef09 feat(replenishment): Integración completa UI - Rutas y menú
+    1a36027 docs(replenishment): Documentación completa Fase 1 - Sistema de Pedidos Sugeridos
+    0c8c129 feat(replenishment): Backend completo Fase 1 - Pedidos Sugeridos
+
+• I'm putting together a well-structured AGENTS.md file of about 300 words to cover project modules,
+  build and test commands, coding style, testing practices, commit conventions, pull request guidance,
+  and optional environment and security tips, all with clear headings and practical examples. I want
+  to mention key directories like app/, resources/, tests/, typical commands like composer install,
+  php artisan test --testsuite=Feature, and emphasize commit messages formatted as feat(scope):
+  message, including the tolerance for Spanish but English structure. I'll also provide instructions
+  on environment setup like copying .env.example and touch on test coverage and naming conventions.
+  I'll handle the file creation via a patch and keep the doc concise but informative.
+
+• Added AGENTS.md (+23 -0)
+     1 +# Repository Guidelines
+     2 +
+     3 +## Project Structure & Module Organization
+     4 +Core Laravel code lives in `app/` (HTTP controllers, models, jobs) and is wired through `route
+        s/web.php` for UI traffic and `routes/api.php` for programmatic clients. Blade layouts, Alpine
+        oot-level `.txt` briefs—review them before picking up a feature. Database assets (`database/mi
+        grations`, `seeders`, `factories`) define the domain schema; keep feature-specific SQL changes
+         together.
+     5 +
+     6 +## Build, Test, and Development Commands
+     7 +- `composer install && npm install` — fresh dependency sync.
+     8 +- `php artisan serve` — boots the API/UI backend at `http://127.0.0.1:8000`.
+     9 +- `npm run dev` — runs Vite in watch mode; pairs well with `php artisan serve` via two termina
+        ls or `concurrently`.
+    10 +- `php artisan migrate --seed` — migrates and seeds local data required by caja chica and pedi
+        dos flows.
+    11 +- `npm run build` — generates optimized assets for staging/prod deploys.
+    12 +
+    13 +## Coding Style & Naming Conventions
+    14 +Follow PSR-12 (4-space indentation, brace-on-next-line) for PHP, and prefer typed properties/m
+        ethods on new classes. Blade templates should use lowercase, dash-separated filenames (`resour
+        ces/views/caja-chica/index.blade.php`). Controllers, events, and jobs follow Laravel’s StudlyC
+        ase suffixes (`*Controller`, `*Event`). Vue is not in use—stick to Alpine components and Boots
+        trap utility classes. Run `./vendor/bin/pint` before committing if you touch PHP, and keep Tai
+        lwind classes sorted logically (layout → spacing → color).
+    15 +
+    16 +## Testing Guidelines
+    17 +PHPUnit is configured via `phpunit.xml`; keep Feature specs in `tests/Feature` and focused uni
+        ts in `tests/Unit`. Name tests after the scenario (`CajaChicaAuthorizationTest.php`) and mirro
+        r namespaces. Run `php artisan test` locally; use `php artisan test --testsuite=Feature --cove
+        rage-html storage/coverage` when validating critical modules. When tests hit the database, inc
+        lude `RefreshDatabase` and seed only what the scenario needs.
+    18 +
+    19 +## Commit & Pull Request Guidelines
+    20 +Recent history mixes Spanish context with Conventional Commit prefixes (e.g., `feat(replenishm
+        ent): …`). Keep that pattern: `<type>(<scope>): summary`, where `type` ∈ {feat, fix, docs, cho
+        ed, screenshots or screencasts for UI shifts, and links to any updated docs under `docs/` or t
+        he knowledge base.
+    21 +
+    22 +## Environment & Security Tips
+    23 +Never commit `.env`; duplicate `cp .env.example .env` and fill credentials for DB, mail, and S
+        3-compatible storage. Queue workers rely on `redis` by default—ensure `QUEUE_CONNECTION=redis`
+         locally if you test async flows. For sensitive configs (API tokens, fiscal data loaders), use
+         Laravel’s `php artisan config:cache`/`config:clear` commands rather than editing cached PHP f
+        iles.
+  critical sentences—like simplifying styling instructions and tweaking environment details—while
+  keeping the useful info intact. I’ll apply a patch with those adjustments.
+
+• Edited AGENTS.md (+2 -2)
+    13  ## Coding Style & Naming Conventions
+    14 -Follow PSR-12 (4-space indentation, brace-on-next-line) for PHP, and prefer typed properties/m
+        ethods on new classes. Blade templates should use lowercase, dash-separated filenames (`resour
+        ces/views/caja-chica/index.blade.php`). Controllers, events, and jobs follow Laravel’s StudlyC
+        ase suffixes (`*Controller`, `*Event`). Vue is not in use—stick to Alpine components and Boots
+        trap utility classes. Run `./vendor/bin/pint` before committing if you touch PHP, and keep Tai
+        lwind classes sorted logically (layout → spacing → color).
+    22  ## Environment & Security Tips
+    23 -Never commit `.env`; duplicate `cp .env.example .env` and fill credentials for DB, mail, and S
+        3-compatible storage. Queue workers rely on `redis` by default—ensure `QUEUE_CONNECTION=redis`
+         locally if you test async flows. For sensitive configs (API tokens, fiscal data loaders), use
+         Laravel’s `php artisan config:cache`/`config:clear` commands rather than editing cached PHP f
+        iles.
+    23 +Never commit `.env`; duplicate `cp .env.example .env` and fill credentials for DB, mail, and S
+        3-compatible storage. Queue workers default to Redis—set `QUEUE_CONNECTION=redis` when testing
+         async flows. For sensitive configs (API tokens, fiscal data loaders), use Laravel’s `php arti
+        san config:cache`/`config:clear` commands rather than editing cached PHP files.
+
+• Ran wc -w AGENTS.md
+  └ 396 AGENTS.md
+
+─ Worked for 59s ─────────────────────────────────────────────────────────────────────────────────────
+
+• Added AGENTS.md:1 outlining Repository Guidelines tailored to this Laravel/Vite stack: project
+  structure highlights, key artisan/Vite commands, coding conventions (PSR-12, Blade naming, Pint),
+  PHPUnit practices with coverage tips, commit/PR expectations, plus environment and security
+  reminders for .env, Redis queues, and config caching. No automated tests were required for this
+  documentation-focused change.
+
+/status
+
+╭────────────────────────────────────────────────────────────────────────────╮
+│  >_ OpenAI Codex (v0.47.0)                                                 │
+│                                                                            │
+│  Model:            gpt-5-codex (reasoning none, summaries auto)            │
+│  Directory:        /mnt/c/xampp3/htdocs/TerrenaLaravel                     │
+│  Approval:         on-request                                              │
+│  Sandbox:          workspace-write                                         │
+│  Agents.md:        AGENTS.md                                               │
+│  Account:          suscripciones@selemti.com (Plus)                        │
+│  Session:          019a19af-1435-71e3-8088-aaeb5b04ecd4                    │
+│                                                                            │
+
+  Usa este documento como contrato del Sprint 1.2.
+
+  1. Crea el archivo app/Services/Inventory/ReceivingService.php con la clase ReceivingService.
+     - Métodos públicos (solo firma + phpdoc + return placeholders):
+       - createDraftReception($purchaseOrderId, $userId)
+       - updateReceptionLines($recepcionId, array $lineItems, $userId)
+       - validateReception($recepcionId, $userId)
+       - postToInventory($recepcionId, $userId)
+     - Cada método debe documentar claramente en phpdoc qué hace, en términos del flujo descrito en
+  STATUS_SPRINT_1.2.md.
+     - No implementes lógica todavía, solo estructura, validaciones básicas de parámetros y TODOs.
+
+     Cada método debe:
+     - Llamar al método correspondiente del ReceivingService.
+     - Retornar JSON con { ok: true, data: ..., message: ... }.
+     - Incluir comentarios "// TODO: autorización por permiso inventory.receptions.*".
+
+  3. Actualiza routes/api.php:
+     Dentro del Route::prefix('purchasing') existente, agrega:
+     Route::prefix('receptions')->group(function () {
+         Route::post('/create-from-po/{purchase_order_id}', [ReceivingController::class,
+  'createFromPO']);
+         Route::post('/{recepcion_id}/lines', [ReceivingController::class, 'setLines']);
+         Route::post('/{recepcion_id}/validate', [ReceivingController::class, 'validateReception']);
+         Route::post('/{recepcion_id}/post', [ReceivingController::class, 'postReception']);
+     });
+
+  IMPORTANTE:
+  - No toques la lógica de Kardex (mov_inv) todavía.
+  - No inventes nombres de tablas nuevos. Solo deja TODOs donde se necesite BD real.
+  - Mantén el namespace consistente con el proyecto (App\Services\Inventory y
+  App\Http\Controllers\Purchasing).
+
+
+• Explored
+  └ Search rg --files
+    Search STATUS_SPRINT_1\.2
+    Read STATUS_SPRINT_1.2.md
+
+• Updated Plan
+  └ □ Review sprint contract and existing structure for inventory receiving requirements
+    □ Add ReceivingService with documented method stubs and basic guards
+    □ Add ReceivingController delegating to service and returning JSON placeholders
+    □ Register new reception endpoints in routes/api.php
+
+• Updated Plan
+  └ Sprint scope reviewed via docs/Replenishment/STATUS_SPRINT_1.2.md.
+    ✔ Review sprint contract and existing structure for inventory receiving requirements
+    □ Add ReceivingService with documented method stubs and basic guards
+    □ Add ReceivingController delegating to service and returning JSON placeholders
+    □ Register new reception endpoints in routes/api.php
+
+• Explored
+  └ List Services
+    List Inventory
+    Read ReceptionService.php
+
+• I'm creating a new service file following the existing style and referencing the
+  STATUS_SPRINT_1.2.md doc. The file will include basic parameter validations throwing
+  InvalidArgumentException, method stubs with TODO comments, and straightforward placeholder returns
+  like empty arrays to align with the restful controller expectations. I'll keep the formatting
+  consistent and add doc comments that mention the related documentation flow.
+
+• Added app/Services/Inventory/ReceivingService.php (+103 -0)
+      1 +<?php
+      2 +
+      3 +namespace App\Services\Inventory;
+      4 +
+      5 +use InvalidArgumentException;
+      6 +
+      7 +class ReceivingService
+      8 +{
+      9 +    /**
+     10 +     * Drafts a reception header in estado EN_PROCESO leveraging purchase_order data as descr
+         ibed
+     11 +     * in docs/Replenishment/STATUS_SPRINT_1.2.md (steps 1-3).
+     12 +     *
+     13 +     * @param int $purchaseOrderId Approved purchase_order identifier that will seed cab+det
+         info.
+     14 +     * @param int $userId User creating the draft reception.
+     15 +     * @return array Placeholder payload for controller consumers.
+     16 +     */
+     17 +    public function createDraftReception(int $purchaseOrderId, int $userId): array
+     18 +    {
+     19 +        $this->guardPositiveId($purchaseOrderId, 'purchase order');
+     20 +        $this->guardPositiveId($userId, 'user');
+     21 +
+     22 +        // TODO: Pull purchase_order cab/det and persist recepcion_cab/det EN_PROCESO.
+     23 +        return [
+     24 +            'recepcion_id' => null,
+     25 +            'status' => 'EN_PROCESO',
+     26 +        ];
+     27 +    }
+     28 +
+     29 +    /**
+     30 +     * Receives physical quantities for each item (step 3 detail) keeping tolerances ready fo
+         r later
+     31 +     * validation. Expects already drafted reception in EN_PROCESO state.
+     32 +     *
+     33 +     * @param int $recepcionId Target reception header identifier.
+     34 +     * @param array $lineItems Array of line DTOs (item_id, qty_recibida, costo_unitario, uom
+         , etc.).
+     35 +     * @param int $userId User capturing the physical receipt.
+     36 +     * @return array Placeholder payload for controller consumers.
+     37 +     */
+     38 +    public function updateReceptionLines(int $recepcionId, array $lineItems, int $userId): ar
+         ray
+     39 +    {
+     40 +        $this->guardPositiveId($recepcionId, 'recepcion');
+     41 +        $this->guardPositiveId($userId, 'user');
+     42 +
+     43 +        if (empty($lineItems)) {
+     44 +            throw new InvalidArgumentException('Line items array cannot be empty.');
+     45 +        }
+     46 +
+     47 +        // TODO: Upsert recepcion_det rows, track qty_recibida vs qty_ordenada for tolerance
+         checks.
+     48 +        return [
+     49 +            'recepcion_id' => $recepcionId,
+     50 +            'lines_processed' => count($lineItems),
+     51 +        ];
+     52 +    }
+     53 +
+     54 +    /**
+     55 +     * Moves reception from EN_PROCESO to VALIDADA once quantities are confirmed (flow step 4
+         ) and
+     56 +     * flags those beyond tolerance for review.
+     57 +     *
+     58 +     * @param int $recepcionId Reception identifier being validated.
+     59 +     * @param int $userId Approver validating the reception.
+     60 +     * @return array Placeholder payload for controller consumers.
+     61 +     */
+     62 +    public function validateReception(int $recepcionId, int $userId): array
+     63 +    {
+     64 +        $this->guardPositiveId($recepcionId, 'recepcion');
+     65 +        $this->guardPositiveId($userId, 'user');
+     66 +
+     67 +        // TODO: Check EN_PROCESO state, evaluate tolerance vs config('inventory.reception_to
+         lerance_pct').
+     68 +        return [
+     69 +            'recepcion_id' => $recepcionId,
+     70 +            'status' => 'VALIDADA',
+     71 +        ];
+         ses the
+     76 +     * process (flow steps 5-6). Makes inventory immutable and finalizes estado POSTEADA_A_IN
+         VENTARIO → CERRADA.
+     77 +     *
+     78 +     * @param int $recepcionId Reception identifier ready for posting.
+     79 +     * @param int $userId User executing the posting (almacenista / supervisor).
+     83 +    {
+     84 +        $this->guardPositiveId($recepcionId, 'recepcion');
+     85 +        $this->guardPositiveId($userId, 'user');
+     86 +
+     87 +        // TODO: Generate mov_inv lines (tipo COMPRA), update reception states, mark immutabl
+         e.
+     88 +        return [
+     89 +            'recepcion_id' => $recepcionId,
+     90 +            'status' => 'POSTEADA_A_INVENTARIO',
+     91 +        ];
+     92 +    }
+     93 +
+     94 +    /**
+     95 +     * Basic guard for positive identifiers.
+     96 +     */
+     97 +    protected function guardPositiveId(int $id, string $label): void
+     98 +    {
+     99 +        if ($id <= 0) {
+    100 +            throw new InvalidArgumentException(sprintf('The %s id must be greater than zero.'
+         , $label));
+    101 +        }
+    102 +    }
+    103 +}
+
+• Updated Plan
+  └ ReceivingService created with method stubs, phpdoc tied to sprint flow, parameter guards, and
+    TODOs.
+    ✔ Review sprint contract and existing structure for inventory receiving requirements
+    ✔ Add ReceivingService with documented method stubs and basic guards
+    □ Add ReceivingController delegating to service and returning JSON placeholders
+    □ Register new reception endpoints in routes/api.php
+
+• Explored
+  └ List Purchasing
+    Read PurchaseSuggestionController.php
+
+• I'm working through how to create a new controller method following the project's PHP and Laravel
+  conventions—handling user ID retrieval carefully, adding TODO comments about authorization,
+  structuring JSON responses with message and data, and syncing route parameter names with method
+  arguments. I'll keep service injection via constructor and consider validation and error handling
+  approach. Next, I'll check the routes/api.php file for integration.
+
+• Explored
+  └ Read api.php
+
+• Added app/Http/Controllers/Purchasing/ReceivingController.php (+70 -0)
+     1 +<?php
+     2 +
+     3 +namespace App\Http\Controllers\Purchasing;
+     4 +
+     5 +use App\Http\Controllers\Controller;
+     6 +use App\Services\Inventory\ReceivingService;
+     7 +use Illuminate\Http\JsonResponse;
+     8 +use Illuminate\Http\Request;
+     9 +
+    10 +class ReceivingController extends Controller
+    11 +{
+    12 +    public function __construct(protected ReceivingService $receivingService)
+    13 +    {
+    14 +    }
+    15 +
+    16 +    public function createFromPO(int $purchase_order_id, Request $request): JsonResponse
+    17 +    {
+    18 +        // TODO: autorización por permiso inventory.receptions.*
+    19 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    20 +        $data = $this->receivingService->createDraftReception($purchase_order_id, $userId);
+    21 +
+    22 +        return response()->json([
+    23 +            'ok' => true,
+    24 +            'data' => $data,
+    25 +            'message' => 'Recepción creada a partir de la orden de compra.',
+    26 +        ]);
+    27 +    }
+    28 +
+    29 +    public function setLines(int $recepcion_id, Request $request): JsonResponse
+    30 +    {
+    31 +        // TODO: autorización por permiso inventory.receptions.*
+    32 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    33 +        $lineItems = $request->input('lines', []);
+    34 +        $lineItems = is_array($lineItems) ? $lineItems : [];
+    35 +
+    36 +        $data = $this->receivingService->updateReceptionLines($recepcion_id, $lineItems, $user
+        Id);
+    37 +
+    38 +        return response()->json([
+    39 +            'ok' => true,
+    40 +            'data' => $data,
+    41 +            'message' => 'Líneas de recepción guardadas.',
+    42 +        ]);
+    43 +    }
+    44 +
+    45 +    public function validateReception(int $recepcion_id, Request $request): JsonResponse
+    46 +    {
+    47 +        // TODO: autorización por permiso inventory.receptions.*
+    48 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    49 +        $data = $this->receivingService->validateReception($recepcion_id, $userId);
+    50 +
+    51 +        return response()->json([
+    52 +            'ok' => true,
+    53 +            'data' => $data,
+    54 +            'message' => 'Recepción validada.',
+    55 +        ]);
+    56 +    }
+    57 +
+    58 +    public function postReception(int $recepcion_id, Request $request): JsonResponse
+    59 +    {
+    60 +        // TODO: autorización por permiso inventory.receptions.*
+    61 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    62 +        $data = $this->receivingService->postToInventory($recepcion_id, $userId);
+    63 +
+    64 +        return response()->json([
+    65 +            'ok' => true,
+    66 +            'data' => $data,
+    67 +            'message' => 'Recepción posteada al inventario.',
+
+• Edited routes/api.php (+14 -6)
+     25  use App\Http\Controllers\Api\CatalogsController;
+     26 -use App\Http\Controllers\Purchasing\PurchaseSuggestionController;
+     26 +use App\Http\Controllers\Purchasing\PurchaseSuggestionController;
+     27 +use App\Http\Controllers\Purchasing\ReceivingController;
+     28
+        ⋮
+    201  */
+    201 -Route::prefix('purchasing')->group(function () {
+    202 -    Route::get('/suggestions', [PurchaseSuggestionController::class, 'index']);
+    203 -    Route::post('/suggestions/{id}/approve', [PurchaseSuggestionController::class, 'approve']
+         );
+    204 -    Route::post('/suggestions/{id}/convert', [PurchaseSuggestionController::class, 'convert']
+         );
+    205 -});
+    202 +Route::prefix('purchasing')->group(function () {
+    203 +    Route::get('/suggestions', [PurchaseSuggestionController::class, 'index']);
+    204 +    Route::post('/suggestions/{id}/approve', [PurchaseSuggestionController::class, 'approve']
+         );
+    205 +    Route::post('/suggestions/{id}/convert', [PurchaseSuggestionController::class, 'convert']
+         );
+    206 +
+    207 +    Route::prefix('receptions')->group(function () {
+    208 +        Route::post('/create-from-po/{purchase_order_id}', [ReceivingController::class, 'crea
+         teFromPO']);
+    209 +        Route::post('/{recepcion_id}/lines', [ReceivingController::class, 'setLines']);
+    210 +        Route::post('/{recepcion_id}/validate', [ReceivingController::class, 'validateRecepti
+         on']);
+    211 +        Route::post('/{recepcion_id}/post', [ReceivingController::class, 'postReception']);
+    212 +    });
+    213 +});
+    214
+
+• Updated Plan
+  └ ReceivingController added with service delegation, JSON responses, and TODO auth notes; new
+    purchasing routes registered.
+    ✔ Review sprint contract and existing structure for inventory receiving requirements
+    ✔ Add ReceivingService with documented method stubs and basic guards
+    ✔ Add ReceivingController delegating to service and returning JSON placeholders
+    ✔ Register new reception endpoints in routes/api.php
+
+• Explored
+  └ Read ReceivingService.php, ReceivingController.php, api.php
+
+• I’m wrapping up with a concise summary mentioning the new service, controller, and routes added with
+  references to the sprint docs and TODOs. I’ll note that no tests were run since this is scaffolding
+  and suggest next steps for implementing logic and tests. This way, everything remains clear and
+  actionable!
+
+─ Worked for 2m 16s ──────────────────────────────────────────────────────────────────────────────────
+
+• Sprint 1.2 Scaffolding
+
+  - app/Services/Inventory/ReceivingService.php:1-103 defines the ReceivingService contract requested
+    in docs/Replenishment/STATUS_SPRINT_1.2.md, adds phpdoc that maps to each flow stage, basic
+    positive-id guards, and TODO markers where DB/Kardex logic will land later.
+  - app/Http/Controllers/Purchasing/ReceivingController.php:1-70 exposes the four API actions, injects
+    the new service, adds the required authorization TODOs, normalizes inputs (including line arrays),
+    and returns the standardized {ok, data, message} JSON payloads.
+  - routes/api.php:26-213 registers the controller and wires the /api/purchasing/receptions/* routes
+    within the existing purchasing prefix per the sprint contract.
+
+  Tests were not run (new endpoints are structural placeholders only). Next steps: implement the
+  actual persistence/validation/Kardex logic in ReceivingService and layer authorization + request
+  validation once specs are finalized.
+
+
+› Usa docs/Replenishment/STATUS_SPRINT_1.3.md sección 3.1.
+  Actualiza ReceivingService::validateReception() y ::postToInventory() para reflejar esa lógica de estados/tolerancia/
+  Kardex.
+  No escribas SQL real, sólo TODOs y returns con la forma indicada.
+  Después actualiza ReceivingController para usar esas versiones.
+
+
+• Explored
+  └ Read STATUS_SPRINT_1.3.md
+
+• Edited app/Services/Inventory/ReceivingService.php (+17 -5)
+     55       * Moves reception from EN_PROCESO to VALIDADA once quantities are confirmed (flow step 4) and
+     56 -     * flags those beyond tolerance for review.
+     56 +     * flags those beyond tolerance for review per STATUS_SPRINT_1.3 §2.1.
+     57       *
+        ⋮
+     66
+     67 -        // TODO: Check EN_PROCESO state, evaluate tolerance vs config('inventory.reception_tolerance_pct').
+     67 +        // TODO: Load recepcion EN_PROCESO with lines, join purchase_order det to compute qty_ordenada.
+     68 +        // TODO: Calculate diferencia_pct per line vs config('inventory.reception_tolerance_pct', 5).
+     69 +        // TODO: Set requiere_aprobacion=true if any line exceeds tolerance and block posting until approved.
+     70 +        // TODO: Persist estado=VALIDADA, validator user/time, and requiere_aprobacion flag.
+     71 +        $requiresApproval = false;
+     72 +
+     73          return [
+        ⋮
+     75              'status' => 'VALIDADA',
+     76 +            'requiere_aprobacion' => $requiresApproval,
+     77          ];
+        ⋮
+     81       * Posts validated reception to inventory by creating selemti.mov_inv COMPRA rows and closes the
+     76 -     * process (flow steps 5-6). Makes inventory immutable and finalizes estado POSTEADA_A_INVENTARIO → CERRADA.
+     82 +     * process (flow steps 5-6) per STATUS_SPRINT_1.3 §3.1, ensuring tolerance approvals are honored.
+     83       *
+        ⋮
+     92
+     87 -        // TODO: Generate mov_inv lines (tipo COMPRA), update reception states, mark immutable.
+     93 +        // TODO: Assert estado actual == VALIDADA; if not, throw domain exception.
+     94 +        // TODO: If requiere_aprobacion=true && no approval recorded, throw domain exception (block posting).
+     95 +        // TODO: Generate mov_inv rows (tipo COMPRA) per recepcion_det with qty/costo, mark immutable.
+     96 +        // TODO: Set estado POSTEADA_A_INVENTARIO ➜ CERRADA, stamp user/time, and prevent further edits.
+     97 +        $movimientosGenerados = 0;
+     98 +
+     99          return [
+    100              'recepcion_id' => $recepcionId,
+     90 -            'status' => 'POSTEADA_A_INVENTARIO',
+    101 +            'movimientos_generados' => $movimientosGenerados,
+    102 +            'status' => 'CERRADA',
+    103          ];
+
+• Edited app/Http/Controllers/Purchasing/ReceivingController.php (+2 -2)
+    46      {
+    47 -        // TODO: autorización por permiso inventory.receptions.*
+    47 +        // TODO: autorización por permiso inventory.receptions.validate
+    48          $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+
+─ Worked for 41s ──────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• Receiving Updates
+
+  - app/Services/Inventory/ReceivingService.php:54-103 now documents the Sprint 1.3 rules: validation stubs describe
+    tolerance calculations, approval gating, and state transitions; posting stubs mention validating state, enforcing
+    pending approvals, generating mov_inv entries, and closing receptions, returning the new response shapes.
+  - app/Http/Controllers/Purchasing/ReceivingController.php:16-68 retains the same service calls but its validation and
+    posting endpoints now flag the specific inventory.receptions.validate and .post permissions for future authorization
+    hooks, aligning with STATUS_SPRINT_1.3 §2.2.
+
+  Next steps: implement the actual tolerance checks, approval workflow, and Kardex writes once DB contracts are ready, plus
+  wire the defined permissions into policies/middleware.
+
+
+› Usa docs/Replenishment/STATUS_SPRINT_1.4.md secciones 3.1 y 3.2.
+
+  1. Agrega en ReceivingService el método:
+     public function finalizeCosting(int $recepcionId, int $userId): array
+     con la lógica/documentación indicada:
+       - calcular total_valorizado = sum(qty_recibida * costo_unitario_final)
+       - marcar last_cost_applied=true
+       - actualizar último costo del item para compras futuras
+       - return [
+           'recepcion_id' => ...,
+           'total_valorizado' => ...,
+           'status' => 'COSTO_FINAL_APLICADO',
+         ]
+     No escribas SQL real, usa TODOs.
+
+  2. En ReceivingController agrega:
+     public function finalizeCosting(int $recepcion_id, Request $request): JsonResponse
+     que llame $this->receivingService->finalizeCosting(...)
+     y devuelva { ok, data, message }.
+     Documenta permiso // TODO: autorización inventory.receptions.cost_finalize
+
+  3. En routes/api.php agrega la ruta:
+     POST /api/purchasing/receptions/{recepcion_id}/costing
+     apuntando a ReceivingController@finalizeCosting
+
+
+• Explored
+  └ Read STATUS_SPRINT_1.4.md, ReceivingService.php
+
+• Edited app/Services/Inventory/ReceivingService.php (+25 -0)
+    106      /**
+    107 +     * Applies final costing per STATUS_SPRINT_1.4 §3.2 by valuating the reception and refreshing item costs.
+    108 +     *
+    109 +     * @param int $recepcionId Reception identifier already posteada.
+    110 +     * @param int $userId User finalizing costing (compras / finanzas).
+    111 +     * @return array Aggregate totals for UI confirmation.
+    115 +        $this->guardPositiveId($recepcionId, 'recepcion');
+    116 +        $this->guardPositiveId($userId, 'user');
+    117 +
+    118 +        // TODO: Load recepcion lines (qty_recibida, costo_unitario_final) and cabecera currency.
+    119 +        // TODO: Calculate total_valorizado = sum(qty_recibida * costo_unitario_final).
+    120 +        // TODO: Update recepcion_cab set total_valorizado, last_cost_applied=true, status=COSTO_FINAL_APLICADO, u
+         ser/time.
+    121 +        // TODO: Update latest purchase cost for each item/vendor to feed future suggestions.
+    122 +        $totalValorizado = 0.0;
+    123 +
+    124 +        return [
+    125 +            'recepcion_id' => $recepcionId,
+    126 +            'total_valorizado' => $totalValorizado,
+    129 +    }
+    130 +
+    131 +    /**
+    132       * Basic guard for positive identifiers.
+    70 +
+    71 +    public function finalizeCosting(int $recepcion_id, Request $request): JsonResponse
+    72 +    {
+    73 +        // TODO: autorización por permiso inventory.receptions.cost_finalize
+    74 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    75 +        $data = $this->receivingService->finalizeCosting($recepcion_id, $userId);
+    76 +
+    77 +        return response()->json([
+    78 +            'ok' => true,
+    79 +            'data' => $data,
+    80 +            'message' => 'Costeo final aplicado.',
+    81 +        ]);
+    82 +    }
+    83  }
+
+• Edited routes/api.php (+1 -0)
+    211          Route::post('/{recepcion_id}/post', [ReceivingController::class, 'postReception']);
+    212 +        Route::post('/{recepcion_id}/costing', [ReceivingController::class, 'finalizeCosting']);
+    213      });
+
+• Explored
+  └ Read ReceivingService.php, ReceivingController.php, api.php
+
+─ Worked for 50s ──────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• - app/Services/Inventory/ReceivingService.php:80-128 gained the Sprint 1.4 costing flow: the new finalizeCosting() method
+    documents total valuation, last-cost updates, and returns the required structure alongside TODO hooks for DB work;
+    earlier methods remain aligned with prior sprints.
+  - app/Http/Controllers/Purchasing/ReceivingController.php:58-82 now exposes finalizeCosting() which logs the new
+    inventory.receptions.cost_finalize permission, calls the service, and responds with the standard {ok, data, message}
+    JSON.
+  - routes/api.php:202-214 registers POST /api/purchasing/receptions/{recepcion_id}/costing pointing to the new controller
+    action.
+
+  No tests were run since logic is still placeholder-level. Suggested next steps: implement the actual DB interactions
+  (line valuations, last-cost fields) when schema updates are ready, and wire the planned permissions into middleware
+  before exposing the endpoint to operators.
+
+
+› Para 1.5 → usar STATUS_SPRINT_1.5.md
+
+
+• Explored
+  └ Read STATUS_SPRINT_1.5.md
+
+• I’m mapping out creating a ReturnService with key methods and aligning them to controller actions, each tagged with TODO
+  comments for permission checks reflecting the documented permission types. I’ll also set routes under purchasing/returns
+  prefixes and carefully match controller methods to service calls and HTTP endpoints since this is shaping up to be a
+  complex multi-step task.
+
+• Updated Plan
+  └ □ Create Purchasing ReturnService stubs per Sprint 1.5 contract
+    □ Add ReturnController delegating to service with JSON responses and auth TODOs
+    □ Register purchasing return routes under /api/purchasing/returns
+
+• Added app/Services/Purchasing/ReturnService.php (+111 -0)
+      1 +<?php
+      2 +
+      3 +namespace App\Services\Purchasing;
+      4 +
+      5 +use InvalidArgumentException;
+      6 +
+      7 +class ReturnService
+      8 +{
+      9 +    /**
+     10 +     * Drafts a supplier return linked to a purchase order per STATUS_SPRINT_1.5 §3.1.
+     11 +     */
+     12 +    public function createDraftReturn(int $purchaseOrderId, int $userId): array
+     13 +    {
+     14 +        $this->guardPositiveId($purchaseOrderId, 'purchase order');
+     15 +        $this->guardPositiveId($userId, 'user');
+     16 +
+     17 +        // TODO: Create devolucion cabecera in BORRADOR based on purchase_order/reception data.
+     18 +        return [
+     19 +            'return_id' => null,
+     20 +            'status' => 'BORRADOR',
+     21 +        ];
+     22 +    }
+     23 +
+     24 +    /**
+     25 +     * Approves a draft return and transitions BORRADOR → APROBADA.
+     26 +     */
+     27 +    public function approveReturn(int $returnId, int $userId): array
+     28 +    {
+     29 +        $this->guardPositiveId($returnId, 'return');
+     30 +        $this->guardPositiveId($userId, 'user');
+     31 +
+     32 +        // TODO: Validate current estado == BORRADOR and persist APROBADA with approver metadata.
+     33 +        return [
+     34 +            'return_id' => $returnId,
+     35 +            'status' => 'APROBADA',
+     36 +        ];
+     37 +    }
+     38 +
+     39 +    /**
+     40 +     * Marks the return as shipped to supplier (APROBADA → EN_TRANSITO) recording tracking info.
+     41 +     *
+     42 +     * @param array $trackingInfo Data such as carrier, guide number, eta, etc.
+     43 +     */
+     44 +    public function markShipped(int $returnId, array $trackingInfo, int $userId): array
+     45 +    {
+     46 +        $this->guardPositiveId($returnId, 'return');
+     47 +        $this->guardPositiveId($userId, 'user');
+     48 +
+     49 +        // TODO: Persist tracking details, estado=EN_TRANSITO, and timestamps without touching inventory.
+     50 +        return [
+     51 +            'return_id' => $returnId,
+     52 +            'status' => 'EN_TRANSITO',
+     53 +        ];
+     54 +    }
+     55 +
+     56 +    /**
+     57 +     * Confirms supplier received the shipment (EN_TRANSITO → RECIBIDA_PROVEEDOR).
+     58 +     */
+     59 +    public function confirmVendorReceived(int $returnId, int $userId): array
+     60 +    {
+     61 +        $this->guardPositiveId($returnId, 'return');
+     62 +        $this->guardPositiveId($userId, 'user');
+     63 +
+     64 +        // TODO: Record confirmation docs (e.g., signed manifest) and transition to RECIBIDA_PROVEEDOR.
+     65 +        return [
+     66 +            'return_id' => $returnId,
+     67 +            'status' => 'RECIBIDA_PROVEEDOR',
+     68 +        ];
+     69 +    }
+     70 +
+     71 +    /**
+     72 +     * Generates negative inventory movements (mov_inv tipo DEVOLUCION_PROVEEDOR) once supplier receipts are confi
+         rmed.
+     73 +     */
+     74 +    public function postInventoryAdjustment(int $returnId, int $userId): array
+     75 +    {
+     76 +        $this->guardPositiveId($returnId, 'return');
+     77 +        $this->guardPositiveId($userId, 'user');
+     78 +
+     79 +        // TODO: Ensure estado == RECIBIDA_PROVEEDOR before generating negative mov_inv rows (qty < 0).
+     80 +        // TODO: Mark movements immutable and set estado NOTA_CREDITO pending credit documentation.
+     81 +        $movimientosGenerados = 0;
+     82 +
+     83 +        return [
+     84 +            'return_id' => $returnId,
+     85 +            'movimientos_generados' => $movimientosGenerados,
+     86 +            'status' => 'NOTA_CREDITO',
+     87 +        ];
+     88 +    }
+     89 +
+     90 +    /**
+     91 +     * Attaches supplier credit note metadata (folio, monto, fecha) and closes the return.
+     92 +     */
+     93 +    public function attachCreditNote(int $returnId, array $notaCreditoData, int $userId): array
+     94 +    {
+     95 +        $this->guardPositiveId($returnId, 'return');
+     96 +        $this->guardPositiveId($userId, 'user');
+     97 +
+     98 +        // TODO: Persist folio_nota_credito, monto, fecha, and transition NOTA_CREDITO → CERRADA.
+     99 +        return [
+    100 +            'return_id' => $returnId,
+    101 +            'status' => 'CERRADA',
+    102 +        ];
+    103 +    }
+    104 +
+    105 +    protected function guardPositiveId(int $id, string $label): void
+    106 +    {
+    107 +        if ($id <= 0) {
+    108 +            throw new InvalidArgumentException(sprintf('The %s id must be greater than zero.', $label));
+    109 +        }
+    110 +    }
+    111 +}
+
+• Updated Plan
+  └ ReturnService created with Sprint 1.5 method stubs, phpdocs, guards, and TODOs.
+    ✔ Create Purchasing ReturnService stubs per Sprint 1.5 contract
+    □ Add ReturnController delegating to service with JSON responses and auth TODOs
+    □ Register purchasing return routes under /api/purchasing/returns
+
+• Added app/Http/Controllers/Purchasing/ReturnController.php (+98 -0)
+     1 +<?php
+     2 +
+     3 +namespace App\Http/Controllers/Purchasing;
+     4 +
+     5 +use App\Http\Controllers\Controller;
+     6 +use App\Services\Purchasing\ReturnService;
+     7 +use Illuminate\Http\JsonResponse;
+     8 +use Illuminate\Http\Request;
+     9 +
+    10 +class ReturnController extends Controller
+    11 +{
+    12 +    public function __construct(protected ReturnService $returnService)
+    13 +    {
+    14 +    }
+    15 +
+    16 +    public function createFromPO(int $purchase_order_id, Request $request): JsonResponse
+    17 +    {
+    18 +        // TODO: autorización purchasing.returns.create
+    19 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    20 +        $data = $this->returnService->createDraftReturn($purchase_order_id, $userId);
+    21 +
+    22 +        return response()->json([
+    23 +            'ok' => true,
+    24 +            'data' => $data,
+    25 +            'message' => 'Devolución al proveedor creada en borrador.',
+    26 +        ]);
+    27 +    }
+    28 +
+    29 +    public function approve(int $return_id, Request $request): JsonResponse
+    30 +    {
+    31 +        // TODO: autorización purchasing.returns.approve
+    32 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    33 +        $data = $this->returnService->approveReturn($return_id, $userId);
+    34 +
+    35 +        return response()->json([
+    36 +            'ok' => true,
+    37 +            'data' => $data,
+    38 +            'message' => 'Devolución aprobada.',
+    39 +        ]);
+    40 +    }
+    41 +
+    42 +    public function ship(int $return_id, Request $request): JsonResponse
+    43 +    {
+    44 +        // TODO: autorización purchasing.returns.approve
+    45 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    46 +        $trackingInfo = $request->input('tracking', []);
+    47 +        $trackingInfo = is_array($trackingInfo) ? $trackingInfo : [];
+    48 +
+    49 +        $data = $this->returnService->markShipped($return_id, $trackingInfo, $userId);
+    50 +
+    51 +        return response()->json([
+    52 +            'ok' => true,
+    53 +            'data' => $data,
+    54 +            'message' => 'Devolución marcada en tránsito.',
+    55 +        ]);
+    56 +    }
+    57 +
+    58 +    public function confirm(int $return_id, Request $request): JsonResponse
+    59 +    {
+    60 +        // TODO: autorización purchasing.returns.approve
+    61 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    62 +        $data = $this->returnService->confirmVendorReceived($return_id, $userId);
+    63 +
+    64 +        return response()->json([
+    65 +            'ok' => true,
+    66 +            'data' => $data,
+    67 +            'message' => 'Proveedor confirmó recepción.',
+    68 +        ]);
+    69 +    }
+    70 +
+    71 +    public function post(int $return_id, Request $request): JsonResponse
+    72 +    {
+    73 +        // TODO: autorización purchasing.returns.post
+    74 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    75 +        $data = $this->returnService->postInventoryAdjustment($return_id, $userId);
+    76 +
+    77 +        return response()->json([
+    78 +            'ok' => true,
+    79 +            'data' => $data,
+    80 +            'message' => 'Devolución posteada a inventario (movimientos negativos).',
+    81 +        ]);
+    82 +    }
+    83 +
+    84 +    public function creditNote(int $return_id, Request $request): JsonResponse
+    85 +    {
+    86 +        // TODO: autorización purchasing.returns.credit_note
+    87 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    88 +        $notaCreditoData = $request->only(['folio', 'monto', 'fecha', 'observaciones']);
+    89 +
+    90 +        $data = $this->returnService->attachCreditNote($return_id, $notaCreditoData, $userId);
+    91 +
+    92 +        return response()->json([
+    93 +            'ok' => true,
+    94 +            'data' => $data,
+
+• Edited app/Http/Controllers/Purchasing/ReturnController.php (+1 -1)
+    2
+    3 -namespace App\Http/Controllers/Purchasing;
+    3 +namespace App\Http\Controllers\Purchasing;
+    4
+
+• Edited routes/api.php (+10 -0)
+     27  use App\Http\Controllers\Purchasing\ReceivingController;
+     28 +use App\Http\Controllers\Purchasing\ReturnController;
+     29
+        ⋮
+    214      });
+    215 +
+    216 +    Route::prefix('returns')->group(function () {
+    217 +        Route::post('/create-from-po/{purchase_order_id}', [ReturnController::class, 'createFromPO']);
+    218 +        Route::post('/{return_id}/approve', [ReturnController::class, 'approve']);
+    219 +        Route::post('/{return_id}/ship', [ReturnController::class, 'ship']);
+    220 +        Route::post('/{return_id}/confirm', [ReturnController::class, 'confirm']);
+    221 +        Route::post('/{return_id}/post', [ReturnController::class, 'post']);
+    222 +        Route::post('/{return_id}/credit-note', [ReturnController::class, 'creditNote']);
+    223 +    });
+• Updated Plan
+  └ ReturnController created and new purchasing return routes registered per Sprint 1.5 contract.
+    ✔ Create Purchasing ReturnService stubs per Sprint 1.5 contract
+    ✔ Add ReturnController delegating to service with JSON responses and auth TODOs
+    ✔ Register purchasing return routes under /api/purchasing/returns
+
+─ Worked for 2m 00s ───────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• - app/Services/Purchasing/ReturnService.php now hosts the Sprint 1.5 stubs for supplier returns, documenting each
+    state transition (draft, approval, transit, confirmation, inventory posting, credit note) with guards, TODOs, and the
+    expected response payloads.
+  - app/Http/Controllers/Purchasing/ReturnController.php wires HTTP actions to those service methods, includes the {ok,
+    ship, confirm, post, credit-note) alongside the existing receptions routes.
+
+  No automated tests were run; once the underlying DB logic is implemented you’ll want to add feature tests covering each
+  new endpoint and permission.
+
+  Para 1.7 → usar STATUS_SPRINT_1.7.md
+
+  Para 1.8 → usar STATUS_SPRINT_1.8.md
+
+
+• Recibido: para los sprints 1.6, 1.7 y 1.8 tomaré como referencia las secciones correspondientes en docs/Replenishment/
+  STATUS_SPRINT_1.6.md, ...1.7.md y ...1.8.md cuando abordemos esas tareas. Cuando estés listo para el siguiente ajuste,
+  indícame qué implementar y usaré el documento de sprint indicado como contrato.
+
+
+› YA TEMINASTES LOS STATUS_SPRINT_1.5?
+
+
+• Sí, el alcance de STATUS_SPRINT_1.5.md quedó cubierto:
+
+  - app/Services/Purchasing/ReturnService.php implementa todos los métodos stub solicitados con guards, phpdoc y TODOs,
+    cubriendo cada estado (BORRADOR → … → CERRADA).
+  - app/Http/Controllers/Purchasing/ReturnController.php expone los endpoints que llaman al servicio y devuelven { ok,
+    data, message }, con los TODOs de permisos purchasing.returns.*.
+  - routes/api.php:202-214 registra el grupo /api/purchasing/returns con las seis rutas pedidas.
+
+  Lo siguiente sería implementar la lógica real cuando el sprint lo requiera.
+
+
+› Y los anteriores como vas?
+
+
+• - Sprint 1.2: listo. ReceivingService y ReceivingController existen con los métodos/JSON pedidos, y rutas /api/
+    purchasing/receptions/* activas.
+  - Sprint 1.3: listo a nivel contrato. validateReception() y postToInventory() documentan las reglas de tolerancia/
+    estados/Kardex (TODOs sin SQL) y el controller ya usa esas versiones.
+  - Sprint 1.4: listo. finalizeCosting() se añadió al servicio con los cálculos/TODOs descritos, su endpoint está en el
+    controller y la ruta /costing quedó registrada.
+  - Sprint 1.5: también completado (servicio, controller y rutas de devoluciones).
+
+  Dime cuándo avanzamos con 1.6.
+
+
+› de una vez y al finaliza ve con los siguientes por favor sin detenerte
+
+
+• Explored
+  └ Read STATUS_SPRINT_1.6.md, STATUS_SPRINT_1.7.md, STATUS_SPRINT_1.8.md
+
+• I’m mapping out a sequential plan to tackle tasks 1.6, 1.7, and 1.8, focusing on creating service classes like
+  TransferService and ProductionService with their controllers and routes, plus a Reports controller for KPIs. This will
+  help me manage the bigger workload across multiple files in a clear, stepwise way.
+
+• Updated Plan
+  └ □ Implement Sprint 1.6 scaffolding (TransferService, controller, routes)
+    □ Implement Sprint 1.7 scaffolding (Production service/controller/routes)
+    □ Implement Sprint 1.8 scaffolding (Reports controller/routes)
+
+• I'm starting the first step by creating the TransferService with specified methods and the TransferController with
+  matching action methods. I'll add the new route group under the existing inventory prefix for transfers and ensure
+  methods parse input and call the service properly, including TODOs for permission checks and return placeholders.
+
+• Added app/Services/Inventory/TransferService.php (+110 -0)
+      1 +<?php
+      2 +
+      3 +namespace App\Services\Inventory;
+      4 +
+      5 +use InvalidArgumentException;
+      6 +
+      7 +class TransferService
+      8 +{
+      9 +    /**
+     10 +     * Creates a transfer request between almacenes following STATUS_SPRINT_1.6 §3.1.
+     11 +     *
+     12 +     * @param int   $fromAlmacenId Origen (sucursal/almacén que envía).
+     13 +     * @param int   $toAlmacenId   Destino que recibirá.
+     14 +     * @param array $lines         Array de items con qty solicitada.
+     15 +     * @param int   $userId        Usuario que solicita.
+     16 +     */
+     17 +    public function createTransfer(int $fromAlmacenId, int $toAlmacenId, array $lines, int $userId): array
+     18 +    {
+     19 +        $this->guardPositiveId($fromAlmacenId, 'almacén origen');
+     20 +        $this->guardPositiveId($toAlmacenId, 'almacén destino');
+     21 +        $this->guardPositiveId($userId, 'user');
+     22 +
+     23 +        if (empty($lines)) {
+     24 +            throw new InvalidArgumentException('At least one line item is required for a transfer.');
+     25 +        }
+     26 +
+     27 +        // TODO: Persist transfer cabecera with estado=SOLICITADA and attach line detail.
+     28 +        return [
+     29 +            'transfer_id' => null,
+     30 +            'status' => 'SOLICITADA',
+     31 +        ];
+     32 +    }
+     33 +
+     34 +    /**
+     35 +     * Approves a transfer request (SOLICITADA → APROBADA).
+     36 +     */
+     37 +    public function approveTransfer(int $transferId, int $userId): array
+     38 +    {
+     39 +        $this->guardPositiveId($transferId, 'transfer');
+     40 +        $this->guardPositiveId($userId, 'user');
+     41 +
+     42 +        // TODO: Validate estado=SOLICITADA and update to APROBADA with approval metadata.
+     43 +        return [
+     44 +            'transfer_id' => $transferId,
+     45 +            'status' => 'APROBADA',
+     46 +        ];
+     47 +    }
+     48 +
+     49 +    /**
+     50 +     * Marks a transfer as in transit once pallets leave origin (APROBADA → EN_TRANSITO).
+     51 +     */
+     52 +    public function markInTransit(int $transferId, int $userId): array
+     53 +    {
+     54 +        $this->guardPositiveId($transferId, 'transfer');
+     55 +        $this->guardPositiveId($userId, 'user');
+     56 +
+     57 +        // TODO: Capture shipping details (carrier, guía) and set estado=EN_TRANSITO without stock impact yet.
+     58 +        return [
+     59 +            'transfer_id' => $transferId,
+     60 +            'status' => 'EN_TRANSITO',
+     61 +        ];
+     62 +    }
+     63 +
+     64 +    /**
+     65 +     * Records received quantities at destination (EN_TRANSITO → RECIBIDA) with potential adjustments.
+     66 +     *
+     67 +     * @param array $receivedLines Array con qty_recibida por item/lote.
+     68 +     */
+     69 +    public function receiveTransfer(int $transferId, array $receivedLines, int $userId): array
+     70 +    {
+     71 +        $this->guardPositiveId($transferId, 'transfer');
+     72 +        $this->guardPositiveId($userId, 'user');
+     73 +
+     74 +        // TODO: Validate estado=EN_TRANSITO, store received lines, compute diffs to flag adjustments.
+     75 +        $receivedCount = count($receivedLines);
+     76 +
+     77 +        return [
+     78 +            'transfer_id' => $transferId,
+     79 +            'lines_confirmed' => $receivedCount,
+     80 +            'status' => 'RECIBIDA',
+     81 +        ];
+     82 +    }
+     83 +
+     84 +    /**
+     85 +     * Posts inventory movements for both origin (TRANSFER_OUT) and destination (TRANSFER_IN) then closes.
+     86 +     */
+     87 +    public function postTransferToInventory(int $transferId, int $userId): array
+     88 +    {
+     89 +        $this->guardPositiveId($transferId, 'transfer');
+     90 +        $this->guardPositiveId($userId, 'user');
+     91 +
+     92 +        // TODO: Ensure estado=RECIBIDA before generating mov_inv.
+     93 +        // TODO: Insert NEGATIVE movements for origen (tipo TRANSFER_OUT) and POSITIVE for destino (TRANSFER_IN).
+     94 +        // TODO: Set estado=CERRADA and lock further edits.
+     95 +        $movimientosGenerados = 0;
+     96 +
+     97 +        return [
+     98 +            'transfer_id' => $transferId,
+     99 +            'movimientos_generados' => $movimientosGenerados,
+    100 +            'status' => 'CERRADA',
+    101 +        ];
+    102 +    }
+    103 +
+    104 +    protected function guardPositiveId(int $id, string $label): void
+    105 +    {
+    106 +        if ($id <= 0) {
+    107 +            throw new InvalidArgumentException(sprintf('The %s id must be greater than zero.', $label));
+    108 +        }
+    109 +    }
+    110 +}
+
+• Added app/Http/Controllers/Inventory/TransferController.php (+88 -0)
+     1 +<?php
+     2 +
+     3 +namespace App\Http\Controllers\Inventory;
+     4 +
+     5 +use App\Http\Controllers\Controller;
+     6 +use App\Services\Inventory\TransferService;
+     7 +use Illuminate\Http\JsonResponse;
+     8 +use Illuminate\Http\Request;
+     9 +
+    10 +class TransferController extends Controller
+    11 +{
+    12 +    public function __construct(protected TransferService $transferService)
+    13 +    {
+    14 +    }
+    15 +
+    16 +    public function create(Request $request): JsonResponse
+    17 +    {
+    18 +        // TODO: autorización inventory.transfers.create
+    19 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    20 +        $from = (int) $request->input('from_almacen_id');
+    21 +        $to = (int) $request->input('to_almacen_id');
+    22 +        $lines = $request->input('lines', []);
+    23 +        $lines = is_array($lines) ? $lines : [];
+    24 +
+    25 +        $data = $this->transferService->createTransfer($from, $to, $lines, $userId);
+    26 +
+    27 +        return response()->json([
+    28 +            'ok' => true,
+    29 +            'data' => $data,
+    30 +            'message' => 'Transferencia solicitada.',
+    31 +        ]);
+    32 +    }
+    33 +
+    34 +    public function approve(int $transfer_id, Request $request): JsonResponse
+    35 +    {
+    36 +        // TODO: autorización inventory.transfers.approve
+    37 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    38 +        $data = $this->transferService->approveTransfer($transfer_id, $userId);
+    39 +
+    40 +        return response()->json([
+    41 +            'ok' => true,
+    42 +            'data' => $data,
+    43 +            'message' => 'Transferencia aprobada.',
+    44 +        ]);
+    45 +    }
+    46 +
+    47 +    public function ship(int $transfer_id, Request $request): JsonResponse
+    48 +    {
+    49 +        // TODO: autorización inventory.transfers.ship
+    50 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    51 +        $data = $this->transferService->markInTransit($transfer_id, $userId);
+    52 +
+    53 +        return response()->json([
+    54 +            'ok' => true,
+    55 +            'data' => $data,
+    56 +            'message' => 'Transferencia en tránsito.',
+    57 +        ]);
+    58 +    }
+    59 +
+    60 +    public function receive(int $transfer_id, Request $request): JsonResponse
+    61 +    {
+    62 +        // TODO: autorización inventory.transfers.receive
+    63 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    64 +        $receivedLines = $request->input('lines', []);
+    65 +        $receivedLines = is_array($receivedLines) ? $receivedLines : [];
+    66 +
+    67 +        $data = $this->transferService->receiveTransfer($transfer_id, $receivedLines, $userId);
+    68 +
+    69 +        return response()->json([
+    70 +            'ok' => true,
+    71 +            'data' => $data,
+    72 +            'message' => 'Transferencia recibida en destino.',
+    73 +        ]);
+    74 +    }
+    75 +
+    76 +    public function post(int $transfer_id, Request $request): JsonResponse
+    77 +    {
+    78 +        // TODO: autorización inventory.transfers.post
+    79 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    80 +        $data = $this->transferService->postTransferToInventory($transfer_id, $userId);
+    81 +
+    82 +        return response()->json([
+    83 +            'ok' => true,
+    84 +            'data' => $data,
+    85 +            'message' => 'Transferencia posteada a inventario (transfer out/in).',
+    86 +        ]);
+    87 +    }
+    88 +}
+
+• Edited routes/api.php (+13 -4)
+     23  use App\Http\Controllers\Api\Inventory\StockController;
+     24 -use App\Http\Controllers\Api\Inventory\VendorController;
+     25 -use App\Http\Controllers\Api\CatalogsController;
+     24 +use App\Http\Controllers\Api\Inventory\VendorController;
+     25 +use App\Http\Controllers\Inventory\TransferController;
+     26 +use App\Http\Controllers\Api\CatalogsController;
+     27  use App\Http\Controllers\Purchasing\PurchaseSuggestionController;
+        ⋮
+    156
+    156 -    // Movements
+    157 -    Route::post('/movements', [StockController::class, 'createMovement']);
+    157 +    // Movements
+    158 +    Route::post('/movements', [StockController::class, 'createMovement']);
+    159 +
+    160 +    Route::prefix('transfers')->group(function () {
+    161 +        Route::post('/create', [TransferController::class, 'create']);
+    162 +        Route::post('/{transfer_id}/approve', [TransferController::class, 'approve']);
+    163 +        Route::post('/{transfer_id}/ship', [TransferController::class, 'ship']);
+    164 +        Route::post('/{transfer_id}/receive', [TransferController::class, 'receive']);
+    165 +        Route::post('/{transfer_id}/post', [TransferController::class, 'post']);
+    166 +    });
+    167
+
+• Updated Plan
+  └ Transfer service/controller and routes added per Sprint 1.6 contract.
+    ✔ Implement Sprint 1.6 scaffolding (TransferService, controller, routes)
+    □ Implement Sprint 1.7 scaffolding (Production service/controller/routes)
+    □ Implement Sprint 1.8 scaffolding (Reports controller/routes)
+
+• Added app/Services/Production/ProductionService.php (+102 -0)
+      1 +<?php
+      2 +
+      3 +namespace App\Services\Production;
+      4 +
+      5 +use InvalidArgumentException;
+      6 +
+      7 +class ProductionService
+      8 +{
+      9 +    /**
+     10 +     * Plans a production batch for a recipe (estado PLANIFICADA) per STATUS_SPRINT_1.7 §2.1.
+     11 +     */
+     12 +    public function planBatch(int $recipeId, float $qtyTarget, int $userId): array
+     13 +    {
+     14 +        $this->guardPositiveId($recipeId, 'recipe');
+     15 +        $this->guardPositiveQty($qtyTarget);
+     16 +        $this->guardPositiveId($userId, 'user');
+     17 +
+     18 +        // TODO: Persist batch header with estado=PLANIFICADA, qty objetivo y ruta de producción.
+     19 +        return [
+     20 +            'batch_id' => null,
+     21 +            'status' => 'PLANIFICADA',
+     22 +        ];
+     23 +    }
+     24 +
+     25 +    /**
+     26 +     * Records ingredient consumption (PLANIFICADA → EN_PROCESO) deducting insumos logically.
+     27 +     *
+     28 +     * @param array $consumedLines Array with item_id, qty_consumida, uom, etc.
+     29 +     */
+     30 +    public function consumeIngredients(int $batchId, array $consumedLines, int $userId): array
+     31 +    {
+     32 +        $this->guardPositiveId($batchId, 'batch');
+     33 +        $this->guardPositiveId($userId, 'user');
+     34 +
+     35 +        if (empty($consumedLines)) {
+     36 +            throw new InvalidArgumentException('Consumed ingredient lines required.');
+     37 +        }
+     38 +
+     39 +        // TODO: Register insumo consumption, track lots, validate inventory availability.
+     40 +        return [
+     41 +            'batch_id' => $batchId,
+     42 +            'status' => 'EN_PROCESO',
+     43 +            'lines_consumed' => count($consumedLines),
+     44 +        ];
+     45 +    }
+     46 +
+     47 +    /**
+     48 +     * Captures produced outputs (EN_PROCESO → COMPLETADA) prior to inventory posting.
+     49 +     *
+     50 +     * @param array $producedLines Array with finished goods info (item_id, qty_producida, uom).
+     51 +     */
+     52 +    public function completeBatch(int $batchId, array $producedLines, int $userId): array
+     53 +    {
+     54 +        $this->guardPositiveId($batchId, 'batch');
+     55 +        $this->guardPositiveId($userId, 'user');
+     56 +
+     57 +        if (empty($producedLines)) {
+     58 +            throw new InvalidArgumentException('Produced lines are required to complete batch.');
+     59 +        }
+     60 +
+     61 +        // TODO: Persist produced outputs, quality checks, yield metrics.
+     62 +        return [
+     63 +            'batch_id' => $batchId,
+     64 +            'status' => 'COMPLETADA',
+     65 +            'lines_produced' => count($producedLines),
+     66 +        ];
+     67 +    }
+     68 +
+     69 +    /**
+     70 +     * Generates mov_inv negative (ingredients) and positive (finished goods) then marks POSTEADA.
+     71 +     */
+     72 +    public function postBatchToInventory(int $batchId, int $userId): array
+     73 +    {
+     74 +        $this->guardPositiveId($batchId, 'batch');
+     75 +        $this->guardPositiveId($userId, 'user');
+     76 +
+     77 +        // TODO: Ensure estado=COMPLETADA.
+     78 +        // TODO: Create mov_inv negativos for consumed insumos and positivos for finished products.
+     79 +        // TODO: Finalize estado=POSTEADA and lock editing.
+     80 +        $movimientosGenerados = 0;
+     81 +
+     82 +        return [
+     83 +            'batch_id' => $batchId,
+     84 +            'movimientos_generados' => $movimientosGenerados,
+     85 +            'status' => 'POSTEADA',
+     86 +        ];
+     87 +    }
+     88 +
+     89 +    protected function guardPositiveId(int $id, string $label): void
+     90 +    {
+     91 +        if ($id <= 0) {
+     92 +            throw new InvalidArgumentException(sprintf('The %s id must be greater than zero.', $label));
+     93 +        }
+     94 +    }
+     95 +
+     96 +    protected function guardPositiveQty(float $qty): void
+     97 +    {
+     98 +        if ($qty <= 0) {
+     99 +            throw new InvalidArgumentException('Quantity target must be greater than zero.');
+    100 +        }
+    101 +    }
+    102 +}
+
+• Added app/Http/Controllers/Production/ProductionController.php (+76 -0)
+     1 +<?php
+     2 +
+     3 +namespace App\Http\Controllers\Production;
+     4 +
+     5 +use App\Http\Controllers\Controller;
+     6 +use App\Services\Production\ProductionService;
+     7 +use Illuminate\Http\JsonResponse;
+     8 +use Illuminate\Http\Request;
+     9 +
+    10 +class ProductionController extends Controller
+    11 +{
+    12 +    public function __construct(protected ProductionService $productionService)
+    13 +    {
+    14 +    }
+    15 +
+    16 +    public function plan(Request $request): JsonResponse
+    17 +    {
+    18 +        // TODO: autorización production.batch.plan
+    19 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    20 +        $recipeId = (int) $request->input('recipe_id');
+    21 +        $qtyTarget = (float) $request->input('qty_target', 0);
+    22 +
+    23 +        $data = $this->productionService->planBatch($recipeId, $qtyTarget, $userId);
+    24 +
+    25 +        return response()->json([
+    26 +            'ok' => true,
+    27 +            'data' => $data,
+    28 +            'message' => 'Batch de producción planificado.',
+    29 +        ]);
+    30 +    }
+    31 +
+    32 +    public function consume(int $batch_id, Request $request): JsonResponse
+    33 +    {
+    34 +        // TODO: autorización production.batch.consume
+    35 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    36 +        $consumed = $request->input('lines', []);
+    37 +        $consumed = is_array($consumed) ? $consumed : [];
+    38 +
+    39 +        $data = $this->productionService->consumeIngredients($batch_id, $consumed, $userId);
+    40 +
+    41 +        return response()->json([
+    42 +            'ok' => true,
+    43 +            'data' => $data,
+    44 +            'message' => 'Insumos registrados para el batch.',
+    45 +        ]);
+    46 +    }
+    47 +
+    48 +    public function complete(int $batch_id, Request $request): JsonResponse
+    49 +    {
+    50 +        // TODO: autorización production.batch.consume
+    51 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    52 +        $produced = $request->input('lines', []);
+    53 +        $produced = is_array($produced) ? $produced : [];
+    54 +
+    55 +        $data = $this->productionService->completeBatch($batch_id, $produced, $userId);
+    56 +
+    57 +        return response()->json([
+    58 +            'ok' => true,
+    59 +            'data' => $data,
+    60 +            'message' => 'Batch completado, listo para posteo.',
+    61 +        ]);
+    62 +    }
+    63 +
+    64 +    public function post(int $batch_id, Request $request): JsonResponse
+    65 +    {
+    66 +        // TODO: autorización production.batch.post
+    67 +        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    68 +        $data = $this->productionService->postBatchToInventory($batch_id, $userId);
+    72 +            'data' => $data,
+    73 +            'message' => 'Batch posteado a inventario (consumo y producto terminado).',
+    74 +        ]);
+    75 +    }
+    76 +}
+
+• Edited routes/api.php (+18 -5)
+     26  use App\Http\Controllers\Api\CatalogsController;
+     27 +use App\Http\Controllers\Production\ProductionController;
+     28  use App\Http\Controllers\Purchasing\PurchaseSuggestionController;
+        ⋮
+    187
+    187 -// Costeo de recetas
+    188 -Route::get('/recipes/{id}/cost', [RecipeCostController::class, 'show']);
+    189 -
+    190 -// Alertas de costos
+    191 -Route::get('/alerts', [AlertsController::class, 'index']);
+    188 +// Costeo de recetas
+    189 +Route::get('/recipes/{id}/cost', [RecipeCostController::class, 'show']);
+    190 +
+    191 +/*
+    192 +|--------------------------------------------------------------------------
+    193 +| MÓDULO: PRODUCCIÓN INTERNA
+    194 +|--------------------------------------------------------------------------
+    195 +*/
+    196 +Route::prefix('production')->group(function () {
+    197 +    Route::post('/batch/plan', [ProductionController::class, 'plan']);
+    198 +    Route::post('/batch/{batch_id}/consume', [ProductionController::class, 'consume']);
+    199 +    Route::post('/batch/{batch_id}/complete', [ProductionController::class, 'complete']);
+    200 +    Route::post('/batch/{batch_id}/post', [ProductionController::class, 'post']);
+    201 +});
+    202 +
+    203 +// Alertas de costos
+    204 +Route::get('/alerts', [AlertsController::class, 'index']);
+    205  Route::post('/alerts/{id}/ack', [AlertsController::class, 'acknowledge']);
+
+• Updated Plan
+  └ Production service/controller and /api/production routes added per Sprint 1.7.
+    ✔ Implement Sprint 1.6 scaffolding (TransferService, controller, routes)
+    ✔ Implement Sprint 1.7 scaffolding (Production service/controller/routes)
+    □ Implement Sprint 1.8 scaffolding (Reports controller/routes)
+
+• Explored
+  └ Search rg --files -g ReportsController.php
+
+• Added app/Http/Controllers/Reports/ReportsController.php (+82 -0)
+     1 +<?php
+     2 +
+     3 +namespace App\Http\Controllers\Reports;
+     4 +
+     5 +use App\Http\Controllers\Controller;
+     6 +use Illuminate\Http\JsonResponse;
+     7 +use Illuminate\Support\Facades\DB;
+     8 +
+     9 +class ReportsController extends Controller
+    10 +{
+    11 +    public function purchasingLatePO(): JsonResponse
+    12 +    {
+    13 +        // TODO: autorización reports.view.purchasing
+    14 +        $rows = DB::table('purchase_orders as po')
+    15 +            ->select([
+    16 +                'po.id',
+    17 +                'po.numero as po_number',
+    18 +                'po.proveedor_id',
+    19 +                'po.fecha_aprobacion',
+    20 +                'po.fecha_estimada_recepcion',
+    21 +                'recepciones.fecha_posteo as recepcion_posteada_at',
+    22 +            ])
+    23 +            ->leftJoin('recepcion_cab as recepciones', 'recepciones.purchase_order_id', '=', 'po.id')
+    24 +            ->whereNull('recepciones.fecha_posteo')
+    25 +            ->orderByDesc('po.fecha_aprobacion')
+    26 +            ->limit(20)
+    27 +            ->get();
+    28 +
+    29 +        // TODO: caching/report snapshots
+    30 +        return response()->json([
+    31 +            'ok' => true,
+    32 +            'data' => $rows,
+    33 +        ]);
+    34 +    }
+    35 +
+    36 +    public function inventoryOverTolerance(): JsonResponse
+    37 +    {
+    38 +        // TODO: autorización reports.view.inventory
+    39 +        $rows = DB::table('recepcion_det as rd')
+    40 +            ->select([
+    41 +                'rd.item_id',
+    42 +                'rd.recepcion_id',
+    43 +                'rd.qty_ordenada',
+    44 +                'rd.qty_recibida',
+    45 +                DB::raw('ABS(rd.qty_recibida - rd.qty_ordenada) / NULLIF(rd.qty_ordenada,0) * 100 as diferencia_pct
+        '),
+    46 +            ])
+    47 +            ->join('recepcion_cab as rc', 'rc.id', '=', 'rd.recepcion_id')
+    48 +            ->where('rc.requiere_aprobacion', true)
+    49 +            ->orderByDesc('diferencia_pct')
+    50 +            ->limit(50)
+    51 +            ->get();
+    52 +
+    53 +        // TODO: caching/report snapshots
+    54 +        return response()->json([
+    55 +            'ok' => true,
+    56 +            'data' => $rows,
+    57 +        ]);
+    58 +    }
+    59 +
+    60 +    public function inventoryTopUrgent(): JsonResponse
+    61 +    {
+    62 +        // TODO: autorización reports.view.inventory
+    63 +        $rows = DB::table('purchase_suggestions as ps')
+    64 +            ->select([
+    65 +                'ps.id',
+    66 +                'ps.item_id',
+    67 +                'ps.prioridad',
+    68 +                'ps.qty_sugerida',
+    69 +                'ps.sucursal_id',
+    70 +            ])
+    71 +            ->where('ps.prioridad', 'URGENTE')
+    72 +            ->orderByDesc('ps.updated_at')
+    73 +            ->limit(10)
+    74 +            ->get();
+    75 +
+    76 +        // TODO: caching/report snapshots
+    77 +        return response()->json([
+    78 +            'ok' => true,
+    79 +            'data' => $rows,
+    80 +        ]);
+    81 +    }
+    82 +}
+
+• Edited routes/api.php (+20 -17)
+    37  use App\Http\Controllers\Api\ReportsController;
+    38 -Route::prefix('reports')->group(function () {
+    39 -    Route::get('/kpis/sucursal',        [ReportsController::class, 'kpisSucursalDia']);
+    40 -    Route::get('/kpis/terminal',        [ReportsController::class, 'kpisTerminalDia']);
+    41 -    Route::get('/ventas/familia',       [ReportsController::class, 'ventasFamilia']);
+    42 -    Route::get('/ventas/hora',          [ReportsController::class, 'ventasPorHora']);
+    43 -    Route::get('/ventas/top',           [ReportsController::class, 'ventasTopProductos']);
+    49 -    Route::get('/ventas/formas',        [ReportsController::class, 'formasPago']);
+    50 -    Route::get('/ticket/promedio',      [ReportsController::class, 'ticketPromedio']);
+    51 -    Route::get('/stock/val',            [ReportsController::class, 'stockValorizado']);
+    52 -    Route::get('/consumo/vr',           [ReportsController::class, 'consumoVsMovimientos']);
+    53 -    Route::get('/anomalias',            [ReportsController::class, 'anomalos']);
+    54 -});
+    41 +    Route::get('/ventas/familia',       [ReportsController::class, 'ventasFamilia']);
+    42 +    Route::get('/ventas/hora',          [ReportsController::class, 'ventasPorHora']);
+    43 +    Route::get('/ventas/top',           [ReportsController::class, 'ventasTopProductos']);
+    44 +    Route::get('/ventas/dia',           [ReportsController::class, 'ventasDiarias']);
+    45 +    Route::get('/ventas/items_resumen', [ReportsController::class, 'ventasItemsResumen']);
+    46 +    Route::get('/ventas/categorias',    [ReportsController::class, 'ventasCategorias']);
+    47 +    Route::get('/ventas/sucursales',    [ReportsController::class, 'ventasPorSucursal']);
+    48 +    Route::get('/ventas/ordenes_recientes', [ReportsController::class, 'ordenesRecientes']);
+    49 +    Route::get('/ventas/formas',        [ReportsController::class, 'formasPago']);
+    50 +    Route::get('/ticket/promedio',      [ReportsController::class, 'ticketPromedio']);
+    51 +    Route::get('/stock/val',            [ReportsController::class, 'stockValorizado']);
+    52 +    Route::get('/consumo/vr',           [ReportsController::class, 'consumoVsMovimientos']);
+    53 +    Route::get('/anomalias',            [ReportsController::class, 'anomalos']);
+    54 +    Route::get('/purchasing/late-po', [\App\Http\Controllers\Reports\ReportsController::class, 'purchasingLatePO'])
+        ;
+    55 +    Route::get('/inventory/over-tolerance', [\App\Http\Controllers\Reports\ReportsController::class, 'inventoryOver
+        Tolerance']);
+    56 +    Route::get('/inventory/top-urgent', [\App\Http\Controllers\Reports\ReportsController::class, 'inventoryTopUrgen
+        t']);
+    57 +});
+    58
+• I'll prepare a final message that lists all new and modified files with exact line ranges using nl so I can reference
+  them clearly, then include bullet points summarizing changes and next steps like implementing logic or permissions.
+
+• Explored
+  └ Read TransferService.php, TransferController.php, ProductionService.php, ProductionController.php,
+ReportsController.php,
+         api.php
+
+• I’m organizing a summary that highlights new transfer and production routes and services with approximate file and line
+  references, like routes/api.php:19-57 for KPI and transfer routes, and about routes/api.php:137-175 for transfer and
+  production routes. I’ll also mention tests haven’t run yet and suggest next steps like implementing logic, permissions,
+  and caching, referencing key service and controller files. This should help clearly communicate the recent scaffolded
+  work and what’s coming next.
+
+• Explored
+  └ Read api.php
+
+─ Worked for 4m 27s ───────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• Sprint 1.6–1.8 Scaffolding
+
+  - Added TransferService and TransferController with full method stubs, guards, JSON responses, and permission TODOs
+    that mirror the SOLICITADA→CERRADA flow plus transfer routes under Route::prefix('inventory') (app/Services/Inventory/
+    TransferService.php:1-110, app/Http/Controllers/Inventory/TransferController.php:1-88, routes/api.php:148-189).
+  - Created ProductionService and ProductionController to cover plan/consume/complete/post actions for internal batches,
+    alongside /api/production/batch/* routes (app/Services/Production/ProductionService.php:1-102, app/Http/Controllers/
+    Production/ProductionController.php:1-76, routes/api.php:191-208).
+  - Introduced a reporting stub controller for Sprint 1.8 KPIs with query-builder placeholders, authorization markers, and
+    new GET endpoints under /api/reports/* (app/Http/Controllers/Reports/ReportsController.php:1-82, routes/api.php:38-57).
+
+  Testing
+
+  - Not run (new code is scaffolding with TODOs only).
+
+  Next steps
+
+  1. Flesh out each service with real persistence, mov_inv generation, and tolerance logic once schemas are ready.
+  2. Wire the specified permissions/middleware and request validation for every controller action.
+  3. Consider caching or snapshot jobs for the new KPI endpoints before exposing them to production dashboards.

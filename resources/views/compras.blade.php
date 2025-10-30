@@ -1,278 +1,41 @@
 @extends('layouts.terrena')
 
-@section('title', 'Compras - TerrenaPOS')
+@php($active = 'compras')
+@section('title', 'Compras / Purchasing')
 @section('page-title')
-  <i class="fa-solid fa-truck"></i> <span class="label">Compras</span>
+  <i class="fa-solid fa-truck"></i> Compras
 @endsection
 
 @section('content')
-<div class="dashboard-grid">
+<div class="container py-4">
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <h5 class="card-title">
+        <i class="fa-solid fa-circle-info me-2"></i>Módulo en preparación
+      </h5>
+      <p class="text-muted mb-4">
+        Estamos integrando el hub de compras en este espacio. Mientras tanto, utiliza los accesos directos a los módulos ya activos.
+      </p>
 
-  <ul class="nav nave nav-tabs mb-3"> 
-    <li class="nav-item">
-      <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tabReq">Requisiciones</button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabOC">Órdenes de compra</button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabRecep">Recepciones</button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabProv">Proveedores</button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabSugeridos">Sugeridos (Min/Max)</button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabFact">Facturación & Pagos</button>
-    </li>
-  </ul>
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{{ route('purchasing.requests.index') }}" class="btn btn-outline-primary">
+          <i class="fa-solid fa-list me-1"></i> Requisiciones
+        </a>
+        <a href="{{ route('purchasing.orders.index') }}" class="btn btn-outline-primary">
+          <i class="fa-solid fa-file-invoice-dollar me-1"></i> Órdenes de compra
+        </a>
+        <a href="{{ route('purchasing.replenishment.dashboard') }}" class="btn btn-outline-primary">
+          <i class="fa-solid fa-repeat me-1"></i> Sugeridos Min/Max
+        </a>
+      </div>
 
-  <div class="tab-content">
-    {{-- Tab Requisiciones --}}
-    <div class="tab-pane fade show active" id="tabReq">
-      <div class="d-flex justify-content-between mb-2">
-        <div class="small text-muted">Listado de requisiciones (maqueta)</div>
-        <button class="btn btn-sm btn-primary">Nueva requisición</button>
+      <hr class="my-4">
+
+      <div class="alert alert-warning mb-0">
+        <strong>Próximamente:</strong> consolidaremos requisiciones, OC, recepciones y proveedores en esta pantalla.
       </div>
-      <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
-          <table class="table table-sm align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Folio</th>
-                <th>Sucursal</th>
-                <th>Solicitó</th>
-                <th>Estatus</th>
-                <th class="text-end">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>REQ-0001</td>
-                <td>PRINCIPAL</td>
-                <td>J. Pérez</td>
-                <td><span class="badge bg-warning">Pendiente</span></td>
-                <td class="text-end">
-                  <button class="btn btn-sm btn-outline-secondary">Ver</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {{-- TODO: enlazar a módulo unificado de compras en Sprint 2.6 --}}
     </div>
-
-    {{-- Tab Órdenes de Compra --}}
-    <div class="tab-pane fade" id="tabOC">
-      <div class="d-flex justify-content-between mb-2">
-        <div class="small text-muted">Órdenes de compra (maqueta)</div>
-        <div class="d-flex gap-2">
-          <button class="btn btn-sm btn-outline-secondary">Importar</button>
-          <button class="btn btn-sm btn-primary">Nueva OC</button>
-        </div>
-      </div>
-      <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
-          <table class="table table-sm align-middle mb-0">
-            <thead>
-              <tr>
-                <th>OC</th>
-                <th>Proveedor</th>
-                <th>Sucursal</th>
-                <th>Estatus</th>
-                <th class="text-end">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>OC-0009</td>
-                <td>Lácteos MX</td>
-                <td>PRINCIPAL</td>
-                <td><span class="badge bg-info">En tránsito</span></td>
-                <td class="text-end">$ 12,450.00</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    {{-- Tab Recepciones --}}
-    <div class="tab-pane fade" id="tabRecep">
-      <div class="alert alert-info">Recepciones (parcial/total) — solo maquetación.</div>
-      <table class="table table-sm">
-        <thead>
-          <tr>
-            <th>OC</th>
-            <th>Fecha</th>
-            <th>Recibió</th>
-            <th>Estatus</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>OC-0009</td>
-            <td>2025-08-15</td>
-            <td>M. López</td>
-            <td><span class="badge bg-success">Parcial</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    {{-- Tab Proveedores --}}
-    <div class="tab-pane fade" id="tabProv">
-      <div class="d-flex justify-content-between mb-2">
-        <div class="small text-muted d-flex align-items-center gap-2 flex-wrap">
-          <span>Proveedores (maqueta)</span>
-          <a class="text-decoration-none" href="{{ route('cat.proveedores') }}">Abrir catálogo</a>
-        </div>
-        <a class="btn btn-sm btn-primary" href="{{ route('cat.proveedores') }}">Nuevo proveedor</a>
-      </div>
-      <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
-          <table class="table table-sm align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Proveedor</th>
-                <th>Contacto</th>
-                <th>Teléfono</th>
-                <th class="text-end">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Lácteos MX</td>
-                <td>ventas@lacteos.mx</td>
-                <td>55 1234 5678</td>
-                <td class="text-end">
-                  <a class="btn btn-sm btn-outline-secondary" href="{{ route('cat.proveedores') }}">Editar</a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    {{-- Tab Sugeridos --}}
-    <div class="tab-pane fade" id="tabSugeridos">
-      <div class="alert alert-secondary small">
-        Sugerencia automática con base en min/max, lead time y producción planificada. Ajusta los parámetros en el
-        <a class="text-decoration-none" href="{{ route('cat.stockpolicy') }}">catálogo de políticas de stock</a>.
-      </div>
-      <table class="table table-sm align-middle">
-        <thead>
-          <tr>
-            <th>Proveedor</th>
-            <th>Ítem</th>
-            <th class="text-end">Exist.</th>
-            <th class="text-end">Mín</th>
-            <th class="text-end">Máx</th>
-            <th class="text-end">Sugerido</th>
-            <th class="text-end">UDM compra</th>
-            <th class="text-end">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Lácteos MX</td>
-            <td>Leche 1.5L (caja×12)</td>
-            <td class="text-end">6 cajas</td>
-            <td class="text-end">5</td>
-            <td class="text-end">12</td>
-            <td class="text-end">6</td>
-            <td class="text-end">CAJA12</td>
-            <td class="text-end">
-              <button class="btn btn-sm btn-primary">Crear OC</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    {{-- Tab Facturación & Pagos --}}
-    <div class="tab-pane fade" id="tabFact">
-      <div class="row g-2">
-        <div class="col-lg-5">
-          <div class="card-vo p-3">
-            <h5 class="card-title">
-              <i class="fa-regular fa-file-lines"></i> Facturas de compra
-            </h5>
-            <div class="d-flex gap-2 mb-2">
-              <input class="form-control form-control-sm" placeholder="Folio / Proveedor">
-              <button class="btn btn-sm btn-primary">Nueva factura</button>
-            </div>
-            <table class="table table-sm mb-0">
-              <thead>
-                <tr>
-                  <th>Folio</th>
-                  <th>Proveedor</th>
-                  <th class="text-end">Subtotal</th>
-                  <th class="text-end">IVA</th>
-                  <th class="text-end">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>F-00021</td>
-                  <td>Lácteos MX</td>
-                  <td class="text-end">$1,800</td>
-                  <td class="text-end">$288</td>
-                  <td class="text-end">$2,088</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div class="col-lg-7">
-          <div class="card-vo p-3">
-            <h5 class="card-title">
-              <i class="fa-solid fa-money-check-dollar"></i> Pagos a proveedor
-            </h5>
-            <div class="row g-2 mb-2">
-              <div class="col-4">
-                <select class="form-select form-select-sm">
-                  <option>Proveedor</option>
-                </select>
-              </div>
-              <div class="col-4">
-                <input class="form-control form-control-sm" placeholder="Ref. pago">
-              </div>
-              <div class="col-4">
-                <input type="date" class="form-control form-control-sm">
-              </div>
-            </div>
-            <table class="table table-sm">
-              <thead>
-                <tr>
-                  <th>Factura</th>
-                  <th>Vence</th>
-                  <th class="text-end">Saldo</th>
-                  <th class="text-end">Pagar</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>F-00021</td>
-                  <td>2025-09-05</td>
-                  <td class="text-end">$2,088</td>
-                  <td class="text-end">
-                    <input class="form-control form-control-sm text-end" value="2088">
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="text-end">
-              <button class="btn btn-sm btn-primary">Registrar pago</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
   </div>
 </div>
 @endsection

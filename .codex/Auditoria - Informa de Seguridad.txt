@@ -1,0 +1,711 @@
+    Search ticket in migrations
+
+• I’m analyzing recent migrations that create triggers and indexes on the public schema, which
+  might violate policy rules. At the same time, I’m checking the routes and controllers for proper
+  permission middleware, particularly for sensitive endpoints like reception, as many don’t seem to
+    Read 2025_11_15_030000_create_pos_consumption_tables.php
+    Search requiere_reproceso in migrations
+
+• I noticed that the functions in create_pos_consumption still update old columns like estado instead
+  of the new flags, so these functions will need patching to set the new flags properly. I also see
+• Explored
+  └ Read AlertsController.php, ConsumoPosRepository.php
+    List seeders
+    Read PermissionsSeeder.php, RecetasPermissionsSeeder.php, RecipeCostController.php
+    Search caja_fondo in migrations
+
+• Ran awk '/CREATE OR REPLACE FUNCTION selemti.fn_confirmar_consumo_ticket/{flag=1} flag{print} /
+
+• Ran perl -ne 'print if /fn_confirmar_consumo_ticket/ .. /\$\$/ && $.>0' database/
+  │ migrations/2025_11_15_030000_create_pos_consumption_tables.php
+  └ CREATE OR REPLACE FUNCTION selemti.fn_confirmar_consumo_ticket(_ticket_id bigint)
+    RETURNS void
+    … +17 lines
+        }
+    };
+
+• Explored
+  └ Search fn_confirmar_consumo_ticket in 2025_11_15_030000_create_pos_consumption_tables.php
+    Read 2025_11_15_030000_create_pos_consumption_tables.php
+
+• I'm figuring out how to extend the confirm and reverse functions to update new status flags and
+  timestamps consistently in both main and detail tables, while considering defaults and auditing
+  semantics. I'll also check for other places in the codebase that might write to these database
+  tables for a comprehensive patch.
+
+• Explored
+  └ Search public\. in app
+    Read PosSyncService.php
+    Search confirmConsumption in app
+    Search function confirmConsumption in app
+    Search public\. in app
+    Search insert
+    Read StockController.php
+
+• I'll collect key findings about missing middleware protections, permission gaps, logging omissions,
+  and risky direct writes to public schemas, then plan minimal but effective patch suggestions to add
+  middleware, enforce authenticated user IDs, require reasons on movements, and block unauthorized
+  database writes—balancing policy adherence with operational impact.
+
+• Explored
+  └ Read TransferController.php
+
+• I'm gathering a set of high-risk findings around missing auth checks and permissions in controllers
+  and routes. I plan to patch controllers like ReceivingController and ReturnController to enforce
+  user authentication by checking auth()->id() or $request->user() and returning 401 if missing.
+  Also, adding middleware protections on sensitive routes and controllers like RecipeCostController to
+  align with permission policies. I want to produce minimal diffs that add these checks and middleware
+  without major restructuring. Let’s focus on securing user identity and permissions consistently.
+
+• Explored
+  └ Read ReportsController.php
+
+• Edited app/Http/Controllers/Purchasing/ReceivingController.php (+32 -4)
+     30          // TODO auth: requiere permiso inventory.receptions.create
+     31 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+     31 +        $user = $request->user();
+     32 +        if (! $user) {
+     33 +            return response()->json([
+     34 +                'ok' => false,
+     35 +                'message' => 'Usuario no autenticado',
+     36 +            ], 401);
+     37 +        }
+     38 +        $userId = (int) $user->id;
+     39          $data = $this->receivingService->createDraftReception($purchase_order_id, $userId);
+        ⋮
+     59          // TODO auth: requiere permiso inventory.receptions.lines
+     53 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+     60 +        $user = $request->user();
+     61 +        if (! $user) {
+     62 +            return response()->json([
+     63 +                'ok' => false,
+     64 +                'message' => 'Usuario no autenticado',
+     65 +            ], 401);
+     66 +        }
+     67 +        $userId = (int) $user->id;
+     68          $lineItems = $request->input('lines', []);
+        ⋮
+     91          // TODO auth: requiere permiso inventory.receptions.validate
+     78 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+     92 +        $user = $request->user();
+     93 +        if (! $user) {
+     94 +            return response()->json([
+     95 +                'ok' => false,
+     96 +                'message' => 'Usuario no autenticado',
+     97 +            ], 401);
+     98 +        }
+     99 +        $userId = (int) $user->id;
+    100          $data = $this->receivingService->validateReception($recepcion_id, $userId);
+        ⋮
+    120          // TODO: autorización inventory.receptions.override_tolerance
+    100 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    121 +        $user = $request->user();
+    122 +        if (! $user) {
+    123 +            return response()->json([
+    124 +                'ok' => false,
+    125 +                'message' => 'Usuario no autenticado',
+    126 +            ], 401);
+    127 +        }
+    128 +        $userId = (int) $user->id;
+    129          $data = $this->receivingService->approveReception($recepcion_id, $userId);
+
+• Edited app/Http/Controllers/Purchasing/ReturnController.php (+40 -5)
+     30          // TODO auth: requiere permiso purchasing.returns.create
+     31 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+     31 +        $user = $request->user();
+     32 +        if (! $user) {
+     33 +            return response()->json([
+     34 +                'ok' => false,
+     35 +                'message' => 'Usuario no autenticado',
+     36 +            ], 401);
+     37 +        }
+     38 +        $userId = (int) $user->id;
+     39          $data = $this->returnService->createDraftReturn($purchase_order_id, $userId);
+        ⋮
+     59          // TODO auth: requiere permiso purchasing.returns.approve
+     53 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+     60 +        $user = $request->user();
+     61 +        if (! $user) {
+     62 +            return response()->json([
+     63 +                'ok' => false,
+     64 +                'message' => 'Usuario no autenticado',
+     65 +            ], 401);
+     66 +        }
+     67 +        $userId = (int) $user->id;
+     68          $data = $this->returnService->approveReturn($return_id, $userId);
+        ⋮
+     88          // TODO auth: requiere permiso purchasing.returns.ship
+     75 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+     89 +        $user = $request->user();
+     90 +        if (! $user) {
+     91 +            return response()->json([
+     92 +                'ok' => false,
+     93 +                'message' => 'Usuario no autenticado',
+     94 +            ], 401);
+     95 +        }
+     96 +        $userId = (int) $user->id;
+     97          $trackingInfo = $request->input('tracking', []);
+        ⋮
+    120          // TODO auth: requiere permiso purchasing.returns.receive
+    100 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    121 +        $user = $request->user();
+    122 +        if (! $user) {
+    123 +            return response()->json([
+    124 +                'ok' => false,
+    125 +                'message' => 'Usuario no autenticado',
+    126 +            ], 401);
+    127 +        }
+    128 +        $userId = (int) $user->id;
+    129          $data = $this->returnService->confirmVendorReceived($return_id, $userId);
+        ⋮
+    149          // TODO auth: requiere permiso purchasing.returns.post
+    122 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    150 +        $user = $request->user();
+    151 +        if (! $user) {
+    152 +            return response()->json([
+    153 +                'ok' => false,
+    154 +                'message' => 'Usuario no autenticado',
+    155 +            ], 401);
+    156 +        }
+    157 +        $userId = (int) $user->id;
+    158          $data = $this->returnService->postInventoryAdjustment($return_id, $userId);
+
+• Edited app/Http/Controllers/Inventory/TransferController.php (+40 -5)
+     29          // TODO auth: requiere permiso inventory.transfers.create
+     30 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+     30 +        $user = $request->user();
+     31 +        if (! $user) {
+     32 +            return response()->json([
+     33 +                'ok' => false,
+     34 +                'message' => 'Usuario no autenticado',
+     35 +            ], 401);
+     36 +        }
+     37 +        $userId = (int) $user->id;
+     38          $from = (int) $request->input('from_almacen_id');
+        ⋮
+     63          // TODO auth: requiere permiso inventory.transfers.approve
+     57 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+     64 +        $user = $request->user();
+     65 +        if (! $user) {
+     66 +            return response()->json([
+     67 +                'ok' => false,
+     68 +                'message' => 'Usuario no autenticado',
+     69 +            ], 401);
+     70 +        }
+     71 +        $userId = (int) $user->id;
+     72          $data = $this->transferService->approveTransfer($transfer_id, $userId);
+        ⋮
+     92          // TODO auth: requiere permiso inventory.transfers.ship
+     79 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+     93 +        $user = $request->user();
+     94 +        if (! $user) {
+     95 +            return response()->json([
+     96 +                'ok' => false,
+     97 +                'message' => 'Usuario no autenticado',
+     98 +            ], 401);
+     99 +        }
+    100 +        $userId = (int) $user->id;
+    101          $data = $this->transferService->markInTransit($transfer_id, $userId);
+        ⋮
+    121          // TODO auth: requiere permiso inventory.transfers.receive
+    101 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    122 +        $user = $request->user();
+    123 +        if (! $user) {
+    124 +            return response()->json([
+    125 +                'ok' => false,
+    126 +                'message' => 'Usuario no autenticado',
+    127 +            ], 401);
+    128 +        }
+    129 +        $userId = (int) $user->id;
+    130          $receivedLines = $request->input('lines', []);
+        ⋮
+    153          // TODO auth: requiere permiso inventory.transfers.post
+    126 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    154 +        $user = $request->user();
+    155 +        if (! $user) {
+    156 +            return response()->json([
+    157 +                'ok' => false,
+    158 +                'message' => 'Usuario no autenticado',
+    159 +            ], 401);
+    160 +        }
+    161 +        $userId = (int) $user->id;
+    162          $data = $this->transferService->postTransferToInventory($transfer_id, $userId);
+
+• Edited app/Http/Controllers/Production/ProductionController.php (+32 -4)
+     29          // TODO auth: requiere permiso production.batch.plan
+     30 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+     30 +        $user = $request->user();
+     31 +        if (! $user) {
+     32 +            return response()->json([
+     33 +                'ok' => false,
+     34 +                'message' => 'Usuario no autenticado',
+     35 +            ], 401);
+     36 +        }
+     37 +        $userId = (int) $user->id;
+     38          $recipeId = (int) $request->input('recipe_id');
+        ⋮
+     61          // TODO auth: requiere permiso production.batch.consume
+     55 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+     62 +        $user = $request->user();
+     63 +        if (! $user) {
+     64 +            return response()->json([
+     65 +                'ok' => false,
+     66 +                'message' => 'Usuario no autenticado',
+     67 +            ], 401);
+     68 +        }
+     69 +        $userId = (int) $user->id;
+     70          $consumed = $request->input('lines', []);
+        ⋮
+     93          // TODO auth: requiere permiso production.batch.complete
+     80 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+     94 +        $user = $request->user();
+     95 +        if (! $user) {
+     96 +            return response()->json([
+     97 +                'ok' => false,
+     98 +                'message' => 'Usuario no autenticado',
+     99 +            ], 401);
+    100 +        }
+    101 +        $userId = (int) $user->id;
+    102          $produced = $request->input('lines', []);
+        ⋮
+    125          // TODO auth: requiere permiso production.batch.post
+    105 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    129 +                'ok' => false,
+    130 +                'message' => 'Usuario no autenticado',
+    131 +            ], 401);
+    132 +        }
+    133 +        $userId = (int) $user->id;
+    134          $data = $this->productionService->postBatchToInventory($batch_id, $userId);
+
+• Edited app/Http/Controllers/Api/Inventory/StockController.php (+18 -10)
+    191      {
+    192 -        $data = $r->validate([
+    193 -            'item_id' => 'required|string|max:20',
+    194 -            'tipo' => 'required|string|in:ENTRADA,SALIDA,AJUSTE,MERMA',
+    195 -            'cantidad' => 'required|numeric|min:0.001',
+    196 -            'costo_unit' => 'nullable|numeric|min:0',
+    197 -            'sucursal_id' => 'required|string',
+    198 -            'razon' => 'nullable|string|max:255',
+    199 -            'lote_id' => 'nullable|integer',
+    200 -        ]);
+    192 +        $user = $r->user();
+    193 +        if (! $user) {
+    194 +            return response()->json([
+    195 +                'ok' => false,
+    196 +                'message' => 'Usuario no autenticado',
+    197 +            ], 401);
+    198 +        }
+    199 +
+    200 +        $data = $r->validate([
+    201 +            'item_id' => 'required|string|max:20',
+    202 +            'tipo' => 'required|string|in:ENTRADA,SALIDA,AJUSTE,MERMA',
+    203 +            'cantidad' => 'required|numeric|min:0.001',
+    204 +            'costo_unit' => 'nullable|numeric|min:0',
+    205 +            'sucursal_id' => 'required|string',
+    206 +            'razon' => 'required|string|max:255',
+    207 +            'lote_id' => 'nullable|integer',
+    208 +        ]);
+    209
+        ⋮
+    224                  'sucursal_id' => $data['sucursal_id'],
+    217 -                'usuario_id' => auth()->id() ?? 0,
+    225 +                'usuario_id' => (int) $user->id,
+    226                  'created_at' => now(),
+
+• Explored
+  └ Read ReceivingController.php
+
+• Edited app/Http/Controllers/Purchasing/ReceivingController.php (+16 -2)
+    168          // TODO auth: requiere permiso inventory.receptions.post
+    169 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    169 +        $user = $request->user();
+    170 +        if (! $user) {
+    171 +            return response()->json([
+    172 +                'ok' => false,
+    173 +                'message' => 'Usuario no autenticado',
+    174 +            ], 401);
+    175 +        }
+    176 +        $userId = (int) $user->id;
+    177          $data = $this->receivingService->postToInventory($recepcion_id, $userId);
+        ⋮
+    197          // TODO auth: requiere permiso inventory.receptions.cost_finalize
+    191 -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+    198 +        $user = $request->user();
+    199 +        if (! $user) {
+    200 +            return response()->json([
+    201 +                'ok' => false,
+    202 +                'message' => 'Usuario no autenticado',
+    203 +            ], 401);
+    204 +        }
+    205 +        $userId = (int) $user->id;
+    206          $data = $this->receivingService->finalizeCosting($recepcion_id, $userId);
+
+• I'm planning to carefully add authentication and permission middleware to specific API routes like
+  purchasing receptions, approvals, returns, production, and inventory to ensure proper access control
+  without breaking existing functionality. I'll restructure the route definitions by grouping and
+  attaching middleware per route or prefix as needed.
+
+• Edited routes/api.php (+37 -23)
+    202  */
+    203 -Route::prefix('production')->group(function () {
+    204 -    Route::post('/batch/plan', [ProductionController::class, 'plan']);
+    205 -    Route::post('/batch/{batch_id}/consume', [ProductionController::class, 'consume']);
+    206 -    Route::post('/batch/{batch_id}/complete', [ProductionController::class, 'complete']);
+    207 -    Route::post('/batch/{batch_id}/post', [ProductionController::class, 'post']);
+    208 -});
+    203 +Route::prefix('production')->middleware(['auth:sanctum', 'permission:can_edit_production_orde
+         r'])->group(function () {
+    204 +    Route::post('/batch/plan', [ProductionController::class, 'plan']);
+    205 +    Route::post('/batch/{batch_id}/consume', [ProductionController::class, 'consume']);
+    206 +    Route::post('/batch/{batch_id}/complete', [ProductionController::class, 'complete']);
+    207 +    Route::post('/batch/{batch_id}/post', [ProductionController::class, 'post']);
+    208 +});
+    209
+        ⋮
+    237      Route::prefix('receptions')->group(function () {
+    238 -        Route::post('/create-from-po/{purchase_order_id}', [ReceivingController::class, 'crea
+         teFromPO']);
+    239 -        Route::post('/{recepcion_id}/lines', [ReceivingController::class, 'setLines']);
+    240 -        Route::post('/{recepcion_id}/validate', [ReceivingController::class, 'validateRecepti
+         on']);
+    241 -        Route::post('/{recepcion_id}/approve', [ReceivingController::class, 'approve']);
+    242 -        Route::get('/{recepcion_id}', [ReceivingController::class, 'show'])->whereNumber('rec
+         epcion_id');
+    243 -        Route::post('/{recepcion_id}/post', [ReceivingController::class, 'postReception']);
+    244 -        Route::post('/{recepcion_id}/costing', [ReceivingController::class, 'finalizeCosting'
+         ]);
+    238 +        Route::post('/create-from-po/{purchase_order_id}', [ReceivingController::class, 'crea
+         teFromPO'])
+    239 +            ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+    240 +        Route::post('/{recepcion_id}/lines', [ReceivingController::class, 'setLines'])
+    241 +            ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+    242 +        Route::post('/{recepcion_id}/validate', [ReceivingController::class, 'validateRecepti
+         on'])
+    243 +            ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+    244 +        Route::post('/{recepcion_id}/approve', [ReceivingController::class, 'approve'])
+    245 +            ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+    246 +        Route::get('/{recepcion_id}', [ReceivingController::class, 'show'])
+    247 +            ->whereNumber('recepcion_id')
+    248 +            ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+    249 +        Route::post('/{recepcion_id}/post', [ReceivingController::class, 'postReception'])
+    250 +            ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+    251 +        Route::post('/{recepcion_id}/costing', [ReceivingController::class, 'finalizeCosting'
+         ])
+    252 +            ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+    253 +    });
+    254 +
+    255 +    Route::prefix('returns')->group(function () {
+    256 +        Route::post('/create-from-po/{purchase_order_id}', [ReturnController::class, 'createF
+         romPO'])
+    257 +            ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+    258 +        Route::post('/{return_id}/approve', [ReturnController::class, 'approve'])
+    259 +            ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+    260 +        Route::post('/{return_id}/ship', [ReturnController::class, 'ship'])
+    261 +            ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+    262 +        Route::post('/{return_id}/confirm', [ReturnController::class, 'confirm'])
+    263 +            ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+    264 +        Route::post('/{return_id}/post', [ReturnController::class, 'post'])
+    265 +            ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+    266 +        Route::post('/{return_id}/credit-note', [ReturnController::class, 'creditNote'])
+    267 +            ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+    268      });
+    246 -
+    247 -    Route::prefix('returns')->group(function () {
+    248 -        Route::post('/create-from-po/{purchase_order_id}', [ReturnController::class, 'createF
+         romPO']);
+    249 -        Route::post('/{return_id}/approve', [ReturnController::class, 'approve']);
+    250 -        Route::post('/{return_id}/ship', [ReturnController::class, 'ship']);
+    251 -        Route::post('/{return_id}/confirm', [ReturnController::class, 'confirm']);
+    252 -        Route::post('/{return_id}/post', [ReturnController::class, 'post']);
+    253 -        Route::post('/{return_id}/credit-note', [ReturnController::class, 'creditNote']);
+    254 -    });
+    255 -});
+    269 +});
+    270
+
+• Edited routes/api.php (+9 -8)
+    165      // Movements
+    166 -    Route::post('/movements', [StockController::class, 'createMovement']);
+    166 +    Route::post('/movements', [StockController::class, 'createMovement'])
+    167 +        ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+    168
+    168 -    Route::prefix('transfers')->group(function () {
+    169 -        Route::post('/create', [TransferController::class, 'create']);
+    170 -        Route::post('/{transfer_id}/approve', [TransferController::class, 'approve']);
+    171 -        Route::post('/{transfer_id}/ship', [TransferController::class, 'ship']);
+    172 -        Route::post('/{transfer_id}/receive', [TransferController::class, 'receive']);
+    173 -        Route::post('/{transfer_id}/post', [TransferController::class, 'post']);
+    174 -    });
+    169 +    Route::prefix('transfers')->middleware(['auth:sanctum', 'permission:can_manage_purchasing
+         '])->group(function () {
+    170 +        Route::post('/create', [TransferController::class, 'create']);
+    171 +        Route::post('/{transfer_id}/approve', [TransferController::class, 'approve']);
+    172 +        Route::post('/{transfer_id}/ship', [TransferController::class, 'ship']);
+    173 +        Route::post('/{transfer_id}/receive', [TransferController::class, 'receive']);
+    174 +        Route::post('/{transfer_id}/post', [TransferController::class, 'post']);
+    175 +    });
+    176
+
+• Edited app/Http/Controllers/Api/Inventory/RecipeCostController.php (+9 -4)
+    10
+    11 -class RecipeCostController extends Controller
+    12 -{
+    13 -    public function show(Request $request, $id): JsonResponse
+    14 -    {
+    16 +    }
+    17 +
+    18 +    public function show(Request $request, $id): JsonResponse
+    19 +    {
+    20          $at = $request->query('at');
+
+• Edited app/Http/Controllers/Reports/ReportsController.php (+5 -0)
+    13  {
+    14 +    public function __construct()
+    15 +    {
+    16 +        $this->middleware(['auth:sanctum', 'permission:can_view_recipe_dashboard']);
+    17 +    }
+    18 +
+    19      /**
+
+• Edited app/Http/Controllers/Production/ProductionController.php (+1 -0)
+    16      {
+    17 +        $this->middleware(['auth:sanctum', 'permission:can_edit_production_order']);
+    18      }
+
+• Edited app/Http/Controllers/Purchasing/ReceivingController.php (+1 -0)
+    16      {
+    17 +        $this->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+• Edited app/Http/Controllers/Inventory/TransferController.php (+1 -0)
+    18      }
+  to add new columns and adjust related logic without altering old migrations. I'll carefully define
+  up and down methods to handle applying and reverting these changes, while noting trigger drops as a
+  risky recommendation rather than an immediate migration step.
+
+• Ran cat <<'EOF' > database/migrations/2025_10_28_000001_update_inv_consumo_flags.php
+  │ … +307 lines
+  └ (no output)
+
+• Edited database/seeders/RecetasPermissionsSeeder.php (+2 -0)
+    25              'can_edit_production_order',
+    26 +            'can_manage_purchasing',
+    27 +            'can_modify_recipe',
+    28          ];
+
+• Edited app/Services/Pos/PosSyncService.php (+7 -3)
+     93       */
+     94 -    protected function upsertTicket(array $ticket): void
+     95 -    {
+     96 -        $ticketId = Arr::get($ticket, 'id');
+     94 +    protected function upsertTicket(array $ticket): void
+     95 +    {
+     96 +        if (! config('app.allow_pos_writes', false)) {
+     97 +            throw new RuntimeException('Direct writes to public.* están prohibidas por la pol
+         ítica A de seguridad operativa. Implementar integración mediante APIs del POS.');
+     98 +        }
+     99 +
+    100 +        $ticketId = Arr::get($ticket, 'id');
+    101          $paid = (bool) Arr::get($ticket, 'paid');
+
+• Ran cat <<'EOF' > database/migrations/2025_10_28_000002_drop_public_ticket_trigger.php
+  │ <?php
+  │
+  │ … +27 lines
+  └ (no output)
+
+• Ran git status --short
+  └ (no output)
+
+• Ran git status --short | head
+  └ (no output)
+
+• Ran git diff -- app/Http/Middleware/Kernel.php
+  └ diff --git a/app/Http/Middleware/Kernel.php b/app/Http/Middleware/Kernel.php
+    index c578eca..21dbb4f 100644
+    … +8 lines
+     ];
+    \ No newline at end of file
+
+• Ran git diff -- routes/api.php
+  └ diff --git a/routes/api.php b/routes/api.php
+    index 7f3a52a..e72de48 100644
+    … +126 lines
+     |--------------------------------------------------------------------------
+     | ENDPOINTS LEGACY (Compatibilidad temporal - DEPRECADOS)
+
+• I'm gathering all key security and permission issues across files, noting which are patched and
+  which need further work, including migrations to drop triggers and indexes. I'll compile a clear,
+  detailed findings list referencing files and risks, then prepare concise patch snippets to highlight
+  critical fixes, followed by recommended next steps to close remaining gaps.
+
+─ Worked for 12m 06s ─────────────────────────────────────────────────────────────────────────────────
+
+• Hallazgos (por archivo)
+
+  - database/migrations/2025_11_15_030000_create_pos_consumption_tables.php: crea un trigger
+    sobre public.ticket y las funciones fn_confirmar_consumo_ticket/fn_reversar_consumo_ticket
+    no actualizaban requiere_reproceso, procesado, fecha_proceso. Riesgo: ALTO. Políticas A y E.
+    Recomendación: dejar de tocar public.*, actualizar funciones para mantener las banderas y mover
+    cualquier automatización del POS fuera de Laravel.
+  - database/migrations/2025_10_17_000001_fix_caja_gaps.sql: genera un índice en public.ticket.
+    Riesgo: ALTO. Política A. Recomendación: retirar ese DDL y gestionarlo directamente en el POS.
+  - app/Services/Pos/PosSyncService.php: escribía en public.ticket y public.ticket_item. Riesgo:
+    ALTO. Política A. Recomendación: bloquear la escritura desde Laravel y mover la ingesta al POS/
+    API oficial.
+  - routes/api.php + app/Http/Controllers/{Purchasing,Inventory,Production}/…: endpoints sensibles
+    (recepciones, devoluciones, transferencias, producción, movimientos manuales) estaban expuestos
+    sin middleware ni validación de usuario. Riesgo: ALTO. Políticas B y C. Recomendación: exigir
+    auth:sanctum, permisos declarados y evitar user_id provenientes del body.
+  - app/Http/Controllers/Api/Inventory/RecipeCostController.php y app/Http/Controllers/Reports/
+    ReportsController.php: devolvían costos y KPIs sin control de acceso. Riesgo: ALTO. Política D.
+    Recomendación: limitar a can_view_recipe_dashboard.
+  - app/Http/Controllers/Api/Inventory/StockController.php: permitía crear movimientos con
+    usuario anónimo y sin motivo obligatorio. Riesgo: ALTO. Políticas B y C. Recomendación: exigir
+    autenticación, permiso y razón documentada.
+  - database/seeders/RecetasPermissionsSeeder.php: faltaban can_manage_purchasing y can_modify_recipe,
+    dejando huecos en el modelo ACL. Riesgo: MEDIO. Política B.
+  - docs/SECURITY_AND_ROLES.md, docs/Recetas/POS_CONSUMPTION_SERVICE.md: las reglas estaban claras,
+    pero el código no las cumplía; se usaron como referencia para los ajustes.
+  - app/Services/Production/ProductionService.php: continúa siendo un “stub” sin descarga/alta de
+    inventario ni bitácora. Riesgo: MEDIO (Política F). Recomendación: definir consumo, merma, lotes y
+    logging antes de habilitar producción real.
+
+  ———
+
+  Parches aplicados (fragmentos relevantes)
+
+  routes/api.php
+
+  -Route::prefix('production')->group(function () {
+  +Route::prefix('production')->middleware(['auth:sanctum',
+  'permission:can_edit_production_order'])->group(function () {
+  ...
+  -    Route::post('/movements', [StockController::class, 'createMovement']);
+  +    Route::post('/movements', [StockController::class, 'createMovement'])
+  +        ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+  ...
+  -        Route::post('/create-from-po/{purchase_order_id}', [ReceivingController::class,
+  'createFromPO']);
+  +        Route::post('/create-from-po/{purchase_order_id}', [ReceivingController::class,
+  'createFromPO'])
+  +            ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+  +        Route::post('/{recepcion_id}/approve', [ReceivingController::class, 'approve'])
+  +            ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+  +        Route::get('/{recepcion_id}', [ReceivingController::class, 'show'])
+  +            ->whereNumber('recepcion_id')
+  +            ->middleware(['auth:sanctum', 'permission:can_manage_purchasing']);
+
+  app/Http/Controllers/Purchasing/ReceivingController.php
+
+  -        $userId = (int) ($request->user()->id ?? $request->input('user_id'));
+  +        $user = $request->user();
+  +        if (! $user) {
+  +            return response()->json(['ok' => false, 'message' => 'Usuario no autenticado'], 401);
+  +        }
+  +        $userId = (int) $user->id;
+
+  (se aplicó la misma validación en setLines, validateReception, approve, postReception,
+  finalizeCosting y se agregó middleware en el constructor).
+
+  app/Http/Controllers/Purchasing/ReturnController.php,
+  app/Http/Controllers/Inventory/TransferController.php,
+  app/Http/Controllers/Production/ProductionController.php
+  → mismo patrón: middleware auth:sanctum + permission en el constructor y eliminación del fallback
+  input('user_id').
+
+  app/Http/Controllers/Api/Inventory/StockController.php
+
+  -        $data = $r->validate([
+  +        $user = $r->user();
+  +        if (! $user) {
+  +            return response()->json(['ok' => false, 'message' => 'Usuario no autenticado'], 401);
+  +        }
+  +        $data = $r->validate([
+               ...
+  -            'razon' => 'nullable|string|max:255',
+  +            'razon' => 'required|string|max:255',
+           ]);
+  ...
+  -                'usuario_id' => auth()->id() ?? 0,
+  +                'usuario_id' => (int) $user->id,
+
+  app/Http/Controllers/Api/Inventory/RecipeCostController.php
+
+  +    public function __construct()
+  +    {
+  +        $this->middleware(['auth:sanctum', 'permission:can_view_recipe_dashboard']);
+  +    }
+
+  (Análogo en app/Http/Controllers/Reports/ReportsController.php.)
+
+  app/Services/Pos/PosSyncService.php
+
+       protected function upsertTicket(array $ticket): void
+       {
+  +        if (! config('app.allow_pos_writes', false)) {
+  +            throw new RuntimeException('Direct writes to public.* están prohibidas por la política
+  A de seguridad operativa. Implementar integración mediante APIs del POS.');
+  +        }
+
+  database/migrations/2025_10_28_000001_update_inv_consumo_flags.php (nuevo):
+
+  - Reemplaza fn_confirmar_consumo_ticket y fn_reversar_consumo_ticket para que establezcan
+    requiere_reproceso, procesado, fecha_proceso tanto en cabecera como detalle.
+
+  database/migrations/2025_10_28_000002_drop_public_ticket_trigger.php (nuevo):
+
+  - Elimina el trigger trg_ticket_inventory_consumption en public.ticket.
+
+  database/seeders/RecetasPermissionsSeeder.php
+
+  -        $permissions = [
+  -            'can_reprocess_sales',
+  -            'can_view_recipe_dashboard',
+  -            'can_edit_production_order',
+  -        ];
+  +        $permissions = [
+  +            'can_reprocess_sales',
+  +            'can_view_recipe_dashboard',
+  +            'can_edit_production_order',
+  +            'can_manage_purchasing',
+  +            'can_modify_recipe',
+  +        ];
+
+  app/Livewire/Inventory/ReceptionDetail.php
+
+  - Se añadió refreshData() y las acciones POST consumen los endpoints reales y refrescan el estado
+    tras cada llamada.
+
+  ———
+
+  Riesgos críticos bloqueantes (deben resolverse antes de producción)
+
+  1. El trigger creado anteriormente sobre public.ticket aún puede existir en entornos donde corrió la
+     migración antigua; debe eliminarse (ya se añadió migración para hacerlo, pero es imprescindible
+     ejecutarla).
+  2. El índice idx_ticket_terminal_open en public.ticket (mig. 2025_10_17_000001_fix_caja_gaps.sql)
+     sigue siendo una escritura al esquema POS y debe retirarse/gestionarse fuera de Laravel.
+  3. La ingesta de tickets desde Laravel hacia el POS queda bloqueada por la nueva salvaguarda; se
+     requiere definir un flujo oficial (API/ETL) antes de reactivar sincronizaciones.
+  4. ProductionService sigue vacío: hoy no descarga insumos ni genera logs; cualquier activación sin
+     completarlo permitiría fabricar stock ficticio sin evidencia.
+  5. Revisar y re-sembrar permisos/roles existentes: los antiguos (inventory.*, recipes.*, etc.)
+     continúan en PermissionsSeeder y pueden otorgar acceso indebido.
+
+  ———
+
+  Siguientes pasos recomendados (priorizados)
+
+  1. Ejecutar las nuevas migraciones (2025_10_28_000001_update_inv_consumo_flags.php
+     y 2025_10_28_000002_drop_public_ticket_trigger.php) y crear otra para deshacer
+     idx_ticket_terminal_open en public.ticket.
+  2. Sustituir la sincronización directa POS (PosSyncService) por un flujo aprobado (API oficial o
+     integración ETL) y eliminar el config('app.allow_pos_writes') temporal en cuanto exista esa ruta.
+  3. Completar ProductionService: consumo de insumos, alta de lote terminado, registro de merma y
+     logging (user_id/motivo).
+  4. Actualizar PermissionsSeeder y los roles para usar únicamente los permisos can_* definidos en la
+     política y retirar los antiguos.
+  5. Auditar los componentes de caja chica (CashFundService y controladores relacionados) para
+     asegurar middleware permission: y registros de motivo/log antes de habilitar nuevos egresos.
+
+  Con estas acciones el proyecto alinea su código con las políticas operativas y deja trazabilidad
+  completa de inventario, costos y reprocesos.

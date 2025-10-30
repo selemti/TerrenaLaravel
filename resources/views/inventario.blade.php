@@ -175,14 +175,31 @@
         </div>
 
         <div class="mb-2">
+          <label class="form-label small">Almacén *</label>
+          <select id="movAlmacen" name="almacen_id" class="form-select form-select-sm" required>
+            <option value="">Seleccione...</option>
+          </select>
+        </div>
+
+        <div class="mb-2">
           <label class="form-label small">Costo unitario (opcional)</label>
           <input type="number" name="costo_unit" step="0.0001" min="0" class="form-control form-control-sm text-end" placeholder="0.0000">
           <div class="form-text">Para entradas/ajustes de costo</div>
         </div>
 
         <div class="mb-2">
-          <label class="form-label small">Razón / Notas</label>
-          <textarea name="razon" class="form-control form-control-sm" rows="2" placeholder="Detalle del movimiento..."></textarea>
+          <label class="form-label small">Motivo / Justificación *</label>
+          <textarea name="motivo" class="form-control form-control-sm" rows="3" placeholder="Detalle del movimiento..." required></textarea>
+          <div class="invalid-feedback d-block small text-danger mt-1" id="movMotivoError" hidden></div>
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label small">Evidencia (URL)</label>
+          <input type="url" name="evidencia_url" class="form-control form-control-sm" placeholder="https://..." inputmode="url">
+          <div class="form-text">
+            Adjunta previa cargada desde <code>/api/audit/evidence/upload</code>.
+            {{-- TODO: hacer obligatoria la evidencia en producción --}}
+          </div>
         </div>
 
         <div class="d-grid">

@@ -52,8 +52,11 @@ async function apiPost(endpoint, data) {
         });
 
         if (!res.ok) {
-            const error = await res.json().catch(() => ({ error: 'unknown' }));
-            throw new Error(error.message || `HTTP ${res.status}`);
+            const errorPayload = await res.json().catch(() => null);
+            const err = new Error(errorPayload?.message || `HTTP ${res.status}`);
+            err.status = res.status;
+            err.payload = errorPayload;
+            throw err;
         }
 
         return await res.json();
@@ -299,6 +302,21 @@ function renderCatalogFilters() {
         movSucSelect.innerHTML = '<option value="">Seleccione sucursal...</option>' +
             state.sucursales.map(suc => `<option value="${esc(suc.id)}">${esc(suc.nombre)}</option>`).join('');
     }
+
+    // Populate almacen in movement form
+    const movAlmSelect = $('#movAlmacen');
+    if (movAlmSelect) {
+        const options = state.almacenes.length > 0
+            ? state.almacenes.map((alm) => {
+                const labelParts = [
+                    esc(alm.nombre ?? `Almacén ${alm.id}`),
+                    alm.sucursal ? esc(alm.sucursal) : ''
+                ].filter(Boolean);
+                return `<option value="${esc(alm.id)}">${labelParts.join(' — ')}</option>`;
+            }).join('')
+            : '';
+        movAlmSelect.innerHTML = '<option value="">Seleccione almacén...</option>' + options;
+    }
 }
 
 // Filter handlers
@@ -375,8 +393,13 @@ function movimientoRapido(itemId) {
 
     const itemIdInput = offcanvas.querySelector('#movItemId');
     const tipoSelect = offcanvas.querySelector('#movTipo');
+    const motivoError = offcanvas.querySelector('#movMotivoError');
 
     if (itemIdInput) itemIdInput.value = itemId;
+    if (motivoError) {
+        motivoError.hidden = true;
+        motivoError.textContent = '';
+    }
 
     // Populate movement types
     if (tipoSelect && state.movementTypes.length > 0) {
@@ -386,8 +409,23 @@ function movimientoRapido(itemId) {
             .join('');
     }
 
-    const bsOffcanvas = new bootstrap.Offcanvas(offcanvas);
+    const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvas);
     bsOffcanvas.show();
+
+    const sucursalSelect = offcanvas.querySelector('#movSucursal');
+    if (sucursalSelect) sucursalSelect.selectedIndex = 0;
+
+    const almacenSelect = offcanvas.querySelector('#movAlmacen');
+    if (almacenSelect) almacenSelect.selectedIndex = 0;
+
+    const motivoField = offcanvas.querySelector('textarea[name="motivo"]');
+    if (motivoField) {
+        motivoField.value = '';
+        motivoField.focus();
+    }
+
+    const evidenciaField = offcanvas.querySelector('input[name="evidencia_url"]');
+    if (evidenciaField) evidenciaField.value = '';
 }
 
 async function guardarMovimiento() {
@@ -397,11 +435,40 @@ async function guardarMovimiento() {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
+    const motivoError = $('#movMotivoError');
+    if (motivoError) {
+        motivoError.hidden = true;
+        motivoError.textContent = '';
+    }
+
     // Validation
-    if (!data.item_id || !data.tipo || !data.cantidad || !data.sucursal_id) {
+    if (!data.item_id || !data.tipo || !data.cantidad || !data.sucursal_id || !data.almacen_id) {
         toast('Por favor complete todos los campos requeridos', 'warning');
         return;
     }
+
+    const motivo = (data.motivo || '').trim();
+    if (!motivo) {
+        if (motivoError) {
+            motivoError.textContent = 'Debe capturar un motivo para el movimiento.';
+            motivoError.hidden = false;
+        }
+        form.querySelector('textarea[name="motivo"]')?.focus();
+        return;
+    }
+
+    const payload = {
+        item_id: data.item_id,
+        tipo: data.tipo,
+        cantidad: data.cantidad,
+        sucursal_id: data.sucursal_id,
+        almacen_id: data.almacen_id,
+        lote_id: data.lote_id || '',
+        costo_unit: data.costo_unit || '',
+        motivo,
+        evidencia_url: (data.evidencia_url || '').trim(),
+        razon: motivo
+    };
 
     const btnGuardar = form.querySelector('[type="submit"]');
     if (btnGuardar) {
@@ -410,13 +477,14 @@ async function guardarMovimiento() {
     }
 
     try {
-        const response = await apiPost('/inventory/movements', data);
+        const response = await apiPost('/inventory/movements', payload);
 
         if (response.ok) {
             toast('Movimiento guardado exitosamente', 'success');
 
             // Close offcanvas
-            const offcanvas = bootstrap.Offcanvas.getInstance('#offcanvasMovimiento');
+            const offcanvasEl = document.getElementById('offcanvasMovimiento');
+            const offcanvas = offcanvasEl ? bootstrap.Offcanvas.getInstance(offcanvasEl) : null;
             if (offcanvas) offcanvas.hide();
 
             // Reset form
@@ -430,7 +498,15 @@ async function guardarMovimiento() {
         }
     } catch (err) {
         console.error('Error saving movement:', err);
-        toast('Error al guardar movimiento', 'error');
+        if (err.status === 422 && err.payload?.error === 'MOTIVO_REQUIRED') {
+            if (motivoError) {
+                motivoError.textContent = 'Motivo es obligatorio para crear movimiento de inventario.';
+                motivoError.hidden = false;
+            }
+            toast('Capture el motivo para registrar el movimiento.', 'warning');
+        } else {
+            toast(err.message || 'Error al guardar movimiento', 'error');
+        }
     } finally {
         if (btnGuardar) {
             btnGuardar.disabled = false;

@@ -8,6 +8,9 @@
   --text-light:#FFF;
 }
 
+/* Alpine x-cloak: ocultar elementos hasta que Alpine esté listo */
+[x-cloak] { display: none !important; }
+
 /* ====== Layout base con footer sticky en todas las páginas ====== */
 html,body{height:100%}
 body{

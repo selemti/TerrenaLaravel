@@ -21,8 +21,15 @@ use App\Http\Controllers\Api\Inventory\ItemController;
 use App\Http\Controllers\Api\Inventory\PriceController;
 use App\Http\Controllers\Api\Inventory\RecipeCostController;
 use App\Http\Controllers\Api\Inventory\StockController;
+use App\Http\Controllers\Api\MeController;
 use App\Http\Controllers\Api\Inventory\VendorController;
+use App\Http\Controllers\Inventory\InsumoController;
+use App\Http\Controllers\Inventory\TransferController;
 use App\Http\Controllers\Api\CatalogsController;
+use App\Http\Controllers\Production\ProductionController;
+use App\Http\Controllers\Purchasing\PurchaseSuggestionController;
+use App\Http\Controllers\Purchasing\ReceivingController;
+use App\Http\Controllers\Purchasing\ReturnController;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,6 +53,9 @@ Route::prefix('reports')->group(function () {
     Route::get('/stock/val',            [ReportsController::class, 'stockValorizado']);
     Route::get('/consumo/vr',           [ReportsController::class, 'consumoVsMovimientos']);
     Route::get('/anomalias',            [ReportsController::class, 'anomalos']);
+    Route::get('/purchasing/late-po', [\App\Http\Controllers\Reports\ReportsController::class, 'purchasingLatePO']);
+    Route::get('/inventory/over-tolerance', [\App\Http\Controllers\Reports\ReportsController::class, 'inventoryOverTolerance']);
+    Route::get('/inventory/top-urgent', [\App\Http\Controllers\Reports\ReportsController::class, 'inventoryTopUrgent']);
 });
 
 /*
@@ -153,6 +163,14 @@ Route::prefix('inventory')->group(function () {
     // Movements
     Route::post('/movements', [StockController::class, 'createMovement']);
 
+    Route::prefix('transfers')->group(function () {
+        Route::post('/create', [TransferController::class, 'create']);
+        Route::post('/{transfer_id}/approve', [TransferController::class, 'approve']);
+        Route::post('/{transfer_id}/ship', [TransferController::class, 'ship']);
+        Route::post('/{transfer_id}/receive', [TransferController::class, 'receive']);
+        Route::post('/{transfer_id}/post', [TransferController::class, 'post']);
+    });
+
     // Items
     Route::prefix('items')->group(function () {
         Route::get('/', [ItemController::class, 'index']);
@@ -175,6 +193,18 @@ Route::prefix('inventory')->group(function () {
 // Costeo de recetas
 Route::get('/recipes/{id}/cost', [RecipeCostController::class, 'show']);
 
+/*
+|--------------------------------------------------------------------------
+| MÓDULO: PRODUCCIÓN INTERNA
+|--------------------------------------------------------------------------
+*/
+Route::prefix('production')->group(function () {
+    Route::post('/batch/plan', [ProductionController::class, 'plan']);
+    Route::post('/batch/{batch_id}/consume', [ProductionController::class, 'consume']);
+    Route::post('/batch/{batch_id}/complete', [ProductionController::class, 'complete']);
+    Route::post('/batch/{batch_id}/post', [ProductionController::class, 'post']);
+});
+
 // Alertas de costos
 Route::get('/alerts', [AlertsController::class, 'index']);
 Route::post('/alerts/{id}/ack', [AlertsController::class, 'acknowledge']);
@@ -190,6 +220,46 @@ Route::prefix('catalogs')->group(function () {
     Route::get('/sucursales', [CatalogsController::class, 'sucursales']);
     Route::get('/unidades', [CatalogsController::class, 'unidades']);
     Route::get('/movement-types', [CatalogsController::class, 'movementTypes']);
+});
+
+Route::middleware(['auth:sanctum', 'permission:inventory.items.manage'])
+    ->post('/inventory/insumos', [InsumoController::class, 'store'])
+    ->name('api.insumos.store');
+
+Route::middleware(['auth:sanctum', 'permission:inventory.items.manage'])
+    ->post('/inventory/insumos/bulk-import', [InsumoController::class, 'bulkImport'])
+    ->name('api.insumos.bulkImport');
+
+Route::middleware('auth:sanctum')
+    ->get('/me/permissions', [MeController::class, 'permissions'])
+    ->name('api.me.permissions');
+
+/*
+|--------------------------------------------------------------------------
+| MÓDULO: PURCHASING (COMPRAS)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('purchasing')->group(function () {
+    Route::get('/suggestions', [PurchaseSuggestionController::class, 'index']);
+    Route::post('/suggestions/{id}/approve', [PurchaseSuggestionController::class, 'approve']);
+    Route::post('/suggestions/{id}/convert', [PurchaseSuggestionController::class, 'convert']);
+
+    Route::prefix('receptions')->group(function () {
+        Route::post('/create-from-po/{purchase_order_id}', [ReceivingController::class, 'createFromPO']);
+        Route::post('/{recepcion_id}/lines', [ReceivingController::class, 'setLines']);
+        Route::post('/{recepcion_id}/validate', [ReceivingController::class, 'validateReception']);
+        Route::post('/{recepcion_id}/post', [ReceivingController::class, 'postReception']);
+        Route::post('/{recepcion_id}/costing', [ReceivingController::class, 'finalizeCosting']);
+    });
+
+    Route::prefix('returns')->group(function () {
+        Route::post('/create-from-po/{purchase_order_id}', [ReturnController::class, 'createFromPO']);
+        Route::post('/{return_id}/approve', [ReturnController::class, 'approve']);
+        Route::post('/{return_id}/ship', [ReturnController::class, 'ship']);
+        Route::post('/{return_id}/confirm', [ReturnController::class, 'confirm']);
+        Route::post('/{return_id}/post', [ReturnController::class, 'post']);
+        Route::post('/{return_id}/credit-note', [ReturnController::class, 'creditNote']);
+    });
 });
 
 /*
@@ -224,6 +294,16 @@ Route::prefix('legacy')->group(function () {
     Route::post('/postcortes[/{id}]', [PostcorteController::class, 'createOrUpdateLegacy'])
         ->where('id', '[0-9]+');
 });
+
+// Rutas de auditoría operacional
+Route::middleware(['auth:sanctum', 'permission:audit.view'])
+    ->prefix('audit-log')
+    ->group(function () {
+        Route::get('/', [App\Http\Controllers\Audit\LogController::class, 'list'])->name('api.audit.log.list');
+        Route::get('/{id}', [App\Http\Controllers\Audit\LogController::class, 'show'])->name('api.audit.log.show');
+        Route::get('/users', [App\Http\Controllers\Audit\LogController::class, 'users'])->name('api.audit.log.users');
+        Route::get('/modules', [App\Http\Controllers\Audit\LogController::class, 'modules'])->name('api.audit.log.modules');
+    });
 
 /*
 |--------------------------------------------------------------------------

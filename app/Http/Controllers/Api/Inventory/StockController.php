@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\Api\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Services\Audit\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class StockController extends Controller
 {
+    public function __construct(private AuditLogService $auditLogService)
+    {
+    }
+
     // GET /api/inventory/kpis
     public function kpis(Request $r)
     {
@@ -199,6 +204,17 @@ class StockController extends Controller
             'lote_id' => 'nullable|integer',
         ]);
 
+        // Validar que el motivo sea obligatorio para operaciones críticas
+        if (empty(trim($r->input('motivo', '')))) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'MOTIVO_REQUIRED',
+                'message' => 'Motivo es obligatorio para crear movimiento de inventario.',
+            ], 422);
+        }
+
+        // TODO: evidencia_url será obligatoria en producción. Si viene vacía aquí, estamos permitiendo temporalmente por QA.
+
         DB::connection('pgsql')->beginTransaction();
 
         try {
@@ -219,6 +235,17 @@ class StockController extends Controller
             ]);
 
             DB::connection('pgsql')->commit();
+
+            $user = $r->user();
+            $this->auditLogService->logAction(
+                (int) $user->id,
+                'INVENTORY_ADJUST',
+                'manual_movement',
+                (int) $movementId,
+                (string) $r->input('motivo', ''),
+                $r->input('evidencia_url'),
+                $r->all()
+            );
 
             return response()->json([
                 'ok' => true,

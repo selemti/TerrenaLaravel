@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\DB;
 
 class RecipeCostController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth:sanctum', 'permission:can_view_recipe_dashboard']);
+    }
+
     public function show(Request $request, $id): JsonResponse
     {
         $at = $request->query('at');

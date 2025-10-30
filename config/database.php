@@ -83,23 +83,21 @@ return [
             ]) : [],
         ],
 
-				'pgsql' => [
-						'driver' => 'pgsql',
-						'url' => env('DB_URL'),
-						'host' => env('DB_HOST', '127.0.0.1'),
-						'port' => env('DB_PORT', '5432'),
-						'database' => env('DB_DATABASE', 'laravel'),
-						'username' => env('DB_USERNAME', 'root'),
-						'password' => env('DB_PASSWORD', ''),
-						'charset' => env('DB_CHARSET', 'utf8'),
-						'prefix' => '',
-						'prefix_indexes' => true,
-						// usa el valor del .env
-						'search_path' => env('DB_SCHEMA', 'public'),
-						// esta línea puedes borrarla; no la usa el conector:
-						// 'schema' => env('DB_SCHEMA', 'public'),
-						'sslmode' => 'prefer',
-				],
+        'pgsql' => [
+            'driver' => 'pgsql',
+            'url' => env('DB_URL'),
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '5432'),
+            'database' => env('DB_DATABASE', 'laravel'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+            'charset' => env('DB_CHARSET', 'utf8'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'schema' => env('DB_SCHEMA', 'selemti'),
+            'search_path' => env('DB_SEARCH_PATH', 'selemti,public'),
+            'sslmode' => 'prefer',
+        ],
 
         'sqlsrv' => [
             'driver' => 'sqlsrv',

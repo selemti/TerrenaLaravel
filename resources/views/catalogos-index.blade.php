@@ -232,13 +232,28 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
+  // Esperar a que el token esté disponible
+  if (typeof TerrenaLoadApiToken === 'function') {
+    await TerrenaLoadApiToken();
+  }
+
   const apiBase = (window.__API_BASE__ || '') + '/api/catalogs';
+
+  // Función helper para hacer fetch autenticado
+  const authFetch = async (url) => {
+    const headers = { 'Accept': 'application/json' };
+    if (window.TerrenaApiToken) {
+      headers['Authorization'] = 'Bearer ' + window.TerrenaApiToken;
+    }
+    const response = await fetch(url, { headers });
+    return response.json();
+  };
 
   try {
     const [sucursales, almacenes, unidades] = await Promise.all([
-      fetch(`${apiBase}/sucursales`).then(r => r.json()).catch(() => null),
-      fetch(`${apiBase}/almacenes`).then(r => r.json()).catch(() => null),
-      fetch(`${apiBase}/unidades?only_count=1`).then(r => r.json()).catch(() => null),
+      authFetch(`${apiBase}/sucursales`).catch(() => null),
+      authFetch(`${apiBase}/almacenes`).catch(() => null),
+      authFetch(`${apiBase}/unidades?only_count=1`).catch(() => null),
     ]);
 
     if (sucursales?.ok) {
@@ -251,13 +266,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (unidades?.ok) {
       document.getElementById('count-unidades').textContent = unidades.count ?? unidades.data?.length ?? 0;
-    } else {
-      document.getElementById('count-unidades').textContent = '--';
     }
 
+    // TODO: agregar endpoint para contar proveedores
     document.getElementById('count-proveedores').textContent = '--';
   } catch (err) {
-    console.error('Error loading catalog counts:', err);
+    console.error('[Catalogos] Error loading counts:', err);
   }
 });
 </script>
