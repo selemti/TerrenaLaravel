@@ -1,0 +1,270 @@
+pos=# -- verification_queries_psql_v6.sql
+pos=# -- Terrena · Verificaciones clave (Cierre Diario, Consumo POS, Reproceso, Snapshots) · psql 9.5
+pos=# -- Basado en el esquema detectado por discover_schema_psql.sql
+pos=# -- public: ticket, ticket_item, ticket_item_modifier, menu_item, terminal
+pos=# -- selemti: pos_map(plu,tipo,receta_id,valid_from,valid_to,vigente_desde),
+pos=# --          inv_consumo_pos, inv_consumo_pos_det(mp_id,uom_id,factor,...),
+pos=# --          mov_inv(sucursal_id TEXT, ref_id, ref_tipo, cantidad, created_at),
+pos=# --          inventory_snapshot(branch_id TEXT, item_id UUID, snapshot_date DATE),
+pos=# --          inventory_counts(estado,sucursal_id,programado_para,iniciado_en,...),
+pos=# --          inventory_count_lines,
+pos=# --          recipe_cost_history(recipe_id, snapshot_at), recipe_extended_cost_history(...)
+pos=# --
+pos=# -- Uso (ejemplo):
+pos=# --   \set bdate 2025-10-29
+pos=# --   \set sucursal_key '1'        -- Clave textual usada en selemti (mov_inv.sucursal_id, snapshot.branch_id, etc.)
+pos=# --   -- \set terminal_id 9939     -- (opcional) si quieres filtrar por una sola terminal
+pos=# --   \i verification_queries_psql_v6.sql
+pos=# --
+pos=# -- NOTA: Para los bloques 1 y 1.b (POS), la sucursal se infiere por public.terminal.location = :'sucursal_key'.
+pos=#
+pos=# /* =======================================================================
+pos*#  1) Ventas del día sin mapeo POS→Receta (MENÚ)
+    pm.plu se compara contra menu_item.id::text o menu_item.pg_id::text
+pos*# ======================================================================== */
+pos-# SELECT
+pos-#   ti.id               AS ticket_item_id,
+pos-#   mi.id               AS menu_item_id,
+pos-#   mi.pg_id            AS menu_item_pg_id,
+pos-#   mi.name             AS menu_item_name,
+pos-#   t.id                AS ticket_id,
+pos-#   t.create_date::date AS fecha_venta,
+pos-#   t.terminal_id
+pos-# FROM public.ticket t
+pos-# JOIN public.terminal term
+pos-#   ON term.id = t.terminal_id
+pos-#  AND term.location::text = :'sucursal_key'
+pos-# JOIN public.ticket_item ti
+pos-#   ON ti.ticket_id = t.id
+pos-# LEFT JOIN public.menu_item mi
+pos-#   ON mi.id = ti.item_id
+pos-# LEFT JOIN selemti.pos_map pm
+pos-#   ON pm.tipo = 'MENU'
+pos-#  AND (pm.plu = mi.id::text OR pm.plu = mi.pg_id::text)
+pos-#  AND (
+pos(#       (pm.valid_from IS NULL OR pm.valid_from <= :'bdate'::date)
+pos(#   AND (pm.valid_to   IS NULL OR pm.valid_to   >= :'bdate'::date)
+pos(#    OR (pm.vigente_desde IS NOT NULL AND pm.vigente_desde::date <= :'bdate'::date)
+pos(#  )
+pos-# WHERE t.create_date::date = :'bdate'::date
+pos-#   -- AND t.terminal_id = :'terminal_id'::int  -- habilita si definiste :terminal_id
+pos-#   AND pm.plu IS NULL
+pos-# ORDER BY mi.name;
+ ticket_item_id | menu_item_id | menu_item_pg_id | menu_item_name | ticket_id | fecha_venta | terminal_id
+----------------+--------------+-----------------+----------------+-----------+-------------+-------------
+(0 filas)
+
+
+pos=#
+pos=# /* =======================================================================
+pos*#  1.b) Modificadores del día sin mapeo (MODIFIER)
+pos*# ======================================================================== */
+pos-# SELECT
+pos-#   tim.id               AS ticket_item_mod_id,
+pos-#   tim.item_id          AS modifier_item_id,
+pos-#   t.id                 AS ticket_id,
+pos-#   t.create_date::date  AS fecha_venta,
+pos-#   t.terminal_id
+pos-# FROM public.ticket t
+pos-# JOIN public.terminal term
+pos-#   ON term.id = t.terminal_id
+pos-#  AND term.location::text = :'sucursal_key'
+pos-# JOIN public.ticket_item ti
+pos-#   ON ti.ticket_id = t.id
+pos-# JOIN public.ticket_item_modifier tim
+pos-#   ON tim.ticket_item_id = ti.id
+pos-# LEFT JOIN selemti.pos_map pm
+pos-#   ON pm.tipo = 'MODIFIER'
+pos-#  AND pm.plu = tim.item_id::text
+pos-#  AND (
+pos(#       (pm.valid_from IS NULL OR pm.valid_from <= :'bdate'::date)
+pos(#   AND (pm.valid_to   IS NULL OR pm.valid_to   >= :'bdate'::date)
+pos(#    OR (pm.vigente_desde IS NOT NULL AND pm.vigente_desde::date <= :'bdate'::date)
+pos(#  )
+pos-# WHERE t.create_date::date = :'bdate'::date
+pos-#   -- AND t.terminal_id = :'terminal_id'::int  -- habilita si definiste :terminal_id
+pos-#   AND pm.plu IS NULL
+pos-# ORDER BY tim.id;
+ ticket_item_mod_id | modifier_item_id | ticket_id | fecha_venta | terminal_id
+--------------------+------------------+-----------+-------------+-------------
+(0 filas)
+
+
+pos=#
+pos=# /* =======================================================================
+pos*#  2) Líneas inv_consumo_pos/_det pendientes (requiere_reproceso o no procesado)
+pos*#     IMPORTANTE: inv_consumo_pos_det no tiene item_id; usa mp_id/uom_id/factor.
+pos*#     Ajustado para verificar mp_id en mov_inv.
+pos*# ======================================================================== */
+pos-# SELECT
+pos-#   d.id,
+pos-#   h.ticket_id,
+pos-#   h.sucursal_id,
+pos-#   h.terminal_id,
+pos-#   h.created_at::date AS fecha,
+pos-#   d.mp_id,           -- <== columna real
+pos-#   d.uom_id,
+pos-#   d.factor,
+pos-#   d.cantidad,
+pos-#   d.requiere_reproceso,
+pos-#   d.procesado,
+pos-#   h.fecha_proceso
+pos-# FROM selemti.inv_consumo_pos      h
+pos-# JOIN selemti.inv_consumo_pos_det  d ON d.consumo_id = h.id
+pos-# LEFT JOIN selemti.materia_prima mp ON d.mp_id = mp.id
+pos-# WHERE h.created_at::date = :'bdate'::date
+pos-#   AND h.sucursal_id::text = :'sucursal_key'
+pos-#   AND (d.requiere_reproceso = true OR d.procesado = false OR mp.id IS NULL)
+pos-# ORDER BY h.ticket_id, d.id;
+ERROR:  no existe la relación «selemti.materia_prima»
+LÍNEA 21: LEFT JOIN selemti.materia_prima mp ON d.mp_id = mp.id
+                    ^
+pos=#
+pos=# /* =======================================================================
+pos*#  3) Tickets expandidos (inv_consumo_pos) pero sin movimientos definitivos en selemti.mov_inv
+pos*# ======================================================================== */
+pos-# SELECT DISTINCT h.ticket_id
+pos-# FROM selemti.inv_consumo_pos h
+pos-# WHERE h.created_at::date = :'bdate'::date
+pos-#   AND h.sucursal_id::text = :'sucursal_key'
+pos-#   AND NOT EXISTS (
+pos(#     SELECT 1
+pos(#     FROM selemti.mov_inv mi
+pos(#     WHERE mi.sucursal_id = :'sucursal_key'
+pos(#       AND mi.ref_id = h.ticket_id
+pos(#       AND mi.ref_tipo IN ('TICKET','AJUSTE_REPROCESO_POS')
+pos(#   )
+pos-# ORDER BY h.ticket_id;
+ ticket_id
+-----------
+(0 filas)
+
+
+pos=#
+pos=# /* =======================================================================
+pos*#  4) Cobertura de snapshot diario por sucursal
+pos*# ======================================================================== */
+pos-# WITH items_mov AS (
+pos(#   SELECT DISTINCT item_id
+pos(#   FROM selemti.mov_inv
+pos(#   WHERE sucursal_id = :'sucursal_key'
+pos(#     AND created_at::date <= :'bdate'::date
+pos(# ),
+pos-# snap AS (
+pos(#   SELECT item_id
+pos(#   FROM selemti.inventory_snapshot
+pos(#   WHERE branch_id = :'sucursal_key'
+pos(#     AND snapshot_date = :'bdate'::date
+pos(# )
+pos-# SELECT
+pos-#   (SELECT count(*) FROM items_mov) AS items_con_mov_historico,
+pos-#   (SELECT count(*) FROM snap)      AS items_snapshoteados,
+pos-#   ((SELECT count(*) FROM items_mov) - (SELECT count(*) FROM snap)) AS faltantes_en_snapshot;
+ items_con_mov_historico | items_snapshoteados | faltantes_en_snapshot
+-------------------------+---------------------+-----------------------
+                       0 |                   0 |                     0
+(1 fila)
+
+
+pos=#
+pos=# /* =======================================================================
+pos*#  5) Stocks teóricos negativos al cierre
+pos*# ======================================================================== */
+pos-# SELECT item_id,
+pos-#        SUM(cantidad) AS stock_teorico
+pos-# FROM selemti.mov_inv
+pos-# WHERE sucursal_id = :'sucursal_key'
+pos-#   AND created_at <= (:'bdate'::date + interval '1 day' - interval '1 second')
+pos-# GROUP BY item_id
+pos-# HAVING SUM(cantidad) < 0
+pos-# ORDER BY stock_teorico;
+ item_id | stock_teorico
+---------+---------------
+(0 filas)
+
+
+pos=#
+pos=# /* =======================================================================
+pos*#  6) Recetas mapeadas sin snapshot de costo a la fecha
+pos*# ======================================================================== */
+pos-# WITH recetas_mapeadas AS (
+pos(#   SELECT DISTINCT (pm.receta_id)::bigint AS recipe_id
+pos(#   FROM selemti.pos_map pm
+pos(#   WHERE pm.receta_id IS NOT NULL
+pos(#     AND (
+pos(#          (pm.valid_from IS NULL OR pm.valid_from <= :'bdate'::date)
+pos(#      AND (pm.valid_to   IS NULL OR pm.valid_to   >= :'bdate'::date)
+pos(#       OR (pm.vigente_desde IS NOT NULL AND pm.vigente_desde::date <= :'bdate'::date)
+pos(#     )
+pos(# ),
+pos-# costeadas AS (
+pos(#   SELECT DISTINCT rch.recipe_id
+pos(#   FROM selemti.recipe_cost_history rch
+pos(#   WHERE rch.snapshot_at::date <= :'bdate'::date
+pos(# )
+pos-# SELECT rm.recipe_id
+pos-# FROM recetas_mapeadas rm
+pos-# LEFT JOIN costeadas c ON c.recipe_id = rm.recipe_id
+pos-# WHERE c.recipe_id IS NULL
+pos-# ORDER BY rm.recipe_id;
+ recipe_id
+-----------
+(0 filas)
+
+
+pos=#
+pos=# /* =======================================================================
+pos*#  7) Candidatos a reproceso (hay mapeo vigente y banderas pendientes en _det)
+pos*#     IMPORTANTE: usar d.mp_id; cruzar ti/mi para validar el PLU del ítem vendido.
+pos*#     Ajustado para verificar mp_id en materia_prima.
+pos*# ======================================================================== */
+pos-# WITH map_menu AS (
+pos(#   SELECT pm.*
+pos(#   FROM selemti.pos_map pm
+pos(#   WHERE pm.tipo = 'MENU'
+pos(#     AND (
+pos(#          (pm.valid_from IS NULL OR pm.valid_from <= :'bdate'::date)
+pos(#      AND (pm.valid_to   IS NULL OR pm.valid_to   >= :'bdate'::date)
+pos(#       OR (pm.vigente_desde IS NOT NULL AND pm.vigente_desde::date <= :'bdate'::date)
+pos(#     )
+pos(# )
+pos-# SELECT
+pos-#   h.ticket_id,
+pos-#   d.id       AS detalle_id,
+pos-#   d.mp_id    AS mp_id,     -- <== columna real
+pos-#   d.cantidad,
+pos-#   h.sucursal_id,
+pos-#   h.terminal_id
+pos-# FROM selemti.inv_consumo_pos      h
+pos-# JOIN selemti.inv_consumo_pos_det  d ON d.consumo_id = h.id
+pos-# LEFT JOIN selemti.materia_prima mp ON d.mp_id = mp.id
+pos-# JOIN public.ticket_item ti ON ti.id = h.ticket_item_id
+pos-# JOIN public.menu_item mi   ON mi.id = ti.item_id
+pos-# JOIN map_menu pm ON pm.plu IN (mi.id::text, mi.pg_id::text)
+pos-# WHERE h.created_at::date = :'bdate'::date
+pos-#   AND h.sucursal_id::text = :'sucursal_key'
+pos-#   AND d.requiere_reproceso = true
+pos-#   AND mp.id IS NULL -- Check for invalid mp_id
+pos-# ORDER BY h.ticket_id, detalle_id;
+ERROR:  no existe la relación «selemti.materia_prima»
+LÍNEA 25: LEFT JOIN selemti.materia_prima mp ON d.mp_id = mp.id
+                    ^
+pos=#
+pos=# /* =======================================================================
+pos*#  8) Conteos físicos abiertos en el día (por sucursal)
+pos*# ======================================================================== */
+pos-# SELECT
+pos-#   h.id,
+pos-#   h.sucursal_id,
+pos-#   h.programado_para::date AS programado_para,
+pos-#   h.iniciado_en::date     AS iniciado_en,
+pos-#   h.estado,
+pos-#   (SELECT count(*) FROM selemti.inventory_count_lines l WHERE l.inventory_count_id = h.id) AS renglones
+pos-# FROM selemti.inventory_counts h
+pos-# WHERE h.sucursal_id::text = :'sucursal_key'
+pos-#   AND (h.programado_para::date = :'bdate'::date OR h.iniciado_en::date = :'bdate'::date)
+pos-#   AND COALESCE(h.estado,'') NOT IN ('CERRADO','CLOSED')
+pos-# ORDER BY h.id;
+ id | sucursal_id | programado_para | iniciado_en | estado | renglones
+----+-------------+-----------------+-------------+--------+-----------
+(0 filas)

@@ -62,6 +62,9 @@ use App\Livewire\Recipes\RecipeEditor        as RecipeEditorLW;
 
 use App\Livewire\Kds\Board                   as KdsBoard;
 
+use App\Livewire\Pos\PosMap                  as PosMapIndex;
+use App\Livewire\Inventory\PhysicalCounts    as InventoryPhysicalCounts;
+
 use App\Livewire\CashFund\Index             as CashFundIndex;
 use App\Livewire\CashFund\Open              as CashFundOpen;
 use App\Livewire\CashFund\Movements         as CashFundMovements;
@@ -239,6 +242,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/counts/{id}/capture', InventoryCountCapture::class)->name('inv.counts.capture');
         Route::get('/counts/{id}/review',  InventoryCountReview::class)->name('inv.counts.review');
         Route::get('/counts/{id}/detail',  InventoryCountDetail::class)->name('inv.counts.detail');
+        
+        // Orquestador de Inventario
+        Route::get('/orquestador',         \App\Livewire\Inventory\OrquestadorPanel::class)->name('inv.orquestador');
     });
 
     /* =========================================================================
@@ -311,6 +317,29 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['auth', 'permission:audit.view'])
         ->get('/audit/logs', [AuditLogController::class, 'index'])
         ->name('audit.log.index');
+
+    // Ruta para mapeo POS
+    Route::middleware(['auth', 'permission:pos.mapping.view'])
+        ->get('/pos/mapping', function () {
+            return view('pos.mapping-index');
+        })
+        ->name('pos.mapping.index');
+
+    Route::prefix('pos')->middleware(['auth', 'permission:pos.mapping.view'])->group(function () {
+        Route::get('/map', PosMapIndex::class)->name('pos.map.index');
+    });
+
+    // Rutas para conteos físicos
+    Route::middleware(['auth', 'permission:inventory.counts.view'])->group(function () {
+        Route::get('/inventory/physical-counts', InventoryPhysicalCounts::class)->name('inv.physical-counts.index');
+    });
+
+    // Ruta para conteos físicos
+    Route::middleware(['auth', 'permission:inventory.counts.view'])
+        ->get('/inventory/counts', function () {
+            return view('inventory.counts-index');
+        })
+        ->name('inv.counts.index');
 
     // Token Sanctum para consumo desde dashboard
     Route::get('/session/api-token', [SessionApiTokenController::class, 'generate'])

@@ -16,61 +16,43 @@ class UnidadesIndex extends Component
 
     // Filtros / querystring
     public string $q = '';
-    public string $tipo = '';
-    public string $categoria = '';
     public int $perPage = 25;
 
     protected $queryString = [
         'q' => ['except' => ''],
-        'tipo' => ['except' => ''],
-        'categoria' => ['except' => ''],
     ];
 
     // Form modal/simple
     public ?int $editingId = null;
     public array $form = [
-        'codigo' => '',
+        'clave' => '',
         'nombre' => '',
-        'tipo' => 'PESO',
-        'categoria' => 'METRICO',
-        'es_base' => false,
-        'factor_conversion_base' => 1.000000,
-        'decimales' => 2,
+        'activo' => true,
     ];
 
     public function updatingQ() { $this->resetPage(); }
-    public function updatedTipo() { $this->resetPage(); }
-    public function updatedCategoria() { $this->resetPage(); }
     public function updatedPerPage() { $this->resetPage(); }
 
     protected function rules()
     {
-        $uniqueCodigo = Rule::unique('selemti.unidades_medida', 'codigo');
+        $uniqueClave = Rule::unique('selemti.cat_unidades', 'clave');
         if ($this->editingId) {
-            $uniqueCodigo = $uniqueCodigo->ignore($this->editingId, 'id');
+            $uniqueClave = $uniqueClave->ignore($this->editingId, 'id');
         }
 
         return [
-            'form.codigo' => ['required', 'string', 'max:10', 'regex:/^[A-Z0-9]{1,10}$/', $uniqueCodigo],
-            'form.nombre' => ['required', 'string', 'max:50'],
-            'form.tipo' => ['required', Rule::in(['PESO','VOLUMEN','UNIDAD','TIEMPO'])],
-            'form.categoria' => ['nullable', Rule::in(['METRICO','IMPERIAL','CULINARIO'])],
-            'form.es_base' => ['boolean'],
-            'form.factor_conversion_base' => ['numeric', 'min:0.000001'],
-            'form.decimales' => ['integer', 'between:0,6'],
+            'form.clave' => ['required', 'string', 'max:16', 'regex:/^[A-Z0-9]{1,16}$/', $uniqueClave],
+            'form.nombre' => ['required', 'string', 'max:64'],
+            'form.activo' => ['boolean'],
         ];
     }
 
     private function defaults(): array
     {
         return [
-            'codigo' => '',
+            'clave' => '',
             'nombre' => '',
-            'tipo' => 'PESO',
-            'categoria' => 'METRICO',
-            'es_base' => false,
-            'factor_conversion_base' => 1.000000,
-            'decimales' => 2,
+            'activo' => true,
         ];
     }
 
@@ -91,20 +73,16 @@ class UnidadesIndex extends Component
         $this->editingId = $id;
         $u = Unidad::findOrFail($id);
         $this->form = [
-            'codigo' => $u->codigo,
+            'clave' => $u->clave,
             'nombre' => $u->nombre,
-            'tipo' => $u->tipo ?? 'PESO',
-            'categoria' => $u->categoria,
-            'es_base' => (bool) $u->es_base,
-            'factor_conversion_base' => (float) $u->factor_conversion_base,
-            'decimales' => (int) $u->decimales,
+            'activo' => $u->activo,
         ];
         $this->dispatch('toggle-unidad-modal', open: true);
     }
 
     public function save()
     {
-        $this->form['codigo'] = strtoupper(trim($this->form['codigo'] ?? ''));
+        $this->form['clave'] = strtoupper(trim($this->form['clave'] ?? ''));
         $this->validate();
 
         if ($this->editingId) {
@@ -141,15 +119,12 @@ class UnidadesIndex extends Component
         if ($this->q !== '') {
             $needle = mb_strtoupper($this->q);
             $q->where(function ($qq) use ($needle) {
-                $qq->whereRaw('UPPER(codigo) LIKE ?', ["%{$needle}%"])
+                $qq->whereRaw('UPPER(clave) LIKE ?', ["%{$needle}%"])
                    ->orWhereRaw('UPPER(nombre) LIKE ?', ["%{$needle}%"]);
             });
         }
 
-        if ($this->tipo !== '')   $q->where('tipo', $this->tipo);
-        if ($this->categoria !== '') $q->where('categoria', $this->categoria);
-
-        $q->orderBy('tipo')->orderBy('codigo');
+        $q->orderBy('clave');
 
         return view('livewire.catalogs.unidades-index', [
             'rows' => $q->paginate($this->perPage),

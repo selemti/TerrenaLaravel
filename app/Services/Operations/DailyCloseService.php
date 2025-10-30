@@ -1,9 +1,9 @@
 <?php
 
-namespace App.Services\Operations;
+namespace App\Services\Operations;
 
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Throwable;
@@ -14,10 +14,12 @@ class DailyCloseService
     protected Carbon $date;
     protected string $branchId;
     protected string $connection = 'pgsql'; // Conexión a PostgreSQL
+    protected PosConsumptionService $posConsumptionService;
 
-    public function __construct()
+    public function __construct(PosConsumptionService $posConsumptionService)
     {
         $this->traceId = uniqid('close_');
+        $this->posConsumptionService = $posConsumptionService;
     }
 
     /**
@@ -73,8 +75,8 @@ class DailyCloseService
     protected function acquireLock(): bool
     {
         $key = "close:lock:{$this->branchId}:{$this->date->toDateString()}";
-        // TTL de 23 horas para asegurar que no se solape con el siguiente ciclo.
-        return Redis::set($key, $this->traceId, 'EX', 82800, 'NX');
+        // Intenta obtener un lock por 23 horas. Si no está disponible, retorna false.
+        return Cache::lock($key, 82800)->get();
     }
 
     protected function checkPosSync(): bool
@@ -92,34 +94,7 @@ class DailyCloseService
         return $isComplete;
     }
 
-    protected function processTheoreticalConsumption(): array
-    {
-        $this->log('info', 'step_process_consumption', ['status' => 'started']);
 
-        // Obtener IDs de tickets del día que no tienen movimientos de inventario asociados.
-        // Esto hace la operación idempotente.
-        $ticketIds = DB::connection($this->connection)
-            ->table('selemti.tickets as t')
-            ->where('t.branch_id', $this->branchId)
-            ->whereDate('t.created_at', $this->date->toDateString())
-            ->whereNotExists(function ($query) {
-                $query->select(DB::raw(1))
-                      ->from('selemti.mov_inv as mi')
-                      ->where('mi.ref_tipo', 'TICKET')
-                      ->whereColumn('mi.ref_id', 't.id');
-            })
-            ->pluck('id');
-
-        $processedCount = 0;
-        foreach ($ticketIds as $ticketId) {
-            // La función de BD es la responsable de la lógica de consumo.
-            DB::connection($this->connection)->statement('SELECT selemti.fn_confirmar_consumo_ticket(?)', [$ticketId]);
-            $processedCount++;
-        }
-
-        $this->log('info', 'step_process_consumption', ['status' => 'completed', 'tickets_processed' => $processedCount]);
-        return ['status' => true, 'tickets_processed' => $processedCount];
-    }
 
     protected function checkOperationalMoves(): bool
     {
@@ -251,14 +226,19 @@ class DailyCloseService
         ];
     }
 
-    protected function log(string $level, string $step, array $context = []): void
+    protected function log(string $level, string $step, array $meta = []): void
     {
-        // Asumiendo que existe un canal 'daily_close' configurado en logging.php
-        Log::channel('daily_close')->{$level}(json_encode(array_merge([
+        // Conforme a METRICS_EVENTS_SCHEMA.md
+        $logData = [
             'trace_id' => $this->traceId,
             'branch_id' => $this->branchId ?? null,
             'date' => isset($this->date) ? $this->date->toDateString() : null,
             'step' => $step,
-        ], $context), JSON_UNESCAPED_UNICODE));
+            'level' => $level,
+            'meta' => $meta,
+        ];
+
+        // Asumiendo que existe un canal 'daily_close' configurado en logging.php
+        Log::channel('daily_close')->{$level}(json_encode($logData, JSON_UNESCAPED_UNICODE));
     }
 }

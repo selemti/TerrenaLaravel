@@ -28,8 +28,8 @@ class InsumoCodeService
         $cat = strtoupper(trim($cat));
         $sub = strtoupper(trim($sub));
 
-        // TODO: Esta tabla vive realmente en el esquema selemti. Ajustar conexión/schema en prod.
-        $max = DB::table('insumo')
+        // Consultar el consecutivo máximo en selemti.insumo usando conexión PostgreSQL
+        $max = DB::connection('pgsql')->table('selemti.insumo')
             ->where('categoria_codigo', $cat)
             ->where('subcategoria_codigo', $sub)
             ->max('consecutivo');

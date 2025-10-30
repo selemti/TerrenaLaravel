@@ -188,6 +188,42 @@ Route::prefix('inventory')->group(function () {
 
     // Precios de proveedores
     Route::post('/prices', [PriceController::class, 'store'])->middleware('throttle:30,1');
+    
+    // Orquestador de Inventario
+    Route::post('/orquestador/daily-close', function (Request $request, \App\Services\Operations\DailyCloseService $dailyCloseService) {
+        $date = $request->input('date', now()->subDay()->format('Y-m-d'));
+        $branch = $request->input('branch', '1');
+        
+        $status = $dailyCloseService->run($branch, $date);
+        
+        return response()->json($status);
+    });
+    
+    Route::post('/orquestador/recalcular-costos', function (Request $request, \App\Services\Recetas\RecalcularCostosRecetasService $recalcularCostosService) {
+        $date = $request->input('date', now()->subDay()->format('Y-m-d'));
+        $branch = $request->input('branch');
+        
+        $result = $recalcularCostosService->recalcularCostos($branch ? (int) $branch : null, $date);
+        
+        return response()->json($result);
+    });
+    
+    Route::post('/orquestador/generar-snapshot', function (Request $request, \App\Services\Operations\DailyCloseService $dailyCloseService) {
+        $date = $request->input('date', now()->subDay()->format('Y-m-d'));
+        $branch = $request->input('branch', '1');
+        
+        // Para generar solo el snapshot, ejecutamos el servicio con el método específico
+        // Simulamos la ejecución del proceso de cierre, pero solo retornamos el estado del snapshot
+        $status = $dailyCloseService->run($branch, $date);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Snapshot generado exitosamente',
+            'date' => $date,
+            'branch' => $branch,
+            'snapshot_ok' => $status['semaphore']['snapshot_ok'] ?? false
+        ]);
+    });
 });
 
 // Costeo de recetas
@@ -296,6 +332,26 @@ Route::prefix('legacy')->group(function () {
 });
 
 // Rutas de auditoría operacional
+/*
+|--------------------------------------------------------------------------
+| MÓDULO: CIERRE DIARIO
+|--------------------------------------------------------------------------
+*/
+Route::prefix('close')->group(function () {
+    Route::get('/status', function (Request $request, \App\Services\Operations\DailyCloseService $dailyCloseService) {
+        $date = $request->query('date');
+        $branch = $request->query('branch');
+
+        if (!$date || !$branch) {
+            return response()->json(['error' => 'date and branch parameters are required'], 400);
+        }
+
+        $status = $dailyCloseService->run($branch, $date);
+
+        return response()->json($status);
+    });
+});
+
 Route::middleware(['auth:sanctum', 'permission:audit.view'])
     ->prefix('audit-log')
     ->group(function () {

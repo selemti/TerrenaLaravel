@@ -1,0 +1,190 @@
+{
+  "channel": "daily_close",
+  "timezone": "America/Mexico_City",
+  "events": [
+    {
+      "name": "pos.sync.completed",
+      "at": "precheck",
+      "keys": [
+        "batch_id",
+        "branch_id",
+        "pos_date",
+        "tickets_count"
+      ],
+      "severity": "info",
+      "doc": "Lote POS importado y conciliado para la fecha/sucursal objetivo."
+    },
+    {
+      "name": "pos.consumption.expand.started",
+      "keys": [
+        "branch_id",
+        "date"
+      ],
+      "severity": "info",
+      "doc": "Expansión de tickets a consumo teórico (inv_consumo_pos/_det)."
+    },
+    {
+      "name": "pos.consumption.expand.finished",
+      "keys": [
+        "branch_id",
+        "date",
+        "tickets_expanded",
+        "lines_expanded"
+      ],
+      "severity": "info"
+    },
+    {
+      "name": "pos.consumption.confirm.started",
+      "keys": [
+        "branch_id",
+        "date"
+      ],
+      "severity": "info",
+      "doc": "Confirmación a movimientos definitivos (mov_inv) por ticket."
+    },
+    {
+      "name": "pos.consumption.confirm.finished",
+      "keys": [
+        "branch_id",
+        "date",
+        "tickets_confirmed",
+        "movements_inserted"
+      ],
+      "severity": "info"
+    },
+    {
+      "name": "pos.reprocess.detected",
+      "keys": [
+        "branch_id",
+        "date",
+        "pending_reprocess_lines"
+      ],
+      "severity": "warning",
+      "doc": "Detectadas líneas con requiere_reproceso=true."
+    },
+    {
+      "name": "pos.reprocess.executed",
+      "keys": [
+        "branch_id",
+        "date",
+        "ticket_id",
+        "lines_reprocessed",
+        "movements_inserted"
+      ],
+      "severity": "info"
+    },
+    {
+      "name": "inventory.snapshot.generated",
+      "keys": [
+        "branch_id",
+        "date",
+        "items_snapshotted"
+      ],
+      "severity": "info",
+      "doc": "UPSERT en selemti.inventory_snapshot por (date, branch, item)."
+    },
+    {
+      "name": "inventory.count.open",
+      "keys": [
+        "branch_id",
+        "count_id",
+        "count_date",
+        "areas",
+        "owner"
+      ],
+      "severity": "info"
+    },
+    {
+      "name": "inventory.count.closed",
+      "keys": [
+        "branch_id",
+        "count_id",
+        "count_date",
+        "lines",
+        "variance_items",
+        "variance_value"
+      ],
+      "severity": "info"
+    },
+    {
+      "name": "recipe.cost_snapshot.generated",
+      "keys": [
+        "branch_id",
+        "date",
+        "recipes_snapshotted"
+      ],
+      "severity": "info"
+    },
+    {
+      "name": "recipe.cost.recalc.executed",
+      "keys": [
+        "branch_id",
+        "date",
+        "affected_recipes",
+        "alerts_generated"
+      ],
+      "severity": "info"
+    },
+    {
+      "name": "warning.unmapped.menu_items",
+      "keys": [
+        "branch_id",
+        "date",
+        "unmapped_count"
+      ],
+      "severity": "warning"
+    },
+    {
+      "name": "warning.negative.stock",
+      "keys": [
+        "branch_id",
+        "date",
+        "items_count"
+      ],
+      "severity": "warning"
+    },
+    {
+      "name": "error.pipeline",
+      "keys": [
+        "branch_id",
+        "date",
+        "step",
+        "message",
+        "trace_id"
+      ],
+      "severity": "error"
+    }
+  ],
+  "metrics": {
+    "gauge": [
+      "daily_close.semaphore.pos_ok",
+      "daily_close.semaphore.consumo_ok",
+      "daily_close.semaphore.snapshot_ok",
+      "inventory.open_counts"
+    ],
+    "counter": [
+      "pos.tickets_expanded",
+      "pos.lines_expanded",
+      "pos.tickets_confirmed",
+      "pos.movements_inserted",
+      "pos.lines_reprocess_pending",
+      "pos.lines_reprocessed",
+      "snapshot.items_upserted",
+      "alerts.margin_low",
+      "alerts.margin_negative"
+    ],
+    "histogram": [
+      "pipeline.step_ms.pos_expand",
+      "pipeline.step_ms.pos_confirm",
+      "pipeline.step_ms.snapshot",
+      "pipeline.step_ms.cost_recalc"
+    ]
+  },
+  "payload_conventions": {
+    "trace_id": "string (uniq per run)",
+    "branch_id": "string",
+    "date": "YYYY-MM-DD",
+    "step": "machine_step_name",
+    "status": "started|completed|completed_with_warnings|failed"
+  }
+}

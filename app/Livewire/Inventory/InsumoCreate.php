@@ -128,8 +128,8 @@ class InsumoCreate extends Component
                 'meta'                => null,
             ];
 
-            // TODO: Esta tabla vive realmente en el esquema selemti. Ajustar conexión/schema en prod si es necesario.
-            DB::table('insumo')->insert($payload);
+            // Insertar en la tabla selemti.insumo usando conexión PostgreSQL
+            DB::connection('pgsql')->table('selemti.insumo')->insert($payload);
 
             session()->flash('success', 'Insumo creado correctamente.');
 
@@ -173,10 +173,10 @@ class InsumoCreate extends Component
     protected function loadUnits(): void
     {
         $this->units = DB::connection('pgsql')
-            ->table('cat_unidades')
-            ->whereIn('clave', $this->allowedUnitKeys)
-            ->orderBy('clave')
-            ->get(['id', 'clave', 'nombre'])
+            ->table('selemti.unidad_medida_legacy')
+            ->whereIn('codigo', $this->allowedUnitKeys)
+            ->orderBy('codigo')
+            ->get(['id', 'codigo as clave', 'nombre'])
             ->map(fn ($row) => [
                 'id'    => (int) $row->id,
                 'clave' => $row->clave,

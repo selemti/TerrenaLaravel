@@ -90,7 +90,18 @@
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT COUNT(*) as total_uom, COUNT(*) FILTER (WHERE activo = true) as activas FROM selemti.cat_unidades;\")",
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT clave, nombre FROM selemti.cat_unidades ORDER BY clave;\")",
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT COUNT(*) as total FROM selemti.unidades_medida;\")",
-      "Bash(gh pr view:*)"
+      "Bash(gh pr view:*)",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\dt selemti.insumo*\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.insumo\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\dt selemti.*unidad*\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\dt selemti.cat_unidades\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.cat_unidades\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.unidad_medida_legacy\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT id, clave, nombre FROM selemti.cat_unidades WHERE clave IN (''KG'', ''L'', ''PZA'') ORDER BY clave;\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT id, codigo, nombre, tipo FROM selemti.unidad_medida_legacy WHERE codigo IN (''KG'', ''L'', ''PZA'') ORDER BY codigo;\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT COUNT(*) as total_insumos FROM selemti.insumo;\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT COUNT(*) as total_from_unidad_medida_legacy FROM selemti.unidad_medida_legacy;\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT id, codigo, nombre, tipo FROM selemti.unidad_medida_legacy ORDER BY codigo;\")"
     ],
     "deny": [],
     "ask": []
