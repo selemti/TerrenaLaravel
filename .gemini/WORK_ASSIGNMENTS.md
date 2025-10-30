@@ -55,19 +55,15 @@ Este archivo coordina el trabajo entre Claude, Codex y Gemini para evitar confli
 - [x] PosSyncService
 - [x] Migraciones: inventory_counts, purchasing, costing_extension, pos_sync, etc.
 
+### ✅ COMPLETADO
+
+#### Gemini:
+- [x] Ajustar bloques 2 y 7 (usar mp_id en lugar de item_id) en verification_queries_psql_v6.sql
+
 ### 🔄 EN PROGRESO
 
 #### Gemini:
-- [ ] **PRIORIDAD ALTA:** Verificar consistencia de `numero_recepcion` en recepcion_cab
-  - Error conocido: `SQLSTATE[42703]: no existe la columna r.numero_recepcion`
-  - Archivo afectado: `app/Livewire/Inventory/ReceptionsIndex.php`
-  - Acción: Determinar si agregar columna o ajustar código
-  - Esquema: `selemti` (modificable libremente)
-
-- [ ] Normalizar campos faltantes en tablas de inventario
-  - Revisar todas las tablas `selemti.*` vs modelos Eloquent
-  - Documentar inconsistencias encontradas
-  - Proponer migraciones de corrección
+- [ ] Verificar consistencia de `numero_recepcion` en recepcion_cab
 
 ### 📅 PENDIENTE (Backlog)
 
