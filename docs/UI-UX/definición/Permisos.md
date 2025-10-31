@@ -27,7 +27,6 @@ El módulo de Permisos gestiona el control de acceso al sistema mediante roles y
 **Características actuales:**
 - 44 permisos definidos
 - Cobertura de 9 módulos
-- Permisos granulares (ver/editar/aprobar)
 
 **Requerimientos de UI/UX:**
 - Matriz rol × permiso (visual)
@@ -35,8 +34,6 @@ El módulo de Permisos gestiona el control de acceso al sistema mediante roles y
 - Búsqueda y filtrado de permisos
 - Descripción clara de cada permiso
 - Validación de permisos críticos
-- Permisos específicos por sucursal
-- Acciones: ver/editar/aprobar por módulo
 
 ### 3. Asignación de Usuarios a Roles
 **Descripción:** Asociación de usuarios con roles específicos.
@@ -83,10 +80,6 @@ El módulo de Permisos gestiona el control de acceso al sistema mediante roles y
 - Validaciones de seguridad para operaciones sensibles
 - Endpoints API para gestión de roles/permisos
 - Caching de permisos para rendimiento
-- Middleware 'can' para protección de rutas
-- Directiva @can en vistas Blade
-- Método user->can() para verificación en componentes
-- Middleware de autenticación web (auth:sanctum)
 
 ## Integración con Otros Módulos
 - Todos los módulos: Verificación de permisos para acceso
@@ -111,113 +104,50 @@ El módulo de Permisos gestiona el control de acceso al sistema mediante roles y
 - Aprobaciones requeridas por tipo de acción
 - Seguimiento de cambios en configuración de seguridad
 
-## Matriz de Permisos por Módulo
+## Flujos de Trabajo
 
-### Inventario
-- `inventory.view` - Ver catálogo de ítems
-- `inventory.items.manage` - Crear/Editar ítems
-- `inventory.prices.manage` - Gestionar precios
-- `inventory.receivings.manage` - Gestionar recepciones
-- `inventory.receptions.validate` - Validar recepciones
-- `inventory.receptions.override_tolerance` - Override tolerancia
-- `inventory.receptions.post` - Postear recepciones
-- `inventory.counts.manage` - Gestionar conteos
-- `inventory.moves.manage` - Gestionar movimientos
-- `inventory.lots.view` - Ver lotes
-- `inventory.transfers.approve` - Aprobar transferencias
-- `inventory.transfers.ship` - Enviar transferencias
-- `inventory.transfers.receive` - Recibir transferencias
-- `inventory.transfers.post` - Postear transferencias
+### Flujo de Gestión de Roles
+1. **Creación**: Administrador crea nuevo rol
+2. **Asignación**: Selecciona permisos desde matriz
+3. **Validación**: Sistema verifica permisos conflictivos
+4. **Guardado**: Rol se guarda en base de datos
+5. **Asignación**: Usuarios se asignan al nuevo rol
 
-### Compras
-- `purchasing.view` - Ver compras
-- `purchasing.manage` - Gestionar compras
-- `purchasing.suggested.view` - Ver pedidos sugeridos
-- `purchasing.orders.manage` - Crear/Editar órdenes
-- `purchasing.orders.approve` - Aprobar órdenes
-- `can_manage_purchasing` - Permiso general de compras
+### Flujo de Asignación de Usuarios
+1. **Búsqueda**: Administrador busca usuario por nombre/email
+2. **Selección**: Usuario se selecciona para asignación
+3. **Asignación**: Se seleccionan roles desde lista
+4. **Validación**: Sistema verifica permisos efectivos
+5. **Guardado**: Asignación se guarda en base de datos
+6. **Auditoría**: Cambio se registra en log de auditoría
 
-### Recetas
-- `recipes.view` - Ver recetas
-- `recipes.manage` - Crear/Editar recetas
-- `recipes.costs.recalc.schedule` - Cron recalcular costos
-- `recipes.costs.snapshot` - Snapshot manual de costo
-- `can_view_recipe_dashboard` - Ver dashboard de recetas
-- `can_modify_recipe` - Modificar recetas
+### Flujo de Prueba de Roles
+1. **Selección**: Administrador selecciona usuario/rol a probar
+2. **Validación**: Sistema verifica permisos para impersonate
+3. **Inicio**: Sesión se inicia en modo "probar como"
+4. **Indicación**: Banner visual muestra modo de prueba
+5. **Uso**: Usuario navega sistema con permisos del rol
+6. **Fin**: Se finaliza sesión de prueba
+7. **Registro**: Acción se registra en log de auditoría
 
-### Producción
-- `can_edit_production_order` - Ejecutar producción y registrar mermas
-- `can_manage_produmix` - Ver, editar y aprobar el plan Produmix
-- `production.orders.view` - Ver órdenes de producción
-- `production.orders.close` - Cerrar OP (consume MP)
+## Estados y Transiciones
 
-### Caja Chica
-- `cashfund.manage` - Acceso general a caja chica
-- `cashfund.view` - Ver caja chica (solo lectura)
-- `approve-cash-funds` - Aprobar fondos de caja
-- `close-cash-funds` - Cerrar fondos de caja
+### Estados de Roles
+```
+INACTIVO ↔ ACTIVO
+```
 
-### Reportes
-- `reports.kpis.view` - Ver KPIs/dashboard
-- `reports.audit.view` - Ver auditoría
-- `reports.view` - Ver reportes
+### Estados de Permisos
+```
+DENEGADO → PERMITIDO
+PERMITIDO → DENEGADO
+```
 
-### POS
-- `can_reprocess_sales` - Reprocesar ventas POS
-- `can_view_recipe_dashboard` - Ver recetas y costos
-- `can_manage_menu_availability` - Control de disponibilidad POS
-
-### Transferencias
-- `can_manage_transfers` - Permiso general para transferencias
-- `inventory.transfers.approve` - Aprobar transferencias
-- `inventory.transfers.ship` - Enviar transferencias
-- `inventory.transfers.receive` - Recibir transferencias
-- `inventory.transfers.post` - Postear transferencias
-
-### Personas
-- `people.users.manage` - Gestionar usuarios
-- `people.roles.manage` - Gestionar roles
-- `people.permissions.manage` - Gestionar permisos
-
-### Sistema
-- `admin.access` - Acceso a administración
-- `audit.view` - Ver auditoría
-- `legacy.view` - Ver rutas legacy
-
-## Roles Predefinidos
-
-### Super Admin
-- Todos los permisos (*)
-
-### Ops Manager
-- Permisos completos de inventario, compras, recetas, producción
-- Acceso a reportes y auditoría
-- Gestión de usuarios y permisos
-
-### Inventario Manager
-- Permisos de gestión de inventario y recetas
-- Acceso a reportes de inventario
-- Gestión de usuarios de inventario
-
-### Compras
-- Permisos de gestión de compras y recepciones
-- Acceso a proveedores
-- Gestión de órdenes de compra
-
-### Cocina
-- Permisos de producción y recetas
-- Acceso a reportes de cocina
-- Gestión de órdenes de producción
-
-### Cajero
-- Permisos de caja chica y reportes básicos
-- Vista limitada de inventario
-- Acceso a funciones de POS
-
-### Viewer
-- Permisos de solo lectura en módulos básicos
-- Acceso a reportes públicos
-- Vista limitada de información sensible
+### Estados de Asignaciones
+```
+ASIGNADO → REVOCADO
+REVOCADO → ASIGNADO
+```
 
 ## Componentes Técnicos
 
@@ -253,6 +183,99 @@ El módulo de Permisos gestiona el control de acceso al sistema mediante roles y
 - `PermissionService` - Lógica de negocio para permisos
 - `RoleService` - Lógica de negocio para roles
 - `UserService` - Lógica de negocio para usuarios
+
+## Permisos y Roles
+
+### Permisos Específicos
+- `inventory.view` - Ver catálogo de ítems
+- `inventory.items.manage` - Crear/Editar ítems
+- `inventory.prices.manage` - Gestionar precios
+- `inventory.receivings.manage` - Gestionar recepciones
+- `inventory.receptions.validate` - Validar recepciones
+- `inventory.receptions.override_tolerance` - Override tolerancia
+- `inventory.receptions.post` - Postear recepciones
+- `inventory.counts.manage` - Gestionar conteos
+- `inventory.moves.manage` - Gestionar movimientos
+- `inventory.lots.view` - Ver lotes
+- `inventory.transfers.approve` - Aprobar transferencias
+- `inventory.transfers.ship` - Enviar transferencias
+- `inventory.transfers.receive` - Recibir transferencias
+- `inventory.transfers.post` - Postear transferencias
+
+- `purchasing.view` - Ver compras
+- `purchasing.manage` - Gestionar compras
+- `purchasing.suggested.view` - Ver pedidos sugeridos
+- `purchasing.orders.manage` - Crear/Editar órdenes
+- `purchasing.orders.approve` - Aprobar órdenes
+- `can_manage_purchasing` - Permiso general de compras
+
+- `recipes.view` - Ver recetas
+- `recipes.manage` - Crear/Editar recetas
+- `recipes.costs.recalc.schedule` - Cron recalcular costos
+- `recipes.costs.snapshot` - Snapshot manual de costo
+- `can_view_recipe_dashboard` - Ver dashboard de recetas
+- `can_modify_recipe` - Modificar recetas
+
+- `can_edit_production_order` - Ejecutar producción y registrar mermas
+- `can_manage_produmix` - Ver, editar y aprobar el plan Produmix
+- `production.orders.view` - Ver órdenes de producción
+- `production.orders.close` - Cerrar OP (consume MP)
+
+- `cashfund.manage` - Acceso general a caja chica
+- `cashfund.view` - Ver caja chica (solo lectura)
+- `approve-cash-funds` - Aprobar fondos de caja
+- `close-cash-funds` - Cerrar fondos de caja
+
+- `reports.kpis.view` - Ver KPIs/dashboard
+- `reports.audit.view` - Ver auditoría
+- `reports.view` - Ver reportes
+
+- `can_reprocess_sales` - Reprocesar ventas POS
+- `can_view_recipe_dashboard` - Ver recetas y costos
+- `can_manage_menu_availability` - Control de disponibilidad POS
+
+- `people.users.manage` - Gestionar usuarios
+- `people.roles.manage` - Gestionar roles
+- `people.permissions.manage` - Gestionar permisos
+
+- `admin.access` - Acceso a administración
+- `audit.view` - Ver auditoría
+- `legacy.view` - Ver rutas legacy
+
+### Roles Predefinidos
+
+#### Super Admin
+- Todos los permisos (*)
+
+#### Ops Manager
+- Permisos completos de inventario, compras, recetas, producción
+- Acceso a reportes y auditoría
+- Gestión de usuarios y permisos
+
+#### Inventario Manager
+- Permisos de gestión de inventario y recetas
+- Acceso a reportes de inventario
+- Gestión de usuarios de inventario
+
+#### Compras
+- Permisos de gestión de compras y recepciones
+- Acceso a proveedores
+- Gestión de órdenes de compra
+
+#### Cocina
+- Permisos de producción y recetas
+- Acceso a reportes de cocina
+- Gestión de órdenes de producción
+
+#### Cajero
+- Permisos de caja chica y reportes básicos
+- Vista limitada de inventario
+- Acceso a funciones de POS
+
+#### Viewer
+- Permisos de solo lectura en módulos básicos
+- Acceso a reportes públicos
+- Vista limitada de información sensible
 
 ## Consideraciones de Seguridad
 
