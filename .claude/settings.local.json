@@ -136,7 +136,8 @@
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -f \"C:/xampp3/htdocs/TerrenaLaravel/docs/BD/Normalizacion/Phase3_Improvements/05_consolidar_usuarios.sql\")",
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -f \"C:/xampp3/htdocs/TerrenaLaravel/docs/BD/Normalizacion/Phase3_Improvements/05_consolidar_usuarios_v2.sql\")",
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT id, username, nombre FROM selemti.v_usuario ORDER BY id;\")",
-      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT id, codigo, nombre FROM selemti.v_rol ORDER BY id LIMIT 5;\")"
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT id, codigo, nombre FROM selemti.v_rol ORDER BY id LIMIT 5;\")",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []
