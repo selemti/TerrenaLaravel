@@ -114,22 +114,38 @@ class InsumoCreate extends Component
         try {
             $codes = app(InsumoCodeService::class)->generateCode($this->categoria, $this->subcategoria);
 
+            // Mapear categoría a category_id en item_categories
+            $categoryMap = [
+                'MP'  => 1, // Materia Prima
+                'PT'  => 2, // Producto Terminado
+                'EM'  => 3, // Empaque / Packaging
+                'LIM' => 4, // Limpieza / Químicos
+                'SRV' => 5, // Servicio
+            ];
+            $categoryId = $categoryMap[$this->categoria] ?? null;
+
+            // Obtener el código de unidad
+            $unit = DB::connection('pgsql')
+                ->table('selemti.unidades_medida_legacy')
+                ->where('id', (int) $this->um_id)
+                ->first(['codigo']);
+
             $payload = [
-                'codigo'              => $codes['codigo'],
-                'categoria_codigo'    => $codes['categoria'],
-                'subcategoria_codigo' => $codes['subcategoria'],
-                'consecutivo'         => $codes['consecutivo'],
+                'id'                  => $codes['codigo'], // MP-LAC-00001
                 'nombre'              => $this->nombre,
-                'um_id'               => (int) $this->um_id,
-                'sku'                 => $this->sku !== null && $this->sku !== '' ? $this->sku : null,
-                'perecible'           => (bool) $this->perecible,
-                'merma_pct'           => (float) $this->merma_pct,
+                'descripcion'         => null,
+                'categoria_id'        => 'CAT-' . str_pad($categoryId, 4, '0', STR_PAD_LEFT), // CAT-0001
+                'category_id'         => $categoryId,
+                'unidad_medida'       => $unit ? $unit->codigo : 'KG',
+                'unidad_medida_id'    => (int) $this->um_id,
+                'perishable'          => (bool) $this->perecible,
                 'activo'              => true,
-                'meta'                => null,
+                'created_at'          => now(),
+                'updated_at'          => now(),
             ];
 
-            // Insertar en la tabla selemti.insumo usando conexión PostgreSQL
-            DB::connection('pgsql')->table('selemti.insumo')->insert($payload);
+            // Insertar en la tabla selemti.items usando conexión PostgreSQL
+            DB::connection('pgsql')->table('selemti.items')->insert($payload);
 
             session()->flash('success', 'Insumo creado correctamente.');
 
@@ -172,9 +188,10 @@ class InsumoCreate extends Component
 
     protected function loadUnits(): void
     {
+        $allowedCodes = ['KG', 'LT', 'PZ']; // Códigos reales en la tabla
         $this->units = DB::connection('pgsql')
-            ->table('selemti.unidad_medida_legacy')
-            ->whereIn('codigo', $this->allowedUnitKeys)
+            ->table('selemti.unidades_medida_legacy')
+            ->whereIn('codigo', $allowedCodes)
             ->orderBy('codigo')
             ->get(['id', 'codigo as clave', 'nombre'])
             ->map(fn ($row) => [

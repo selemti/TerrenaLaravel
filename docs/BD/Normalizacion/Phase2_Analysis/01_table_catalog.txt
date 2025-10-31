@@ -1,0 +1,54 @@
+ schemaname |           tablename           |  size  
+------------+-------------------------------+--------
+ selemti    | audit_log                     | 160 kB
+ selemti    | receta_version                | 152 kB
+ selemti    | sesion_cajon                  | 128 kB
+ selemti    | receta_cab                    | 120 kB
+ selemti    | purchase_suggestions          | 112 kB
+ selemti    | cat_uom_conversion            | 112 kB
+ selemti    | sessions                      | 96 kB
+ selemti    | replenishment_suggestions     | 96 kB
+ selemti    | personal_access_tokens        | 96 kB
+ selemti    | cash_funds                    | 96 kB
+ selemti    | cash_fund_movements           | 96 kB
+ selemti    | precorte                      | 80 kB
+ selemti    | cash_fund_movement_audit_log  | 80 kB
+ selemti    | insumo                        | 80 kB
+ selemti    | cat_proveedores               | 80 kB
+ selemti    | cash_fund_arqueos             | 80 kB
+ selemti    | modificadores_pos             | 72 kB
+ selemti    | precorte_efectivo             | 72 kB
+ selemti    | cat_unidades                  | 72 kB
+ selemti    | cat_almacenes                 | 72 kB
+ selemti    | production_orders             | 72 kB
+ selemti    | mov_inv                       | 72 kB
+ selemti    | inventory_counts              | 64 kB
+ selemti    | postcorte                     | 64 kB
+ selemti    | role_has_permissions          | 64 kB
+ selemti    | precorte_otros                | 64 kB
+ selemti    | item_categories               | 64 kB
+ selemti    | purchase_requests             | 64 kB
+ selemti    | auditoria                     | 64 kB
+ selemti    | formas_pago                   | 64 kB
+ selemti    | items                         | 48 kB
+ selemti    | inventory_wastes              | 48 kB
+ selemti    | unidad_medida_legacy          | 48 kB
+ selemti    | users                         | 48 kB
+ selemti    | permissions                   | 48 kB
+ selemti    | insumo_proveedor_presentacion | 48 kB
+ selemti    | roles                         | 48 kB
+ selemti    | ticket_det_consumo            | 40 kB
+ selemti    | model_has_roles               | 40 kB
+ selemti    | model_has_permissions         | 40 kB
+ selemti    | pos_map                       | 40 kB
+ selemti    | purchase_request_lines        | 40 kB
+ selemti    | overhead_definitions          | 40 kB
+ selemti    | inventory_count_lines         | 40 kB
+ selemti    | purchase_orders               | 40 kB
+ selemti    | item_vendor_prices            | 40 kB
+ selemti    | stock_policy                  | 40 kB
+ selemti    | purchase_vendor_quote_lines   | 40 kB
+ selemti    | production_order_outputs      | 40 kB
+ selemti    | unidades_medida_legacy        | 40 kB
+(50 filas)
+

@@ -599,7 +599,7 @@ class ItemsManage extends Component
     protected function loadUnits(): void
     {
         $this->units = DB::connection('pgsql')
-            ->table(DB::raw('selemti.unidades_medida'))
+            ->table('selemti.unidades_medida_legacy')
             ->orderBy('nombre')
             ->get(['id', 'codigo', 'nombre'])
             ->map(fn ($row) => [

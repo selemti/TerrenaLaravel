@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 class InsumoCodeService
 {
     /**
-     * Genera el siguiente código interno para un insumo en selemti.insumo.
+     * Genera el siguiente código interno para un insumo en selemti.items.
      *
      * Formato final: CAT-SUB-00001
      *
@@ -18,7 +18,7 @@ class InsumoCodeService
      *
      * IMPORTANTE:
      * - Esto NO toca public.item (POS).
-     * - Sólo opera sobre selemti.insumo.
+     * - Opera sobre selemti.items extrayendo el consecutivo del campo id.
      *
      * TODO FUTURO:
      * - Encapsular en una transacción con bloqueo por (CAT,SUB) para evitar colisiones.
@@ -28,13 +28,22 @@ class InsumoCodeService
         $cat = strtoupper(trim($cat));
         $sub = strtoupper(trim($sub));
 
-        // Consultar el consecutivo máximo en selemti.insumo usando conexión PostgreSQL
-        $max = DB::connection('pgsql')->table('selemti.insumo')
-            ->where('categoria_codigo', $cat)
-            ->where('subcategoria_codigo', $sub)
-            ->max('consecutivo');
+        // Consultar el consecutivo máximo en selemti.items analizando el patrón del id
+        $pattern = $cat . '-' . $sub . '-%';
+        $maxId = DB::connection('pgsql')->table('selemti.items')
+            ->where('id', 'like', $pattern)
+            ->orderByRaw('id DESC')
+            ->value('id');
 
-        $next = ($max ?? 0) + 1;
+        $next = 1;
+        if ($maxId) {
+            // Extraer el consecutivo del formato CAT-SUB-00001
+            $parts = explode('-', $maxId);
+            if (count($parts) === 3) {
+                $next = (int) $parts[2] + 1;
+            }
+        }
+
         $codigo = sprintf('%s-%s-%05d', $cat, $sub, $next);
 
         return [

@@ -3,7 +3,7 @@
     <div class="d-flex gap-2 w-100 w-lg-50">
       <div class="flex-grow-1">
         <input type="text" class="form-control" placeholder="Buscar por SKU, nombre o descripción"
-               wire:model.debounce.400ms="q">
+               wire:model.live.debounce.400ms="q">
       </div>
       <a href="{{ route('inventory.items.new') }}" class="btn btn-primary">
         <i class="fa-solid fa-plus me-1"></i>Nuevo insumo (CAT-SUB-#####)
@@ -33,7 +33,7 @@
       <div class="row g-3 align-items-end">
         <div class="col-md-4">
           <label class="form-label">Categoría</label>
-          <select class="form-select" wire:model="categoryFilter">
+          <select class="form-select" wire:model.live="categoryFilter">
             <option value="">Todas</option>
             @foreach($categoryOptions as $category)
               <option value="{{ $category['id'] }}">
@@ -44,7 +44,7 @@
         </div>
         <div class="col-md-3">
           <label class="form-label">Estado</label>
-          <select class="form-select" wire:model="statusFilter">
+          <select class="form-select" wire:model.live="statusFilter">
             <option value="all">Todos</option>
             <option value="active">Solo activos</option>
             <option value="inactive">Solo inactivos</option>
@@ -52,7 +52,7 @@
         </div>
         <div class="col-md-3">
           <label class="form-label">Proveedor preferente</label>
-          <select class="form-select" wire:model="preferredFilter">
+          <select class="form-select" wire:model.live="preferredFilter">
             <option value="all">Todos</option>
             <option value="with">Con proveedor</option>
             <option value="without">Sin proveedor</option>
@@ -60,14 +60,14 @@
         </div>
         <div class="col-md-2">
           <label class="form-label">Ordenar por</label>
-          <select class="form-select" wire:model="sortField">
+          <select class="form-select" wire:model.live="sortField">
             <option value="name">Nombre</option>
             <option value="effective_from">Vigencia precio</option>
           </select>
         </div>
         <div class="col-md-2">
           <label class="form-label">Dirección</label>
-          <select class="form-select" wire:model="sortDirection">
+          <select class="form-select" wire:model.live="sortDirection">
             <option value="asc">Ascendente</option>
             <option value="desc">Descendente</option>
           </select>

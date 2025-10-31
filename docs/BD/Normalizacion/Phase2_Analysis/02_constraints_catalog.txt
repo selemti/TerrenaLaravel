@@ -1,0 +1,443 @@
+          table_name           |                         constraint_name                         | constraint_type |       column_name       |      foreign_table_name       | foreign_column_name 
+-------------------------------+-----------------------------------------------------------------+-----------------+-------------------------+-------------------------------+---------------------
+ alert_events                  | alert_events_pkey                                               | PRIMARY KEY     | id                      | alert_events                  | id
+ alert_rules                   | alert_rules_pkey                                                | PRIMARY KEY     | id                      | alert_rules                   | id
+ almacen                       | almacen_sucursal_id_fkey                                        | FOREIGN KEY     | sucursal_id             | sucursal                      | id
+ almacen                       | almacen_pkey                                                    | PRIMARY KEY     | id                      | almacen                       | id
+ audit_log                     | selemti_audit_log_user_id_foreign                               | FOREIGN KEY     | user_id                 | users                         | id
+ audit_log                     | audit_log_pkey                                                  | PRIMARY KEY     | id                      | audit_log                     | id
+ auditoria                     | auditoria_pkey                                                  | PRIMARY KEY     | id                      | auditoria                     | id
+ bodega                        | bodega_sucursal_id_fkey                                         | FOREIGN KEY     | sucursal_id             | sucursal                      | id
+ bodega                        | bodega_pkey                                                     | PRIMARY KEY     | id                      | bodega                        | id
+ bodega                        | bodega_sucursal_id_codigo_key                                   | UNIQUE          | codigo                  | bodega                        | sucursal_id
+ bodega                        | bodega_sucursal_id_codigo_key                                   | UNIQUE          | sucursal_id             | bodega                        | sucursal_id
+ bodega                        | bodega_sucursal_id_codigo_key                                   | UNIQUE          | codigo                  | bodega                        | codigo
+ bodega                        | bodega_sucursal_id_codigo_key                                   | UNIQUE          | sucursal_id             | bodega                        | codigo
+ cache                         | cache_pkey                                                      | PRIMARY KEY     | key                     | cache                         | key
+ cache_locks                   | cache_locks_pkey                                                | PRIMARY KEY     | key                     | cache_locks                   | key
+ caja_fondo                    | caja_fondo_pkey                                                 | PRIMARY KEY     | id                      | caja_fondo                    | id
+ caja_fondo_adj                | caja_fondo_adj_mov_id_fkey                                      | FOREIGN KEY     | mov_id                  | caja_fondo_mov                | id
+ caja_fondo_adj                | caja_fondo_adj_pkey                                             | PRIMARY KEY     | id                      | caja_fondo_adj                | id
+ caja_fondo_arqueo             | caja_fondo_arqueo_fondo_id_fkey                                 | FOREIGN KEY     | fondo_id                | caja_fondo                    | id
+ caja_fondo_arqueo             | caja_fondo_arqueo_pkey                                          | PRIMARY KEY     | id                      | caja_fondo_arqueo             | id
+ caja_fondo_mov                | caja_fondo_mov_fondo_id_fkey                                    | FOREIGN KEY     | fondo_id                | caja_fondo                    | id
+ caja_fondo_mov                | caja_fondo_mov_pkey                                             | PRIMARY KEY     | id                      | caja_fondo_mov                | id
+ caja_fondo_usuario            | caja_fondo_usuario_fondo_id_fkey                                | FOREIGN KEY     | fondo_id                | caja_fondo                    | id
+ caja_fondo_usuario            | caja_fondo_usuario_pkey                                         | PRIMARY KEY     | fondo_id                | caja_fondo_usuario            | user_id
+ caja_fondo_usuario            | caja_fondo_usuario_pkey                                         | PRIMARY KEY     | user_id                 | caja_fondo_usuario            | user_id
+ caja_fondo_usuario            | caja_fondo_usuario_pkey                                         | PRIMARY KEY     | fondo_id                | caja_fondo_usuario            | fondo_id
+ caja_fondo_usuario            | caja_fondo_usuario_pkey                                         | PRIMARY KEY     | user_id                 | caja_fondo_usuario            | fondo_id
+ cash_fund_arqueos             | cash_fund_arqueos_cash_fund_id_foreign                          | FOREIGN KEY     | cash_fund_id            | cash_funds                    | id
+ cash_fund_arqueos             | cash_fund_arqueos_created_by_user_id_foreign                    | FOREIGN KEY     | created_by_user_id      | users                         | id
+ cash_fund_arqueos             | cash_fund_arqueos_pkey                                          | PRIMARY KEY     | id                      | cash_fund_arqueos             | id
+ cash_fund_arqueos             | cash_fund_arqueos_cash_fund_id_unique                           | UNIQUE          | cash_fund_id            | cash_fund_arqueos             | cash_fund_id
+ cash_fund_movement_audit_log  | selemti_cash_fund_movement_audit_log_changed_by_user_id_foreign | FOREIGN KEY     | changed_by_user_id      | users                         | id
+ cash_fund_movement_audit_log  | selemti_cash_fund_movement_audit_log_movement_id_foreign        | FOREIGN KEY     | movement_id             | cash_fund_movements           | id
+ cash_fund_movement_audit_log  | cash_fund_movement_audit_log_pkey                               | PRIMARY KEY     | id                      | cash_fund_movement_audit_log  | id
+ cash_fund_movements           | cash_fund_movements_approved_by_user_id_foreign                 | FOREIGN KEY     | approved_by_user_id     | users                         | id
+ cash_fund_movements           | cash_fund_movements_cash_fund_id_foreign                        | FOREIGN KEY     | cash_fund_id            | cash_funds                    | id
+ cash_fund_movements           | cash_fund_movements_created_by_user_id_foreign                  | FOREIGN KEY     | created_by_user_id      | users                         | id
+ cash_fund_movements           | cash_fund_movements_pkey                                        | PRIMARY KEY     | id                      | cash_fund_movements           | id
+ cash_funds                    | cash_funds_created_by_user_id_foreign                           | FOREIGN KEY     | created_by_user_id      | users                         | id
+ cash_funds                    | cash_funds_responsable_user_id_foreign                          | FOREIGN KEY     | responsable_user_id     | users                         | id
+ cash_funds                    | cash_funds_pkey                                                 | PRIMARY KEY     | id                      | cash_funds                    | id
+ cat_almacenes                 | cat_almacenes_sucursal_id_foreign                               | FOREIGN KEY     | sucursal_id             | cat_sucursales                | id
+ cat_almacenes                 | cat_almacenes_pkey                                              | PRIMARY KEY     | id                      | cat_almacenes                 | id
+ cat_almacenes                 | cat_almacenes_clave_unique                                      | UNIQUE          | clave                   | cat_almacenes                 | clave
+ cat_proveedores               | cat_proveedores_pkey                                            | PRIMARY KEY     | id                      | cat_proveedores               | id
+ cat_proveedores               | cat_proveedores_rfc_unique                                      | UNIQUE          | rfc                     | cat_proveedores               | rfc
+ cat_sucursales                | cat_sucursales_pkey                                             | PRIMARY KEY     | id                      | cat_sucursales                | id
+ cat_sucursales                | cat_sucursales_clave_unique                                     | UNIQUE          | clave                   | cat_sucursales                | clave
+ cat_unidades                  | cat_unidades_pkey                                               | PRIMARY KEY     | id                      | cat_unidades                  | id
+ cat_unidades                  | cat_unidades_clave_unique                                       | UNIQUE          | clave                   | cat_unidades                  | clave
+ cat_uom_conversion            | cat_uom_conversion_destino_id_foreign                           | FOREIGN KEY     | destino_id              | cat_unidades                  | id
+ cat_uom_conversion            | cat_uom_conversion_origen_id_foreign                            | FOREIGN KEY     | origen_id               | cat_unidades                  | id
+ cat_uom_conversion            | cat_uom_conversion_pkey                                         | PRIMARY KEY     | id                      | cat_uom_conversion            | id
+ cat_uom_conversion            | cat_uom_conversion_origen_id_destino_id_unique                  | UNIQUE          | destino_id              | cat_uom_conversion            | destino_id
+ cat_uom_conversion            | cat_uom_conversion_origen_id_destino_id_unique                  | UNIQUE          | origen_id               | cat_uom_conversion            | destino_id
+ cat_uom_conversion            | cat_uom_conversion_origen_id_destino_id_unique                  | UNIQUE          | destino_id              | cat_uom_conversion            | origen_id
+ cat_uom_conversion            | cat_uom_conversion_origen_id_destino_id_unique                  | UNIQUE          | origen_id               | cat_uom_conversion            | origen_id
+ cat_uom_conversion            | cat_uom_conversion_unique                                       | UNIQUE          | destino_id              | cat_uom_conversion            | destino_id
+ cat_uom_conversion            | cat_uom_conversion_unique                                       | UNIQUE          | origen_id               | cat_uom_conversion            | destino_id
+ cat_uom_conversion            | cat_uom_conversion_unique                                       | UNIQUE          | destino_id              | cat_uom_conversion            | origen_id
+ cat_uom_conversion            | cat_uom_conversion_unique                                       | UNIQUE          | origen_id               | cat_uom_conversion            | origen_id
+ conciliacion                  | conciliacion_postcorte_id_fkey                                  | FOREIGN KEY     | postcorte_id            | postcorte                     | id
+ conciliacion                  | conciliacion_pkey                                               | PRIMARY KEY     | id                      | conciliacion                  | id
+ conciliacion                  | conciliacion_postcorte_id_key                                   | UNIQUE          | postcorte_id            | conciliacion                  | postcorte_id
+ conversiones_unidad_legacy    | conversiones_unidad_unidad_destino_id_fkey                      | FOREIGN KEY     | unidad_destino_id       | unidades_medida_legacy        | id
+ conversiones_unidad_legacy    | conversiones_unidad_unidad_origen_id_fkey                       | FOREIGN KEY     | unidad_origen_id        | unidades_medida_legacy        | id
+ conversiones_unidad_legacy    | conversiones_unidad_pkey                                        | PRIMARY KEY     | id                      | conversiones_unidad_legacy    | id
+ conversiones_unidad_legacy    | conversiones_unidad_unidad_origen_id_unidad_destino_id_key      | UNIQUE          | unidad_origen_id        | conversiones_unidad_legacy    | unidad_destino_id
+ conversiones_unidad_legacy    | conversiones_unidad_unidad_origen_id_unidad_destino_id_key      | UNIQUE          | unidad_destino_id       | conversiones_unidad_legacy    | unidad_origen_id
+ conversiones_unidad_legacy    | conversiones_unidad_unidad_origen_id_unidad_destino_id_key      | UNIQUE          | unidad_origen_id        | conversiones_unidad_legacy    | unidad_origen_id
+ conversiones_unidad_legacy    | conversiones_unidad_unidad_origen_id_unidad_destino_id_key      | UNIQUE          | unidad_destino_id       | conversiones_unidad_legacy    | unidad_destino_id
+ cost_layer                    | cost_layer_batch_id_fkey                                        | FOREIGN KEY     | batch_id                | inventory_batch               | id
+ cost_layer                    | cost_layer_item_id_fkey                                         | FOREIGN KEY     | item_id                 | items                         | id
+ cost_layer                    | cost_layer_pkey                                                 | PRIMARY KEY     | id                      | cost_layer                    | id
+ failed_jobs                   | failed_jobs_pkey                                                | PRIMARY KEY     | id                      | failed_jobs                   | id
+ failed_jobs                   | failed_jobs_uuid_unique                                         | UNIQUE          | uuid                    | failed_jobs                   | uuid
+ formas_pago                   | formas_pago_pkey                                                | PRIMARY KEY     | id                      | formas_pago                   | id
+ hist_cost_insumo              | hist_cost_insumo_insumo_id_fkey                                 | FOREIGN KEY     | insumo_id               | insumo                        | id
+ hist_cost_insumo              | hist_cost_insumo_pkey                                           | PRIMARY KEY     | id                      | hist_cost_insumo              | id
+ hist_cost_receta              | hist_cost_receta_receta_version_id_fkey                         | FOREIGN KEY     | receta_version_id       | receta_version                | id
+ hist_cost_receta              | hist_cost_receta_pkey                                           | PRIMARY KEY     | id                      | hist_cost_receta              | id
+ historial_costos_item         | historial_costos_item_item_id_fkey                              | FOREIGN KEY     | item_id                 | items                         | id
+ historial_costos_item         | historial_costos_item_pkey                                      | PRIMARY KEY     | id                      | historial_costos_item         | id
+ historial_costos_item         | historial_costos_item_item_id_fecha_efectiva_version_datos_key  | UNIQUE          | fecha_efectiva          | historial_costos_item         | fecha_efectiva
+ historial_costos_item         | historial_costos_item_item_id_fecha_efectiva_version_datos_key  | UNIQUE          | version_datos           | historial_costos_item         | item_id
+ historial_costos_item         | historial_costos_item_item_id_fecha_efectiva_version_datos_key  | UNIQUE          | fecha_efectiva          | historial_costos_item         | item_id
+ historial_costos_item         | historial_costos_item_item_id_fecha_efectiva_version_datos_key  | UNIQUE          | item_id                 | historial_costos_item         | item_id
+ historial_costos_item         | historial_costos_item_item_id_fecha_efectiva_version_datos_key  | UNIQUE          | version_datos           | historial_costos_item         | fecha_efectiva
+ historial_costos_item         | historial_costos_item_item_id_fecha_efectiva_version_datos_key  | UNIQUE          | item_id                 | historial_costos_item         | fecha_efectiva
+ historial_costos_item         | historial_costos_item_item_id_fecha_efectiva_version_datos_key  | UNIQUE          | version_datos           | historial_costos_item         | version_datos
+ historial_costos_item         | historial_costos_item_item_id_fecha_efectiva_version_datos_key  | UNIQUE          | fecha_efectiva          | historial_costos_item         | version_datos
+ historial_costos_item         | historial_costos_item_item_id_fecha_efectiva_version_datos_key  | UNIQUE          | item_id                 | historial_costos_item         | version_datos
+ historial_costos_receta       | historial_costos_receta_receta_version_id_fkey                  | FOREIGN KEY     | receta_version_id       | receta_version                | id
+ historial_costos_receta       | historial_costos_receta_pkey                                    | PRIMARY KEY     | id                      | historial_costos_receta       | id
+ insumo                        | insumo_um_id_fkey                                               | FOREIGN KEY     | um_id                   | unidad_medida_legacy          | id
+ insumo                        | insumo_pkey                                                     | PRIMARY KEY     | id                      | insumo                        | id
+ insumo                        | insumo_codigo_unique                                            | UNIQUE          | codigo                  | insumo                        | codigo
+ insumo                        | insumo_sku_key                                                  | UNIQUE          | sku                     | insumo                        | sku
+ insumo_presentacion           | insumo_presentacion_insumo_id_fkey                              | FOREIGN KEY     | insumo_id               | insumo                        | id
+ insumo_presentacion           | insumo_presentacion_um_compra_id_fkey                           | FOREIGN KEY     | um_compra_id            | unidad_medida_legacy          | id
+ insumo_presentacion           | insumo_presentacion_pkey                                        | PRIMARY KEY     | id                      | insumo_presentacion           | id
+ insumo_proveedor_presentacion | ipp_insumo_fk                                                   | FOREIGN KEY     | insumo_id               | insumo                        | id
+ insumo_proveedor_presentacion | ipp_proveedor_fk                                                | FOREIGN KEY     | proveedor_id            | proveedor                     | id
+ insumo_proveedor_presentacion | ipp_uom_base_fk                                                 | FOREIGN KEY     | uom_base_id             | cat_unidades                  | id
+ insumo_proveedor_presentacion | ipp_uom_compra_fk                                               | FOREIGN KEY     | uom_compra_id           | cat_unidades                  | id
+ insumo_proveedor_presentacion | insumo_proveedor_presentacion_pkey                              | PRIMARY KEY     | id                      | insumo_proveedor_presentacion | id
+ inv_consumo_pos               | inv_consumo_pos_pkey                                            | PRIMARY KEY     | id                      | inv_consumo_pos               | id
+ inv_consumo_pos               | inv_consumo_pos_ticket_id_ticket_item_id_key                    | UNIQUE          | ticket_id               | inv_consumo_pos               | ticket_item_id
+ inv_consumo_pos               | inv_consumo_pos_ticket_id_ticket_item_id_key                    | UNIQUE          | ticket_item_id          | inv_consumo_pos               | ticket_item_id
+ inv_consumo_pos               | inv_consumo_pos_ticket_id_ticket_item_id_key                    | UNIQUE          | ticket_id               | inv_consumo_pos               | ticket_id
+ inv_consumo_pos               | inv_consumo_pos_ticket_id_ticket_item_id_key                    | UNIQUE          | ticket_item_id          | inv_consumo_pos               | ticket_id
+ inv_consumo_pos_det           | inv_consumo_pos_det_consumo_id_fkey                             | FOREIGN KEY     | consumo_id              | inv_consumo_pos               | id
+ inv_consumo_pos_det           | inv_consumo_pos_det_pkey                                        | PRIMARY KEY     | id                      | inv_consumo_pos_det           | id
+ inv_consumo_pos_log           | inv_consumo_pos_log_pkey                                        | PRIMARY KEY     | id                      | inv_consumo_pos_log           | id
+ inv_stock_policy              | inv_stock_policy_item_id_foreign                                | FOREIGN KEY     | item_id                 | items                         | id
+ inv_stock_policy              | inv_stock_policy_sucursal_id_foreign                            | FOREIGN KEY     | sucursal_id             | cat_sucursales                | id
+ inv_stock_policy              | inv_stock_policy_pkey                                           | PRIMARY KEY     | id                      | inv_stock_policy              | id
+ inv_stock_policy              | inv_stock_policy_item_store_unique                              | UNIQUE          | item_id                 | inv_stock_policy              | item_id
+ inv_stock_policy              | inv_stock_policy_item_store_unique                              | UNIQUE          | item_id                 | inv_stock_policy              | sucursal_id
+ inv_stock_policy              | inv_stock_policy_item_store_unique                              | UNIQUE          | sucursal_id             | inv_stock_policy              | sucursal_id
+ inv_stock_policy              | inv_stock_policy_item_store_unique                              | UNIQUE          | sucursal_id             | inv_stock_policy              | item_id
+ inventory_batch               | inventory_batch_item_id_fkey                                    | FOREIGN KEY     | item_id                 | items                         | id
+ inventory_batch               | inventory_batch_pkey                                            | PRIMARY KEY     | id                      | inventory_batch               | id
+ inventory_count_lines         | inventory_count_lines_pkey                                      | PRIMARY KEY     | id                      | inventory_count_lines         | id
+ inventory_counts              | inventory_counts_pkey                                           | PRIMARY KEY     | id                      | inventory_counts              | id
+ inventory_counts              | inventory_counts_folio_unique                                   | UNIQUE          | folio                   | inventory_counts              | folio
+ inventory_snapshot            | fk_inventory_snapshot_item                                      | FOREIGN KEY     | item_id                 | items                         | id
+ inventory_snapshot            | pk_inventory_snapshot                                           | PRIMARY KEY     | branch_id               | inventory_snapshot            | snapshot_date
+ inventory_snapshot            | pk_inventory_snapshot                                           | PRIMARY KEY     | item_id                 | inventory_snapshot            | snapshot_date
+ inventory_snapshot            | pk_inventory_snapshot                                           | PRIMARY KEY     | snapshot_date           | inventory_snapshot            | item_id
+ inventory_snapshot            | pk_inventory_snapshot                                           | PRIMARY KEY     | branch_id               | inventory_snapshot            | item_id
+ inventory_snapshot            | pk_inventory_snapshot                                           | PRIMARY KEY     | item_id                 | inventory_snapshot            | item_id
+ inventory_snapshot            | pk_inventory_snapshot                                           | PRIMARY KEY     | snapshot_date           | inventory_snapshot            | branch_id
+ inventory_snapshot            | pk_inventory_snapshot                                           | PRIMARY KEY     | branch_id               | inventory_snapshot            | branch_id
+ inventory_snapshot            | pk_inventory_snapshot                                           | PRIMARY KEY     | item_id                 | inventory_snapshot            | branch_id
+ inventory_snapshot            | pk_inventory_snapshot                                           | PRIMARY KEY     | snapshot_date           | inventory_snapshot            | snapshot_date
+ inventory_wastes              | inventory_wastes_pkey                                           | PRIMARY KEY     | id                      | inventory_wastes              | id
+ item_categories               | item_categories_pkey                                            | PRIMARY KEY     | id                      | item_categories               | id
+ item_categories               | item_categories_codigo_key                                      | UNIQUE          | codigo                  | item_categories               | codigo
+ item_categories               | item_categories_slug_key                                        | UNIQUE          | slug                    | item_categories               | slug
+ item_category_counters        | item_category_counters_pkey                                     | PRIMARY KEY     | category_id             | item_category_counters        | category_id
+ item_vendor                   | item_vendor_item_id_fkey                                        | FOREIGN KEY     | item_id                 | items                         | id
+ item_vendor                   | item_vendor_unidad_presentacion_id_fkey                         | FOREIGN KEY     | unidad_presentacion_id  | unidades_medida_legacy        | id
+ item_vendor                   | item_vendor_pkey                                                | PRIMARY KEY     | presentacion            | item_vendor                   | presentacion
+ item_vendor                   | item_vendor_pkey                                                | PRIMARY KEY     | vendor_id               | item_vendor                   | presentacion
+ item_vendor                   | item_vendor_pkey                                                | PRIMARY KEY     | item_id                 | item_vendor                   | presentacion
+ item_vendor                   | item_vendor_pkey                                                | PRIMARY KEY     | presentacion            | item_vendor                   | vendor_id
+ item_vendor                   | item_vendor_pkey                                                | PRIMARY KEY     | item_id                 | item_vendor                   | item_id
+ item_vendor                   | item_vendor_pkey                                                | PRIMARY KEY     | vendor_id               | item_vendor                   | vendor_id
+ item_vendor                   | item_vendor_pkey                                                | PRIMARY KEY     | item_id                 | item_vendor                   | vendor_id
+ item_vendor                   | item_vendor_pkey                                                | PRIMARY KEY     | presentacion            | item_vendor                   | item_id
+ item_vendor                   | item_vendor_pkey                                                | PRIMARY KEY     | vendor_id               | item_vendor                   | item_id
+ item_vendor_prices            | item_vendor_prices_pkey                                         | PRIMARY KEY     | id                      | item_vendor_prices            | id
+ items                         | items_category_fk                                               | FOREIGN KEY     | category_id             | item_categories               | id
+ items                         | items_unidad_compra_id_fkey                                     | FOREIGN KEY     | unidad_compra_id        | unidades_medida_legacy        | id
+ items                         | items_unidad_medida_id_fkey                                     | FOREIGN KEY     | unidad_medida_id        | unidades_medida_legacy        | id
+ items                         | items_unidad_salida_id_fkey                                     | FOREIGN KEY     | unidad_salida_id        | unidades_medida_legacy        | id
+ items                         | items_pkey                                                      | PRIMARY KEY     | id                      | items                         | id
+ job_batches                   | job_batches_pkey                                                | PRIMARY KEY     | id                      | job_batches                   | id
+ job_recalc_queue              | job_recalc_queue_pkey                                           | PRIMARY KEY     | id                      | job_recalc_queue              | id
+ jobs                          | jobs_pkey                                                       | PRIMARY KEY     | id                      | jobs                          | id
+ labor_roles                   | labor_roles_pkey                                                | PRIMARY KEY     | id                      | labor_roles                   | id
+ labor_roles                   | labor_roles_clave_unique                                        | UNIQUE          | clave                   | labor_roles                   | clave
+ lote                          | lote_insumo_id_fkey                                             | FOREIGN KEY     | insumo_id               | insumo                        | id
+ lote                          | lote_pkey                                                       | PRIMARY KEY     | id                      | lote                          | id
+ menu_engineering_snapshots    | selemti_menu_engineering_snapshots_menu_item_id_foreign         | FOREIGN KEY     | menu_item_id            | menu_items                    | id
+ menu_engineering_snapshots    | menu_engineering_snapshots_pkey                                 | PRIMARY KEY     | id                      | menu_engineering_snapshots    | id
+ menu_engineering_snapshots    | selemti_menu_engineering_snapshots_menu_item_id_period_start_pe | UNIQUE          | menu_item_id            | menu_engineering_snapshots    | period_end
+ menu_engineering_snapshots    | selemti_menu_engineering_snapshots_menu_item_id_period_start_pe | UNIQUE          | period_end              | menu_engineering_snapshots    | menu_item_id
+ menu_engineering_snapshots    | selemti_menu_engineering_snapshots_menu_item_id_period_start_pe | UNIQUE          | period_start            | menu_engineering_snapshots    | menu_item_id
+ menu_engineering_snapshots    | selemti_menu_engineering_snapshots_menu_item_id_period_start_pe | UNIQUE          | menu_item_id            | menu_engineering_snapshots    | menu_item_id
+ menu_engineering_snapshots    | selemti_menu_engineering_snapshots_menu_item_id_period_start_pe | UNIQUE          | period_end              | menu_engineering_snapshots    | period_start
+ menu_engineering_snapshots    | selemti_menu_engineering_snapshots_menu_item_id_period_start_pe | UNIQUE          | period_start            | menu_engineering_snapshots    | period_start
+ menu_engineering_snapshots    | selemti_menu_engineering_snapshots_menu_item_id_period_start_pe | UNIQUE          | menu_item_id            | menu_engineering_snapshots    | period_start
+ menu_engineering_snapshots    | selemti_menu_engineering_snapshots_menu_item_id_period_start_pe | UNIQUE          | period_end              | menu_engineering_snapshots    | period_end
+ menu_engineering_snapshots    | selemti_menu_engineering_snapshots_menu_item_id_period_start_pe | UNIQUE          | period_start            | menu_engineering_snapshots    | period_end
+ menu_item_sync_map            | selemti_menu_item_sync_map_menu_item_id_foreign                 | FOREIGN KEY     | menu_item_id            | menu_items                    | id
+ menu_item_sync_map            | menu_item_sync_map_pkey                                         | PRIMARY KEY     | id                      | menu_item_sync_map            | id
+ menu_item_sync_map            | selemti_menu_item_sync_map_pos_identifier_channel_unique        | UNIQUE          | pos_identifier          | menu_item_sync_map            | pos_identifier
+ menu_item_sync_map            | selemti_menu_item_sync_map_pos_identifier_channel_unique        | UNIQUE          | channel                 | menu_item_sync_map            | channel
+ menu_item_sync_map            | selemti_menu_item_sync_map_pos_identifier_channel_unique        | UNIQUE          | pos_identifier          | menu_item_sync_map            | channel
+ menu_item_sync_map            | selemti_menu_item_sync_map_pos_identifier_channel_unique        | UNIQUE          | channel                 | menu_item_sync_map            | pos_identifier
+ menu_items                    | menu_items_pkey                                                 | PRIMARY KEY     | id                      | menu_items                    | id
+ menu_items                    | selemti_menu_items_plu_unique                                   | UNIQUE          | plu                     | menu_items                    | plu
+ merma                         | merma_insumo_id_fkey                                            | FOREIGN KEY     | insumo_id               | insumo                        | id
+ merma                         | merma_lote_id_fkey                                              | FOREIGN KEY     | lote_id                 | lote                          | id
+ merma                         | merma_um_id_fkey                                                | FOREIGN KEY     | um_id                   | unidad_medida_legacy          | id
+ merma                         | merma_usuario_id_fkey                                           | FOREIGN KEY     | usuario_id              | usuario                       | id
+ merma                         | merma_pkey                                                      | PRIMARY KEY     | id                      | merma                         | id
+ migrations                    | migrations_pkey                                                 | PRIMARY KEY     | id                      | migrations                    | id
+ model_has_permissions         | model_has_permissions_permission_id_foreign                     | FOREIGN KEY     | permission_id           | permissions                   | id
+ model_has_permissions         | model_has_permissions_pkey                                      | PRIMARY KEY     | permission_id           | model_has_permissions         | model_id
+ model_has_permissions         | model_has_permissions_pkey                                      | PRIMARY KEY     | model_id                | model_has_permissions         | permission_id
+ model_has_permissions         | model_has_permissions_pkey                                      | PRIMARY KEY     | model_type              | model_has_permissions         | permission_id
+ model_has_permissions         | model_has_permissions_pkey                                      | PRIMARY KEY     | permission_id           | model_has_permissions         | permission_id
+ model_has_permissions         | model_has_permissions_pkey                                      | PRIMARY KEY     | model_id                | model_has_permissions         | model_type
+ model_has_permissions         | model_has_permissions_pkey                                      | PRIMARY KEY     | model_type              | model_has_permissions         | model_id
+ model_has_permissions         | model_has_permissions_pkey                                      | PRIMARY KEY     | model_id                | model_has_permissions         | model_id
+ model_has_permissions         | model_has_permissions_pkey                                      | PRIMARY KEY     | permission_id           | model_has_permissions         | model_type
+ model_has_permissions         | model_has_permissions_pkey                                      | PRIMARY KEY     | model_type              | model_has_permissions         | model_type
+ model_has_roles               | model_has_roles_role_id_foreign                                 | FOREIGN KEY     | role_id                 | roles                         | id
+ model_has_roles               | model_has_roles_pkey                                            | PRIMARY KEY     | model_type              | model_has_roles               | model_type
+ model_has_roles               | model_has_roles_pkey                                            | PRIMARY KEY     | model_id                | model_has_roles               | model_type
+ model_has_roles               | model_has_roles_pkey                                            | PRIMARY KEY     | role_id                 | model_has_roles               | role_id
+ model_has_roles               | model_has_roles_pkey                                            | PRIMARY KEY     | model_type              | model_has_roles               | role_id
+ model_has_roles               | model_has_roles_pkey                                            | PRIMARY KEY     | model_id                | model_has_roles               | role_id
+ model_has_roles               | model_has_roles_pkey                                            | PRIMARY KEY     | model_id                | model_has_roles               | model_id
+ model_has_roles               | model_has_roles_pkey                                            | PRIMARY KEY     | model_type              | model_has_roles               | model_id
+ model_has_roles               | model_has_roles_pkey                                            | PRIMARY KEY     | role_id                 | model_has_roles               | model_type
+ model_has_roles               | model_has_roles_pkey                                            | PRIMARY KEY     | role_id                 | model_has_roles               | model_id
+ modificadores_pos             | modificadores_pos_receta_modificador_id_fkey                    | FOREIGN KEY     | receta_modificador_id   | receta_cab                    | id
+ modificadores_pos             | modificadores_pos_pkey                                          | PRIMARY KEY     | id                      | modificadores_pos             | id
+ modificadores_pos             | modificadores_pos_codigo_pos_key                                | UNIQUE          | codigo_pos              | modificadores_pos             | codigo_pos
+ mov_inv                       | mov_inv_item_id_fkey                                            | FOREIGN KEY     | item_id                 | items                         | id
+ mov_inv                       | mov_inv_lote_id_fkey                                            | FOREIGN KEY     | lote_id                 | inventory_batch               | id
+ mov_inv                       | mov_inv_pkey                                                    | PRIMARY KEY     | id                      | mov_inv                       | id
+ op_cab                        | op_cab_receta_version_id_fkey                                   | FOREIGN KEY     | receta_version_id       | receta_version                | id
+ op_cab                        | op_cab_sucursal_id_fkey                                         | FOREIGN KEY     | sucursal_id             | sucursal                      | id
+ op_cab                        | op_cab_um_salida_id_fkey                                        | FOREIGN KEY     | um_salida_id            | unidad_medida_legacy          | id
+ op_cab                        | op_cab_usuario_abre_fkey                                        | FOREIGN KEY     | usuario_abre            | usuario                       | id
+ op_cab                        | op_cab_usuario_cierra_fkey                                      | FOREIGN KEY     | usuario_cierra          | usuario                       | id
+ op_cab                        | op_cab_pkey                                                     | PRIMARY KEY     | id                      | op_cab                        | id
+ op_insumo                     | op_insumo_insumo_id_fkey                                        | FOREIGN KEY     | insumo_id               | insumo                        | id
+ op_insumo                     | op_insumo_op_id_fkey                                            | FOREIGN KEY     | op_id                   | op_cab                        | id
+ op_insumo                     | op_insumo_um_id_fkey                                            | FOREIGN KEY     | um_id                   | unidad_medida_legacy          | id
+ op_insumo                     | op_insumo_pkey                                                  | PRIMARY KEY     | id                      | op_insumo                     | id
+ op_produccion_cab             | op_produccion_cab_receta_version_id_fkey                        | FOREIGN KEY     | receta_version_id       | receta_version                | id
+ op_produccion_cab             | op_produccion_cab_pkey                                          | PRIMARY KEY     | id                      | op_produccion_cab             | id
+ op_yield                      | op_yield_op_id_fkey                                             | FOREIGN KEY     | op_id                   | op_cab                        | id
+ op_yield                      | op_yield_pkey                                                   | PRIMARY KEY     | op_id                   | op_yield                      | op_id
+ overhead_definitions          | overhead_definitions_pkey                                       | PRIMARY KEY     | id                      | overhead_definitions          | id
+ overhead_definitions          | overhead_definitions_clave_unique                               | UNIQUE          | clave                   | overhead_definitions          | clave
+ param_sucursal                | param_sucursal_pkey                                             | PRIMARY KEY     | id                      | param_sucursal                | id
+ param_sucursal                | param_sucursal_sucursal_id_key                                  | UNIQUE          | sucursal_id             | param_sucursal                | sucursal_id
+ password_reset_tokens         | password_reset_tokens_pkey                                      | PRIMARY KEY     | email                   | password_reset_tokens         | email
+ perdida_log                   | perdida_log_item_id_fkey                                        | FOREIGN KEY     | item_id                 | items                         | id
+ perdida_log                   | perdida_log_lote_id_fkey                                        | FOREIGN KEY     | lote_id                 | inventory_batch               | id
+ perdida_log                   | perdida_log_uom_original_id_fkey                                | FOREIGN KEY     | uom_original_id         | unidades_medida_legacy        | id
+ perdida_log                   | perdida_log_pkey                                                | PRIMARY KEY     | id                      | perdida_log                   | id
+ permissions                   | permissions_pkey                                                | PRIMARY KEY     | id                      | permissions                   | id
+ permissions                   | permissions_name_guard_name_unique                              | UNIQUE          | name                    | permissions                   | guard_name
+ permissions                   | permissions_name_guard_name_unique                              | UNIQUE          | guard_name              | permissions                   | name
+ permissions                   | permissions_name_guard_name_unique                              | UNIQUE          | name                    | permissions                   | name
+ permissions                   | permissions_name_guard_name_unique                              | UNIQUE          | guard_name              | permissions                   | guard_name
+ personal_access_tokens        | personal_access_tokens_pkey                                     | PRIMARY KEY     | id                      | personal_access_tokens        | id
+ personal_access_tokens        | personal_access_tokens_token_unique                             | UNIQUE          | token                   | personal_access_tokens        | token
+ pos_map                       | fk_pos_map_receta                                               | FOREIGN KEY     | receta_id               | receta_cab                    | id
+ pos_map                       | pos_map_pkey                                                    | PRIMARY KEY     | plu                     | pos_map                       | plu
+ pos_map                       | pos_map_pkey                                                    | PRIMARY KEY     | sys_from                | pos_map                       | pos_system
+ pos_map                       | pos_map_pkey                                                    | PRIMARY KEY     | valid_from              | pos_map                       | pos_system
+ pos_map                       | pos_map_pkey                                                    | PRIMARY KEY     | pos_system              | pos_map                       | sys_from
+ pos_map                       | pos_map_pkey                                                    | PRIMARY KEY     | plu                     | pos_map                       | sys_from
+ pos_map                       | pos_map_pkey                                                    | PRIMARY KEY     | valid_from              | pos_map                       | sys_from
+ pos_map                       | pos_map_pkey                                                    | PRIMARY KEY     | sys_from                | pos_map                       | sys_from
+ pos_map                       | pos_map_pkey                                                    | PRIMARY KEY     | plu                     | pos_map                       | pos_system
+ pos_map                       | pos_map_pkey                                                    | PRIMARY KEY     | pos_system              | pos_map                       | pos_system
+ pos_map                       | pos_map_pkey                                                    | PRIMARY KEY     | sys_from                | pos_map                       | plu
+ pos_map                       | pos_map_pkey                                                    | PRIMARY KEY     | pos_system              | pos_map                       | valid_from
+ pos_map                       | pos_map_pkey                                                    | PRIMARY KEY     | plu                     | pos_map                       | valid_from
+ pos_map                       | pos_map_pkey                                                    | PRIMARY KEY     | valid_from              | pos_map                       | valid_from
+ pos_map                       | pos_map_pkey                                                    | PRIMARY KEY     | sys_from                | pos_map                       | valid_from
+ pos_map                       | pos_map_pkey                                                    | PRIMARY KEY     | pos_system              | pos_map                       | plu
+ pos_map                       | pos_map_pkey                                                    | PRIMARY KEY     | valid_from              | pos_map                       | plu
+ pos_modifiers_map             | pos_modifiers_map_pkey                                          | PRIMARY KEY     | id                      | pos_modifiers_map             | id
+ pos_modifiers_map             | pos_modifiers_map_pos_modifier_code_key                         | UNIQUE          | pos_modifier_code       | pos_modifiers_map             | pos_modifier_code
+ pos_reprocess_log             | pos_reprocess_log_pkey                                          | PRIMARY KEY     | id                      | pos_reprocess_log             | id
+ pos_reverse_log               | pos_reverse_log_pkey                                            | PRIMARY KEY     | id                      | pos_reverse_log               | id
+ pos_sync_batches              | pos_sync_batches_pkey                                           | PRIMARY KEY     | id                      | pos_sync_batches              | id
+ pos_sync_logs                 | selemti_pos_sync_logs_batch_id_foreign                          | FOREIGN KEY     | batch_id                | pos_sync_batches              | id
+ pos_sync_logs                 | pos_sync_logs_pkey                                              | PRIMARY KEY     | id                      | pos_sync_logs                 | id
+ postcorte                     | postcorte_sesion_id_fkey                                        | FOREIGN KEY     | sesion_id               | sesion_cajon                  | id
+ postcorte                     | postcorte_pkey                                                  | PRIMARY KEY     | id                      | postcorte                     | id
+ postcorte                     | uq_postcorte_sesion_id                                          | UNIQUE          | sesion_id               | postcorte                     | sesion_id
+ precorte                      | precorte_sesion_id_fkey                                         | FOREIGN KEY     | sesion_id               | sesion_cajon                  | id
+ precorte                      | precorte_pkey                                                   | PRIMARY KEY     | id                      | precorte                      | id
+ precorte                      | uq_precorte_sesion_id                                           | UNIQUE          | sesion_id               | precorte                      | sesion_id
+ precorte_efectivo             | precorte_efectivo_precorte_id_fkey                              | FOREIGN KEY     | precorte_id             | precorte                      | id
+ precorte_efectivo             | precorte_efectivo_pkey                                          | PRIMARY KEY     | id                      | precorte_efectivo             | id
+ precorte_otros                | precorte_otros_precorte_id_fkey                                 | FOREIGN KEY     | precorte_id             | precorte                      | id
+ precorte_otros                | precorte_otros_pkey                                             | PRIMARY KEY     | id                      | precorte_otros                | id
+ prod_cab                      | prod_cab_sol_id_fkey                                            | FOREIGN KEY     | sol_id                  | sol_prod_cab                  | id
+ prod_cab                      | prod_cab_pkey                                                   | PRIMARY KEY     | id                      | prod_cab                      | id
+ prod_det                      | prod_det_prod_id_fkey                                           | FOREIGN KEY     | prod_id                 | prod_cab                      | id
+ prod_det                      | prod_det_pkey                                                   | PRIMARY KEY     | id                      | prod_det                      | id
+ production_order_inputs       | production_order_inputs_pkey                                    | PRIMARY KEY     | id                      | production_order_inputs       | id
+ production_order_outputs      | production_order_outputs_pkey                                   | PRIMARY KEY     | id                      | production_order_outputs      | id
+ production_orders             | production_orders_pkey                                          | PRIMARY KEY     | id                      | production_orders             | id
+ production_orders             | production_orders_folio_unique                                  | UNIQUE          | folio                   | production_orders             | folio
+ proveedor                     | proveedor_pkey                                                  | PRIMARY KEY     | id                      | proveedor                     | id
+ purchase_documents            | purchase_documents_pkey                                         | PRIMARY KEY     | id                      | purchase_documents            | id
+ purchase_order_lines          | purchase_order_lines_pkey                                       | PRIMARY KEY     | id                      | purchase_order_lines          | id
+ purchase_orders               | fk_purchase_orders_vendor                                       | FOREIGN KEY     | vendor_id               | cat_proveedores               | id
+ purchase_orders               | purchase_orders_pkey                                            | PRIMARY KEY     | id                      | purchase_orders               | id
+ purchase_orders               | purchase_orders_folio_unique                                    | UNIQUE          | folio                   | purchase_orders               | folio
+ purchase_request_lines        | purchase_request_lines_pkey                                     | PRIMARY KEY     | id                      | purchase_request_lines        | id
+ purchase_requests             | fk_preq_almacen_destino                                         | FOREIGN KEY     | almacen_destino_id      | cat_almacenes                 | id
+ purchase_requests             | fk_preq_suggestion                                              | FOREIGN KEY     | origen_suggestion_id    | purchase_suggestions          | id
+ purchase_requests             | purchase_requests_pkey                                          | PRIMARY KEY     | id                      | purchase_requests             | id
+ purchase_requests             | purchase_requests_folio_unique                                  | UNIQUE          | folio                   | purchase_requests             | folio
+ purchase_suggestion_lines     | fk_psuggline_item                                               | FOREIGN KEY     | item_id                 | items                         | id
+ purchase_suggestion_lines     | fk_psuggline_proveedor                                          | FOREIGN KEY     | proveedor_sugerido_id   | cat_proveedores               | id
+ purchase_suggestion_lines     | fk_psuggline_suggestion                                         | FOREIGN KEY     | suggestion_id           | purchase_suggestions          | id
+ purchase_suggestion_lines     | purchase_suggestion_lines_pkey                                  | PRIMARY KEY     | id                      | purchase_suggestion_lines     | id
+ purchase_suggestion_lines     | uq_psuggline_suggestion_item                                    | UNIQUE          | suggestion_id           | purchase_suggestion_lines     | suggestion_id
+ purchase_suggestion_lines     | uq_psuggline_suggestion_item                                    | UNIQUE          | suggestion_id           | purchase_suggestion_lines     | item_id
+ purchase_suggestion_lines     | uq_psuggline_suggestion_item                                    | UNIQUE          | item_id                 | purchase_suggestion_lines     | item_id
+ purchase_suggestion_lines     | uq_psuggline_suggestion_item                                    | UNIQUE          | item_id                 | purchase_suggestion_lines     | suggestion_id
+ purchase_suggestions          | fk_psugg_almacen                                                | FOREIGN KEY     | almacen_id              | cat_almacenes                 | id
+ purchase_suggestions          | fk_psugg_request                                                | FOREIGN KEY     | convertido_a_request_id | purchase_requests             | id
+ purchase_suggestions          | fk_psugg_sucursal                                               | FOREIGN KEY     | sucursal_id             | cat_sucursales                | id
+ purchase_suggestions          | fk_psugg_user_revisado                                          | FOREIGN KEY     | revisado_por_user_id    | users                         | id
+ purchase_suggestions          | fk_psugg_user_sugerido                                          | FOREIGN KEY     | sugerido_por_user_id    | users                         | id
+ purchase_suggestions          | purchase_suggestions_pkey                                       | PRIMARY KEY     | id                      | purchase_suggestions          | id
+ purchase_suggestions          | selemti_purchase_suggestions_folio_unique                       | UNIQUE          | folio                   | purchase_suggestions          | folio
+ purchase_vendor_quote_lines   | purchase_vendor_quote_lines_pkey                                | PRIMARY KEY     | id                      | purchase_vendor_quote_lines   | id
+ purchase_vendor_quotes        | purchase_vendor_quotes_pkey                                     | PRIMARY KEY     | id                      | purchase_vendor_quotes        | id
+ recalc_log                    | recalc_log_job_id_fkey                                          | FOREIGN KEY     | job_id                  | job_recalc_queue              | id
+ recalc_log                    | recalc_log_pkey                                                 | PRIMARY KEY     | id                      | recalc_log                    | id
+ recepcion_adjuntos            | recepcion_adjuntos_pkey                                         | PRIMARY KEY     | id                      | recepcion_adjuntos            | id
+ recepcion_cab                 | recepcion_cab_sucursal_id_fkey                                  | FOREIGN KEY     | sucursal_id             | sucursal                      | id
+ recepcion_cab                 | recepcion_cab_usuario_id_fkey                                   | FOREIGN KEY     | usuario_id              | usuario                       | id
+ recepcion_cab                 | recepcion_cab_pkey                                              | PRIMARY KEY     | id                      | recepcion_cab                 | id
+ recepcion_det                 | recepcion_det_bodega_id_fkey                                    | FOREIGN KEY     | bodega_id               | bodega                        | id
+ recepcion_det                 | recepcion_det_insumo_id_fkey                                    | FOREIGN KEY     | insumo_id               | insumo                        | id
+ recepcion_det                 | recepcion_det_lote_id_fkey                                      | FOREIGN KEY     | lote_id                 | lote                          | id
+ recepcion_det                 | recepcion_det_recepcion_id_fkey                                 | FOREIGN KEY     | recepcion_id            | recepcion_cab                 | id
+ recepcion_det                 | recepcion_det_um_id_fkey                                        | FOREIGN KEY     | um_id                   | unidad_medida_legacy          | id
+ recepcion_det                 | recepcion_det_pkey                                              | PRIMARY KEY     | id                      | recepcion_det                 | id
+ receta                        | receta_pkey                                                     | PRIMARY KEY     | id                      | receta                        | id
+ receta                        | receta_codigo_key                                               | UNIQUE          | codigo                  | receta                        | codigo
+ receta_cab                    | receta_cab_pkey                                                 | PRIMARY KEY     | id                      | receta_cab                    | id
+ receta_cab                    | receta_cab_codigo_plato_pos_key                                 | UNIQUE          | codigo_plato_pos        | receta_cab                    | codigo_plato_pos
+ receta_det                    | receta_det_item_id_fkey                                         | FOREIGN KEY     | item_id                 | items                         | id
+ receta_det                    | receta_det_receta_version_id_fkey                               | FOREIGN KEY     | receta_version_id       | receta_version                | id
+ receta_det                    | receta_det_pkey                                                 | PRIMARY KEY     | id                      | receta_det                    | id
+ receta_insumo                 | receta_insumo_insumo_id_fkey                                    | FOREIGN KEY     | insumo_id               | insumo                        | id
+ receta_insumo                 | receta_insumo_receta_version_id_fkey                            | FOREIGN KEY     | receta_version_id       | receta_version                | id
+ receta_insumo                 | receta_insumo_pkey                                              | PRIMARY KEY     | id                      | receta_insumo                 | id
+ receta_insumo                 | receta_insumo_receta_version_id_insumo_id_key                   | UNIQUE          | receta_version_id       | receta_insumo                 | receta_version_id
+ receta_insumo                 | receta_insumo_receta_version_id_insumo_id_key                   | UNIQUE          | insumo_id               | receta_insumo                 | receta_version_id
+ receta_insumo                 | receta_insumo_receta_version_id_insumo_id_key                   | UNIQUE          | insumo_id               | receta_insumo                 | insumo_id
+ receta_insumo                 | receta_insumo_receta_version_id_insumo_id_key                   | UNIQUE          | receta_version_id       | receta_insumo                 | insumo_id
+ receta_shadow                 | receta_shadow_pkey                                              | PRIMARY KEY     | id                      | receta_shadow                 | id
+ receta_version                | receta_version_receta_id_fkey                                   | FOREIGN KEY     | receta_id               | receta_cab                    | id
+ receta_version                | receta_version_pkey                                             | PRIMARY KEY     | id                      | receta_version                | id
+ receta_version                | receta_version_receta_id_version_key                            | UNIQUE          | receta_id               | receta_version                | version
+ receta_version                | receta_version_receta_id_version_key                            | UNIQUE          | version                 | receta_version                | receta_id
+ receta_version                | receta_version_receta_id_version_key                            | UNIQUE          | version                 | receta_version                | version
+ receta_version                | receta_version_receta_id_version_key                            | UNIQUE          | receta_id               | receta_version                | receta_id
+ recipe_cost_history           | recipe_cost_history_pkey                                        | PRIMARY KEY     | id                      | recipe_cost_history           | id
+ recipe_extended_cost_history  | recipe_extended_cost_history_pkey                               | PRIMARY KEY     | id                      | recipe_extended_cost_history  | id
+ recipe_labor_steps            | recipe_labor_steps_pkey                                         | PRIMARY KEY     | id                      | recipe_labor_steps            | id
+ recipe_overhead_allocations   | recipe_overhead_allocations_pkey                                | PRIMARY KEY     | id                      | recipe_overhead_allocations   | id
+ recipe_overhead_allocations   | recipe_overhead_unique                                          | UNIQUE          | recipe_id               | recipe_overhead_allocations   | overhead_id
+ recipe_overhead_allocations   | recipe_overhead_unique                                          | UNIQUE          | overhead_id             | recipe_overhead_allocations   | recipe_id
+ recipe_overhead_allocations   | recipe_overhead_unique                                          | UNIQUE          | recipe_id               | recipe_overhead_allocations   | recipe_id
+ recipe_overhead_allocations   | recipe_overhead_unique                                          | UNIQUE          | overhead_id             | recipe_overhead_allocations   | overhead_id
+ recipe_version_items          | recipe_version_items_pkey                                       | PRIMARY KEY     | id                      | recipe_version_items          | id
+ recipe_versions               | recipe_versions_pkey                                            | PRIMARY KEY     | id                      | recipe_versions               | id
+ replenishment_suggestions     | replenishment_suggestions_pkey                                  | PRIMARY KEY     | id                      | replenishment_suggestions     | id
+ replenishment_suggestions     | replenishment_suggestions_folio_unique                          | UNIQUE          | folio                   | replenishment_suggestions     | folio
+ report_definitions            | report_definitions_pkey                                         | PRIMARY KEY     | id                      | report_definitions            | id
+ report_definitions            | selemti_report_definitions_slug_unique                          | UNIQUE          | slug                    | report_definitions            | slug
+ report_runs                   | selemti_report_runs_report_id_foreign                           | FOREIGN KEY     | report_id               | report_definitions            | id
+ report_runs                   | report_runs_pkey                                                | PRIMARY KEY     | id                      | report_runs                   | id
+ rol                           | rol_pkey                                                        | PRIMARY KEY     | id                      | rol                           | id
+ rol                           | rol_codigo_key                                                  | UNIQUE          | codigo                  | rol                           | codigo
+ role_has_permissions          | role_has_permissions_permission_id_foreign                      | FOREIGN KEY     | permission_id           | permissions                   | id
+ role_has_permissions          | role_has_permissions_role_id_foreign                            | FOREIGN KEY     | role_id                 | roles                         | id
+ role_has_permissions          | role_has_permissions_pkey                                       | PRIMARY KEY     | role_id                 | role_has_permissions          | role_id
+ role_has_permissions          | role_has_permissions_pkey                                       | PRIMARY KEY     | permission_id           | role_has_permissions          | permission_id
+ role_has_permissions          | role_has_permissions_pkey                                       | PRIMARY KEY     | permission_id           | role_has_permissions          | role_id
+ role_has_permissions          | role_has_permissions_pkey                                       | PRIMARY KEY     | role_id                 | role_has_permissions          | permission_id
+ roles                         | roles_pkey                                                      | PRIMARY KEY     | id                      | roles                         | id
+ roles                         | roles_name_guard_name_unique                                    | UNIQUE          | guard_name              | roles                         | guard_name
+ roles                         | roles_name_guard_name_unique                                    | UNIQUE          | name                    | roles                         | guard_name
+ roles                         | roles_name_guard_name_unique                                    | UNIQUE          | name                    | roles                         | name
+ roles                         | roles_name_guard_name_unique                                    | UNIQUE          | guard_name              | roles                         | name
+ sesion_cajon                  | sesion_cajon_pkey                                               | PRIMARY KEY     | id                      | sesion_cajon                  | id
+ sesion_cajon                  | sesion_cajon_terminal_id_cajero_usuario_id_apertura_ts_key      | UNIQUE          | terminal_id             | sesion_cajon                  | cajero_usuario_id
+ sesion_cajon                  | sesion_cajon_terminal_id_cajero_usuario_id_apertura_ts_key      | UNIQUE          | apertura_ts             | sesion_cajon                  | terminal_id
+ sesion_cajon                  | sesion_cajon_terminal_id_cajero_usuario_id_apertura_ts_key      | UNIQUE          | apertura_ts             | sesion_cajon                  | apertura_ts
+ sesion_cajon                  | sesion_cajon_terminal_id_cajero_usuario_id_apertura_ts_key      | UNIQUE          | terminal_id             | sesion_cajon                  | apertura_ts
+ sesion_cajon                  | sesion_cajon_terminal_id_cajero_usuario_id_apertura_ts_key      | UNIQUE          | cajero_usuario_id       | sesion_cajon                  | cajero_usuario_id
+ sesion_cajon                  | sesion_cajon_terminal_id_cajero_usuario_id_apertura_ts_key      | UNIQUE          | apertura_ts             | sesion_cajon                  | cajero_usuario_id
+ sesion_cajon                  | sesion_cajon_terminal_id_cajero_usuario_id_apertura_ts_key      | UNIQUE          | terminal_id             | sesion_cajon                  | terminal_id
+ sesion_cajon                  | sesion_cajon_terminal_id_cajero_usuario_id_apertura_ts_key      | UNIQUE          | cajero_usuario_id       | sesion_cajon                  | terminal_id
+ sesion_cajon                  | sesion_cajon_terminal_id_cajero_usuario_id_apertura_ts_key      | UNIQUE          | cajero_usuario_id       | sesion_cajon                  | apertura_ts
+ sessions                      | sessions_pkey                                                   | PRIMARY KEY     | id                      | sessions                      | id
+ sol_prod_cab                  | sol_prod_cab_pkey                                               | PRIMARY KEY     | id                      | sol_prod_cab                  | id
+ sol_prod_det                  | sol_prod_det_sol_id_fkey                                        | FOREIGN KEY     | sol_id                  | sol_prod_cab                  | id
+ sol_prod_det                  | sol_prod_det_pkey                                               | PRIMARY KEY     | id                      | sol_prod_det                  | id
+ stock_policy                  | stock_policy_item_id_fkey                                       | FOREIGN KEY     | item_id                 | items                         | id
+ stock_policy                  | stock_policy_pkey                                               | PRIMARY KEY     | id                      | stock_policy                  | id
+ sucursal                      | sucursal_pkey                                                   | PRIMARY KEY     | id                      | sucursal                      | id
+ sucursal_almacen_terminal     | sucursal_almacen_terminal_pkey                                  | PRIMARY KEY     | id                      | sucursal_almacen_terminal     | id
+ ticket_det_consumo            | ticket_det_consumo_item_id_fkey                                 | FOREIGN KEY     | item_id                 | items                         | id
+ ticket_det_consumo            | ticket_det_consumo_lote_id_fkey                                 | FOREIGN KEY     | lote_id                 | inventory_batch               | id
+ ticket_det_consumo            | ticket_det_consumo_uom_original_id_fkey                         | FOREIGN KEY     | uom_original_id         | unidades_medida_legacy        | id
+ ticket_det_consumo            | ticket_det_consumo_pkey                                         | PRIMARY KEY     | id                      | ticket_det_consumo            | id
+ ticket_item_modifiers         | ticket_item_modifiers_pkey                                      | PRIMARY KEY     | id                      | ticket_item_modifiers         | id
+ ticket_venta_cab              | ticket_venta_cab_pkey                                           | PRIMARY KEY     | id                      | ticket_venta_cab              | id
+ ticket_venta_cab              | ticket_venta_cab_numero_ticket_key                              | UNIQUE          | numero_ticket           | ticket_venta_cab              | numero_ticket
+ ticket_venta_det              | fk_ticket_det_cab                                               | FOREIGN KEY     | ticket_id               | ticket_venta_cab              | id
+ ticket_venta_det              | ticket_venta_det_receta_shadow_id_fkey                          | FOREIGN KEY     | receta_shadow_id        | receta_shadow                 | id
+ ticket_venta_det              | ticket_venta_det_receta_version_id_fkey                         | FOREIGN KEY     | receta_version_id       | receta_version                | id
+ ticket_venta_det              | ticket_venta_det_pkey                                           | PRIMARY KEY     | id                      | ticket_venta_det              | id
+ transfer_cab                  | transfer_cab_pkey                                               | PRIMARY KEY     | id                      | transfer_cab                  | id
+ transfer_det                  | transfer_det_transfer_id_fkey                                   | FOREIGN KEY     | transfer_id             | transfer_cab                  | id
+ transfer_det                  | transfer_det_pkey                                               | PRIMARY KEY     | id                      | transfer_det                  | id
+ traspaso_cab                  | traspaso_cab_from_bodega_id_fkey                                | FOREIGN KEY     | from_bodega_id          | bodega                        | id
+ traspaso_cab                  | traspaso_cab_to_bodega_id_fkey                                  | FOREIGN KEY     | to_bodega_id            | bodega                        | id
+ traspaso_cab                  | traspaso_cab_usuario_id_fkey                                    | FOREIGN KEY     | usuario_id              | usuario                       | id
+ traspaso_cab                  | traspaso_cab_pkey                                               | PRIMARY KEY     | id                      | traspaso_cab                  | id
+ traspaso_det                  | traspaso_det_insumo_id_fkey                                     | FOREIGN KEY     | insumo_id               | insumo                        | id
+ traspaso_det                  | traspaso_det_lote_id_fkey                                       | FOREIGN KEY     | lote_id                 | lote                          | id
+ traspaso_det                  | traspaso_det_traspaso_id_fkey                                   | FOREIGN KEY     | traspaso_id             | traspaso_cab                  | id
+ traspaso_det                  | traspaso_det_um_id_fkey                                         | FOREIGN KEY     | um_id                   | unidad_medida_legacy          | id
+ traspaso_det                  | traspaso_det_pkey                                               | PRIMARY KEY     | id                      | traspaso_det                  | id
+ unidad_medida_legacy          | unidad_medida_pkey                                              | PRIMARY KEY     | id                      | unidad_medida_legacy          | id
+ unidad_medida_legacy          | unidad_medida_codigo_key                                        | UNIQUE          | codigo                  | unidad_medida_legacy          | codigo
+ unidades_medida_legacy        | unidades_medida_pkey                                            | PRIMARY KEY     | id                      | unidades_medida_legacy        | id
+ unidades_medida_legacy        | unidades_medida_codigo_key                                      | UNIQUE          | codigo                  | unidades_medida_legacy        | codigo
+ uom_conversion_legacy         | uom_conversion_destino_id_fkey                                  | FOREIGN KEY     | destino_id              | unidad_medida_legacy          | id
+ uom_conversion_legacy         | uom_conversion_origen_id_fkey                                   | FOREIGN KEY     | origen_id               | unidad_medida_legacy          | id
+ uom_conversion_legacy         | uom_conversion_pkey                                             | PRIMARY KEY     | id                      | uom_conversion_legacy         | id
+ uom_conversion_legacy         | uom_conversion_origen_id_destino_id_key                         | UNIQUE          | destino_id              | uom_conversion_legacy         | origen_id
+ uom_conversion_legacy         | uom_conversion_origen_id_destino_id_key                         | UNIQUE          | destino_id              | uom_conversion_legacy         | destino_id
+ uom_conversion_legacy         | uom_conversion_origen_id_destino_id_key                         | UNIQUE          | origen_id               | uom_conversion_legacy         | origen_id
+ uom_conversion_legacy         | uom_conversion_origen_id_destino_id_key                         | UNIQUE          | origen_id               | uom_conversion_legacy         | destino_id
+ user_roles                    | user_roles_pkey                                                 | PRIMARY KEY     | user_id                 | user_roles                    | user_id
+ user_roles                    | user_roles_pkey                                                 | PRIMARY KEY     | role_id                 | user_roles                    | role_id
+ user_roles                    | user_roles_pkey                                                 | PRIMARY KEY     | user_id                 | user_roles                    | role_id
+ user_roles                    | user_roles_pkey                                                 | PRIMARY KEY     | role_id                 | user_roles                    | user_id
+ users                         | users_pkey                                                      | PRIMARY KEY     | id                      | users                         | id
+ users                         | users_username_key                                              | UNIQUE          | username                | users                         | username
+ usuario                       | usuario_rol_id_fkey                                             | FOREIGN KEY     | rol_id                  | rol                           | id
+ usuario                       | usuario_pkey                                                    | PRIMARY KEY     | id                      | usuario                       | id
+ usuario                       | usuario_username_key                                            | UNIQUE          | username                | usuario                       | username
+(439 filas)
+
