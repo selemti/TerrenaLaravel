@@ -1,22 +1,22 @@
-# 🎯 PLAN MAESTRO UI/UX ENTERPRISE - TerrenaLaravel
+# 馃幆 PLAN MAESTRO UI/UX ENTERPRISE - TerrenaLaravel
 
 **Proyecto**: TerrenaLaravel - Sistema ERP Restaurantes  
-**Versión**: v7.0 Enterprise (Post-Normalización BD)  
+**Versi贸n**: v7.0 Enterprise (Post-Normalizaci贸n BD)  
 **Fecha**: 31 de octubre de 2025  
-**Estado**: 🟢 READY TO EXECUTE
+**Estado**: 馃煝 READY TO EXECUTE
 
 ---
 
-## 📋 TABLA DE CONTENIDOS
+## 馃搵 TABLA DE CONTENIDOS
 
 1. [Resumen Ejecutivo](#resumen-ejecutivo)
 2. [Estado Actual](#estado-actual)
 3. [Arquitectura y Stack](#arquitectura-y-stack)
 4. [Sistema de Permisos](#sistema-de-permisos)
-5. [Roadmap de Implementación](#roadmap-de-implementación)
-6. [Análisis por Módulo](#análisis-por-módulo)
+5. [Roadmap de Implementaci贸n](#roadmap-de-implementaci贸n)
+6. [An谩lisis por M贸dulo](#an谩lisis-por-m贸dulo)
 7. [Quick Wins](#quick-wins)
-8. [Métricas y KPIs](#métricas-y-kpis)
+8. [M茅tricas y KPIs](#m茅tricas-y-kpis)
 9. [Plan de Testing](#plan-de-testing)
 10. [Entregables](#entregables)
 
@@ -24,151 +24,151 @@
 
 ## 1. RESUMEN EJECUTIVO
 
-### 🎉 Logro Mayor: Base de Datos Enterprise Completada
+### 馃帀 Logro Mayor: Base de Datos Enterprise Completada
 
 **Acabamos de completar** (31 octubre 2025, 00:40):
-- ✅ **5 Fases de normalización** (Fundamentos → Consolidación → Integridad → Performance → Enterprise)
-- ✅ **141 tablas** enterprise-grade
-- ✅ **127 Foreign Keys** verificadas
-- ✅ **415 índices** optimizados
-- ✅ **20 triggers** de auditoría
-- ✅ **51 vistas** de compatibilidad
-- ✅ **4 vistas materializadas** para reportes
-- ✅ **Audit log global** implementado
-- ✅ **Zero breaking changes** + código legacy compatible
+- 鉁?**5 Fases de normalizaci贸n** (Fundamentos 鈫?Consolidaci贸n 鈫?Integridad 鈫?Performance 鈫?Enterprise)
+- 鉁?**141 tablas** enterprise-grade
+- 鉁?**127 Foreign Keys** verificadas
+- 鉁?**415 铆ndices** optimizados
+- 鉁?**20 triggers** de auditor铆a
+- 鉁?**51 vistas** de compatibilidad
+- 鉁?**4 vistas materializadas** para reportes
+- 鉁?**Audit log global** implementado
+- 鉁?**Zero breaking changes** + c贸digo legacy compatible
 
-### 🎯 Objetivo del Plan UI/UX
+### 馃幆 Objetivo del Plan UI/UX
 
 Transformar el frontend de un sistema funcional a un **ERP comercial de clase mundial** aprovechando la base de datos enterprise que acabamos de crear.
 
-### 📊 Estado Actual vs Objetivo
+### 馃搳 Estado Actual vs Objetivo
 
-| Módulo | Estado Actual | Objetivo | Gap |
+| M贸dulo | Estado Actual | Objetivo | Gap |
 |--------|---------------|----------|-----|
 | **Inventario** | 60-70% | 95% | UI moderna + validaciones |
-| **Compras/Replenishment** | 40-50% | 95% | Motor + políticas |
+| **Compras/Replenishment** | 40-50% | 95% | Motor + pol铆ticas |
 | **Recetas/Costos** | 50-60% | 95% | Versionado + snapshots |
-| **Producción** | 30-40% | 90% | UI operativa completa |
-| **POS Integration** | 70% | 95% | Auditoría + mapeos |
+| **Producci贸n** | 30-40% | 90% | UI operativa completa |
+| **POS Integration** | 70% | 95% | Auditor铆a + mapeos |
 | **Reportes** | 30-40% | 90% | Exports + drill-down |
 | **Permisos** | 80% | 98% | Matriz + gating |
 | **Caja Chica** | 70% | 90% | Reglas + checklist |
 
-### 🚀 Ventaja Competitiva
+### 馃殌 Ventaja Competitiva
 
 Con la BD enterprise completada, tenemos:
-1. ✅ **Integridad garantizada** por constraints de BD
-2. ✅ **Auditoría automática** vía triggers
-3. ✅ **Performance optimizada** con 415 índices
-4. ✅ **Escalabilidad** probada (vistas materializadas)
-5. ✅ **Código legacy compatible** (vistas v_*)
+1. 鉁?**Integridad garantizada** por constraints de BD
+2. 鉁?**Auditor铆a autom谩tica** v铆a triggers
+3. 鉁?**Performance optimizada** con 415 铆ndices
+4. 鉁?**Escalabilidad** probada (vistas materializadas)
+5. 鉁?**C贸digo legacy compatible** (vistas v_*)
 
-**Esto significa**: El frontend puede ser **más simple y rápido** porque la BD hace el trabajo pesado.
+**Esto significa**: El frontend puede ser **m谩s simple y r谩pido** porque la BD hace el trabajo pesado.
 
 ---
 
 ## 2. ESTADO ACTUAL
 
-### 2.1 Stack Tecnológico Actual
+### 2.1 Stack Tecnol贸gico Actual
 
 ```
 Backend:
-├── Laravel 10.x
-├── PHP 8.2+
-├── PostgreSQL 9.5
-└── Spatie Permissions (roles/permisos)
+鈹溾攢鈹€ Laravel 10.x
+鈹溾攢鈹€ PHP 8.2+
+鈹溾攢鈹€ PostgreSQL 9.5
+鈹斺攢鈹€ Spatie Permissions (roles/permisos)
 
 Frontend:
-├── Blade Templates
-├── Alpine.js (interactividad)
-├── Tailwind CSS 3.x
-├── Bootstrap 5 (legacy, migrar gradualmente)
-└── Livewire (componentes reactivos)
+鈹溾攢鈹€ Blade Templates
+鈹溾攢鈹€ Alpine.js (interactividad)
+鈹溾攢鈹€ Tailwind CSS 3.x
+鈹溾攢鈹€ Bootstrap 5 (legacy, migrar gradualmente)
+鈹斺攢鈹€ Livewire (componentes reactivos)
 
 Infraestructura:
-├── XAMPP (desarrollo)
-├── Git (control de versiones)
-└── Artisan (CLI)
+鈹溾攢鈹€ XAMPP (desarrollo)
+鈹溾攢鈹€ Git (control de versiones)
+鈹斺攢鈹€ Artisan (CLI)
 ```
 
-### 2.2 Módulos Existentes
+### 2.2 M贸dulos Existentes
 
 **Inventario**:
-- ✅ Items/Altas: Filtro + alta básica
-- ✅ Recepciones: Modal completo con FEFO
-- ✅ Lotes/Caducidades: Tableros vacíos
-- ✅ Conteos: Estados + tablero
-- ✅ Transferencias: Borrador/Despachada
+- 鉁?Items/Altas: Filtro + alta b谩sica
+- 鉁?Recepciones: Modal completo con FEFO
+- 鉁?Lotes/Caducidades: Tableros vac铆os
+- 鉁?Conteos: Estados + tablero
+- 鉁?Transferencias: Borrador/Despachada
 
 **Compras**:
-- ✅ Solicitudes/Órdenes: Estructura completa
-- ⚠️ Pedidos Sugeridos: UI lista, motor falta
-- ⚠️ Políticas de Stock: UI pendiente
+- 鉁?Solicitudes/脫rdenes: Estructura completa
+- 鈿狅笍 Pedidos Sugeridos: UI lista, motor falta
+- 鈿狅笍 Pol铆ticas de Stock: UI pendiente
 
 **Recetas**:
-- ✅ Listado con precios
-- ✅ Editor básico (ID, PLU, ingredientes)
-- ⚠️ Alertas de costo vacío
-- ❌ Versionado: No implementado
-- ❌ Snapshots automáticos: Falta
+- 鉁?Listado con precios
+- 鉁?Editor b谩sico (ID, PLU, ingredientes)
+- 鈿狅笍 Alertas de costo vac铆o
+- 鉂?Versionado: No implementado
+- 鉂?Snapshots autom谩ticos: Falta
 
-**Producción**:
-- ✅ API completa (plan/consume/complete/post)
-- ❌ UI operativa: No existe
+**Producci贸n**:
+- 鉁?API completa (plan/consume/complete/post)
+- 鉂?UI operativa: No existe
 
 **POS**:
-- ✅ Mapeos: Vista básica
-- ⚠️ Auditoría: Queries v6 listas, UI falta
-- ✅ Integración read-only desde `public.*`
+- 鉁?Mapeos: Vista b谩sica
+- 鈿狅笍 Auditor铆a: Queries v6 listas, UI falta
+- 鉁?Integraci贸n read-only desde `public.*`
 
 **Caja Chica**:
-- ✅ Precorte por denominaciones
-- ✅ Panel de excepciones
-- ⚠️ Reglas parametrizables: Falta
+- 鉁?Precorte por denominaciones
+- 鉁?Panel de excepciones
+- 鈿狅笍 Reglas parametrizables: Falta
 
 **Reportes**:
-- ✅ Dashboard principal con KPIs ventas
-- ❌ Exports CSV/PDF: No
-- ❌ Drill-down: No
-- ❌ Reportes programados: No
+- 鉁?Dashboard principal con KPIs ventas
+- 鉂?Exports CSV/PDF: No
+- 鉂?Drill-down: No
+- 鉂?Reportes programados: No
 
-**Catálogos**:
-- ✅ Sucursales, Almacenes: Completo
-- ✅ Unidades/Conversiones: Muy bien
-- ✅ Proveedores: Básico
-- ⚠️ Políticas de Stock: UI pendiente
+**Cat谩logos**:
+- 鉁?Sucursales, Almacenes: Completo
+- 鉁?Unidades/Conversiones: Muy bien
+- 鉁?Proveedores: B谩sico
+- 鈿狅笍 Pol铆ticas de Stock: UI pendiente
 
 **Permisos**:
-- ✅ 45 permisos definidos
-- ✅ 9 módulos
-- ✅ 7 roles base
-- ⚠️ Matriz visual: Falta
-- ⚠️ Auditoría de cambios: Falta
+- 鉁?45 permisos definidos
+- 鉁?9 m贸dulos
+- 鉁?7 roles base
+- 鈿狅笍 Matriz visual: Falta
+- 鈿狅笍 Auditor铆a de cambios: Falta
 
 ### 2.3 Fortalezas Actuales
 
-1. ✅ **Base de Datos Enterprise** (recién completada)
-2. ✅ **Estructura Laravel sólida**
-3. ✅ **Spatie Permissions** implementado
-4. ✅ **Alpine.js + Livewire** (moderno, rápido)
-5. ✅ **Tailwind CSS** (diseño consistente)
-6. ✅ **API REST** bien estructurada
-7. ✅ **Integración POS** read-only funcional
+1. 鉁?**Base de Datos Enterprise** (reci茅n completada)
+2. 鉁?**Estructura Laravel s贸lida**
+3. 鉁?**Spatie Permissions** implementado
+4. 鉁?**Alpine.js + Livewire** (moderno, r谩pido)
+5. 鉁?**Tailwind CSS** (dise帽o consistente)
+6. 鉁?**API REST** bien estructurada
+7. 鉁?**Integraci贸n POS** read-only funcional
 
-### 2.4 Gaps Críticos Identificados
+### 2.4 Gaps Cr铆ticos Identificados
 
 | Prioridad | Gap | Impacto Negocio | Esfuerzo |
 |-----------|-----|-----------------|----------|
-| 🔥 **CRÍTICO** | Motor de Replenishment | ALTO | MEDIO |
-| 🔥 **CRÍTICO** | Snapshot de Costos (auto) | ALTO | BAJO |
-| 🔥 **CRÍTICO** | Validaciones inline | MEDIO | BAJO |
-| ⚠️ **ALTO** | Versionado de Recetas | ALTO | MEDIO |
-| ⚠️ **ALTO** | Export Reportes | MEDIO | BAJO |
-| ⚠️ **ALTO** | UI Producción | MEDIO | ALTO |
-| ⚠️ **MEDIO** | Políticas de Stock UI | ALTO | MEDIO |
-| ⚠️ **MEDIO** | Auditoría POS UI | MEDIO | BAJO |
-| 🟢 **BAJO** | Mobile conteos | BAJO | MEDIO |
-| 🟢 **BAJO** | OCR lotes | BAJO | ALTO |
+| 馃敟 **CR脥TICO** | Motor de Replenishment | ALTO | MEDIO |
+| 馃敟 **CR脥TICO** | Snapshot de Costos (auto) | ALTO | BAJO |
+| 馃敟 **CR脥TICO** | Validaciones inline | MEDIO | BAJO |
+| 鈿狅笍 **ALTO** | Versionado de Recetas | ALTO | MEDIO |
+| 鈿狅笍 **ALTO** | Export Reportes | MEDIO | BAJO |
+| 鈿狅笍 **ALTO** | UI Producci贸n | MEDIO | ALTO |
+| 鈿狅笍 **MEDIO** | Pol铆ticas de Stock UI | ALTO | MEDIO |
+| 鈿狅笍 **MEDIO** | Auditor铆a POS UI | MEDIO | BAJO |
+| 馃煝 **BAJO** | Mobile conteos | BAJO | MEDIO |
+| 馃煝 **BAJO** | OCR lotes | BAJO | ALTO |
 
 ---
 
@@ -177,193 +177,193 @@ Infraestructura:
 ### 3.1 Arquitectura Propuesta (Layers)
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    PRESENTATION                      │
-│  Blade + Alpine.js + Livewire + Tailwind CSS       │
-│  • Validación inline (Alpine)                       │
-│  • Componentes reactivos (Livewire)                 │
-│  • UI consistente (Tailwind)                        │
-└─────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────┐
-│                   APPLICATION                        │
-│  Controllers (HTTP) + Livewire Components           │
-│  • Routing                                          │
-│  • Request validation                               │
-│  • Response formatting                              │
-└─────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────┐
-│                     BUSINESS                         │
-│  Services (lógica de negocio)                       │
-│  ├── ItemService                                    │
-│  ├── CostingService                                 │
-│  ├── ReplenishmentEngine ⭐                         │
-│  ├── RecipeService                                  │
-│  ├── ProductionService                              │
-│  ├── TransferService                                │
-│  └── ReportingService                               │
-└─────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────┐
-│                     DATA ACCESS                      │
-│  Models (Eloquent ORM)                              │
-│  • Relationships                                    │
-│  • Scopes                                           │
-│  • Accessors/Mutators                               │
-└─────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────┐
-│                    DATABASE ✅                       │
-│  PostgreSQL 9.5 - ENTERPRISE GRADE                  │
-│  • 141 tablas                                       │
-│  • 127 FKs                                          │
-│  • 415 índices                                      │
-│  • 20 triggers                                      │
-│  • Audit log global                                 │
-└─────────────────────────────────────────────────────┘
+鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+鈹?                   PRESENTATION                      鈹?
+鈹? Blade + Alpine.js + Livewire + Tailwind CSS       鈹?
+鈹? 鈥?Validaci贸n inline (Alpine)                       鈹?
+鈹? 鈥?Componentes reactivos (Livewire)                 鈹?
+鈹? 鈥?UI consistente (Tailwind)                        鈹?
+鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+                         鈫?
+鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+鈹?                  APPLICATION                        鈹?
+鈹? Controllers (HTTP) + Livewire Components           鈹?
+鈹? 鈥?Routing                                          鈹?
+鈹? 鈥?Request validation                               鈹?
+鈹? 鈥?Response formatting                              鈹?
+鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+                         鈫?
+鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+鈹?                    BUSINESS                         鈹?
+鈹? Services (l贸gica de negocio)                       鈹?
+鈹? 鈹溾攢鈹€ ItemService                                    鈹?
+鈹? 鈹溾攢鈹€ CostingService                                 鈹?
+鈹? 鈹溾攢鈹€ ReplenishmentEngine 猸?                        鈹?
+鈹? 鈹溾攢鈹€ RecipeService                                  鈹?
+鈹? 鈹溾攢鈹€ ProductionService                              鈹?
+鈹? 鈹溾攢鈹€ TransferService                                鈹?
+鈹? 鈹斺攢鈹€ ReportingService                               鈹?
+鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+                         鈫?
+鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+鈹?                    DATA ACCESS                      鈹?
+鈹? Models (Eloquent ORM)                              鈹?
+鈹? 鈥?Relationships                                    鈹?
+鈹? 鈥?Scopes                                           鈹?
+鈹? 鈥?Accessors/Mutators                               鈹?
+鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+                         鈫?
+鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+鈹?                   DATABASE 鉁?                      鈹?
+鈹? PostgreSQL 9.5 - ENTERPRISE GRADE                  鈹?
+鈹? 鈥?141 tablas                                       鈹?
+鈹? 鈥?127 FKs                                          鈹?
+鈹? 鈥?415 铆ndices                                      鈹?
+鈹? 鈥?20 triggers                                      鈹?
+鈹? 鈥?Audit log global                                 鈹?
+鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
 ```
 
-### 3.2 Patrones de Diseño
+### 3.2 Patrones de Dise帽o
 
 **1. Repository Pattern** (opcional, para queries complejas):
 ```php
 app/Repositories/
-├── ItemRepository
-├── RecipeRepository
-└── ReportRepository
+鈹溾攢鈹€ ItemRepository
+鈹溾攢鈹€ RecipeRepository
+鈹斺攢鈹€ ReportRepository
 ```
 
 **2. Service Layer Pattern** (obligatorio):
 ```php
 app/Services/
-├── Inventory/
-│   ├── ItemService.php
-│   ├── ReceptionService.php
-│   └── TransferService.php
-├── Purchasing/
-│   ├── ReplenishmentEngine.php ⭐
-│   └── OrderService.php
-├── Recipes/
-│   ├── RecipeService.php
-│   └── CostingService.php ⭐
-└── Production/
-    └── ProductionService.php
+鈹溾攢鈹€ Inventory/
+鈹?  鈹溾攢鈹€ ItemService.php
+鈹?  鈹溾攢鈹€ ReceptionService.php
+鈹?  鈹斺攢鈹€ TransferService.php
+鈹溾攢鈹€ Purchasing/
+鈹?  鈹溾攢鈹€ ReplenishmentEngine.php 猸?
+鈹?  鈹斺攢鈹€ OrderService.php
+鈹溾攢鈹€ Recipes/
+鈹?  鈹溾攢鈹€ RecipeService.php
+鈹?  鈹斺攢鈹€ CostingService.php 猸?
+鈹斺攢鈹€ Production/
+    鈹斺攢鈹€ ProductionService.php
 ```
 
-**3. Job/Queue Pattern** (asíncrono):
+**3. Job/Queue Pattern** (as铆ncrono):
 ```php
 app/Jobs/
-├── RecalculateRecipeCosts.php ⭐
-├── GenerateReplenishmentSuggestions.php ⭐
-├── UpdateCostSnapshots.php
-├── ProcessPosConsumption.php
-└── GenerateReports.php
+鈹溾攢鈹€ RecalculateRecipeCosts.php 猸?
+鈹溾攢鈹€ GenerateReplenishmentSuggestions.php 猸?
+鈹溾攢鈹€ UpdateCostSnapshots.php
+鈹溾攢鈹€ ProcessPosConsumption.php
+鈹斺攢鈹€ GenerateReports.php
 ```
 
-**4. Event/Listener Pattern** (auditoría):
+**4. Event/Listener Pattern** (auditor铆a):
 ```php
 app/Events/
-├── ItemCreated.php
-├── CostChanged.php
-├── RecipeUpdated.php
-└── StockBelowMinimum.php
+鈹溾攢鈹€ ItemCreated.php
+鈹溾攢鈹€ CostChanged.php
+鈹溾攢鈹€ RecipeUpdated.php
+鈹斺攢鈹€ StockBelowMinimum.php
 
 app/Listeners/
-├── LogItemCreation.php
-├── RecalculateRecipeCosts.php
-├── NotifyStockAlert.php
-└── UpdateCostSnapshot.php
+鈹溾攢鈹€ LogItemCreation.php
+鈹溾攢鈹€ RecalculateRecipeCosts.php
+鈹溾攢鈹€ NotifyStockAlert.php
+鈹斺攢鈹€ UpdateCostSnapshot.php
 ```
 
 ### 3.3 Estructura de Directorios Propuesta
 
 ```
 app/
-├── Http/
-│   ├── Controllers/          (delgados, solo routing)
-│   │   ├── InventoryController.php
-│   │   ├── PurchasingController.php
-│   │   ├── RecipeController.php
-│   │   └── ProductionController.php
-│   ├── Livewire/            (componentes reactivos)
-│   │   ├── Inventory/
-│   │   │   ├── ItemForm.php
-│   │   │   ├── ItemList.php
-│   │   │   ├── ReceptionForm.php
-│   │   │   └── CountingForm.php
-│   │   ├── Purchasing/
-│   │   │   ├── SuggestedOrders.php ⭐
-│   │   │   └── StockPolicies.php
-│   │   └── Recipes/
-│   │       ├── RecipeEditor.php
-│   │       └── CostAlert.php
-│   ├── Middleware/
-│   │   ├── CheckPermission.php ⭐
-│   │   └── AuditLog.php
-│   └── Requests/            (validación)
-│       ├── StoreItemRequest.php
-│       └── PostReceptionRequest.php
-├── Services/                (lógica de negocio) ⭐
-├── Jobs/                    (procesamiento asíncrono) ⭐
-├── Events/                  (eventos del sistema)
-├── Listeners/               (respuestas a eventos)
-├── Models/                  (Eloquent ORM)
-│   ├── Item.php
-│   ├── InventoryBatch.php
-│   ├── Recipe.php
-│   ├── RecipeVersion.php ⭐
-│   └── StockPolicy.php ⭐
-└── Policies/                (autorización) ⭐
-    ├── InventoryPolicy.php
-    ├── PurchasingPolicy.php
-    ├── RecipePolicy.php
-    └── ProductionPolicy.php
+鈹溾攢鈹€ Http/
+鈹?  鈹溾攢鈹€ Controllers/          (delgados, solo routing)
+鈹?  鈹?  鈹溾攢鈹€ InventoryController.php
+鈹?  鈹?  鈹溾攢鈹€ PurchasingController.php
+鈹?  鈹?  鈹溾攢鈹€ RecipeController.php
+鈹?  鈹?  鈹斺攢鈹€ ProductionController.php
+鈹?  鈹溾攢鈹€ Livewire/            (componentes reactivos)
+鈹?  鈹?  鈹溾攢鈹€ Inventory/
+鈹?  鈹?  鈹?  鈹溾攢鈹€ ItemForm.php
+鈹?  鈹?  鈹?  鈹溾攢鈹€ ItemList.php
+鈹?  鈹?  鈹?  鈹溾攢鈹€ ReceptionForm.php
+鈹?  鈹?  鈹?  鈹斺攢鈹€ CountingForm.php
+鈹?  鈹?  鈹溾攢鈹€ Purchasing/
+鈹?  鈹?  鈹?  鈹溾攢鈹€ SuggestedOrders.php 猸?
+鈹?  鈹?  鈹?  鈹斺攢鈹€ StockPolicies.php
+鈹?  鈹?  鈹斺攢鈹€ Recipes/
+鈹?  鈹?      鈹溾攢鈹€ RecipeEditor.php
+鈹?  鈹?      鈹斺攢鈹€ CostAlert.php
+鈹?  鈹溾攢鈹€ Middleware/
+鈹?  鈹?  鈹溾攢鈹€ CheckPermission.php 猸?
+鈹?  鈹?  鈹斺攢鈹€ AuditLog.php
+鈹?  鈹斺攢鈹€ Requests/            (validaci贸n)
+鈹?      鈹溾攢鈹€ StoreItemRequest.php
+鈹?      鈹斺攢鈹€ PostReceptionRequest.php
+鈹溾攢鈹€ Services/                (l贸gica de negocio) 猸?
+鈹溾攢鈹€ Jobs/                    (procesamiento as铆ncrono) 猸?
+鈹溾攢鈹€ Events/                  (eventos del sistema)
+鈹溾攢鈹€ Listeners/               (respuestas a eventos)
+鈹溾攢鈹€ Models/                  (Eloquent ORM)
+鈹?  鈹溾攢鈹€ Item.php
+鈹?  鈹溾攢鈹€ InventoryBatch.php
+鈹?  鈹溾攢鈹€ Recipe.php
+鈹?  鈹溾攢鈹€ RecipeVersion.php 猸?
+鈹?  鈹斺攢鈹€ StockPolicy.php 猸?
+鈹斺攢鈹€ Policies/                (autorizaci贸n) 猸?
+    鈹溾攢鈹€ InventoryPolicy.php
+    鈹溾攢鈹€ PurchasingPolicy.php
+    鈹溾攢鈹€ RecipePolicy.php
+    鈹斺攢鈹€ ProductionPolicy.php
 
 resources/
-├── views/
-│   ├── components/          (Blade components reusables) ⭐
-│   │   ├── forms/
-│   │   │   ├── input.blade.php
-│   │   │   ├── select.blade.php
-│   │   │   └── datepicker.blade.php
-│   │   ├── ui/
-│   │   │   ├── toast.blade.php ⭐
-│   │   │   ├── modal.blade.php
-│   │   │   ├── card.blade.php
-│   │   │   ├── empty-state.blade.php ⭐
-│   │   │   └── loading-skeleton.blade.php ⭐
-│   │   └── tables/
-│   │       ├── table.blade.php
-│   │       └── pagination.blade.php
-│   ├── livewire/            (vistas Livewire)
-│   ├── inventory/
-│   ├── purchasing/
-│   ├── recipes/
-│   └── layouts/
-│       ├── app.blade.php
-│       ├── guest.blade.php
-│       └── components/
-│           ├── navbar.blade.php
-│           ├── sidebar.blade.php ⭐
-│           └── breadcrumb.blade.php
-└── js/
-    ├── alpine/              (Alpine.js components)
-    │   ├── validation.js ⭐
-    │   ├── search.js
-    │   └── modals.js
-    └── app.js
+鈹溾攢鈹€ views/
+鈹?  鈹溾攢鈹€ components/          (Blade components reusables) 猸?
+鈹?  鈹?  鈹溾攢鈹€ forms/
+鈹?  鈹?  鈹?  鈹溾攢鈹€ input.blade.php
+鈹?  鈹?  鈹?  鈹溾攢鈹€ select.blade.php
+鈹?  鈹?  鈹?  鈹斺攢鈹€ datepicker.blade.php
+鈹?  鈹?  鈹溾攢鈹€ ui/
+鈹?  鈹?  鈹?  鈹溾攢鈹€ toast.blade.php 猸?
+鈹?  鈹?  鈹?  鈹溾攢鈹€ modal.blade.php
+鈹?  鈹?  鈹?  鈹溾攢鈹€ card.blade.php
+鈹?  鈹?  鈹?  鈹溾攢鈹€ empty-state.blade.php 猸?
+鈹?  鈹?  鈹?  鈹斺攢鈹€ loading-skeleton.blade.php 猸?
+鈹?  鈹?  鈹斺攢鈹€ tables/
+鈹?  鈹?      鈹溾攢鈹€ table.blade.php
+鈹?  鈹?      鈹斺攢鈹€ pagination.blade.php
+鈹?  鈹溾攢鈹€ livewire/            (vistas Livewire)
+鈹?  鈹溾攢鈹€ inventory/
+鈹?  鈹溾攢鈹€ purchasing/
+鈹?  鈹溾攢鈹€ recipes/
+鈹?  鈹斺攢鈹€ layouts/
+鈹?      鈹溾攢鈹€ app.blade.php
+鈹?      鈹溾攢鈹€ guest.blade.php
+鈹?      鈹斺攢鈹€ components/
+鈹?          鈹溾攢鈹€ navbar.blade.php
+鈹?          鈹溾攢鈹€ sidebar.blade.php 猸?
+鈹?          鈹斺攢鈹€ breadcrumb.blade.php
+鈹斺攢鈹€ js/
+    鈹溾攢鈹€ alpine/              (Alpine.js components)
+    鈹?  鈹溾攢鈹€ validation.js 猸?
+    鈹?  鈹溾攢鈹€ search.js
+    鈹?  鈹斺攢鈹€ modals.js
+    鈹斺攢鈹€ app.js
 
 database/
-├── migrations/              (nuevas tablas)
-│   ├── 2025_11_01_create_stock_policies_table.php ⭐
-│   ├── 2025_11_01_create_replenishment_runs_table.php ⭐
-│   ├── 2025_11_01_create_recipe_versions_table.php ⭐
-│   ├── 2025_11_01_create_recipe_cost_snapshots_table.php ⭐
-│   └── 2025_11_01_create_production_batches_table.php
-└── seeders/
-    ├── PermissionsSeederV6.php ⭐
-    └── StockPoliciesSeeder.php
+鈹溾攢鈹€ migrations/              (nuevas tablas)
+鈹?  鈹溾攢鈹€ 2025_11_01_create_stock_policies_table.php 猸?
+鈹?  鈹溾攢鈹€ 2025_11_01_create_replenishment_runs_table.php 猸?
+鈹?  鈹溾攢鈹€ 2025_11_01_create_recipe_versions_table.php 猸?
+鈹?  鈹溾攢鈹€ 2025_11_01_create_recipe_cost_snapshots_table.php 猸?
+鈹?  鈹斺攢鈹€ 2025_11_01_create_production_batches_table.php
+鈹斺攢鈹€ seeders/
+    鈹溾攢鈹€ PermissionsSeederV6.php 猸?
+    鈹斺攢鈹€ StockPoliciesSeeder.php
 ```
 
 ---
@@ -372,126 +372,126 @@ database/
 
 ### 4.1 Arquitectura de Permisos (Spatie)
 
-**Jerarquía**:
+**Jerarqu铆a**:
 ```
 Usuario
-  ↓
+  鈫?
 Roles (plantillas)
-  ↓
-Permisos (atómicos)
-  ↓
-Gates (autorización)
-  ↓
+  鈫?
+Permisos (at贸micos)
+  鈫?
+Gates (autorizaci贸n)
+  鈫?
 UI Gating (mostrar/ocultar)
 ```
 
-### 4.2 Permisos Atómicos (44 permisos)
+### 4.2 Permisos At贸micos (44 permisos)
 
 #### **Inventario** (14 permisos)
 ```
-inventory.items.view              → Ver catálogo de ítems
-inventory.items.manage            → Crear/Editar ítems
-inventory.uoms.view               → Ver presentaciones
-inventory.uoms.manage             → Gestionar presentaciones
-inventory.uoms.convert.manage     → Gestionar conversiones
-inventory.receptions.view         → Ver recepciones
-inventory.receptions.post         → Postear recepciones (mov_inv)
-inventory.counts.view             → Ver conteos
-inventory.counts.open             → Abrir conteo
-inventory.counts.close            → Cerrar conteo (valida v6)
-inventory.moves.view              → Ver movimientos
-inventory.moves.adjust            → Ajuste manual
-inventory.snapshot.generate       → Generar snapshot diario
-inventory.snapshot.view           → Ver snapshots
+inventory.items.view              鈫?Ver cat谩logo de 铆tems
+inventory.items.manage            鈫?Crear/Editar 铆tems
+inventory.uoms.view               鈫?Ver presentaciones
+inventory.uoms.manage             鈫?Gestionar presentaciones
+inventory.uoms.convert.manage     鈫?Gestionar conversiones
+inventory.receptions.view         鈫?Ver recepciones
+inventory.receptions.post         鈫?Postear recepciones (mov_inv)
+inventory.counts.view             鈫?Ver conteos
+inventory.counts.open             鈫?Abrir conteo
+inventory.counts.close            鈫?Cerrar conteo (valida v6)
+inventory.moves.view              鈫?Ver movimientos
+inventory.moves.adjust            鈫?Ajuste manual
+inventory.snapshot.generate       鈫?Generar snapshot diario
+inventory.snapshot.view           鈫?Ver snapshots
 ```
 
 #### **Compras** (3 permisos)
 ```
-purchasing.suggested.view         → Ver pedidos sugeridos
-purchasing.orders.manage          → Crear/Editar órdenes
-purchasing.orders.approve         → Aprobar órdenes
+purchasing.suggested.view         鈫?Ver pedidos sugeridos
+purchasing.orders.manage          鈫?Crear/Editar 贸rdenes
+purchasing.orders.approve         鈫?Aprobar 贸rdenes
 ```
 
 #### **Recetas/Costos** (4 permisos)
 ```
-recipes.view                      → Ver recetas
-recipes.manage                    → Crear/Editar recetas
-recipes.costs.recalc.schedule     → Cron recalcular costos (01:10)
-recipes.costs.snapshot            → Snapshot manual de costo
+recipes.view                      鈫?Ver recetas
+recipes.manage                    鈫?Crear/Editar recetas
+recipes.costs.recalc.schedule     鈫?Cron recalcular costos (01:10)
+recipes.costs.snapshot            鈫?Snapshot manual de costo
 ```
 
 #### **POS** (4 permisos)
 ```
-pos.map.view                      → Ver mapeos POS
-pos.map.manage                    → Gestionar mapeos
-pos.audit.run                     → Ejecutar auditoría SQL v6
-pos.reprocess.run                 → Reprocesar tickets
+pos.map.view                      鈫?Ver mapeos POS
+pos.map.manage                    鈫?Gestionar mapeos
+pos.audit.run                     鈫?Ejecutar auditor铆a SQL v6
+pos.reprocess.run                 鈫?Reprocesar tickets
 ```
 
-#### **Producción** (2 permisos)
+#### **Producci贸n** (2 permisos)
 ```
-production.orders.view            → Ver órdenes de producción
-production.orders.close           → Cerrar OP (consume MP)
+production.orders.view            鈫?Ver 贸rdenes de producci贸n
+production.orders.close           鈫?Cerrar OP (consume MP)
 ```
 
 #### **Caja** (2 permisos)
 ```
-cashier.preclose.run              → Ejecutar precorte
-cashier.close.run                 → Corte final
+cashier.preclose.run              鈫?Ejecutar precorte
+cashier.close.run                 鈫?Corte final
 ```
 
 #### **Reportes** (2 permisos)
 ```
-reports.kpis.view                 → Ver KPIs/dashboard
-reports.audit.view                → Ver auditoría
+reports.kpis.view                 鈫?Ver KPIs/dashboard
+reports.audit.view                鈫?Ver auditor铆a
 ```
 
 #### **Sistema** (3 permisos)
 ```
-system.users.view                 → Ver usuarios
-system.templates.manage           → Gestionar plantillas de roles
-system.permissions.direct.manage  → Asignar permisos especiales
+system.users.view                 鈫?Ver usuarios
+system.templates.manage           鈫?Gestionar plantillas de roles
+system.permissions.direct.manage  鈫?Asignar permisos especiales
 ```
 
 ### 4.3 Plantillas de Roles (7 roles predefinidos)
 
 **1. Almacenista** (6 permisos):
 ```
-✅ inventory.items.view
-✅ inventory.counts.view
-✅ inventory.counts.open
-✅ inventory.counts.close
-✅ inventory.moves.view
-✅ inventory.snapshot.view
+鉁?inventory.items.view
+鉁?inventory.counts.view
+鉁?inventory.counts.open
+鉁?inventory.counts.close
+鉁?inventory.moves.view
+鉁?inventory.snapshot.view
 ```
 
-**Caso de uso**: Operador de almacén que realiza conteos físicos.
+**Caso de uso**: Operador de almac茅n que realiza conteos f铆sicos.
 
 ---
 
-**2. Jefe de Almacén** (9 permisos):
+**2. Jefe de Almac茅n** (9 permisos):
 ```
-✅ inventory.items.view
-✅ inventory.counts.view
-✅ inventory.counts.open
-✅ inventory.counts.close
-✅ inventory.moves.view
-✅ inventory.moves.adjust          ← Ajustes manuales
-✅ inventory.receptions.view
-✅ inventory.receptions.post       ← Posteo de recepciones
-✅ pos.map.view
+鉁?inventory.items.view
+鉁?inventory.counts.view
+鉁?inventory.counts.open
+鉁?inventory.counts.close
+鉁?inventory.moves.view
+鉁?inventory.moves.adjust          鈫?Ajustes manuales
+鉁?inventory.receptions.view
+鉁?inventory.receptions.post       鈫?Posteo de recepciones
+鉁?pos.map.view
 ```
 
-**Caso de uso**: Supervisor de almacén con capacidad de ajustar inventario.
+**Caso de uso**: Supervisor de almac茅n con capacidad de ajustar inventario.
 
 ---
 
 **3. Compras** (4 permisos):
 ```
-✅ purchasing.suggested.view
-✅ purchasing.orders.manage
-✅ purchasing.orders.approve       ← Autorización de compras
-✅ inventory.receptions.view
+鉁?purchasing.suggested.view
+鉁?purchasing.orders.manage
+鉁?purchasing.orders.approve       鈫?Autorizaci贸n de compras
+鉁?inventory.receptions.view
 ```
 
 **Caso de uso**: Departamento de compras, manejo de pedidos y proveedores.
@@ -500,34 +500,34 @@ system.permissions.direct.manage  → Asignar permisos especiales
 
 **4. Costos / Recetas** (5 permisos):
 ```
-✅ recipes.view
-✅ recipes.manage
-✅ recipes.costs.recalc.schedule   ← Cron automático
-✅ recipes.costs.snapshot          ← Snapshot manual
-✅ pos.map.manage                  ← Mapeo menú
+鉁?recipes.view
+鉁?recipes.manage
+鉁?recipes.costs.recalc.schedule   鈫?Cron autom谩tico
+鉁?recipes.costs.snapshot          鈫?Snapshot manual
+鉁?pos.map.manage                  鈫?Mapeo men煤
 ```
 
 **Caso de uso**: Chef o gerente de costos que gestiona recetas y precios.
 
 ---
 
-**5. Producción** (3 permisos):
+**5. Producci贸n** (3 permisos):
 ```
-✅ production.orders.view
-✅ production.orders.close         ← Cierre de OP
-✅ inventory.items.view
+鉁?production.orders.view
+鉁?production.orders.close         鈫?Cierre de OP
+鉁?inventory.items.view
 ```
 
-**Caso de uso**: Operador de producción (si aplica en el negocio).
+**Caso de uso**: Operador de producci贸n (si aplica en el negocio).
 
 ---
 
-**6. Auditoría / Reportes** (4 permisos):
+**6. Auditor铆a / Reportes** (4 permisos):
 ```
-✅ reports.kpis.view
-✅ reports.audit.view
-✅ pos.audit.run                   ← Auditoría SQL v6
-✅ inventory.snapshot.view
+鉁?reports.kpis.view
+鉁?reports.audit.view
+鉁?pos.audit.run                   鈫?Auditor铆a SQL v6
+鉁?inventory.snapshot.view
 ```
 
 **Caso de uso**: Contador o gerente general que revisa reportes.
@@ -536,10 +536,10 @@ system.permissions.direct.manage  → Asignar permisos especiales
 
 **7. Administrador del Sistema** (wildcard):
 ```
-✅ * (todos los permisos)
+鉁?* (todos los permisos)
 ```
 
-**Caso de uso**: IT o dueño con acceso total.
+**Caso de uso**: IT o due帽o con acceso total.
 
 ---
 
@@ -549,46 +549,46 @@ system.permissions.direct.manage  → Asignar permisos especiales
 | Ruta/Elemento | Permiso Requerido | Tipo |
 |---------------|-------------------|------|
 | `/inventario/items` | `inventory.items.view` | Vista |
-| → Botón "Nuevo Ítem" | `inventory.items.manage` | Acción |
-| → Acción "Editar" | `inventory.items.manage` | Acción |
-| → Acción "Ajuste manual" | `inventory.moves.adjust` | Acción |
+| 鈫?Bot贸n "Nuevo 脥tem" | `inventory.items.manage` | Acci贸n |
+| 鈫?Acci贸n "Editar" | `inventory.items.manage` | Acci贸n |
+| 鈫?Acci贸n "Ajuste manual" | `inventory.moves.adjust` | Acci贸n |
 | `/inventario/recepciones` | `inventory.receptions.view` | Vista |
-| → Botón "Postear" | `inventory.receptions.post` | Acción |
+| 鈫?Bot贸n "Postear" | `inventory.receptions.post` | Acci贸n |
 | `/inventario/conteos` | `inventory.counts.view` | Vista |
-| → Botón "Abrir conteo" | `inventory.counts.open` | Acción |
-| → Botón "Cerrar conteo" | `inventory.counts.close` | Acción |
+| 鈫?Bot贸n "Abrir conteo" | `inventory.counts.open` | Acci贸n |
+| 鈫?Bot贸n "Cerrar conteo" | `inventory.counts.close` | Acci贸n |
 | `/inventario/snapshot` | `inventory.snapshot.view` | Vista |
-| → Botón "Generar snapshot" | `inventory.snapshot.generate` | Acción |
+| 鈫?Bot贸n "Generar snapshot" | `inventory.snapshot.generate` | Acci贸n |
 
 #### **POS**
 | Ruta/Elemento | Permiso Requerido | Tipo |
 |---------------|-------------------|------|
 | `/pos/map` | `pos.map.view` | Vista |
-| → Botón "Nuevo mapeo" | `pos.map.manage` | Acción |
-| → Acción "Editar mapeo" | `pos.map.manage` | Acción |
-| `/pos/auditoria` | `pos.audit.run` | Vista + Acción |
-| → Botón "Ejecutar auditoría SQL v6" | `pos.audit.run` | Acción |
+| 鈫?Bot贸n "Nuevo mapeo" | `pos.map.manage` | Acci贸n |
+| 鈫?Acci贸n "Editar mapeo" | `pos.map.manage` | Acci贸n |
+| `/pos/auditoria` | `pos.audit.run` | Vista + Acci贸n |
+| 鈫?Bot贸n "Ejecutar auditor铆a SQL v6" | `pos.audit.run` | Acci贸n |
 
 #### **Recetas / Costos**
 | Ruta/Elemento | Permiso Requerido | Tipo |
 |---------------|-------------------|------|
 | `/recetas` | `recipes.view` | Vista |
-| → Botón "Nueva receta" | `recipes.manage` | Acción |
-| → Acción "Snapshot costo" | `recipes.costs.snapshot` | Acción |
+| 鈫?Bot贸n "Nueva receta" | `recipes.manage` | Acci贸n |
+| 鈫?Acci贸n "Snapshot costo" | `recipes.costs.snapshot` | Acci贸n |
 
 #### **Compras**
 | Ruta/Elemento | Permiso Requerido | Tipo |
 |---------------|-------------------|------|
 | `/compras/sugerido` | `purchasing.suggested.view` | Vista |
 | `/compras/ordenes` | `purchasing.orders.manage` | Vista |
-| → Botón "Nueva orden" | `purchasing.orders.manage` | Acción |
-| → Botón "Aprobar" | `purchasing.orders.approve` | Acción |
+| 鈫?Bot贸n "Nueva orden" | `purchasing.orders.manage` | Acci贸n |
+| 鈫?Bot贸n "Aprobar" | `purchasing.orders.approve` | Acci贸n |
 
-#### **Producción**
+#### **Producci贸n**
 | Ruta/Elemento | Permiso Requerido | Tipo |
 |---------------|-------------------|------|
 | `/produccion/ordenes` | `production.orders.view` | Vista |
-| → Botón "Cerrar OP" | `production.orders.close` | Acción |
+| 鈫?Bot贸n "Cerrar OP" | `production.orders.close` | Acci贸n |
 
 #### **Reportes**
 | Ruta/Elemento | Permiso Requerido | Tipo |
@@ -603,7 +603,7 @@ system.permissions.direct.manage  → Asignar permisos especiales
 | `/sistema/plantillas` | `system.templates.manage` | Vista + CRUD |
 | `/sistema/usuarios/{id}/permisos` | `system.permissions.direct.manage` | Vista + Asignar |
 
-### 4.5 Implementación en Código
+### 4.5 Implementaci贸n en C贸digo
 
 **Middleware (route-level)**:
 ```php
@@ -618,7 +618,7 @@ Route::middleware(['auth', 'permission:inventory.items.view'])
 ```blade
 {{-- resources/views/inventory/items.blade.php --}}
 @can('inventory.items.manage')
-    <button wire:click="createItem">Nuevo Ítem</button>
+    <button wire:click="createItem">Nuevo 脥tem</button>
 @endcan
 
 @cannot('inventory.items.manage')
@@ -632,10 +632,10 @@ Route::middleware(['auth', 'permission:inventory.items.view'])
 public function createItem()
 {
     if (!Gate::allows('inventory.items.manage')) {
-        abort(403, 'No tienes permiso para crear ítems.');
+        abort(403, 'No tienes permiso para crear 铆tems.');
     }
     
-    // Lógica...
+    // L贸gica...
 }
 ```
 
@@ -658,17 +658,17 @@ class InventoryPolicy
 
 ---
 
-## 5. ROADMAP DE IMPLEMENTACIÓN
+## 5. ROADMAP DE IMPLEMENTACI脫N
 
-### 5.1 Visión General (6 meses)
+### 5.1 Visi贸n General (6 meses)
 
 ```
 Mes 1: Sprint 0 + Sprint 1 (Inventario Base)
-Mes 2: Sprint 2 (Replenishment 🔥) + Sprint 2.5 (Reportes)
+Mes 2: Sprint 2 (Replenishment 馃敟) + Sprint 2.5 (Reportes)
 Mes 3: Sprint 3 (Recepciones Avanzadas) + Sprint 4 (Recetas)
-Mes 4: Sprint 5 (Transferencias) + Sprint 6 (Producción)
+Mes 4: Sprint 5 (Transferencias) + Sprint 6 (Producci贸n)
 Mes 5: Sprint 7 (Mobile) + Optimizaciones
-Mes 6: Testing QA + Capacitación + Go-Live
+Mes 6: Testing QA + Capacitaci贸n + Go-Live
 ```
 
 ### 5.2 Sprints Detallados
@@ -676,13 +676,13 @@ Mes 6: Testing QA + Capacitación + Go-Live
 ---
 
 #### **SPRINT 0: Foundation** (1-2 semanas)
-**Objetivo**: Crear base sólida de componentes y design system
+**Objetivo**: Crear base s贸lida de componentes y design system
 
 **Tareas**:
-1. ✅ **Design System** (5 días)
+1. 鉁?**Design System** (5 d铆as)
    - [ ] Tailwind config personalizado
    - [ ] Paleta de colores consistente
-   - [ ] Tipografía y espaciado
+   - [ ] Tipograf铆a y espaciado
    - [ ] Componentes base:
      - [ ] `<x-button>`
      - [ ] `<x-input>`
@@ -690,79 +690,79 @@ Mes 6: Testing QA + Capacitación + Go-Live
      - [ ] `<x-textarea>`
      - [ ] `<x-datepicker>`
      - [ ] `<x-modal>`
-     - [ ] `<x-toast>` ⭐
+     - [ ] `<x-toast>` 猸?
      - [ ] `<x-card>`
      - [ ] `<x-table>`
-     - [ ] `<x-empty-state>` ⭐
-     - [ ] `<x-loading-skeleton>` ⭐
+     - [ ] `<x-empty-state>` 猸?
+     - [ ] `<x-loading-skeleton>` 猸?
 
-2. ✅ **Sistema de Validación Unificado** (3 días)
-   - [ ] Validación inline con Alpine.js ⭐
+2. 鉁?**Sistema de Validaci贸n Unificado** (3 d铆as)
+   - [ ] Validaci贸n inline con Alpine.js 猸?
    - [ ] Mensajes de error consistentes
    - [ ] Highlight de campos con error
    - [ ] Tooltips de ayuda
 
-3. ✅ **Sistema de Notificaciones** (2 días)
-   - [ ] Toast notifications (éxito/error/warning/info)
+3. 鉁?**Sistema de Notificaciones** (2 d铆as)
+   - [ ] Toast notifications (茅xito/error/warning/info)
    - [ ] Alpine.js store para toasts
    - [ ] Auto-dismiss configurable
 
-4. ✅ **Auditoría Base** (2 días)
-   - [ ] Middleware de auditoría
+4. 鉁?**Auditor铆a Base** (2 d铆as)
+   - [ ] Middleware de auditor铆a
    - [ ] Log de errores estructurado
-   - [ ] Eventos CRUD básicos
+   - [ ] Eventos CRUD b谩sicos
 
 **Entregables**:
-- ✅ Guía de diseño (Figma/PDF)
-- ✅ Storybook de componentes
-- ✅ Sistema de validación funcionando
-- ✅ PR: `feat/design-system-v7`
+- 鉁?Gu铆a de dise帽o (Figma/PDF)
+- 鉁?Storybook de componentes
+- 鉁?Sistema de validaci贸n funcionando
+- 鉁?PR: `feat/design-system-v7`
 
-**Criterios de Aceptación**:
-- [ ] Todos los componentes funcionan en producción
-- [ ] Guía documentada con ejemplos
-- [ ] Tests unitarios de componentes críticos
+**Criterios de Aceptaci贸n**:
+- [ ] Todos los componentes funcionan en producci贸n
+- [ ] Gu铆a documentada con ejemplos
+- [ ] Tests unitarios de componentes cr铆ticos
 
 ---
 
 #### **SPRINT 1: Inventario Base + Costos** (2 semanas)
-**Objetivo**: Inventario sólido con costos actualizados
+**Objetivo**: Inventario s贸lido con costos actualizados
 
 **Tareas**:
 
-1. ✅ **Alta de Ítems (Wizard 2 Pasos)** (5 días)
-   - [ ] Paso 1: Datos maestros (nombre, categoría, UOM base)
+1. 鉁?**Alta de 脥tems (Wizard 2 Pasos)** (5 d铆as)
+   - [ ] Paso 1: Datos maestros (nombre, categor铆a, UOM base)
    - [ ] Paso 2: Presentaciones/Proveedor (opcional)
-   - [ ] Validación inline por campo ⭐
-   - [ ] Preview de código CAT-SUB-##### antes de guardar
-   - [ ] Botón "Crear y seguir con presentaciones"
+   - [ ] Validaci贸n inline por campo 猸?
+   - [ ] Preview de c贸digo CAT-SUB-##### antes de guardar
+   - [ ] Bot贸n "Crear y seguir con presentaciones"
    - [ ] Auto-sugerencias de nombres normalizados
 
-2. ✅ **Proveedor-Insumo (Presentaciones)** (3 días)
+2. 鉁?**Proveedor-Insumo (Presentaciones)** (3 d铆as)
    - [ ] CRUD completo
-   - [ ] Plantilla rápida desde recepción
-   - [ ] Auto-conversión UOM base ↔ compra
-   - [ ] Tooltip mostrando factor de conversión
+   - [ ] Plantilla r谩pida desde recepci贸n
+   - [ ] Auto-conversi贸n UOM base 鈫?compra
+   - [ ] Tooltip mostrando factor de conversi贸n
 
-3. ✅ **Recepciones Posteables** (5 días)
-   - [ ] Estados: Pre-validada → Aprobada → Posteada
-   - [ ] Snapshot de costo al postear ⭐
-   - [ ] Adjuntos múltiples (drag & drop)
+3. 鉁?**Recepciones Posteables** (5 d铆as)
+   - [ ] Estados: Pre-validada 鈫?Aprobada 鈫?Posteada
+   - [ ] Snapshot de costo al postear 猸?
+   - [ ] Adjuntos m煤ltiples (drag & drop)
    - [ ] Tolerancias de qty (alerta si discrepancia > X%)
-   - [ ] Genera `mov_inv` automáticamente
+   - [ ] Genera `mov_inv` autom谩ticamente
 
-4. ✅ **UOM Assistant** (2 días)
-   - [ ] Creación inversa automática (si creo kg→g, crear g→kg)
-   - [ ] Validación de circularidad
-   - [ ] Preview de conversión
+4. 鉁?**UOM Assistant** (2 d铆as)
+   - [ ] Creaci贸n inversa autom谩tica (si creo kg鈫抔, crear g鈫択g)
+   - [ ] Validaci贸n de circularidad
+   - [ ] Preview de conversi贸n
 
 **Modelo de Datos Necesario**:
 ```sql
 -- Ya existe en BD:
-✅ selemti.items
-✅ selemti.inventory_batch
+鉁?selemti.items
+鉁?selemti.inventory_batch
 
--- Añadir:
+-- A帽adir:
 CREATE TABLE selemti.vendor_pricelist (
     id BIGSERIAL PRIMARY KEY,
     proveedor_id BIGINT REFERENCES selemti.proveedores(id),
@@ -796,70 +796,70 @@ CREATE TABLE selemti.insumo_alias (
 ```
 
 **Entregables**:
-- ✅ Wizard de ítems funcionando
-- ✅ Recepciones con snapshot de costo
-- ✅ UOM con conversiones automáticas
-- ✅ PR: `feat/inventory-base-v7`
+- 鉁?Wizard de 铆tems funcionando
+- 鉁?Recepciones con snapshot de costo
+- 鉁?UOM con conversiones autom谩ticas
+- 鉁?PR: `feat/inventory-base-v7`
 
-**Criterios de Aceptación**:
-- [ ] Usuario puede crear ítem → añadir presentación → recepcionar con conversión automática → ver lote/caducidad → costo base actualizado
-- [ ] Tests de integración pasando
+**Criterios de Aceptaci贸n**:
+- [ ] Usuario puede crear 铆tem 鈫?a帽adir presentaci贸n 鈫?recepcionar con conversi贸n autom谩tica 鈫?ver lote/caducidad 鈫?costo base actualizado
+- [ ] Tests de integraci贸n pasando
 - [ ] Validaciones inline funcionando
 
 ---
 
-#### **SPRINT 2: Replenishment + Políticas** 🔥 (2-3 semanas)
-**Objetivo**: Motor de sugerencias de pedidos (corazón del negocio)
+#### **SPRINT 2: Replenishment + Pol铆ticas** 馃敟 (2-3 semanas)
+**Objetivo**: Motor de sugerencias de pedidos (coraz贸n del negocio)
 
 **Tareas**:
 
-1. ✅ **UI de Políticas de Stock** (3 días)
-   - [ ] CRUD por ítem/sucursal
+1. 鉁?**UI de Pol铆ticas de Stock** (3 d铆as)
+   - [ ] CRUD por 铆tem/sucursal
    - [ ] Campos:
-     - [ ] Stock mínimo
-     - [ ] Stock máximo
+     - [ ] Stock m铆nimo
+     - [ ] Stock m谩ximo
      - [ ] Safety stock
-     - [ ] Lead time (días)
-     - [ ] Método de replenishment (dropdown)
+     - [ ] Lead time (d铆as)
+     - [ ] M茅todo de replenishment (dropdown)
    - [ ] Bulk import CSV
    - [ ] Export template
 
-2. ✅ **Motor de Replenishment** (7 días) ⭐⭐⭐
-   - [ ] Método 1: Min-Max básico
+2. 鉁?**Motor de Replenishment** (7 d铆as) 猸愨瓙猸?
+   - [ ] M茅todo 1: Min-Max b谩sico
      ```
      Si stock_actual < min:
          sugerido = max - stock_actual
      ```
-   - [ ] Método 2: Simple Moving Average (SMA)
+   - [ ] M茅todo 2: Simple Moving Average (SMA)
      ```
-     consumo_promedio = SUM(consumo_últimos_n_días) / n
+     consumo_promedio = SUM(consumo_煤ltimos_n_d铆as) / n
      sugerido = (consumo_promedio * lead_time) + safety_stock - stock_actual
      ```
-   - [ ] Método 3: Consumo POS (últimos n días)
+   - [ ] M茅todo 3: Consumo POS (煤ltimos n d铆as)
      ```
      Leer de inv_consumo_pos_det agrupado
-     sugerido = proyección basada en consumo
+     sugerido = proyecci贸n basada en consumo
      ```
-   - [ ] Integración con POS (read-only desde `public.*`)
-   - [ ] Validación: considerar órdenes pendientes
-   - [ ] Cálculo de cobertura (días)
+   - [ ] Integraci贸n con POS (read-only desde `public.*`)
+   - [ ] Validaci贸n: considerar 贸rdenes pendientes
+   - [ ] C谩lculo de cobertura (d铆as)
 
-3. ✅ **UI de Pedidos Sugeridos** (4 días)
-   - [ ] Botón "Generar Sugerencias"
+3. 鉁?**UI de Pedidos Sugeridos** (4 d铆as)
+   - [ ] Bot贸n "Generar Sugerencias"
    - [ ] Grilla editable con:
-     - [ ] Ítem
+     - [ ] 脥tem
      - [ ] Stock actual
      - [ ] Stock min/max
      - [ ] Consumo promedio
      - [ ] Qty sugerida (editable)
-     - [ ] Cobertura (días)
-     - [ ] Razón del cálculo (tooltip) ⭐
-   - [ ] Filtros: sucursal, categoría, proveedor
-   - [ ] Conversión 1-click: Sugerencia → Solicitud → Orden
+     - [ ] Cobertura (d铆as)
+     - [ ] Raz贸n del c谩lculo (tooltip) 猸?
+   - [ ] Filtros: sucursal, categor铆a, proveedor
+   - [ ] Conversi贸n 1-click: Sugerencia 鈫?Solicitud 鈫?Orden
 
-4. ✅ **Simulador de Costo** (2 días)
-   - [ ] "¿Qué pasa si ordeno X cantidad?"
-   - [ ] Proyección de cobertura
+4. 鉁?**Simulador de Costo** (2 d铆as)
+   - [ ] "驴Qu茅 pasa si ordeno X cantidad?"
+   - [ ] Proyecci贸n de cobertura
    - [ ] Alertas de ruptura de stock (si lead time > cobertura)
 
 **Modelo de Datos**:
@@ -902,12 +902,12 @@ CREATE TABLE selemti.replenishment_lines (
     qty_sugerida NUMERIC(10,3),
     qty_ajustada NUMERIC(10,3), -- Si usuario edita
     cobertura_dias NUMERIC(5,1),
-    razon_calculo TEXT, -- "Min-Max: stock bajo mínimo"
+    razon_calculo TEXT, -- "Min-Max: stock bajo m铆nimo"
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
-**Job Asíncrono**:
+**Job As铆ncrono**:
 ```php
 // app/Jobs/GenerateReplenishmentSuggestions.php
 class GenerateReplenishmentSuggestions implements ShouldQueue
@@ -928,17 +928,17 @@ class GenerateReplenishmentSuggestions implements ShouldQueue
 ```
 
 **Entregables**:
-- ✅ Motor de replenishment funcionando
-- ✅ Políticas de stock configurables
-- ✅ UI de sugerencias con razón del cálculo
-- ✅ PR: `feat/replenishment-engine-v7`
+- 鉁?Motor de replenishment funcionando
+- 鉁?Pol铆ticas de stock configurables
+- 鉁?UI de sugerencias con raz贸n del c谩lculo
+- 鉁?PR: `feat/replenishment-engine-v7`
 
-**Criterios de Aceptación**:
+**Criterios de Aceptaci贸n**:
 - [ ] "Generar Sugerencias" llena grilla con cantidades calculadas
-- [ ] Usuario puede ver razón del cálculo (tooltip)
+- [ ] Usuario puede ver raz贸n del c谩lculo (tooltip)
 - [ ] Sugerencias se convierten a solicitud/orden
-- [ ] Integración POS funciona (read-only)
-- [ ] Tests de motor con múltiples métodos
+- [ ] Integraci贸n POS funciona (read-only)
+- [ ] Tests de motor con m煤ltiples m茅todos
 
 ---
 
@@ -947,36 +947,36 @@ class GenerateReplenishmentSuggestions implements ShouldQueue
 
 **Tareas**:
 
-1. ✅ **Export de Reportes** (3 días) ⭐
+1. 鉁?**Export de Reportes** (3 d铆as) 猸?
    - [ ] Export CSV (todos los reportes)
    - [ ] Export PDF (reportes principales)
    - [ ] Usar Laravel Excel o TCPDF
-   - [ ] Botón "Exportar" en cada reporte
+   - [ ] Bot贸n "Exportar" en cada reporte
 
-2. ✅ **Drill-down en Dashboard** (2 días)
-   - [ ] Click en KPI → detalle
-   - [ ] Ejemplo: "Ventas $50k" → lista de tickets
+2. 鉁?**Drill-down en Dashboard** (2 d铆as)
+   - [ ] Click en KPI 鈫?detalle
+   - [ ] Ejemplo: "Ventas $50k" 鈫?lista de tickets
 
-3. ✅ **Búsqueda Global (Ctrl+K)** (2 días) ⭐
+3. 鉁?**B煤squeda Global (Ctrl+K)** (2 d铆as) 猸?
    - [ ] Alpine.js modal
-   - [ ] Busca: ítems, recetas, órdenes, usuarios
+   - [ ] Busca: 铆tems, recetas, 贸rdenes, usuarios
    - [ ] Resultados agrupados por tipo
-   - [ ] Navegación rápida
+   - [ ] Navegaci贸n r谩pida
 
-4. ✅ **Acciones en Lote** (1 día)
+4. 鉁?**Acciones en Lote** (1 d铆a)
    - [ ] Checkbox en tablas
    - [ ] "Seleccionar todos"
    - [ ] Acciones: Eliminar, Activar/Desactivar, Export
 
 **Entregables**:
-- ✅ Exports CSV/PDF funcionando
-- ✅ Búsqueda global Ctrl+K
-- ✅ Acciones en lote en tablas
-- ✅ PR: `feat/reports-quick-wins-v7`
+- 鉁?Exports CSV/PDF funcionando
+- 鉁?B煤squeda global Ctrl+K
+- 鉁?Acciones en lote en tablas
+- 鉁?PR: `feat/reports-quick-wins-v7`
 
-**Criterios de Aceptación**:
+**Criterios de Aceptaci贸n**:
 - [ ] Usuario puede exportar cualquier reporte
-- [ ] Búsqueda global responde < 500ms
+- [ ] B煤squeda global responde < 500ms
 - [ ] Acciones en lote funcionan en todas las tablas
 
 ---
@@ -986,33 +986,33 @@ class GenerateReplenishmentSuggestions implements ShouldQueue
 
 **Tareas**:
 
-1. ✅ **Auto-lookup por Código Proveedor** (2 días)
-   - [ ] Input SKU proveedor → busca ítem
-   - [ ] Suggest automático
+1. 鉁?**Auto-lookup por C贸digo Proveedor** (2 d铆as)
+   - [ ] Input SKU proveedor 鈫?busca 铆tem
+   - [ ] Suggest autom谩tico
 
-2. ✅ **Conversión Automática con Tooltip** (2 días)
-   - [ ] UOM compra → UOM base (automático)
+2. 鉁?**Conversi贸n Autom谩tica con Tooltip** (2 d铆as)
+   - [ ] UOM compra 鈫?UOM base (autom谩tico)
    - [ ] Tooltip mostrando factor: "1 caja = 12 unidades"
 
-3. ✅ **Adjuntos Múltiples** (3 días)
+3. 鉁?**Adjuntos M煤ltiples** (3 d铆as)
    - [ ] Drag & drop
-   - [ ] Preview de imágenes
+   - [ ] Preview de im谩genes
    - [ ] Storage en `storage/app/recepciones/`
 
-4. ✅ **OCR para Lote/Caducidad** (4 días) - OPCIONAL
+4. 鉁?**OCR para Lote/Caducidad** (4 d铆as) - OPCIONAL
    - [ ] Tesseract.js o servicio cloud
    - [ ] Extraer fecha y lote de foto
-   - [ ] Validación manual
+   - [ ] Validaci贸n manual
 
-5. ✅ **Plantillas de Recepción** (2 días)
-   - [ ] Guardar recepción frecuente como plantilla
-   - [ ] "Cargar plantilla" → pre-llena líneas
+5. 鉁?**Plantillas de Recepci贸n** (2 d铆as)
+   - [ ] Guardar recepci贸n frecuente como plantilla
+   - [ ] "Cargar plantilla" 鈫?pre-llena l铆neas
 
 **Entregables**:
-- ✅ Recepciones con adjuntos
-- ✅ Conversión automática UOM
-- ✅ Plantillas funcionando
-- ✅ PR: `feat/advanced-receptions-v7`
+- 鉁?Recepciones con adjuntos
+- 鉁?Conversi贸n autom谩tica UOM
+- 鉁?Plantillas funcionando
+- 鉁?PR: `feat/advanced-receptions-v7`
 
 ---
 
@@ -1021,25 +1021,25 @@ class GenerateReplenishmentSuggestions implements ShouldQueue
 
 **Tareas**:
 
-1. ✅ **Versionado de Recetas** (5 días) ⭐
-   - [ ] `recipe_version` con número incremental
-   - [ ] Al editar receta → crear nueva versión
+1. 鉁?**Versionado de Recetas** (5 d铆as) 猸?
+   - [ ] `recipe_version` con n煤mero incremental
+   - [ ] Al editar receta 鈫?crear nueva versi贸n
    - [ ] Historial de versiones (UI)
    - [ ] Comparador de versiones (diff)
 
-2. ✅ **Snapshot de Costo** (3 días)
-   - [ ] Al cambiar costo de insumo → recalcular todas las recetas que lo usan
-   - [ ] Job asíncrono: `RecalculateRecipeCosts`
+2. 鉁?**Snapshot de Costo** (3 d铆as)
+   - [ ] Al cambiar costo de insumo 鈫?recalcular todas las recetas que lo usan
+   - [ ] Job as铆ncrono: `RecalculateRecipeCosts`
    - [ ] Guardar en `recipe_cost_snapshot`
-   - [ ] UI: historial de costos con gráfica
+   - [ ] UI: historial de costos con gr谩fica
 
-3. ✅ **Alertas de Costo** (2 días)
+3. 鉁?**Alertas de Costo** (2 d铆as)
    - [ ] Umbral configurable (ej: +5%)
-   - [ ] Notificación en dashboard
+   - [ ] Notificaci贸n en dashboard
    - [ ] Email opcional
 
-4. ✅ **Impacto de Costo** (3 días)
-   - [ ] Simulador: "¿Qué pasa si sube 10% la leche?"
+4. 鉁?**Impacto de Costo** (3 d铆as)
+   - [ ] Simulador: "驴Qu茅 pasa si sube 10% la leche?"
    - [ ] Tabla de impacto por receta
    - [ ] Sugerencia de ajuste de precio
 
@@ -1097,7 +1097,7 @@ class RecalculateRecipeCosts implements ShouldQueue
                 'trigger_reason' => 'INGREDIENT_COST_CHANGE'
             ]);
             
-            // Alerta si cambió > 5%
+            // Alerta si cambi贸 > 5%
             if ($this->costChangedMoreThan($recipe, 5)) {
                 event(new CostAlertTriggered($recipe, $newCost));
             }
@@ -1107,36 +1107,36 @@ class RecalculateRecipeCosts implements ShouldQueue
 ```
 
 **Entregables**:
-- ✅ Versionado de recetas
-- ✅ Snapshots automáticos
-- ✅ Alertas de costo funcionando
-- ✅ PR: `feat/recipe-versioning-costs-v7`
+- 鉁?Versionado de recetas
+- 鉁?Snapshots autom谩ticos
+- 鉁?Alertas de costo funcionando
+- 鉁?PR: `feat/recipe-versioning-costs-v7`
 
-**Criterios de Aceptación**:
-- [ ] Al cambiar costo de insumo, recetas se recalculan automáticamente
-- [ ] Usuario ve historial de costos con gráfica
+**Criterios de Aceptaci贸n**:
+- [ ] Al cambiar costo de insumo, recetas se recalculan autom谩ticamente
+- [ ] Usuario ve historial de costos con gr谩fica
 - [ ] Alertas se generan cuando costo cambia > umbral
 - [ ] Simulador de impacto funciona
 
 ---
 
 #### **SPRINT 5: Transferencias + Discrepancias** (1 semana)
-**Objetivo**: Transferencias con recepción y ajustes
+**Objetivo**: Transferencias con recepci贸n y ajustes
 
 **Tareas**:
 
-1. ✅ **Flujo 3 Estados** (3 días)
-   - [ ] Borrador → Despachada → Recibida
-   - [ ] Al despachar: descuenta origen, crea "en tránsito"
+1. 鉁?**Flujo 3 Estados** (3 d铆as)
+   - [ ] Borrador 鈫?Despachada 鈫?Recibida
+   - [ ] Al despachar: descuenta origen, crea "en tr谩nsito"
    - [ ] Al recibir: abona destino por lote
 
-2. ✅ **Confirmación Parcial** (2 días)
+2. 鉁?**Confirmaci贸n Parcial** (2 d铆as)
    - [ ] Recibir menos de lo enviado
-   - [ ] Razón de discrepancia (dropdown)
+   - [ ] Raz贸n de discrepancia (dropdown)
 
-3. ✅ **Botón "Recibir" en Destino** (2 días)
+3. 鉁?**Bot贸n "Recibir" en Destino** (2 d铆as)
    - [ ] Sucursal destino puede ver transferencias pendientes
-   - [ ] Click "Recibir" → posteo
+   - [ ] Click "Recibir" 鈫?posteo
 
 **Modelo de Datos**:
 ```sql
@@ -1153,34 +1153,34 @@ CREATE TABLE selemti.transfer_discrepancy (
 ```
 
 **Entregables**:
-- ✅ Transferencias con 3 estados
-- ✅ Discrepancias manejadas
-- ✅ PR: `feat/transfers-discrepancies-v7`
+- 鉁?Transferencias con 3 estados
+- 鉁?Discrepancias manejadas
+- 鉁?PR: `feat/transfers-discrepancies-v7`
 
 ---
 
-#### **SPRINT 6: Producción UI** (1-2 semanas)
-**Objetivo**: UI operativa para órdenes de producción
+#### **SPRINT 6: Producci贸n UI** (1-2 semanas)
+**Objetivo**: UI operativa para 贸rdenes de producci贸n
 
 **Tareas**:
 
-1. ✅ **Planificación de OP** (4 días)
+1. 鉁?**Planificaci贸n de OP** (4 d铆as)
    - [ ] Por demanda (ventas POS)
    - [ ] Por stock objetivo
    - [ ] Por calendario (programadas)
 
-2. ✅ **Consumo Teórico vs Real** (3 días)
-   - [ ] Al crear OP: calcular consumo teórico
+2. 鉁?**Consumo Te贸rico vs Real** (3 d铆as)
+   - [ ] Al crear OP: calcular consumo te贸rico
    - [ ] Al cerrar OP: registrar consumo real
-   - [ ] Comparación con merma
+   - [ ] Comparaci贸n con merma
 
-3. ✅ **KPIs de Producción** (2 días)
+3. 鉁?**KPIs de Producci贸n** (2 d铆as)
    - [ ] Rendimiento (output/input)
    - [ ] Merma %
    - [ ] Costo por batch
 
-4. ✅ **Cierre de OP** (3 días)
-   - [ ] Validación: stock suficiente
+4. 鉁?**Cierre de OP** (3 d铆as)
+   - [ ] Validaci贸n: stock suficiente
    - [ ] Posteo: descuenta MP, abona PT
    - [ ] Genera `mov_inv`
 
@@ -1217,10 +1217,10 @@ CREATE TABLE selemti.production_output (
 ```
 
 **Entregables**:
-- ✅ UI de producción operativa
-- ✅ Cierre de OP con posteo
-- ✅ KPIs de rendimiento
-- ✅ PR: `feat/production-ui-v7`
+- 鉁?UI de producci贸n operativa
+- 鉁?Cierre de OP con posteo
+- 鉁?KPIs de rendimiento
+- 鉁?PR: `feat/production-ui-v7`
 
 ---
 
@@ -1229,91 +1229,91 @@ CREATE TABLE selemti.production_output (
 
 **Tareas**:
 
-1. ✅ **UI Mobile-first para Conteos** (5 días)
+1. 鉁?**UI Mobile-first para Conteos** (5 d铆as)
    - [ ] Responsive design
-   - [ ] Escaneo de código de barras (QuaggaJS)
+   - [ ] Escaneo de c贸digo de barras (QuaggaJS)
    - [ ] Ajuste de qty con +/-
 
-2. ✅ **Etiquetas/Barcode** (3 días)
-   - [ ] Generación de códigos de barras
-   - [ ] Impresión de etiquetas
+2. 鉁?**Etiquetas/Barcode** (3 d铆as)
+   - [ ] Generaci贸n de c贸digos de barras
+   - [ ] Impresi贸n de etiquetas
 
-3. ✅ **PWA** (3 días) - OPCIONAL
+3. 鉁?**PWA** (3 d铆as) - OPCIONAL
    - [ ] Service worker
    - [ ] Offline-first
    - [ ] Install prompt
 
 **Entregables**:
-- ✅ App mobile para conteos
-- ✅ Barcode scanning
-- ✅ PR: `feat/mobile-barcode-v7`
+- 鉁?App mobile para conteos
+- 鉁?Barcode scanning
+- 鉁?PR: `feat/mobile-barcode-v7`
 
 ---
 
 ### 5.3 Resumen de Sprints
 
-| Sprint | Duración | Prioridad | Impacto Negocio |
+| Sprint | Duraci贸n | Prioridad | Impacto Negocio |
 |--------|----------|-----------|-----------------|
-| Sprint 0: Foundation | 1-2 sem | 🔥 CRÍTICO | Alto |
-| Sprint 1: Inventario Base | 2 sem | 🔥 CRÍTICO | Alto |
-| Sprint 2: Replenishment 🔥 | 2-3 sem | 🔥 CRÍTICO | MUY ALTO |
-| Sprint 2.5: Reportes + Quick Wins | 1 sem | ⚠️ ALTO | Medio-Alto |
-| Sprint 3: Recepciones Avanzadas | 1-2 sem | ⚠️ ALTO | Medio |
-| Sprint 4: Recetas + Costos | 2 sem | ⚠️ ALTO | Alto |
-| Sprint 5: Transferencias | 1 sem | ⚠️ MEDIO | Medio |
-| Sprint 6: Producción UI | 1-2 sem | ⚠️ MEDIO | Medio (depende del negocio) |
-| Sprint 7: Mobile + Barcode | 1-2 sem | 🟢 BAJO | Bajo-Medio |
+| Sprint 0: Foundation | 1-2 sem | 馃敟 CR脥TICO | Alto |
+| Sprint 1: Inventario Base | 2 sem | 馃敟 CR脥TICO | Alto |
+| Sprint 2: Replenishment 馃敟 | 2-3 sem | 馃敟 CR脥TICO | MUY ALTO |
+| Sprint 2.5: Reportes + Quick Wins | 1 sem | 鈿狅笍 ALTO | Medio-Alto |
+| Sprint 3: Recepciones Avanzadas | 1-2 sem | 鈿狅笍 ALTO | Medio |
+| Sprint 4: Recetas + Costos | 2 sem | 鈿狅笍 ALTO | Alto |
+| Sprint 5: Transferencias | 1 sem | 鈿狅笍 MEDIO | Medio |
+| Sprint 6: Producci贸n UI | 1-2 sem | 鈿狅笍 MEDIO | Medio (depende del negocio) |
+| Sprint 7: Mobile + Barcode | 1-2 sem | 馃煝 BAJO | Bajo-Medio |
 
 **Total estimado**: 12-18 semanas (3-4.5 meses)
 
 ---
 
-## 6. ANÁLISIS POR MÓDULO
+## 6. AN脕LISIS POR M脫DULO
 
-*(continuará con análisis detallado de cada módulo, componentes específicos, wireframes, etc.)*
+*(continuar谩 con an谩lisis detallado de cada m贸dulo, componentes espec铆ficos, wireframes, etc.)*
 
 ---
 
 ## 7. QUICK WINS (Bajo Esfuerzo, Alto Impacto)
 
 ### Semana 1:
-1. ✅ **Validación inline** (2 días)
-2. ✅ **Toasts con detalle** (1 día)
-3. ✅ **Empty states** (1 día)
-4. ✅ **Loading skeletons** (1 día)
+1. 鉁?**Validaci贸n inline** (2 d铆as)
+2. 鉁?**Toasts con detalle** (1 d铆a)
+3. 鉁?**Empty states** (1 d铆a)
+4. 鉁?**Loading skeletons** (1 d铆a)
 
 ### Semana 2:
-1. ✅ **Export CSV** (2 días)
-2. ✅ **Búsqueda global Ctrl+K** (2 días)
-3. ✅ **Acciones en lote** (1 día)
+1. 鉁?**Export CSV** (2 d铆as)
+2. 鉁?**B煤squeda global Ctrl+K** (2 d铆as)
+3. 鉁?**Acciones en lote** (1 d铆a)
 
 ### Semana 3-4:
-1. ✅ **Wizard de alta item** (3 días)
-2. ✅ **Auto-conversión UOM** (2 días)
-3. ✅ **Snapshot de costos** (2 días)
-4. ✅ **Políticas de stock UI** (2 días)
+1. 鉁?**Wizard de alta item** (3 d铆as)
+2. 鉁?**Auto-conversi贸n UOM** (2 d铆as)
+3. 鉁?**Snapshot de costos** (2 d铆as)
+4. 鉁?**Pol铆ticas de stock UI** (2 d铆as)
 
 ---
 
-## 8. MÉTRICAS Y KPIs
+## 8. M脡TRICAS Y KPIs
 
 ### KPIs de Desarrollo
 
-| Métrica | Objetivo | Actual | Gap |
+| M茅trica | Objetivo | Actual | Gap |
 |---------|----------|--------|-----|
 | Cobertura de Tests | 80% | 30%? | +50% |
 | Tiempo de Carga (p95) | < 2s | 3-5s? | -1-3s |
-| Errores JS (producción) | < 5/día | ? | TBD |
+| Errores JS (producci贸n) | < 5/d铆a | ? | TBD |
 | Uptime | 99.5% | ? | TBD |
 
 ### KPIs de Negocio
 
-| Métrica | Objetivo | Método |
+| M茅trica | Objetivo | M茅todo |
 |---------|----------|--------|
-| Reducción de ruptura de stock | -50% | Motor replenishment |
-| Tiempo de conteo físico | -30% | Mobile app |
-| Precisión de costos | +95% | Snapshots automáticos |
-| Tiempo de cierre diario | -20 min | Automatización |
+| Reducci贸n de ruptura de stock | -50% | Motor replenishment |
+| Tiempo de conteo f铆sico | -30% | Mobile app |
+| Precisi贸n de costos | +95% | Snapshots autom谩ticos |
+| Tiempo de cierre diario | -20 min | Automatizaci贸n |
 
 ---
 
@@ -1322,33 +1322,33 @@ CREATE TABLE selemti.production_output (
 ### Testing Unitario (PHPUnit)
 ```php
 tests/Unit/
-├── Services/
-│   ├── ReplenishmentEngineTest.php ⭐
-│   ├── CostingServiceTest.php ⭐
-│   └── RecipeServiceTest.php
-└── Jobs/
-    └── RecalculateRecipeCostsTest.php
+鈹溾攢鈹€ Services/
+鈹?  鈹溾攢鈹€ ReplenishmentEngineTest.php 猸?
+鈹?  鈹溾攢鈹€ CostingServiceTest.php 猸?
+鈹?  鈹斺攢鈹€ RecipeServiceTest.php
+鈹斺攢鈹€ Jobs/
+    鈹斺攢鈹€ RecalculateRecipeCostsTest.php
 ```
 
-### Testing de Integración
+### Testing de Integraci贸n
 ```php
 tests/Feature/
-├── Inventory/
-│   ├── ItemCreationTest.php
-│   ├── ReceptionPostingTest.php
-│   └── TransferFlowTest.php
-├── Purchasing/
-│   └── ReplenishmentFlowTest.php ⭐
-└── Recipes/
-    └── CostRecalculationTest.php ⭐
+鈹溾攢鈹€ Inventory/
+鈹?  鈹溾攢鈹€ ItemCreationTest.php
+鈹?  鈹溾攢鈹€ ReceptionPostingTest.php
+鈹?  鈹斺攢鈹€ TransferFlowTest.php
+鈹溾攢鈹€ Purchasing/
+鈹?  鈹斺攢鈹€ ReplenishmentFlowTest.php 猸?
+鈹斺攢鈹€ Recipes/
+    鈹斺攢鈹€ CostRecalculationTest.php 猸?
 ```
 
 ### Testing E2E (Laravel Dusk)
 ```php
 tests/Browser/
-├── InventoryFlowTest.php
-├── ReplenishmentFlowTest.php
-└── ProductionFlowTest.php
+鈹溾攢鈹€ InventoryFlowTest.php
+鈹溾攢鈹€ ReplenishmentFlowTest.php
+鈹斺攢鈹€ ProductionFlowTest.php
 ```
 
 ---
@@ -1356,61 +1356,61 @@ tests/Browser/
 ## 10. ENTREGABLES
 
 ### Por Sprint:
-1. ✅ **PR con código** (branch feat/*)
-2. ✅ **Tests pasando** (PHPUnit + Dusk)
-3. ✅ **Documentación** (README + inline)
-4. ✅ **Screenshots/Video** (evidencia)
-5. ✅ **Migration scripts** (si aplica)
-6. ✅ **Seeder data** (datos de prueba)
+1. 鉁?**PR con c贸digo** (branch feat/*)
+2. 鉁?**Tests pasando** (PHPUnit + Dusk)
+3. 鉁?**Documentaci贸n** (README + inline)
+4. 鉁?**Screenshots/Video** (evidencia)
+5. 鉁?**Migration scripts** (si aplica)
+6. 鉁?**Seeder data** (datos de prueba)
 
 ### Finales:
-1. ✅ **Manual de Usuario** (PDF)
-2. ✅ **Guía de Desarrollo** (para mantenimiento)
-3. ✅ **Documentación API** (Postman/Swagger)
-4. ✅ **Videos de Capacitación** (por módulo)
-5. ✅ **Plan de Rollback** (por si falla)
+1. 鉁?**Manual de Usuario** (PDF)
+2. 鉁?**Gu铆a de Desarrollo** (para mantenimiento)
+3. 鉁?**Documentaci贸n API** (Postman/Swagger)
+4. 鉁?**Videos de Capacitaci贸n** (por m贸dulo)
+5. 鉁?**Plan de Rollback** (por si falla)
 
 ---
 
-## 📞 CONTACTO Y PRÓXIMOS PASOS
+## 馃摓 CONTACTO Y PR脫XIMOS PASOS
 
 ### Decisiones Pendientes:
 
-1. **¿Cuál es la prioridad #1 del negocio?**
-   - Evitar rupturas → Priorizar Replenishment
-   - Control de costos → Priorizar Recetas + Snapshots
-   - Producción interna → Priorizar Producción UI
+1. **驴Cu谩l es la prioridad #1 del negocio?**
+   - Evitar rupturas 鈫?Priorizar Replenishment
+   - Control de costos 鈫?Priorizar Recetas + Snapshots
+   - Producci贸n interna 鈫?Priorizar Producci贸n UI
 
-2. **¿Tienes equipo frontend o eres solo?**
-   - Ajustar timeline según recursos
+2. **驴Tienes equipo frontend o eres solo?**
+   - Ajustar timeline seg煤n recursos
 
-3. **¿Prefieres enfoque ágil (sprints) o MVP rápido?**
+3. **驴Prefieres enfoque 谩gil (sprints) o MVP r谩pido?**
    - MVP = Sprint 0 + 1 + 2 (6-8 semanas)
-   - Ágil = Todos los sprints (12-18 semanas)
+   - 脕gil = Todos los sprints (12-18 semanas)
 
-4. **¿El negocio es más retail o producción?**
-   - Retail → Priorizar Inventario + Compras
-   - Producción → Priorizar Recetas + Producción
+4. **驴El negocio es m谩s retail o producci贸n?**
+   - Retail 鈫?Priorizar Inventario + Compras
+   - Producci贸n 鈫?Priorizar Recetas + Producci贸n
 
 ---
 
-**Fecha de Creación**: 31 de octubre de 2025, 02:30  
-**Versión**: v7.0 Enterprise  
-**Estado**: 🟢 LISTO PARA EJECUTAR
+**Fecha de Creaci贸n**: 31 de octubre de 2025, 02:30  
+**Versi贸n**: v7.0 Enterprise  
+**Estado**: 馃煝 LISTO PARA EJECUTAR
 
-**Base de Datos**: ✅ Enterprise-grade completada (31 oct 00:40)  
-**Frontend**: ⏳ Pendiente de implementación (este plan)
+**Base de Datos**: 鉁?Enterprise-grade completada (31 oct 00:40)  
+**Frontend**: 鈴?Pendiente de implementaci贸n (este plan)
 
 ---
 
 *Documento creado en base a:*
-- ✅ Auditoría UI/UX (AuditoriaGPT.txt)
-- ✅ MASTER_ROADMAP_V6.md
-- ✅ PERMISSIONS_MATRIX_V6.md
-- ✅ UI_GATING_MAP_V6.md
-- ✅ PERMISSIONS_SEEDER_V6.php
-- ✅ SEED_PLANTILLAS_V6.sql
-- ✅ Análisis experto (Claude AI)
-- ✅ Base de Datos Enterprise v7.0 (recién completada)
+- 鉁?Auditor铆a UI/UX (AuditoriaGPT.txt)
+- 鉁?MASTER_ROADMAP_V6.md
+- 鉁?PERMISSIONS_MATRIX_V6.md
+- 鉁?UI_GATING_MAP_V6.md
+- 鉁?PERMISSIONS_SEEDER_V6.php
+- 鉁?SEED_PLANTILLAS_V6.sql
+- 鉁?An谩lisis experto (Claude AI)
+- 鉁?Base de Datos Enterprise v7.0 (reci茅n completada)
 
-**¡Sistema listo para transformarse en ERP de clase mundial! 🚀**
+**隆Sistema listo para transformarse en ERP de clase mundial! 馃殌**

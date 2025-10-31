@@ -48,14 +48,14 @@ Transformar TerrenaLaravel de un sistema funcional pero fragmentado a un **ERP d
 4. ✅ Creación de este plan maestro
 
 #### Documentación Generada:
-- ✅ `Status/STATUS_Inventario.md` - Completitud 70%
-- ✅ `Status/STATUS_Compras.md` - Completitud 60%
-- ✅ `Status/STATUS_Recetas.md` - Completitud 50%
-- ✅ `Status/STATUS_Producción.md` - Completitud 30%
-- ✅ `Status/STATUS_CajaChica.md` - Completitud 80%
-- ✅ `Status/STATUS_Reportes.md` - Completitud 40%
-- ✅ `Status/STATUS_Catálogos.md` - Completitud 80%
-- ✅ `Status/STATUS_Permisos.md` - Completitud 80%
+- ✅ `docs/UI-UX/Status/STATUS_Inventario.md` - Completitud 70%
+- ✅ `docs/UI-UX/Status/STATUS_Compras.md` - Completitud 60%
+- ✅ `docs/UI-UX/Status/STATUS_Recetas.md` - Completitud 50%
+- ✅ `docs/UI-UX/Status/STATUS_Producción.md` - Completitud 30%
+- ✅ `docs/UI-UX/Status/STATUS_CajaChica.md` - Completitud 80%
+- ✅ `docs/UI-UX/Status/STATUS_Reportes.md` - Completitud 40%
+- ✅ `docs/UI-UX/Status/STATUS_Catálogos.md` - Completitud 80%
+- ✅ `docs/UI-UX/Status/STATUS_Permisos.md` - Completitud 80%
 
 ---
 
@@ -514,8 +514,9 @@ Enero 2026
 
 ## 📚 Documentación Relacionada
 
-- **Definiciones**: `docs/UI-UX/Definiciones/*.md` (todos los módulos por funcionalidad)
-- **Status Módulos**: `docs/UI-UX/Status/*.md` (todos los STATUS_*.md)
+- **Definiciones Módulos**: `docs/UI-UX/Definiciones/*.md` (detalles funcionales por módulo)
+- **Status Módulos**: `docs/UI-UX/Status/*.md` (estado actual de backend/frontend por módulo)
+- **Documentación Maestra**: `docs/UI-UX/MASTER/` (estructura completa del proyecto)
 - **Fase 1 Completada**: Este documento
 - **UI/UX Specs**: `docs/UI-UX/ANALISIS_PROYECTO_ACTUAL.md`
 - **Plan Maestro**: `docs/UI-UX/PLAN_MAESTRO_UI_UX_ENTERPRISE.md`
