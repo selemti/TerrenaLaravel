@@ -10,7 +10,7 @@
 
 Este documento especifica los endpoints de la API de Recetas que gestionan fórmulas de producción, costeo automático, ingredientes y versionado de recetas.
 
-**Endpoints Documentados**: 6
+**Endpoints Documentados**: 7
 **Autenticación**: Laravel Sanctum (Bearer Token)
 **Permisos Requeridos**: `can_view_recipe_dashboard`, `can_manage_recipes`
 
@@ -129,7 +129,77 @@ curl -X GET "https://app.terrena.com/api/recipes/REC-001/cost?at=2025-10-15T10:3
 
 ---
 
-### 2. GET /api/recipes
+### 2. GET /api/recipes/{id}/bom/implode
+
+Implosiona el BOM de una receta y consolida todos los ingredientes base, evitando recursiones en el cliente.
+
+#### Request
+
+```http
+GET /api/recipes/REC-HAMBUR-001/bom/implode
+Authorization: Bearer {token}
+```
+
+#### Path Parameters
+
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `id` | string | Sí | ID de la receta raíz |
+
+#### Response 200 OK
+
+```json
+{
+  "ok": true,
+  "data": {
+    "recipe_id": "REC-HAMBUR-001",
+    "recipe_name": "Hamburguesa Clásica",
+    "base_ingredients": [
+      {
+        "item_id": "ITEM-HAR-001",
+        "item_code": "HAR-TRIG-500",
+        "item_name": "Harina de Trigo",
+        "qty": 0.5,
+        "uom": "KG",
+        "category": "Harinas"
+      },
+      {
+        "item_id": "ITEM-MAN-002",
+        "item_code": "MAN-SIN-250",
+        "item_name": "Mantequilla sin sal",
+        "qty": 0.05,
+        "uom": "KG",
+        "category": "Lácteos"
+      }
+    ],
+    "total_ingredients": 4
+  },
+  "timestamp": "2025-11-01T10:30:00.000000Z"
+}
+```
+
+#### Response 500 Error
+
+```json
+{
+  "ok": false,
+  "error": "BOM_IMPLOSION_ERROR",
+  "message": "Error al implosionar BOM de receta",
+  "timestamp": "2025-11-01T10:32:10.000000Z"
+}
+```
+
+#### Ejemplo cURL
+
+```bash
+curl -X GET "https://app.terrena.com/api/recipes/REC-HAMBUR-001/bom/implode" \
+  -H "Authorization: Bearer 1|abc123..." \
+  -H "Accept: application/json"
+```
+
+---
+
+### 3. GET /api/recipes
 
 Obtiene el listado de recetas con filtros y paginación.
 
@@ -229,7 +299,7 @@ curl -X GET "https://app.terrena.com/api/recipes?search=hamburguesa&per_page=10"
 
 ---
 
-### 3. GET /api/recipes/{id}
+### 4. GET /api/recipes/{id}
 
 Obtiene el detalle completo de una receta incluyendo ingredientes.
 
@@ -342,7 +412,7 @@ curl -X GET "https://app.terrena.com/api/recipes/REC-001" \
 
 ---
 
-### 4. POST /api/recipes
+### 5. POST /api/recipes
 
 Crea una nueva receta con sus ingredientes.
 
@@ -469,7 +539,7 @@ curl -X POST "https://app.terrena.com/api/recipes" \
 
 ---
 
-### 5. PUT /api/recipes/{id}
+### 6. PUT /api/recipes/{id}
 
 Actualiza una receta existente (crea nueva versión si hay cambios significativos).
 
@@ -549,7 +619,7 @@ curl -X PUT "https://app.terrena.com/api/recipes/REC-105" \
 
 ---
 
-### 6. DELETE /api/recipes/{id}
+### 7. DELETE /api/recipes/{id}
 
 Elimina (soft delete) una receta.
 
