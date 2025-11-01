@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Models\Inventory\ItemCategory;
+use App\Models\ReplenishmentSuggestion;
+use App\Models\StockPolicy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,10 +15,16 @@ class Item extends Model
     use HasFactory;
 
     protected $connection = 'pgsql';
-    protected $table = 'items';
-    protected $guarded = [];
+
+    protected $table = 'selemti.items';
+
+    protected $primaryKey = 'id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
+
+    protected $guarded = [];
 
     protected $casts = [
         'perishable' => 'boolean',
@@ -24,27 +32,19 @@ class Item extends Model
         'costo_promedio' => 'decimal:2',
         'factor_conversion' => 'decimal:6',
         'factor_compra' => 'decimal:6',
+        'es_producible' => 'boolean',
     ];
 
-    /**
-     * Políticas de stock para este item
-     */
     public function stockPolicies(): HasMany
     {
         return $this->hasMany(StockPolicy::class, 'item_id', 'id');
     }
 
-    /**
-     * Sugerencias de reposición
-     */
     public function replenishmentSuggestions(): HasMany
     {
         return $this->hasMany(ReplenishmentSuggestion::class, 'item_id', 'id');
     }
 
-    /**
-     * Scope para items activos
-     */
     public function scopeActivo($query)
     {
         return $query->where('activo', true);
@@ -52,7 +52,12 @@ class Item extends Model
 
     public function category(): BelongsTo
     {
-        return $this->belongsTo(ItemCategory::class, 'categoria_id', 'id');
+        return $this->belongsTo(ItemCategory::class, 'category_id', 'id');
+    }
+
+    public function legacyCategory(): BelongsTo
+    {
+        return $this->belongsTo(ItemCategory::class, 'categoria_id', 'codigo');
     }
 
     protected static function newFactory()

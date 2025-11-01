@@ -16,12 +16,14 @@ class ItemFactory extends Factory
 
         return [
             'id' => $id,
-            'codigo' => strtoupper(Str::random(6)),
+            'item_code' => strtoupper(Str::random(6)),
             'nombre' => $this->faker->words(2, true),
-            'categoria_id' => null,
+            'descripcion' => null,
+            'categoria_id' => 'CAT-TEST',
+            'unidad_medida' => 'PZ',
             'perishable' => false,
+            'costo_promedio' => $this->faker->randomFloat(2, 5, 200),
             'activo' => true,
-            'costo_promedio' => $this->faker->randomFloat(2, 10, 200),
             'factor_conversion' => 1,
             'factor_compra' => 1,
             'created_at' => now(),

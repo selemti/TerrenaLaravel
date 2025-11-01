@@ -8,40 +8,37 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RecetaDetalle extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'selemti.receta_det';
+
     protected $primaryKey = 'id';
-    public $timestamps = true;
+
+    public $timestamps = false;
 
     protected $fillable = [
-        'receta_id',
+        'receta_version_id',
         'item_id',
-        'receta_id_ingrediente',
         'cantidad',
-        'unidad_id',
+        'unidad_medida',
+        'merma_porcentaje',
+        'instrucciones_especificas',
         'orden',
+        'created_at',
     ];
 
     protected $casts = [
         'cantidad' => 'decimal:4',
+        'merma_porcentaje' => 'decimal:2',
     ];
 
-    public function receta(): BelongsTo
+    public function version(): BelongsTo
     {
-        return $this->belongsTo(Receta::class, 'receta_id', 'id');
+        return $this->belongsTo(RecetaVersion::class, 'receta_version_id');
     }
 
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class, 'item_id', 'id');
-    }
-
-    public function subreceta(): BelongsTo
-    {
-        return $this->belongsTo(Receta::class, 'receta_id_ingrediente', 'id');
-    }
-
-    public function isSubRecipe(): bool
-    {
-        return ! is_null($this->receta_id_ingrediente);
     }
 }

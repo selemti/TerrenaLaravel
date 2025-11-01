@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class CatalogosProductionSeeder extends Seeder
 {
@@ -13,7 +14,7 @@ class CatalogosProductionSeeder extends Seeder
         DB::connection('pgsql')->beginTransaction();
 
         try {
-            $this->seedUnidadesMedida();
+            $this->seedUnidades();
             $this->seedSucursales();
             $this->seedAlmacenes();
             $this->seedCategorias();
@@ -29,43 +30,34 @@ class CatalogosProductionSeeder extends Seeder
         }
     }
 
-    private function seedUnidadesMedida(): void
+    private function seedUnidades(): void
     {
         $now = Carbon::now();
 
         $unidades = [
-            ['codigo' => 'KG', 'nombre' => 'Kilogramo', 'tipo' => 'BASE', 'categoria' => 'MASA', 'es_base' => true, 'factor' => 1.0, 'decimales' => 3],
-            ['codigo' => 'GR', 'nombre' => 'Gramo', 'tipo' => 'BASE', 'categoria' => 'MASA', 'es_base' => false, 'factor' => 0.001, 'decimales' => 2],
-            ['codigo' => 'LT', 'nombre' => 'Litro', 'tipo' => 'BASE', 'categoria' => 'VOLUMEN', 'es_base' => true, 'factor' => 1.0, 'decimales' => 3],
-            ['codigo' => 'ML', 'nombre' => 'Mililitro', 'tipo' => 'BASE', 'categoria' => 'VOLUMEN', 'es_base' => false, 'factor' => 0.001, 'decimales' => 2],
-            ['codigo' => 'PZ', 'nombre' => 'Pieza', 'tipo' => 'BASE', 'categoria' => 'UNIDAD', 'es_base' => true, 'factor' => 1.0, 'decimales' => 0],
-            ['codigo' => 'PAQ', 'nombre' => 'Paquete', 'tipo' => 'COMPRA', 'categoria' => 'UNIDAD', 'es_base' => false, 'factor' => 1.0, 'decimales' => 0],
-            ['codigo' => 'CAJ', 'nombre' => 'Caja', 'tipo' => 'COMPRA', 'categoria' => 'UNIDAD', 'es_base' => false, 'factor' => 1.0, 'decimales' => 0],
+            ['clave' => 'KG', 'nombre' => 'Kilogramo'],
+            ['clave' => 'GR', 'nombre' => 'Gramo'],
+            ['clave' => 'LT', 'nombre' => 'Litro'],
+            ['clave' => 'ML', 'nombre' => 'Mililitro'],
+            ['clave' => 'PZ', 'nombre' => 'Pieza'],
+            ['clave' => 'PAQ', 'nombre' => 'Paquete'],
+            ['clave' => 'CAJ', 'nombre' => 'Caja'],
         ];
 
-        $rows = array_map(function ($unidad) use ($now) {
-            return [
-                'codigo' => $unidad['codigo'],
-                'nombre' => $unidad['nombre'],
-                'tipo' => $unidad['tipo'],
-                'categoria' => $unidad['categoria'],
-                'es_base' => $unidad['es_base'],
-                'factor_conversion_base' => $unidad['factor'],
-                'decimales' => $unidad['decimales'],
-                'activo' => true,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-        }, $unidades);
+        $rows = array_map(fn ($unidad) => array_merge($unidad, [
+            'activo' => true,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]), $unidades);
 
         $this->upsertRows(
-            'selemti.unidades_medida',
+            'selemti.cat_unidades',
             $rows,
-            ['codigo'],
-            ['nombre', 'tipo', 'categoria', 'es_base', 'factor_conversion_base', 'decimales', 'activo', 'updated_at']
+            ['clave'],
+            ['nombre', 'activo', 'updated_at']
         );
 
-        $this->command?->info('  ➜ Unidades de medida: 7 registros.');
+        $this->command?->info('  ➜ Unidades: ' . count($rows) . ' registros.');
     }
 
     private function seedSucursales(): void
@@ -76,24 +68,24 @@ class CatalogosProductionSeeder extends Seeder
             [
                 'clave' => 'SUC-01',
                 'nombre' => 'Sucursal Principal',
-                'rfc' => 'XAXX010101000',
-                'direccion' => 'Por definir',
-                'telefono' => '0000000000',
-                'email' => 'principal@terrena.com',
+                'ubicacion' => 'Pendiente de registrar',
                 'activo' => true,
             ],
         ];
 
-        $rows = array_map(fn ($sucursal) => array_merge($sucursal, ['created_at' => $now, 'updated_at' => $now]), $sucursales);
+        $rows = array_map(fn ($sucursal) => array_merge($sucursal, [
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]), $sucursales);
 
         $this->upsertRows(
             'selemti.cat_sucursales',
             $rows,
             ['clave'],
-            ['nombre', 'rfc', 'direccion', 'telefono', 'email', 'activo', 'updated_at']
+            ['nombre', 'ubicacion', 'activo', 'updated_at']
         );
 
-        $this->command?->info('  ➜ Sucursales: 1 registro.');
+        $this->command?->info('  ➜ Sucursales: ' . count($rows) . ' registros.');
     }
 
     private function seedAlmacenes(): void
@@ -106,34 +98,39 @@ class CatalogosProductionSeeder extends Seeder
             ->value('id');
 
         if (! $sucursalId) {
+            $this->command?->warn('  ⚠️  No se encontró la sucursal SUC-01, se omiten almacenes.');
+
             return;
         }
 
         $almacenes = [
             [
-                'sucursal_id' => $sucursalId,
+                'clave' => 'ALM-GEN',
                 'nombre' => 'Almacén General',
-                'tipo' => 'GENERAL',
+                'sucursal_id' => $sucursalId,
                 'activo' => true,
             ],
             [
-                'sucursal_id' => $sucursalId,
+                'clave' => 'ALM-FRIO',
                 'nombre' => 'Almacén Refrigerados',
-                'tipo' => 'FRIO',
+                'sucursal_id' => $sucursalId,
                 'activo' => true,
             ],
         ];
 
-        $rows = array_map(fn ($almacen) => array_merge($almacen, ['created_at' => $now, 'updated_at' => $now]), $almacenes);
+        $rows = array_map(fn ($almacen) => array_merge($almacen, [
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]), $almacenes);
 
         $this->upsertRows(
             'selemti.cat_almacenes',
             $rows,
-            ['sucursal_id', 'nombre'],
-            ['tipo', 'activo', 'updated_at']
+            ['clave'],
+            ['nombre', 'sucursal_id', 'activo', 'updated_at']
         );
 
-        $this->command?->info('  ➜ Almacenes: 2 registros.');
+        $this->command?->info('  ➜ Almacenes: ' . count($rows) . ' registros.');
     }
 
     private function seedCategorias(): void
@@ -141,24 +138,35 @@ class CatalogosProductionSeeder extends Seeder
         $now = Carbon::now();
 
         $categorias = [
-            ['codigo' => 'CAR', 'nombre' => 'Carnes', 'prefijo' => 'CAR'],
-            ['codigo' => 'LAC', 'nombre' => 'Lácteos', 'prefijo' => 'LAC'],
-            ['codigo' => 'VEG', 'nombre' => 'Vegetales', 'prefijo' => 'VEG'],
-            ['codigo' => 'HAR', 'nombre' => 'Harinas y Granos', 'prefijo' => 'HAR'],
-            ['codigo' => 'BEB', 'nombre' => 'Bebidas', 'prefijo' => 'BEB'],
-            ['codigo' => 'CON', 'nombre' => 'Condimentos', 'prefijo' => 'CON'],
+            ['codigo' => 'CAT-CAR', 'nombre' => 'Carnes', 'prefijo' => 'CAR'],
+            ['codigo' => 'CAT-LAC', 'nombre' => 'Lácteos', 'prefijo' => 'LAC'],
+            ['codigo' => 'CAT-VEG', 'nombre' => 'Vegetales', 'prefijo' => 'VEG'],
+            ['codigo' => 'CAT-HAR', 'nombre' => 'Harinas y Granos', 'prefijo' => 'HAR'],
+            ['codigo' => 'CAT-BEB', 'nombre' => 'Bebidas', 'prefijo' => 'BEB'],
+            ['codigo' => 'CAT-CON', 'nombre' => 'Condimentos', 'prefijo' => 'CON'],
         ];
 
-        $rows = array_map(fn ($categoria) => array_merge($categoria, ['created_at' => $now, 'updated_at' => $now]), $categorias);
+        $rows = array_map(function ($categoria) use ($now) {
+            return [
+                'codigo' => $categoria['codigo'],
+                'nombre' => $categoria['nombre'],
+                'slug' => Str::slug($categoria['nombre']),
+                'prefijo' => $categoria['prefijo'],
+                'descripcion' => null,
+                'activo' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }, $categorias);
 
         $this->upsertRows(
             'selemti.item_categories',
             $rows,
             ['codigo'],
-            ['nombre', 'prefijo', 'updated_at']
+            ['nombre', 'slug', 'prefijo', 'activo', 'updated_at']
         );
 
-        $this->command?->info('  ➜ Categorías: 6 registros.');
+        $this->command?->info('  ➜ Categorías: ' . count($rows) . ' registros.');
     }
 
     private function seedProveedores(): void
@@ -167,29 +175,29 @@ class CatalogosProductionSeeder extends Seeder
 
         $proveedores = [
             [
-                'nombre_comercial' => 'Proveedor General',
-                'razon_social' => 'Proveedor General S.A. de C.V.',
                 'rfc' => 'PGE000101000',
-                'tipo' => 'GENERAL',
+                'nombre' => 'Proveedor General',
+                'telefono' => '0000000000',
+                'email' => 'proveedor@terrena.com',
                 'activo' => true,
             ],
         ];
 
-        $rows = array_map(fn ($proveedor) => array_merge($proveedor, ['created_at' => $now, 'updated_at' => $now]), $proveedores);
+        $rows = array_map(fn ($proveedor) => array_merge($proveedor, [
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]), $proveedores);
 
         $this->upsertRows(
             'selemti.cat_proveedores',
             $rows,
             ['rfc'],
-            ['nombre_comercial', 'razon_social', 'tipo', 'activo', 'updated_at']
+            ['nombre', 'telefono', 'email', 'activo', 'updated_at']
         );
 
-        $this->command?->info('  ➜ Proveedores: 1 registro.');
+        $this->command?->info('  ➜ Proveedores: ' . count($rows) . ' registros.');
     }
 
-    /**
-     * Ejecuta un upsert protegiendo columnas inexistentes en la tabla destino.
-     */
     private function upsertRows(string $table, array $rows, array $uniqueBy, array $updateColumns): void
     {
         if (empty($rows)) {
@@ -203,7 +211,6 @@ class CatalogosProductionSeeder extends Seeder
         }
 
         $columnLookup = array_flip($columns);
-
         $filteredRows = [];
 
         foreach ($rows as $row) {
@@ -235,9 +242,6 @@ class CatalogosProductionSeeder extends Seeder
         $builder->upsert($filteredRows, $uniqueBy, $filteredUpdateColumns);
     }
 
-    /**
-     * Obtiene columnas disponibles para una tabla con esquema calificado.
-     */
     private function getTableColumns(string $qualifiedTable): array
     {
         [$schema, $table] = $this->splitQualifiedTable($qualifiedTable);

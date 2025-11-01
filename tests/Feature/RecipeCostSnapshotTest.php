@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Item;
 use App\Models\Rec\Receta;
 use App\Models\Rec\RecetaDetalle;
+use App\Models\Rec\RecetaVersion;
 use App\Models\Rec\RecipeCostSnapshot;
 use App\Services\Recipes\RecipeCostSnapshotService;
 use Carbon\Carbon;
@@ -41,6 +42,8 @@ class RecipeCostSnapshotTest extends TestCase
             'porciones_standard' => 2,
         ]);
 
+        $version = $this->createVersion($recipe);
+
         $item1 = Item::factory()->create([
             'id' => 'ITEM-001',
             'costo_promedio' => 50,
@@ -52,17 +55,19 @@ class RecipeCostSnapshotTest extends TestCase
         ]);
 
         RecetaDetalle::create([
-            'receta_id' => $recipe->id,
+            'receta_version_id' => $version->id,
             'item_id' => $item1->id,
             'cantidad' => 1.5,
-            'unidad_id' => 'KG',
+            'unidad_medida' => 'KG',
+            'created_at' => now(),
         ]);
 
         RecetaDetalle::create([
-            'receta_id' => $recipe->id,
+            'receta_version_id' => $version->id,
             'item_id' => $item2->id,
             'cantidad' => 0.5,
-            'unidad_id' => 'KG',
+            'unidad_medida' => 'KG',
+            'created_at' => now(),
         ]);
 
         $snapshot = $this->service->createSnapshot(
@@ -116,16 +121,19 @@ class RecipeCostSnapshotTest extends TestCase
             'porciones_standard' => 2,
         ]);
 
+        $version = $this->createVersion($recipe);
+
         $item = Item::factory()->create([
             'id' => 'ITEM-003',
             'costo_promedio' => 100,
         ]);
 
         RecetaDetalle::create([
-            'receta_id' => $recipe->id,
+            'receta_version_id' => $version->id,
             'item_id' => $item->id,
             'cantidad' => 1,
-            'unidad_id' => 'PZ',
+            'unidad_medida' => 'PZ',
+            'created_at' => now(),
         ]);
 
         $initialSnapshot = $this->service->createSnapshot(
@@ -157,16 +165,19 @@ class RecipeCostSnapshotTest extends TestCase
             'porciones_standard' => 2,
         ]);
 
+        $version = $this->createVersion($recipe);
+
         $item = Item::factory()->create([
             'id' => 'ITEM-004',
             'costo_promedio' => 80,
         ]);
 
         RecetaDetalle::create([
-            'receta_id' => $recipe->id,
+            'receta_version_id' => $version->id,
             'item_id' => $item->id,
             'cantidad' => 1,
-            'unidad_id' => 'PZ',
+            'unidad_medida' => 'PZ',
+            'created_at' => now(),
         ]);
 
         $initialSnapshot = $this->service->createSnapshot(
@@ -191,19 +202,22 @@ class RecipeCostSnapshotTest extends TestCase
     public function test_it_creates_snapshots_for_all_active_recipes(): void
     {
         $activeRecipes = Receta::factory()->count(3)->create(['activo' => true]);
-        $inactiveRecipes = Receta::factory()->count(2)->create(['activo' => false]);
+        Receta::factory()->count(2)->create(['activo' => false]);
 
         foreach ($activeRecipes as $index => $recipe) {
+            $version = $this->createVersion($recipe);
+
             $item = Item::factory()->create([
                 'id' => 'ITEM-ACT-' . $index,
                 'costo_promedio' => 20 + ($index * 5),
             ]);
 
             RecetaDetalle::create([
-                'receta_id' => $recipe->id,
+                'receta_version_id' => $version->id,
                 'item_id' => $item->id,
                 'cantidad' => 1,
-                'unidad_id' => 'PZ',
+                'unidad_medida' => 'PZ',
+                'created_at' => now(),
             ]);
         }
 
@@ -211,5 +225,17 @@ class RecipeCostSnapshotTest extends TestCase
 
         $this->assertEquals(3, $count);
         $this->assertEquals(3, RecipeCostSnapshot::count());
+    }
+
+    private function createVersion(Receta $recipe): RecetaVersion
+    {
+        return RecetaVersion::create([
+            'receta_id' => $recipe->id,
+            'version' => 1,
+            'descripcion_cambios' => 'Versión de prueba',
+            'fecha_efectiva' => now()->toDateString(),
+            'version_publicada' => false,
+            'created_at' => now(),
+        ]);
     }
 }

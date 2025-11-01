@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class ItemCategory extends Model
 {
-    protected $table = 'item_categories';
+    protected $connection = 'pgsql';
+
+    protected $table = 'selemti.item_categories';
+
     protected $guarded = [];
+
     public $timestamps = false;
 }

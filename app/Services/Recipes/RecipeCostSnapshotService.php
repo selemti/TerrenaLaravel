@@ -139,7 +139,7 @@ class RecipeCostSnapshotService
 
         Receta::where('activo', true)
             ->orderBy('id')
-            ->chunkById(100, function ($recipes) use (&$count, $reason, $date) {
+            ->chunk(100, function ($recipes) use (&$count, $reason, $date) {
                 foreach ($recipes as $recipe) {
                     try {
                         $this->createSnapshot($recipe->id, $reason, null, $date);
@@ -151,7 +151,7 @@ class RecipeCostSnapshotService
                         ]);
                     }
                 }
-            }, 'id');
+            });
 
         Log::info('Snapshots masivos completados', [
             'total' => $count,

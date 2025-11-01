@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RecipeCostSnapshot extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'selemti.recipe_cost_snapshots';
 
     public const UPDATED_AT = null;

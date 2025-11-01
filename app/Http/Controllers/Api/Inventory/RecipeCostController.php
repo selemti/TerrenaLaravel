@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\Inventory;
 
 use App\Http\Controllers\Controller;
-use App\Models\Item;
 use App\Models\Rec\Receta;
+use App\Models\Rec\RecetaVersion;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -43,6 +43,8 @@ class RecipeCostController extends Controller
     {
         $moment = $moment ?? now();
 
+        $recipe = Receta::findOrFail($recipeId);
+
         try {
             $result = DB::connection('pgsql')->selectOne(
                 'SELECT * FROM selemti.fn_recipe_cost_at(?, ?)',
@@ -54,9 +56,10 @@ class RecipeCostController extends Controller
 
                 return [
                     'recipe_id' => $recipeId,
+                    'recipe_name' => $recipe->nombre_plato ?? null,
                     'cost_total' => (float) ($resultArray['batch_cost'] ?? 0),
                     'cost_per_portion' => (float) ($resultArray['portion_cost'] ?? 0),
-                    'portions' => (float) ($resultArray['yield_portions'] ?? 0),
+                    'portions' => (float) ($resultArray['yield_portions'] ?? ($recipe->porciones_standard ?? 0)),
                     'cost_breakdown' => [],
                     'from_snapshot' => false,
                 ];
@@ -68,10 +71,21 @@ class RecipeCostController extends Controller
             ]);
         }
 
-        $recipe = Receta::with('detalles')->findOrFail($recipeId);
+        $version = $this->resolveLatestVersion($recipeId);
+
+        if (! $version) {
+            return [
+                'recipe_id' => $recipeId,
+                'recipe_name' => $recipe->nombre_plato ?? null,
+                'cost_total' => 0.0,
+                'cost_per_portion' => 0.0,
+                'portions' => (float) ($recipe->porciones_standard ?? 1),
+                'cost_breakdown' => [],
+            ];
+        }
 
         $baseIngredients = [];
-        $this->implodeRecipeBomRecursive($recipeId, 1.0, $baseIngredients);
+        $this->processVersionDetails($version, 1.0, $baseIngredients);
 
         $totalCost = 0.0;
         $breakdown = [];
@@ -105,8 +119,23 @@ class RecipeCostController extends Controller
         try {
             $recipe = Receta::findOrFail($id);
 
+            $version = $this->resolveLatestVersion($id);
+
+            if (! $version) {
+                return response()->json([
+                    'ok' => true,
+                    'data' => [
+                        'recipe_id' => $recipe->id,
+                        'recipe_name' => $recipe->nombre_plato,
+                        'base_ingredients' => [],
+                        'total_ingredients' => 0,
+                    ],
+                    'timestamp' => now()->toIso8601String(),
+                ]);
+            }
+
             $baseIngredients = [];
-            $this->implodeRecipeBomRecursive($id, 1.0, $baseIngredients);
+            $this->processVersionDetails($version, 1.0, $baseIngredients);
 
             return response()->json([
                 'ok' => true,
@@ -133,55 +162,60 @@ class RecipeCostController extends Controller
         }
     }
 
-    private function implodeRecipeBomRecursive(
-        string $recipeId,
-        float $factor,
-        array &$baseIngredients,
-        int $depth = 0
-    ): void {
+    private function resolveLatestVersion(string $recipeId): ?RecetaVersion
+    {
+        return RecetaVersion::query()
+            ->where('receta_id', $recipeId)
+            ->orderByDesc('fecha_efectiva')
+            ->orderByDesc('version')
+            ->orderByDesc('id')
+            ->with(['detalles' => function ($query) {
+                $query
+                    ->orderBy('orden')
+                    ->orderBy('id')
+                    ->with('item');
+            }])
+            ->first();
+    }
+
+    private function processVersionDetails(RecetaVersion $version, float $factor, array &$baseIngredients, int $depth = 0): void
+    {
         if ($depth > 10) {
             Log::warning('Se alcanzó la profundidad máxima de implosión de BOM', [
-                'recipe_id' => $recipeId,
+                'recipe_id' => $version->receta_id,
                 'depth' => $depth,
             ]);
 
             return;
         }
 
-        $recipe = Receta::with(['detalles.item', 'detalles.subreceta'])->findOrFail($recipeId);
+        foreach ($version->detalles as $detalle) {
+            if (! $detalle->item) {
+                continue;
+            }
 
-        foreach ($recipe->detalles as $detalle) {
+            $item = $detalle->item;
+            $key = $item->id;
             $adjustedQty = (float) $detalle->cantidad * $factor;
+            $unitCost = (float) ($item->costo_promedio ?? 0);
+            $category = optional($item->category)->nombre
+                ?? optional($item->legacyCategory)->nombre
+                ?? 'Sin categoría';
+            $itemCode = $item->item_code ?? $item->codigo ?? $item->id;
+            $uom = $detalle->unidad_medida ?? $item->unidad_medida ?? null;
 
-            if ($detalle->item_id && $detalle->item) {
-                $item = $detalle->item;
-                $key = $item->id;
-                $unitCost = (float) ($item->costo_promedio ?? 0);
-                $categoryModel = method_exists($item, 'category') ? $item->category : null;
-                $category = $categoryModel->nombre
-                    ?? $categoryModel->name
-                    ?? ($item->categoria ?? 'Sin categoría');
-
-                if (isset($baseIngredients[$key])) {
-                    $baseIngredients[$key]['qty'] += $adjustedQty;
-                } else {
-                    $baseIngredients[$key] = [
-                        'item_id' => $item->id,
-                        'item_code' => $item->codigo ?? null,
-                        'item_name' => $item->nombre ?? null,
-                        'qty' => $adjustedQty,
-                        'uom' => $detalle->unidad_id ?? null,
-                        'unit_cost' => $unitCost,
-                        'category' => $category,
-                    ];
-                }
-            } elseif ($detalle->receta_id_ingrediente) {
-                $this->implodeRecipeBomRecursive(
-                    $detalle->receta_id_ingrediente,
-                    $factor * (float) $detalle->cantidad,
-                    $baseIngredients,
-                    $depth + 1
-                );
+            if (isset($baseIngredients[$key])) {
+                $baseIngredients[$key]['qty'] += $adjustedQty;
+            } else {
+                $baseIngredients[$key] = [
+                    'item_id' => $item->id,
+                    'item_code' => $itemCode,
+                    'item_name' => $item->nombre ?? null,
+                    'qty' => $adjustedQty,
+                    'uom' => $uom,
+                    'unit_cost' => $unitCost,
+                    'category' => $category,
+                ];
             }
         }
     }

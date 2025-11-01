@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Item;
 use App\Models\Rec\Receta;
 use App\Models\Rec\RecetaDetalle;
+use App\Models\Rec\RecetaVersion;
 use App\Models\Rec\RecipeCostSnapshot;
 use App\Services\Recipes\RecipeCostSnapshotService;
 use Carbon\Carbon;
@@ -27,6 +28,8 @@ class WeekendDeploymentIntegrationTest extends TestCase
 
         $this->service = app(RecipeCostSnapshotService::class);
 
+        $this->createCategory();
+
         DB::table('users')->insert([
             'name' => 'Admin',
             'email' => 'admin@example.com',
@@ -38,7 +41,7 @@ class WeekendDeploymentIntegrationTest extends TestCase
 
     public function test_it_can_calculate_recipe_cost_via_endpoint(): void
     {
-        $recipe = $this->createRecipeWithItems('REC-INT-001', [
+        $this->createRecipeWithItems('REC-INT-001', [
             ['id' => 'ITEM-A', 'qty' => 1, 'cost' => 40],
             ['id' => 'ITEM-B', 'qty' => 0.5, 'cost' => 20],
         ]);
@@ -116,6 +119,15 @@ class WeekendDeploymentIntegrationTest extends TestCase
             'porciones_standard' => $portions,
         ]);
 
+        $version = RecetaVersion::create([
+            'receta_id' => $recipe->id,
+            'version' => 1,
+            'descripcion_cambios' => 'Versión de integración',
+            'fecha_efectiva' => now()->toDateString(),
+            'version_publicada' => false,
+            'created_at' => now(),
+        ]);
+
         foreach ($items as $index => $itemConfig) {
             $item = Item::factory()->create([
                 'id' => $itemConfig['id'],
@@ -124,13 +136,27 @@ class WeekendDeploymentIntegrationTest extends TestCase
             ]);
 
             RecetaDetalle::create([
-                'receta_id' => $recipeId,
+                'receta_version_id' => $version->id,
                 'item_id' => $item->id,
                 'cantidad' => $itemConfig['qty'],
-                'unidad_id' => 'PZ',
+                'unidad_medida' => 'PZ',
+                'created_at' => now(),
             ]);
         }
 
         return $recipe;
+    }
+
+    private function createCategory(string $code = 'CAT-INT', string $name = 'Integración'): void
+    {
+        DB::table('selemti.item_categories')->insert([
+            'codigo' => $code,
+            'nombre' => $name,
+            'slug' => strtolower(str_replace(' ', '-', $name)),
+            'prefijo' => strtoupper(substr($code, 4, 3) ?: substr($code, -3)),
+            'activo' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 }

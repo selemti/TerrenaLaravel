@@ -5,15 +5,22 @@ namespace App\Models\Rec;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Receta extends Model
 {
     use HasFactory;
 
-    protected $table = 'receta_cab';
+    protected $connection = 'pgsql';
+
+    protected $table = 'selemti.receta_cab';
+
     protected $primaryKey = 'id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
+
     public $timestamps = true;
 
     protected $fillable = [
@@ -32,34 +39,32 @@ class Receta extends Model
     protected $casts = [
         'porciones_standard' => 'integer',
         'tiempo_preparacion_min' => 'integer',
-        'costo_standard_porcion' => 'decimal:4',
+        'costo_standard_porcion' => 'decimal:2',
         'precio_venta_sugerido' => 'decimal:2',
         'activo' => 'boolean',
     ];
 
     public function versiones(): HasMany
     {
-        return $this->hasMany(RecetaVersion::class, 'receta_id', 'id');
+        return $this->hasMany(RecetaVersion::class, 'receta_id', 'id')
+            ->orderByDesc('version');
     }
 
-    public function publishedVersion()
+    public function detalles(): HasManyThrough
     {
-        return $this->hasOne(RecetaVersion::class, 'receta_id', 'id')
-            ->where('version_publicada', true)
-            ->orderByDesc('fecha_efectiva')
-            ->limit(1);
+        return $this->hasManyThrough(
+            RecetaDetalle::class,
+            RecetaVersion::class,
+            'receta_id',
+            'receta_version_id',
+            'id',
+            'id'
+        );
     }
 
-    public function latestVersion()
+    public function scopeActivas($query)
     {
-        return $this->hasOne(RecetaVersion::class, 'receta_id', 'id')
-            ->orderByDesc('version')
-            ->limit(1);
-    }
-
-    public function detalles(): HasMany
-    {
-        return $this->hasMany(RecetaDetalle::class, 'receta_id', 'id');
+        return $query->where('activo', true);
     }
 
     protected static function newFactory()

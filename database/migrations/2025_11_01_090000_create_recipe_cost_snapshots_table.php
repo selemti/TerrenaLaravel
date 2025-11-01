@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS selemti.recipe_cost_snapshots (
         ON DELETE CASCADE,
     CONSTRAINT fk_recipe_cost_snap_user
         FOREIGN KEY (created_by_user_id)
-        REFERENCES users(id)
+        REFERENCES selemti.users(id)
         ON DELETE SET NULL
 );
 

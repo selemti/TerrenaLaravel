@@ -3,16 +3,28 @@
 namespace App\Models\Rec;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RecetaVersion extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'selemti.receta_version';
+
     protected $primaryKey = 'id';
-    public $timestamps = false; // Solo usa created_at
+
+    public $timestamps = false;
 
     protected $fillable = [
-        'receta_id', 'version', 'descripcion_cambios', 'fecha_efectiva', 
-        'version_publicada', 'usuario_publicador', 'fecha_publicacion', 'created_at'
+        'receta_id',
+        'version',
+        'descripcion_cambios',
+        'fecha_efectiva',
+        'version_publicada',
+        'usuario_publicador',
+        'fecha_publicacion',
+        'created_at',
     ];
 
     protected $casts = [
@@ -21,12 +33,12 @@ class RecetaVersion extends Model
         'fecha_publicacion' => 'datetime',
     ];
 
-    public function receta()
+    public function receta(): BelongsTo
     {
         return $this->belongsTo(Receta::class, 'receta_id', 'id');
     }
-    
-    public function detalles()
+
+    public function detalles(): HasMany
     {
         return $this->hasMany(RecetaDetalle::class, 'receta_version_id');
     }

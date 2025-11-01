@@ -25,6 +25,8 @@ class RecetaFactory extends Factory
             'costo_standard_porcion' => 0,
             'precio_venta_sugerido' => $this->faker->numberBetween(40, 160),
             'activo' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
         ];
     }
 }

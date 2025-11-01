@@ -26,8 +26,10 @@ trait InteractsWithRecipeDatabase
         $this->createItemCategoriesTable();
         $this->createItemsTable();
         $this->createRecipesTable();
+        $this->createRecipeVersionsTable();
         $this->createRecipeDetailsTable();
         $this->createSnapshotsTable();
+        $this->seedDefaultCategory();
     }
 
     private function createUsersTable(): void
@@ -45,10 +47,15 @@ trait InteractsWithRecipeDatabase
 
     private function createItemCategoriesTable(): void
     {
-        DB::statement('DROP TABLE IF EXISTS "item_categories"');
-        DB::statement('CREATE TABLE "item_categories" (
+        DB::statement('DROP TABLE IF EXISTS selemti.item_categories');
+        DB::statement('CREATE TABLE selemti.item_categories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            codigo TEXT,
             nombre TEXT NOT NULL,
+            slug TEXT,
+            prefijo TEXT,
+            descripcion TEXT,
+            activo INTEGER,
             created_at TEXT,
             updated_at TEXT
         )');
@@ -56,17 +63,22 @@ trait InteractsWithRecipeDatabase
 
     private function createItemsTable(): void
     {
-        DB::statement('DROP TABLE IF EXISTS "items"');
-        DB::statement('CREATE TABLE "items" (
+        DB::statement('DROP TABLE IF EXISTS selemti.items');
+        DB::statement('CREATE TABLE selemti.items (
             id TEXT PRIMARY KEY,
-            codigo TEXT,
+            item_code TEXT,
             nombre TEXT,
-            categoria_id INTEGER,
-            perishable INTEGER,
-            activo INTEGER,
-            costo_promedio REAL,
-            factor_conversion REAL,
-            factor_compra REAL,
+            descripcion TEXT,
+            categoria_id TEXT NOT NULL,
+            unidad_medida TEXT DEFAULT "PZ",
+            perishable INTEGER DEFAULT 0,
+            costo_promedio REAL DEFAULT 0,
+            activo INTEGER DEFAULT 1,
+            factor_conversion REAL DEFAULT 1,
+            factor_compra REAL DEFAULT 1,
+            unidad_medida_id INTEGER,
+            unidad_compra_id INTEGER,
+            unidad_salida_id INTEGER,
             created_at TEXT,
             updated_at TEXT
         )');
@@ -74,20 +86,36 @@ trait InteractsWithRecipeDatabase
 
     private function createRecipesTable(): void
     {
-        DB::statement('DROP TABLE IF EXISTS "receta_cab"');
-        DB::statement('CREATE TABLE "receta_cab" (
+        DB::statement('DROP TABLE IF EXISTS selemti.receta_cab');
+        DB::statement('CREATE TABLE selemti.receta_cab (
             id TEXT PRIMARY KEY,
             nombre_plato TEXT,
             codigo_plato_pos TEXT,
             categoria_plato TEXT,
-            porciones_standard REAL DEFAULT 1,
+            porciones_standard INTEGER DEFAULT 1,
             instrucciones_preparacion TEXT,
             tiempo_preparacion_min INTEGER,
-            costo_standard_porcion REAL,
-            precio_venta_sugerido REAL,
-            activo INTEGER,
+            costo_standard_porcion REAL DEFAULT 0,
+            precio_venta_sugerido REAL DEFAULT 0,
+            activo INTEGER DEFAULT 1,
             created_at TEXT,
             updated_at TEXT
+        )');
+    }
+
+    private function createRecipeVersionsTable(): void
+    {
+        DB::statement('DROP TABLE IF EXISTS selemti.receta_version');
+        DB::statement('CREATE TABLE selemti.receta_version (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            receta_id TEXT NOT NULL,
+            version INTEGER DEFAULT 1,
+            descripcion_cambios TEXT,
+            fecha_efectiva TEXT,
+            version_publicada INTEGER DEFAULT 0,
+            usuario_publicador INTEGER,
+            fecha_publicacion TEXT,
+            created_at TEXT
         )');
     }
 
@@ -96,14 +124,14 @@ trait InteractsWithRecipeDatabase
         DB::statement('DROP TABLE IF EXISTS selemti.receta_det');
         DB::statement('CREATE TABLE selemti.receta_det (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            receta_id TEXT NOT NULL,
-            item_id TEXT,
-            receta_id_ingrediente TEXT,
+            receta_version_id INTEGER NOT NULL,
+            item_id TEXT NOT NULL,
             cantidad REAL NOT NULL,
-            unidad_id TEXT,
+            unidad_medida TEXT NOT NULL,
+            merma_porcentaje REAL,
+            instrucciones_especificas TEXT,
             orden INTEGER,
-            created_at TEXT,
-            updated_at TEXT
+            created_at TEXT
         )');
     }
 
@@ -133,5 +161,18 @@ trait InteractsWithRecipeDatabase
         }
 
         DB::statement("ATTACH DATABASE ':memory:' AS selemti");
+    }
+
+    private function seedDefaultCategory(): void
+    {
+        DB::table('selemti.item_categories')->insert([
+            'codigo' => 'CAT-TEST',
+            'nombre' => 'Categoría Test',
+            'slug' => 'categoria-test',
+            'prefijo' => 'TES',
+            'activo' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 }
