@@ -2,11 +2,13 @@
 
 namespace App\Models\Rec;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Inv\Item;
 
 class RecetaDetalle extends Model
 {
+    use HasFactory;
     protected $table = 'selemti.receta_det';
     protected $primaryKey = 'id';
     public $timestamps = false; // Solo usa created_at

@@ -2,10 +2,13 @@
 
 namespace App\Models\Rec;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Receta extends Model
 {
+    use HasFactory;
+    
     protected $table = 'receta_cab'; // Asume DB_SCHEMA=selemti
     protected $primaryKey = 'id';
     public $incrementing = false; // El ID es VARCHAR(20)
