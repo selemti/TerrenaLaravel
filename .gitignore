@@ -25,6 +25,7 @@ Thumbs.db
 *.zip
 *.rar
 DEPLOY_CONSOLIDADO_FULL_PG95-v4-FIXED.sql
+<<<<<<< Updated upstream
 
 # Local AI tooling
 .claude/
@@ -34,3 +35,6 @@ DEPLOY_CONSOLIDADO_FULL_PG95-v4-FIXED.sql
 bootstrap/cache/*.php
 
 NUL
+=======
+NUL
+>>>>>>> Stashed changes
