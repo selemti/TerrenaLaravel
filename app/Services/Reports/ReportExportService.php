@@ -5,6 +5,7 @@ namespace App\Services\Reports;
 use Carbon\Carbon;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportExportService
 {
@@ -12,14 +13,14 @@ class ReportExportService
      * @param  array<string,float>  $kpis
      * @param  array<string,array<int,mixed>>  $charts
      */
-    public function export(string $type, string $range, Carbon $from, Carbon $to, array $kpis, array $charts): Response
+    public function export(string $type, string $range, Carbon $from, Carbon $to, array $kpis, array $charts): Response|StreamedResponse
     {
         return $type === 'csv'
             ? $this->exportCsv($range, $from, $to, $kpis, $charts)
             : $this->exportPdf($range, $from, $to, $kpis, $charts);
     }
 
-    protected function exportCsv(string $range, Carbon $from, Carbon $to, array $kpis, array $charts): Response
+    protected function exportCsv(string $range, Carbon $from, Carbon $to, array $kpis, array $charts): StreamedResponse
     {
         $filename = sprintf('dashboard_%s_%s.csv', $range, now()->format('Ymd_His'));
 
