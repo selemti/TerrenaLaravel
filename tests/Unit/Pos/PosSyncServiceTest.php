@@ -4,7 +4,6 @@ namespace Tests\Unit\Pos;
 
 use App\Services\Inventory\PosConsumptionService;
 use App\Services\Pos\PosSyncService;
-use Illuminate\Support\Facades\DB;
 use Mockery;
 use Tests\TestCase;
 
@@ -14,7 +13,6 @@ class PosSyncServiceTest extends TestCase
     {
         parent::tearDown();
 
-        DB::flushQueryLog();
         Mockery::close();
     }
 

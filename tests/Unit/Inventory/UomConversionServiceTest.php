@@ -3,7 +3,6 @@
 namespace Tests\Unit\Inventory;
 
 use App\Services\Inventory\UomConversionService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**

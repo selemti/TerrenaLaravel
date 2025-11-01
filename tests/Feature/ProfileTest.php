@@ -3,12 +3,19 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\RequiresPostgresConnection;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
 {
-    use RefreshDatabase;
+    use RequiresPostgresConnection;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->requirePostgresConnection();
+    }
 
     public function test_profile_page_is_displayed(): void
     {

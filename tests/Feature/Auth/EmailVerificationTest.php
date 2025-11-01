@@ -4,14 +4,21 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\URL;
+use Tests\Support\RequiresPostgresConnection;
 use Tests\TestCase;
 
 class EmailVerificationTest extends TestCase
 {
-    use RefreshDatabase;
+    use RequiresPostgresConnection;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->requirePostgresConnection();
+    }
 
     public function test_email_verification_screen_can_be_rendered(): void
     {
