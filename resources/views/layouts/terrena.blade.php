@@ -210,6 +210,7 @@
 
   {{-- CSS locales (mismo orden que legacy) --}}
   <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link href="{{ asset('assets/fontawesome-free-7.0.1-web/css/all.min.css') }}" rel="stylesheet">
   <link rel="stylesheet" href="{{ asset('assets/css/terrena.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/css/caja.css') }}">
@@ -576,6 +577,8 @@
     });
   })();
   </script>
+
+  <x-toast-notification />
 
   @stack('scripts')
 </body>
