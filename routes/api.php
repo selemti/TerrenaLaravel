@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\AlertsController;
 use App\Http\Controllers\Api\Inventory\ItemController;
 use App\Http\Controllers\Api\Inventory\PriceController;
 use App\Http\Controllers\Api\Inventory\RecipeCostController;
+use App\Http\Controllers\Api\Inventory\TransferApiController;
 use App\Http\Controllers\Api\Inventory\StockController;
 use App\Http\Controllers\Api\MeController;
 use App\Http\Controllers\Api\Inventory\VendorController;
@@ -227,8 +228,22 @@ Route::prefix('inventory')->group(function () {
 });
 
 // Costeo de recetas
-Route::get('/recipes/{id}/cost', [RecipeCostController::class, 'show']);
-Route::get('/recipes/{id}/bom/implode', [RecipeCostController::class, 'implodeBom']);
+Route::prefix('recipes')->middleware(['auth:sanctum'])->group(function () {
+    Route::get('/{id}/cost', [RecipeCostController::class, 'show']);
+    // BOM Implosion endpoint
+    Route::get('/{id}/bom/implode', [RecipeCostController::class, 'implodeBom']);
+});
+
+// Transfers API
+Route::prefix('inventory/transfers')->middleware(['auth:sanctum'])->group(function () {
+    Route::get('/', [TransferApiController::class, 'index']);
+    Route::post('/', [TransferApiController::class, 'store']);
+    Route::get('/{id}', [TransferApiController::class, 'show']);
+    Route::post('/{id}/approve', [TransferApiController::class, 'approve']);
+    Route::post('/{id}/ship', [TransferApiController::class, 'ship']);
+    Route::post('/{id}/receive', [TransferApiController::class, 'receive']);
+    Route::post('/{id}/post', [TransferApiController::class, 'post']);
+});
 
 /*
 |--------------------------------------------------------------------------
