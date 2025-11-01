@@ -20,6 +20,8 @@ trait InteractsWithRecipeDatabase
         DB::purge('pgsql');
         DB::reconnect('pgsql');
 
+        $this->attachSelemtiSchema();
+
         $this->createUsersTable();
         $this->createItemCategoriesTable();
         $this->createItemsTable();
@@ -91,8 +93,8 @@ trait InteractsWithRecipeDatabase
 
     private function createRecipeDetailsTable(): void
     {
-        DB::statement('DROP TABLE IF EXISTS "selemti.receta_det"');
-        DB::statement('CREATE TABLE "selemti.receta_det" (
+        DB::statement('DROP TABLE IF EXISTS selemti.receta_det');
+        DB::statement('CREATE TABLE selemti.receta_det (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             receta_id TEXT NOT NULL,
             item_id TEXT,
@@ -107,8 +109,8 @@ trait InteractsWithRecipeDatabase
 
     private function createSnapshotsTable(): void
     {
-        DB::statement('DROP TABLE IF EXISTS "selemti.recipe_cost_snapshots"');
-        DB::statement('CREATE TABLE "selemti.recipe_cost_snapshots" (
+        DB::statement('DROP TABLE IF EXISTS selemti.recipe_cost_snapshots');
+        DB::statement('CREATE TABLE selemti.recipe_cost_snapshots (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             recipe_id TEXT NOT NULL,
             snapshot_date TEXT NOT NULL,
@@ -120,5 +122,16 @@ trait InteractsWithRecipeDatabase
             created_by_user_id INTEGER,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )');
+    }
+
+    private function attachSelemtiSchema(): void
+    {
+        try {
+            DB::statement('DETACH DATABASE selemti');
+        } catch (\Throwable $e) {
+            // ignore if schema is not attached
+        }
+
+        DB::statement("ATTACH DATABASE ':memory:' AS selemti");
     }
 }
