@@ -43,22 +43,26 @@ class CatalogosProductionSeeder extends Seeder
             ['codigo' => 'CAJ', 'nombre' => 'Caja', 'tipo' => 'COMPRA', 'categoria' => 'UNIDAD', 'es_base' => false, 'factor' => 1.0, 'decimales' => 0],
         ];
 
-        foreach ($unidades as $unidad) {
-            DB::connection('pgsql')->table('selemti.unidades_medida')->updateOrInsert(
-                ['codigo' => $unidad['codigo']],
-                [
-                    'nombre' => $unidad['nombre'],
-                    'tipo' => $unidad['tipo'],
-                    'categoria' => $unidad['categoria'],
-                    'es_base' => $unidad['es_base'],
-                    'factor_conversion_base' => $unidad['factor'],
-                    'decimales' => $unidad['decimales'],
-                    'activo' => true,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ]
-            );
-        }
+        $rows = array_map(function ($unidad) use ($now) {
+            return [
+                'codigo' => $unidad['codigo'],
+                'nombre' => $unidad['nombre'],
+                'tipo' => $unidad['tipo'],
+                'categoria' => $unidad['categoria'],
+                'es_base' => $unidad['es_base'],
+                'factor_conversion_base' => $unidad['factor'],
+                'decimales' => $unidad['decimales'],
+                'activo' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }, $unidades);
+
+        DB::connection('pgsql')->table('selemti.unidades_medida')->upsert(
+            $rows,
+            ['codigo'],
+            ['nombre', 'tipo', 'categoria', 'es_base', 'factor_conversion_base', 'decimales', 'activo', 'updated_at']
+        );
 
         $this->command?->info('  ➜ Unidades de medida: 7 registros.');
     }
@@ -79,12 +83,13 @@ class CatalogosProductionSeeder extends Seeder
             ],
         ];
 
-        foreach ($sucursales as $sucursal) {
-            DB::connection('pgsql')->table('selemti.cat_sucursales')->updateOrInsert(
-                ['clave' => $sucursal['clave']],
-                array_merge($sucursal, ['created_at' => $now, 'updated_at' => $now])
-            );
-        }
+        $rows = array_map(fn ($sucursal) => array_merge($sucursal, ['created_at' => $now, 'updated_at' => $now]), $sucursales);
+
+        DB::connection('pgsql')->table('selemti.cat_sucursales')->upsert(
+            $rows,
+            ['clave'],
+            ['nombre', 'rfc', 'direccion', 'telefono', 'email', 'activo', 'updated_at']
+        );
 
         $this->command?->info('  ➜ Sucursales: 1 registro.');
     }
@@ -117,12 +122,13 @@ class CatalogosProductionSeeder extends Seeder
             ],
         ];
 
-        foreach ($almacenes as $almacen) {
-            DB::connection('pgsql')->table('selemti.cat_almacenes')->updateOrInsert(
-                ['sucursal_id' => $almacen['sucursal_id'], 'nombre' => $almacen['nombre']],
-                array_merge($almacen, ['created_at' => $now, 'updated_at' => $now])
-            );
-        }
+        $rows = array_map(fn ($almacen) => array_merge($almacen, ['created_at' => $now, 'updated_at' => $now]), $almacenes);
+
+        DB::connection('pgsql')->table('selemti.cat_almacenes')->upsert(
+            $rows,
+            ['sucursal_id', 'nombre'],
+            ['tipo', 'activo', 'updated_at']
+        );
 
         $this->command?->info('  ➜ Almacenes: 2 registros.');
     }
@@ -140,12 +146,13 @@ class CatalogosProductionSeeder extends Seeder
             ['codigo' => 'CON', 'nombre' => 'Condimentos', 'prefijo' => 'CON'],
         ];
 
-        foreach ($categorias as $categoria) {
-            DB::connection('pgsql')->table('selemti.item_categories')->updateOrInsert(
-                ['codigo' => $categoria['codigo']],
-                array_merge($categoria, ['created_at' => $now, 'updated_at' => $now])
-            );
-        }
+        $rows = array_map(fn ($categoria) => array_merge($categoria, ['created_at' => $now, 'updated_at' => $now]), $categorias);
+
+        DB::connection('pgsql')->table('selemti.item_categories')->upsert(
+            $rows,
+            ['codigo'],
+            ['nombre', 'prefijo', 'updated_at']
+        );
 
         $this->command?->info('  ➜ Categorías: 6 registros.');
     }
@@ -164,12 +171,13 @@ class CatalogosProductionSeeder extends Seeder
             ],
         ];
 
-        foreach ($proveedores as $proveedor) {
-            DB::connection('pgsql')->table('selemti.cat_proveedores')->updateOrInsert(
-                ['rfc' => $proveedor['rfc']],
-                array_merge($proveedor, ['created_at' => $now, 'updated_at' => $now])
-            );
-        }
+        $rows = array_map(fn ($proveedor) => array_merge($proveedor, ['created_at' => $now, 'updated_at' => $now]), $proveedores);
+
+        DB::connection('pgsql')->table('selemti.cat_proveedores')->upsert(
+            $rows,
+            ['rfc'],
+            ['nombre_comercial', 'razon_social', 'tipo', 'activo', 'updated_at']
+        );
 
         $this->command?->info('  ➜ Proveedores: 1 registro.');
     }
