@@ -3,15 +3,20 @@
 namespace Tests\Unit\Purchasing;
 
 use App\Services\Purchasing\PurchasingService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Tests\Support\RequiresPostgresConnection;
 use Tests\TestCase;
 
 class PurchasingServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use RequiresPostgresConnection;
 
-    protected array $connectionsToTransact = ['pgsql'];
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->requirePostgresConnection();
+    }
 
     public function test_create_request_persists_header_and_lines(): void
     {

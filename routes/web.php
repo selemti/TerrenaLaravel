@@ -81,6 +81,8 @@ use App\Livewire\Purchasing\Orders\Index    as PurchasingOrdersIndex;
 use App\Livewire\Purchasing\Orders\Detail   as PurchasingOrdersDetail;
 
 use App\Livewire\Replenishment\Dashboard   as ReplenishmentDashboard;
+use App\Livewire\Reports\Dashboard        as ReportsDashboard;
+use App\Livewire\Reports\DrillDown        as ReportsDrillDown;
 
 /* =========================================================================
 |  HOME (UNA sola definición, limpia y canónica)
@@ -300,7 +302,18 @@ Route::middleware('auth')->group(function () {
     });
 
     if (feature_enabled('reportes')) {
-        Route::view('/reportes', 'reportes')->name('reportes');
+        Route::prefix('reports')->group(function () {
+            Route::get('/', ReportsDashboard::class)
+                ->middleware('permission:reports.view')
+                ->name('reports.dashboard');
+
+            Route::get('/drill-down/{type}/{id?}', ReportsDrillDown::class)
+                ->where('type', '(ventas|inventario|produccion)')
+                ->middleware('permission:reports.view')
+                ->name('reports.drill-down');
+        });
+
+        Route::redirect('/reportes', '/reports')->name('reportes');
     }
 
     if (feature_enabled('admin')) {

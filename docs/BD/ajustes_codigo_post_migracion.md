@@ -21,6 +21,15 @@ Documentar todos los ajustes necesarios en el código (modelos, servicios, vista
 ### 4. Tabla inventory_snapshot
 - El campo `item_id` ahora es VARCHAR(20) para coincidir con `items.id`
 
+### 5. Configuración de Conexión PostgreSQL
+- **Host**: `127.0.0.1`
+- **Puerto**: `5433`
+- **Schemas**: `selemti,public`
+- **Usuario**: `postgres`
+- **Password**: `T3rr3n4#p0s`
+- **Archivos sincronizados**: `config/database.php`, `phpunit.xml`, `scripts/generate_data_dictionary.php`
+- **Propósito**: garantizar que las pruebas unitarias/feature y las utilerías CLI utilicen la misma instancia normalizada (`DB/00.SelemTI_Normalizada_29_10_25_10_40_v0.sql`).
+
 ## Ajustes Necesarios en el Código
 
 ### 1. Modelos

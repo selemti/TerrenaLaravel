@@ -25,5 +25,8 @@ Estado: ACTIVO / OBLIGATORIO
 - Requiere permisos `can_view_recipe_dashboard` y `can_manage_produmix` según sección rol.
 
 ## Auditoría
-- Cada consulta/exportación debe registrar user_id, timestamp y reporte generado (futuro).  
+- Cada consulta/exportación debe registrar user_id, timestamp y reporte generado (futuro).
 - Enlazar con `docs/AUDIT_LOG_POLICY.md`.
+
+## Actualizaciones Recientes
+- 2025-12-06: se liberó el dashboard operativo (`docs/REPORTING_AND_KPIS_DASHBOARD_WEEK6.md`) con Livewire + Chart.js, exportación CSV/PDF y favoritos por usuario. Todos los KPIs listados arriba están cubiertos parcialmente; restan márgenes y notas operativas para fase 2.

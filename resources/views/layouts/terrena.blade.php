@@ -346,7 +346,7 @@
 
         {{-- Reportes (reports.view) --}}
         <a class="nav-link {{ ($active ?? '') === 'reportes' ? 'active' : '' }}"
-           href="{{ url('/reportes') }}"
+           href="{{ route('reports.dashboard') }}"
            x-show="permsLoaded && window.TerrenaHasPerm('reports.view')"
            x-cloak>
           <i class="fa-solid fa-chart-column"></i> <span class="label">Reportes</span>
@@ -436,7 +436,7 @@
             <div class="dropdown-menu dropdown-menu-end p-0" style="min-width:320px">
               <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center">
                 <strong>Alertas</strong>
-                <a href="{{ url('/reportes') }}" class="link-more small">Ver todas <i class="fa-solid fa-chevron-right ms-1"></i></a>
+                <a href="{{ route('reports.dashboard') }}" class="link-more small">Ver todas <i class="fa-solid fa-chevron-right ms-1"></i></a>
               </div>
               <div id="hdr-alerts-list" class="py-1"></div>
             </div>
