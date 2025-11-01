@@ -17,16 +17,17 @@ return new class extends Migration
             throw new \Exception('Error: config/permission.php not found and defaults could not be merged.');
         }
 
-        // Verificar si la foreign key ya existe
-        $fks = \Illuminate\Support\Facades\DB::connection('pgsql')->select("
-            SELECT conname 
-            FROM pg_constraint 
-            WHERE conrelid = 'selemti.audit_log'::regclass 
-            AND contype = 'f' 
-            AND conname = 'audit_log_user_id_foreign'
+        // Verificar si la foreign key ya existe (soporta prefijo generado por Postgres)
+        $existingConstraint = \Illuminate\Support\Facades\DB::connection('pgsql')->selectOne("
+            SELECT conname
+            FROM pg_constraint
+            WHERE conrelid = 'selemti.audit_log'::regclass
+              AND contype = 'f'
+              AND conname IN ('audit_log_user_id_foreign', 'selemti_audit_log_user_id_foreign')
+            LIMIT 1
         ");
 
-        if (empty($fks)) {
+        if (!$existingConstraint) {
             Schema::connection('pgsql')->table('selemti.audit_log', function (Blueprint $table) {
                 $table->foreign('user_id')
                     ->references('id')
@@ -48,17 +49,20 @@ return new class extends Migration
         }
 
         // Verificar si la foreign key existe antes de intentar eliminarla
-        $fks = \Illuminate\Support\Facades\DB::connection('pgsql')->select("
-            SELECT conname 
-            FROM pg_constraint 
-            WHERE conrelid = 'selemti.audit_log'::regclass 
-            AND contype = 'f' 
-            AND conname = 'audit_log_user_id_foreign'
+        $existingConstraint = \Illuminate\Support\Facades\DB::connection('pgsql')->selectOne("
+            SELECT conname
+            FROM pg_constraint
+            WHERE conrelid = 'selemti.audit_log'::regclass
+              AND contype = 'f'
+              AND conname IN ('audit_log_user_id_foreign', 'selemti_audit_log_user_id_foreign')
+            LIMIT 1
         ");
 
-        if (!empty($fks)) {
-            Schema::connection('pgsql')->table('selemti.audit_log', function (Blueprint $table) {
-                $table->dropForeign(['user_id']);
+        if ($existingConstraint) {
+            $constraintName = $existingConstraint->conname;
+
+            Schema::connection('pgsql')->table('selemti.audit_log', function (Blueprint $table) use ($constraintName) {
+                $table->dropForeign($constraintName);
             });
         }
     }

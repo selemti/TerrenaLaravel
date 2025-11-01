@@ -2,33 +2,46 @@
 
 namespace App\Models\Rec;
 
+use App\Models\Item;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Inv\Item;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RecetaDetalle extends Model
 {
     protected $table = 'selemti.receta_det';
     protected $primaryKey = 'id';
-    public $timestamps = false; // Solo usa created_at
+    public $timestamps = true;
 
     protected $fillable = [
-        'receta_version_id', 'item_id', 'cantidad', 'unidad_medida', 
-        'merma_porcentaje', 'instrucciones_especificas', 'orden', 'created_at'
+        'receta_id',
+        'item_id',
+        'receta_id_ingrediente',
+        'cantidad',
+        'unidad_id',
+        'orden',
     ];
 
     protected $casts = [
         'cantidad' => 'decimal:4',
-        'merma_porcentaje' => 'decimal:2',
-        'created_at' => 'datetime',
     ];
 
-    public function version()
+    public function receta(): BelongsTo
     {
-        return $this->belongsTo(RecetaVersion::class, 'receta_version_id');
+        return $this->belongsTo(Receta::class, 'receta_id', 'id');
     }
-    
-    public function item()
+
+    public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class, 'item_id', 'id');
+    }
+
+    public function subreceta(): BelongsTo
+    {
+        return $this->belongsTo(Receta::class, 'receta_id_ingrediente', 'id');
+    }
+
+    public function isSubRecipe(): bool
+    {
+        return ! is_null($this->receta_id_ingrediente);
     }
 }

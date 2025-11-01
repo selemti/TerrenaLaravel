@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Inventory\ItemCategory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Item extends Model
 {
+    use HasFactory;
+
     protected $connection = 'pgsql';
     protected $table = 'items';
     protected $guarded = [];
@@ -43,5 +48,15 @@ class Item extends Model
     public function scopeActivo($query)
     {
         return $query->where('activo', true);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(ItemCategory::class, 'categoria_id', 'id');
+    }
+
+    protected static function newFactory()
+    {
+        return \Database\Factories\ItemFactory::new();
     }
 }

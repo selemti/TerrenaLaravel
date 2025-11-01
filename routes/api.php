@@ -228,6 +228,7 @@ Route::prefix('inventory')->group(function () {
 
 // Costeo de recetas
 Route::get('/recipes/{id}/cost', [RecipeCostController::class, 'show']);
+Route::get('/recipes/{id}/bom/implode', [RecipeCostController::class, 'implodeRecipeBom']);
 
 /*
 |--------------------------------------------------------------------------
