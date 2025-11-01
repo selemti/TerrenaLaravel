@@ -73,6 +73,10 @@ use App\Livewire\CashFund\Approvals         as CashFundApprovals;
 use App\Livewire\CashFund\Detail            as CashFundDetail;
 
 use App\Livewire\Transfers\Create           as TransfersCreate;
+use App\Livewire\Production\Index           as ProductionIndex;
+use App\Livewire\Production\Create         as ProductionCreate;
+use App\Livewire\Production\Detail         as ProductionDetail;
+use App\Livewire\Production\Execute        as ProductionExecute;
 
 use App\Livewire\Purchasing\Requests\Index  as PurchasingRequestsIndex;
 use App\Livewire\Purchasing\Requests\Create as PurchasingRequestsCreate;
@@ -207,7 +211,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/personal',    PeopleUsersIndex::class)
         ->middleware('can:people.view')
         ->name('personal');
-    Route::view('/produccion', 'produccion')->name('produccion');
+    Route::get('/produccion', ProductionIndex::class)->name('production.legacy');
     Route::view('/recetas',    'recetas')->name('recetas');
 
     /* =========================================================================
@@ -280,6 +284,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/',                    \App\Livewire\Transfers\Index::class)->name('transfers.index');
         Route::get('/create',              TransfersCreate::class)->name('transfers.create');
         // TODO: agregar rutas dispatch, receive cuando estén listas
+    });
+
+    /* =========================================================================
+    |  Producción (Livewire)
+    |========================================================================= */
+    Route::prefix('production')->group(function () {
+        Route::get('/',                ProductionIndex::class)->name('production.index');
+        Route::get('/create',          ProductionCreate::class)->name('production.create');
+        Route::get('/{id}/detail',     ProductionDetail::class)->name('production.detail');
+        Route::get('/{id}/execute',    ProductionExecute::class)->name('production.execute');
     });
 
     /* =========================================================================

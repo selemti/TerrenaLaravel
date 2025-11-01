@@ -2,6 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Almacen;
+use App\Models\InventoryWaste;
+use App\Models\Item;
+use App\Models\ProductionOrderInput;
+use App\Models\ProductionOrderOutput;
+use App\Models\Rec\Receta;
+use App\Models\Rec\RecetaVersion;
+use App\Models\Sucursal;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -25,8 +34,11 @@ class ProductionOrder extends Model
     // Estados
     const ESTADO_BORRADOR = 'BORRADOR';
     const ESTADO_PLANIFICADA = 'PLANIFICADA';
+    const ESTADO_APROBADA = 'APROBADA';
     const ESTADO_EN_PROCESO = 'EN_PROCESO';
+    const ESTADO_COMPLETADA = 'COMPLETADA';
     const ESTADO_COMPLETADO = 'COMPLETADO';
+    const ESTADO_POSTEADA = 'POSTEADA';
     const ESTADO_PAUSADA = 'PAUSADA';
     const ESTADO_CANCELADA = 'CANCELADA';
 
@@ -43,7 +55,12 @@ class ProductionOrder extends Model
      */
     public function recipe(): BelongsTo
     {
-        return $this->belongsTo(Recipe::class, 'recipe_id', 'id');
+        return $this->belongsTo(Receta::class, 'recipe_id', 'id');
+    }
+
+    public function recipeVersion(): BelongsTo
+    {
+        return $this->belongsTo(RecetaVersion::class, 'recipe_version_id', 'id');
     }
 
     /**
@@ -67,7 +84,7 @@ class ProductionOrder extends Model
      */
     public function creador(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'creado_por', 'id');
+        return $this->belongsTo(User::class, 'creado_por', 'id');
     }
 
     /**
@@ -75,7 +92,22 @@ class ProductionOrder extends Model
      */
     public function aprobador(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'aprobado_por', 'id');
+        return $this->belongsTo(User::class, 'aprobado_por', 'id');
+    }
+
+    public function inputs(): HasMany
+    {
+        return $this->hasMany(ProductionOrderInput::class, 'production_order_id');
+    }
+
+    public function outputs(): HasMany
+    {
+        return $this->hasMany(ProductionOrderOutput::class, 'production_order_id');
+    }
+
+    public function wastes(): HasMany
+    {
+        return $this->hasMany(InventoryWaste::class, 'production_order_id');
     }
 
     /**
@@ -83,14 +115,18 @@ class ProductionOrder extends Model
      */
     public function getEstadoBadgeAttribute(): string
     {
-        return match($this->estado) {
+        $estado = $this->estado;
+
+        return match ($estado) {
             self::ESTADO_BORRADOR => '<span class="badge bg-secondary">Borrador</span>',
             self::ESTADO_PLANIFICADA => '<span class="badge bg-warning text-dark">Planificada</span>',
-            self::ESTADO_EN_PROCESO => '<span class="badge bg-info">En Proceso</span>',
-            self::ESTADO_COMPLETADO => '<span class="badge bg-success">Completado</span>',
+            self::ESTADO_APROBADA => '<span class="badge bg-primary">Aprobada</span>',
+            self::ESTADO_EN_PROCESO => '<span class="badge bg-info text-dark">En proceso</span>',
+            self::ESTADO_COMPLETADA, self::ESTADO_COMPLETADO => '<span class="badge bg-success">Completada</span>',
+            self::ESTADO_POSTEADA => '<span class="badge bg-success-subtle text-success-emphasis">Posteada</span>',
             self::ESTADO_PAUSADA => '<span class="badge bg-warning">Pausada</span>',
             self::ESTADO_CANCELADA => '<span class="badge bg-danger">Cancelada</span>',
-            default => '<span class="badge bg-secondary">' . $this->estado . '</span>',
+            default => '<span class="badge bg-secondary">' . e($estado) . '</span>',
         };
     }
 

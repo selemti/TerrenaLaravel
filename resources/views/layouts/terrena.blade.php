@@ -339,7 +339,7 @@
 
         {{-- Producción (can_edit_production_order) --}}
         <a class="nav-link {{ ($active ?? '') === 'produccion' ? 'active' : '' }}"
-           href="{{ url('/produccion') }}"
+           href="{{ route('production.index') }}"
            x-show="permsLoaded && window.TerrenaHasPerm('can_edit_production_order')"
            x-cloak>
           <i class="fa-solid fa-industry"></i> <span class="label">Producción</span>
