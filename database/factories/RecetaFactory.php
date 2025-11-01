@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Rec;
 
 use App\Models\Rec\Receta;
 use Illuminate\Database\Eloquent\Factories\Factory;

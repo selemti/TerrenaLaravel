@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Rec;
 
 use App\Models\Rec\RecetaVersion;
 use App\Models\Rec\Receta;
