@@ -6,9 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Proveedor extends Model
 {
-    protected $connection = 'pgsql';
-
-    protected $table = 'selemti.cat_proveedores';
+    protected $table = 'cat_proveedores';
 
     protected $fillable = [
         'rfc',
@@ -22,3 +20,4 @@ class Proveedor extends Model
         'activo' => 'boolean',
     ];
 }
+

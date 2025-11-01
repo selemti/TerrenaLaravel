@@ -29,32 +29,12 @@ class AlmacenesIndex extends Component
                 'required',
                 'string',
                 'max:16',
-                'regex:/^[A-Z0-9\-]+$/',
                 Rule::unique('cat_almacenes', 'clave')->ignore($this->editId),
             ],
             'nombre'      => ['required', 'string', 'max:80'],
             'sucursal_id' => ['nullable', 'integer', 'exists:cat_sucursales,id'],
             'activo'      => ['boolean'],
         ];
-    }
-
-    protected function messages(): array
-    {
-        return [
-            'clave.required' => 'La clave es obligatoria',
-            'clave.regex' => 'La clave solo debe contener letras, números o guiones',
-            'clave.unique' => 'Ya existe un almacén con esta clave',
-            'nombre.required' => 'El nombre es obligatorio',
-            'nombre.max' => 'El nombre no puede exceder 80 caracteres',
-            'sucursal_id.exists' => 'Selecciona una sucursal válida',
-        ];
-    }
-
-    public function updated($propertyName): void
-    {
-        if (in_array($propertyName, ['clave', 'nombre', 'sucursal_id', 'activo'], true)) {
-            $this->validateOnly($propertyName);
-        }
     }
 
     private function resetForm(): void

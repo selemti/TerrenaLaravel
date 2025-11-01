@@ -2,12 +2,10 @@
 
 namespace App\Livewire\Recipes;
 
-use App\Models\Inv\Item;
 use App\Models\Rec\Receta;
 use App\Models\Rec\RecetaDetalle;
 use App\Models\Rec\RecetaVersion;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class RecipeEditor extends Component
@@ -29,116 +27,22 @@ class RecipeEditor extends Component
     ];
 
     public array $ingredients = [];
-    public float $costo_estimado = 0.0;
 
-    protected function rules(): array
-    {
-        $nombreRule = Rule::unique('receta_cab', 'nombre_plato');
-
-        if ($this->recipeId) {
-            $nombreRule = $nombreRule->ignore($this->recipeId, 'id');
-        }
-
-        return [
-            'form.id' => ['required', 'regex:/^(REC|SUB)\-[0-9]{5}$|^REC\-MOD\-[0-9]{5}$/'],
-            'form.nombre_plato' => ['required', 'string', 'max:100', $nombreRule],
-            'form.codigo_plato_pos' => ['nullable', 'string', 'max:20'],
-            'form.categoria_plato' => ['nullable', 'string', 'max:50'],
-            'form.porciones_standard' => ['required', 'numeric', 'min:0.01'],
-            'form.tiempo_preparacion_min' => ['nullable', 'integer', 'min:0'],
-            'form.costo_standard_porcion' => ['nullable', 'numeric', 'min:0'],
-            'form.precio_venta_sugerido' => ['nullable', 'numeric', 'min:0'],
-            'ingredients' => ['required', 'array', 'min:1'],
-            'ingredients.*.item_id' => [
-                'required',
-                'string',
-                'max:30',
-                function ($attribute, $value, $fail) {
-                    $value = trim((string) $value);
-
-                    if ($value === '') {
-                        return;
-                    }
-
-                    $exists = Item::query()->where('id', $value)->exists()
-                        || Receta::query()->where('id', $value)->exists();
-
-                    if (! $exists) {
-                        $fail('Debe seleccionar un ítem o sub-receta válido.');
-                    }
-                },
-            ],
-            'ingredients.*.cantidad' => ['required', 'numeric', 'gt:0'],
-            'ingredients.*.unidad_medida' => ['required', 'string', 'max:10'],
-            'ingredients.*.merma_porcentaje' => ['nullable', 'numeric', 'min:0', 'max:99.99'],
-            'ingredients.*.orden' => ['nullable', 'integer', 'min:1'],
-        ];
-    }
-
-    protected function messages(): array
-    {
-        return [
-            'form.id.required' => 'El identificador de la receta es obligatorio',
-            'form.id.regex' => 'El identificador debe seguir el patrón REC-00001 o SUB-00001',
-            'form.nombre_plato.required' => 'El nombre del plato es obligatorio',
-            'form.nombre_plato.unique' => 'Ya existe una receta con este nombre',
-            'form.porciones_standard.required' => 'Ingresa el rendimiento estándar',
-            'form.porciones_standard.min' => 'El rendimiento debe ser mayor a 0',
-            'ingredients.required' => 'Debe agregar al menos un ingrediente',
-            'ingredients.*.item_id.required' => 'Selecciona un ítem o sub-receta',
-            'ingredients.*.item_id.max' => 'El identificador no debe exceder 30 caracteres',
-            'ingredients.*.cantidad.required' => 'Ingresa una cantidad',
-            'ingredients.*.cantidad.gt' => 'La cantidad debe ser mayor a 0',
-            'ingredients.*.unidad_medida.required' => 'Selecciona una unidad de medida',
-        ];
-    }
-
-    public function updated($propertyName): void
-    {
-        if (str_starts_with($propertyName, 'form.')) {
-            $this->validateOnly($propertyName);
-        }
-
-        if (str_starts_with($propertyName, 'ingredients')) {
-            $this->validateOnly($propertyName);
-            $this->calculateEstimatedCost();
-        }
-    }
-
-    public function updatedIngredients(): void
-    {
-        $this->calculateEstimatedCost();
-    }
-
-    protected function calculateEstimatedCost(): void
-    {
-        $itemIds = collect($this->ingredients)
-            ->pluck('item_id')
-            ->filter()
-            ->map(fn ($id) => trim((string) $id))
-            ->filter()
-            ->unique()
-            ->values();
-
-        $costs = $itemIds->isNotEmpty()
-            ? Item::query()->whereIn('id', $itemIds)->pluck('costo_promedio', 'id')
-            : collect();
-
-        $total = 0;
-
-        foreach ($this->ingredients as $row) {
-            $id = trim((string) ($row['item_id'] ?? ''));
-
-            if ($id === '' || ! $costs->has($id)) {
-                continue;
-            }
-
-            $cantidad = (float) ($row['cantidad'] ?? 0);
-            $total += $cantidad * (float) $costs[$id];
-        }
-
-        $this->costo_estimado = round($total, 4);
-    }
+    protected array $rules = [
+        'form.id' => ['required', 'regex:/^(REC|SUB)\-[0-9]{5}$|^REC\-MOD\-[0-9]{5}$/'],
+        'form.nombre_plato' => ['required', 'string', 'max:100'],
+        'form.codigo_plato_pos' => ['nullable', 'string', 'max:20'],
+        'form.categoria_plato' => ['nullable', 'string', 'max:50'],
+        'form.porciones_standard' => ['required', 'numeric', 'min:0.01'],
+        'form.tiempo_preparacion_min' => ['nullable', 'integer', 'min:0'],
+        'form.costo_standard_porcion' => ['nullable', 'numeric', 'min:0'],
+        'form.precio_venta_sugerido' => ['nullable', 'numeric', 'min:0'],
+        'ingredients.*.item_id' => ['nullable', 'string', 'max:20'],
+        'ingredients.*.cantidad' => ['nullable', 'numeric', 'min:0'],
+        'ingredients.*.unidad_medida' => ['nullable', 'string', 'max:10'],
+        'ingredients.*.merma_porcentaje' => ['nullable', 'numeric', 'min:0', 'max:99.99'],
+        'ingredients.*.orden' => ['nullable', 'integer', 'min:1'],
+    ];
 
     public function mount(?string $id = null): void
     {
@@ -151,8 +55,6 @@ class RecipeEditor extends Component
         if (empty($this->ingredients)) {
             $this->addIngredientRow();
         }
-
-        $this->calculateEstimatedCost();
     }
 
     protected function loadExisting(string $id): void
@@ -200,8 +102,6 @@ class RecipeEditor extends Component
                 'instrucciones_especificas' => $detalle->instrucciones_especificas,
             ];
         })->toArray();
-
-        $this->calculateEstimatedCost();
     }
 
     protected function initializeNew(): void
@@ -219,7 +119,6 @@ class RecipeEditor extends Component
         $this->form['precio_venta_sugerido'] = 0;
         $this->versionId = null;
         $this->ingredients = [];
-        $this->costo_estimado = 0.0;
     }
 
     protected function generateSequentialId(string $prefix): string
@@ -253,8 +152,6 @@ class RecipeEditor extends Component
             'orden' => count($this->ingredients) + 1,
             'instrucciones_especificas' => null,
         ];
-
-        $this->calculateEstimatedCost();
     }
 
     public function removeIngredientRow(int $index): void
@@ -262,7 +159,6 @@ class RecipeEditor extends Component
         if (isset($this->ingredients[$index])) {
             unset($this->ingredients[$index]);
             $this->ingredients = array_values($this->ingredients);
-            $this->calculateEstimatedCost();
         }
     }
 

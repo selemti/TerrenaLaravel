@@ -210,7 +210,6 @@
 
   {{-- CSS locales (mismo orden que legacy) --}}
   <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link href="{{ asset('assets/fontawesome-free-7.0.1-web/css/all.min.css') }}" rel="stylesheet">
   <link rel="stylesheet" href="{{ asset('assets/css/terrena.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/css/caja.css') }}">
@@ -339,7 +338,7 @@
 
         {{-- Producción (can_edit_production_order) --}}
         <a class="nav-link {{ ($active ?? '') === 'produccion' ? 'active' : '' }}"
-           href="{{ route('production.index') }}"
+           href="{{ url('/produccion') }}"
            x-show="permsLoaded && window.TerrenaHasPerm('can_edit_production_order')"
            x-cloak>
           <i class="fa-solid fa-industry"></i> <span class="label">Producción</span>
@@ -347,7 +346,7 @@
 
         {{-- Reportes (reports.view) --}}
         <a class="nav-link {{ ($active ?? '') === 'reportes' ? 'active' : '' }}"
-           href="{{ url('/reportes') }}"
+           href="{{ route('reports.dashboard') }}"
            x-show="permsLoaded && window.TerrenaHasPerm('reports.view')"
            x-cloak>
           <i class="fa-solid fa-chart-column"></i> <span class="label">Reportes</span>
@@ -437,7 +436,7 @@
             <div class="dropdown-menu dropdown-menu-end p-0" style="min-width:320px">
               <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center">
                 <strong>Alertas</strong>
-                <a href="{{ url('/reportes') }}" class="link-more small">Ver todas <i class="fa-solid fa-chevron-right ms-1"></i></a>
+                <a href="{{ route('reports.dashboard') }}" class="link-more small">Ver todas <i class="fa-solid fa-chevron-right ms-1"></i></a>
               </div>
               <div id="hdr-alerts-list" class="py-1"></div>
             </div>
@@ -577,8 +576,6 @@
     });
   })();
   </script>
-
-  <x-toast-notification />
 
   @stack('scripts')
 </body>

@@ -10,7 +10,7 @@
 
 Este documento especifica los endpoints de la API de Recetas que gestionan fórmulas de producción, costeo automático, ingredientes y versionado de recetas.
 
-**Endpoints Documentados**: 7
+**Endpoints Documentados**: 6
 **Autenticación**: Laravel Sanctum (Bearer Token)
 **Permisos Requeridos**: `can_view_recipe_dashboard`, `can_manage_recipes`
 
@@ -642,71 +642,6 @@ La implosión permite descomponer una receta en sus ingredientes básicos, útil
 | 404 | Not Found | Receta no existe | Verificar ID |
 | 422 | Validation Error | Datos inválidos | Corregir request |
 | 500 | Internal Server Error | Error de servidor | Contactar soporte |
-
----
-
-### 7. GET /api/recipes/{id}/bom/implode
-
-Implosiona el BOM (Bill of Materials) de una receta para obtener solo ingredientes base.
-
-**¿Qué hace?**
-
-- Recorre recursivamente los ingredientes de una receta y sus sub-recetas.
-- Agrupa insumos repetidos sumando cantidades.
-- Retorna una lista plana con materias primas, lista para requisiciones o análisis de costo.
-
-**Request**
-
-```http
-GET /api/recipes/REC-HAMBUR-001/bom/implode
-Authorization: Bearer {token}
-```
-
-**Response 200 OK**
-
-```json
-{
-  "ok": true,
-  "data": {
-    "recipe_id": "REC-HAMBUR-001",
-    "recipe_name": "Hamburguesa Clásica",
-    "base_ingredients": [
-      {
-        "item_id": "ITEM-HAR-001",
-        "item_code": "HAR-TRIG-500",
-        "item_name": "Harina de Trigo",
-        "qty": 0.5,
-        "uom": "KG",
-        "category": "Harinas"
-      },
-      {
-        "item_id": "ITEM-MAN-002",
-        "item_code": "MAN-SIN-250",
-        "item_name": "Mantequilla sin sal",
-        "qty": 0.05,
-        "uom": "KG",
-        "category": "Lácteos"
-      }
-    ],
-    "total_ingredients": 2
-  },
-  "timestamp": "2025-11-01T10:30:00.000000Z"
-}
-```
-
-**Ejemplo cURL**
-
-```bash
-curl -X GET "https://app.terrena.com/api/recipes/REC-HAMBUR-001/bom/implode" \
-  -H "Authorization: Bearer 1|abc123..." \
-  -H "Accept: application/json"
-```
-
-**Notas**
-
-- Recursión máxima: 10 niveles para evitar loops.
-- Ingredientes duplicados se consolidan con cantidades agregadas.
-- Considerar snapshots para evitar cálculos intensivos en consultas masivas.
 
 ---
 

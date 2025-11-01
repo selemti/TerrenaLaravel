@@ -37,12 +37,7 @@ class ProveedoresIndex extends Component
 
     protected function rules(): array
     {
-        $rfcRules = [
-            'required',
-            'string',
-            'max:20',
-            'regex:/^[A-Z&Ñ]{3,4}\d{6}[A-Z0-9]{3}$/',
-        ];
+        $rfcRules = ['required','string','max:20'];
 
         if ($this->tableReady) {
             $rfcRules[] = Rule::unique('cat_proveedores', 'rfc')->ignore($this->editId);
@@ -51,34 +46,10 @@ class ProveedoresIndex extends Component
         return [
             'rfc'      => $rfcRules,
             'nombre'   => ['required','string','max:120'],
-            'telefono' => ['nullable','string','max:30','regex:/^\d{10}$/'],
+            'telefono' => ['nullable','string','max:30'],
             'email'    => ['nullable','email','max:120'],
             'activo'   => ['boolean'],
         ];
-    }
-
-    protected function messages(): array
-    {
-        return [
-            'rfc.required' => 'El RFC es obligatorio',
-            'rfc.regex' => 'El RFC no tiene un formato válido (ej. ABC123456XYZ)',
-            'rfc.unique' => 'Este RFC ya se encuentra registrado',
-            'nombre.required' => 'El nombre es obligatorio',
-            'nombre.max' => 'El nombre no puede exceder 120 caracteres',
-            'telefono.regex' => 'El teléfono debe contener 10 dígitos',
-            'email.email' => 'El correo electrónico no es válido',
-        ];
-    }
-
-    public function updated($propertyName): void
-    {
-        if (in_array($propertyName, ['rfc', 'nombre', 'telefono', 'email', 'activo'], true)) {
-            if (! $this->tableReady && $propertyName === 'rfc') {
-                return;
-            }
-
-            $this->validateOnly($propertyName);
-        }
     }
 
     private function resetForm(): void

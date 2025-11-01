@@ -2,73 +2,47 @@
 
 namespace App\Models\Rec;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Receta extends Model
 {
-    use HasFactory;
-
-    protected $connection = 'pgsql';
-
-    protected $table = 'selemti.receta_cab';
-
+    protected $table = 'receta_cab'; // Asume DB_SCHEMA=selemti
     protected $primaryKey = 'id';
-
-    public $incrementing = false;
-
+    public $incrementing = false; // El ID es VARCHAR(20)
     protected $keyType = 'string';
-
-    public $timestamps = true;
+    public $timestamps = true; // Tiene created_at y updated_at
 
     protected $fillable = [
-        'id',
-        'nombre_plato',
-        'codigo_plato_pos',
-        'categoria_plato',
-        'porciones_standard',
-        'instrucciones_preparacion',
-        'tiempo_preparacion_min',
-        'costo_standard_porcion',
-        'precio_venta_sugerido',
-        'activo',
+        'id', 'nombre_plato', 'codigo_plato_pos', 'categoria_plato', 
+        'porciones_standard', 'instrucciones_preparacion', 'tiempo_preparacion_min', 
+        'costo_standard_porcion', 'precio_venta_sugerido', 'activo',
     ];
 
     protected $casts = [
         'porciones_standard' => 'integer',
         'tiempo_preparacion_min' => 'integer',
-        'costo_standard_porcion' => 'decimal:2',
+        'costo_standard_porcion' => 'decimal:4', // Costos suelen ser precisos
         'precio_venta_sugerido' => 'decimal:2',
         'activo' => 'boolean',
     ];
 
-    public function versiones(): HasMany
+    public function versiones()
     {
-        return $this->hasMany(RecetaVersion::class, 'receta_id', 'id')
-            ->orderByDesc('version');
+        return $this->hasMany(RecetaVersion::class, 'receta_id', 'id');
     }
 
-    public function detalles(): HasManyThrough
+    public function publishedVersion()
     {
-        return $this->hasManyThrough(
-            RecetaDetalle::class,
-            RecetaVersion::class,
-            'receta_id',
-            'receta_version_id',
-            'id',
-            'id'
-        );
+        return $this->hasOne(RecetaVersion::class, 'receta_id', 'id')
+            ->where('version_publicada', true)
+            ->orderByDesc('fecha_efectiva')
+            ->limit(1);
     }
 
-    public function scopeActivas($query)
+    public function latestVersion()
     {
-        return $query->where('activo', true);
-    }
-
-    protected static function newFactory()
-    {
-        return \Database\Factories\Rec\RecetaFactory::new();
+        return $this->hasOne(RecetaVersion::class, 'receta_id', 'id')
+            ->orderByDesc('version')
+            ->limit(1);
     }
 }

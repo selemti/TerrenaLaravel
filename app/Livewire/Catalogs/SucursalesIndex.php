@@ -28,32 +28,12 @@ class SucursalesIndex extends Component
                 'required',
                 'string',
                 'max:16',
-                'regex:/^[A-Z0-9\-]+$/',
                 Rule::unique('cat_sucursales', 'clave')->ignore($this->editId),
             ],
             'nombre'    => ['required','string','max:120'],
             'ubicacion' => ['nullable','string','max:160'],
             'activo'    => ['boolean'],
         ];
-    }
-
-    protected function messages(): array
-    {
-        return [
-            'clave.required' => 'La clave es obligatoria',
-            'clave.regex' => 'La clave solo debe contener letras, números o guiones',
-            'clave.unique' => 'Ya existe una sucursal con esta clave',
-            'nombre.required' => 'El nombre es obligatorio',
-            'nombre.max' => 'El nombre no puede exceder 120 caracteres',
-            'ubicacion.max' => 'La ubicación no puede exceder 160 caracteres',
-        ];
-    }
-
-    public function updated($propertyName): void
-    {
-        if (in_array($propertyName, ['clave', 'nombre', 'ubicacion', 'activo'], true)) {
-            $this->validateOnly($propertyName);
-        }
     }
 
     private function resetForm(): void

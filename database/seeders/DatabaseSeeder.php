@@ -16,13 +16,5 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             AuditLogDemoSeeder::class,
         ]);
-
-        if ($this->command?->confirm('¿Desea crear catálogos de producción?', true)) {
-            $this->call(CatalogosProductionSeeder::class);
-        }
-
-        if ($this->command?->confirm('¿Desea crear recetas demo?', true)) {
-            $this->call(RecipesProductionSeeder::class);
-        }
     }
 }

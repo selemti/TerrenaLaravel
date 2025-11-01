@@ -50,34 +50,6 @@ class StockPolicyIndex extends Component
         ];
     }
 
-    protected function messages(): array
-    {
-        return [
-            'item_id.required' => 'Selecciona un artículo',
-            'item_id.exists' => 'El artículo seleccionado no es válido',
-            'item_id.unique' => 'Ya existe una política para este artículo y sucursal',
-            'sucursal_id.required' => 'Selecciona una sucursal',
-            'sucursal_id.exists' => 'La sucursal seleccionada no es válida',
-            'min_qty.required' => 'Ingresa un mínimo',
-            'min_qty.gte' => 'El mínimo debe ser mayor o igual a 0',
-            'max_qty.required' => 'Ingresa un máximo',
-            'max_qty.gte' => 'El máximo debe ser mayor o igual al mínimo',
-            'reorder_qty.required' => 'Ingresa un punto de reorden',
-            'reorder_qty.gte' => 'El punto de reorden debe ser mayor o igual a 0',
-        ];
-    }
-
-    public function updated($propertyName): void
-    {
-        if (in_array($propertyName, ['item_id', 'sucursal_id', 'min_qty', 'max_qty', 'reorder_qty', 'activo'], true)) {
-            if (in_array($propertyName, ['min_qty', 'max_qty', 'reorder_qty'], true)) {
-                $this->$propertyName = $this->$propertyName === '' ? 0 : (float) $this->$propertyName;
-            }
-
-            $this->validateOnly($propertyName);
-        }
-    }
-
     private function resetForm(): void
     {
         $this->reset(['editId','item_id','sucursal_id','min_qty','max_qty','reorder_qty']);
