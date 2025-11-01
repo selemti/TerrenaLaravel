@@ -87,15 +87,23 @@ return [
             'driver' => 'pgsql',
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '5432'),
+            'port' => env('DB_PORT', '5433'),
             'database' => env('DB_DATABASE', 'laravel'),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
-            'schema' => env('DB_SCHEMA', 'selemti'),
-            'search_path' => env('DB_SEARCH_PATH', 'selemti,public'),
+            'schema' => $schemaList = (function () {
+                $schemas = array_filter(array_map('trim', explode(',', env('DB_SCHEMA', 'selemti'))));
+
+                if (empty($schemas)) {
+                    return 'selemti';
+                }
+
+                return count($schemas) === 1 ? reset($schemas) : $schemas;
+            })(),
+            'search_path' => env('DB_SEARCH_PATH', is_array($schemaList) ? implode(',', $schemaList) : $schemaList),
             'sslmode' => 'prefer',
         ],
 
