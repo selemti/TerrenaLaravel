@@ -131,12 +131,22 @@ curl -X GET "https://app.terrena.com/api/recipes/REC-001/cost?at=2025-10-15T10:3
 
 ### 2. GET /api/recipes/{id}/bom/implode
 
-Implosiona el BOM de una receta y consolida todos los ingredientes base, evitando recursiones en el cliente.
+**✅ IMPLEMENTADO** - Implosiona el BOM (Bill of Materials) de una receta recursivamente, resolviendo sub-recetas y agregando ingredientes duplicados.
+
+#### Descripción
+
+Este endpoint toma una receta (que puede contener sub-recetas como ingredientes) y la "implota" recursivamente hasta obtener SOLO ingredientes base (items de inventario). Si hay ingredientes duplicados, se agregan las cantidades.
+
+**Casos de uso**:
+- Calcular materiales exactos necesarios para producción
+- Obtener lista de compras consolidada
+- Análisis de dependencias de recetas
+- Validar disponibilidad de inventario
 
 #### Request
 
 ```http
-GET /api/recipes/REC-HAMBUR-001/bom/implode
+GET /api/recipes/{recipe_id}/bom/implode
 Authorization: Bearer {token}
 ```
 
@@ -144,58 +154,213 @@ Authorization: Bearer {token}
 
 | Parámetro | Tipo | Requerido | Descripción |
 |-----------|------|-----------|-------------|
-| `id` | string | Sí | ID de la receta raíz |
+| `id` | string | Sí | ID de la receta (ej: `REC-HAMBUR-001`) |
 
 #### Response 200 OK
 
 ```json
 {
   "ok": true,
-  "data": {
-    "recipe_id": "REC-HAMBUR-001",
-    "recipe_name": "Hamburguesa Clásica",
-    "base_ingredients": [
-      {
-        "item_id": "ITEM-HAR-001",
-        "item_code": "HAR-TRIG-500",
-        "item_name": "Harina de Trigo",
-        "qty": 0.5,
-        "uom": "KG",
-        "category": "Harinas"
-      },
-      {
-        "item_id": "ITEM-MAN-002",
-        "item_code": "MAN-SIN-250",
-        "item_name": "Mantequilla sin sal",
-        "qty": 0.05,
-        "uom": "KG",
-        "category": "Lácteos"
-      }
-    ],
-    "total_ingredients": 4
-  },
-  "timestamp": "2025-11-01T10:30:00.000000Z"
+  "recipe_id": "REC-HAMBUR-001",
+  "recipe_name": "Hamburguesa Clásica",
+  "version_id": 5,
+  "version_number": 1,
+  "base_ingredients": [
+    {
+      "item_id": "ITEM-PAN-001",
+      "item_name": "Pan para hamburguesa",
+      "total_qty": 2.0,
+      "uom": "PZ",
+      "is_base": true
+    },
+    {
+      "item_id": "ITEM-CARNE-001",
+      "item_name": "Carne molida de res",
+      "total_qty": 200.0,
+      "uom": "GR",
+      "is_base": true
+    },
+    {
+      "item_id": "ITEM-TOMATE",
+      "item_name": "Tomate",
+      "total_qty": 150.0,
+      "uom": "GR",
+      "is_base": true
+    },
+    {
+      "item_id": "ITEM-CEBOLLA",
+      "item_name": "Cebolla",
+      "total_qty": 50.0,
+      "uom": "GR",
+      "is_base": true
+    }
+  ],
+  "total_ingredients": 4,
+  "aggregated": true,
+  "timestamp": "2025-11-01T06:20:00.000000Z"
 }
 ```
 
-#### Response 500 Error
+**Campos de respuesta**:
+- `ok`: Boolean - Estado de la operación
+- `recipe_id`: ID de la receta procesada
+- `recipe_name`: Nombre de la receta
+- `version_id`: ID de la versión usada (publicada o última)
+- `version_number`: Número de versión
+- `base_ingredients`: Array de ingredientes base consolidados
+  - `item_id`: ID del item de inventario
+  - `item_name`: Nombre del item
+  - `total_qty`: Cantidad total agregada (si había duplicados)
+  - `uom`: Unidad de medida
+  - `is_base`: true (siempre, indica que es ingrediente base)
+- `total_ingredients`: Cantidad de ingredientes únicos
+- `aggregated`: true (indica que duplicados fueron agregados)
+
+#### Response 404 Not Found
 
 ```json
 {
   "ok": false,
-  "error": "BOM_IMPLOSION_ERROR",
-  "message": "Error al implosionar BOM de receta",
-  "timestamp": "2025-11-01T10:32:10.000000Z"
+  "message": "Receta no encontrada.",
+  "recipe_id": "REC-INVALID"
 }
 ```
 
-#### Ejemplo cURL
+```json
+{
+  "ok": false,
+  "message": "La receta no tiene versiones disponibles.",
+  "recipe_id": "REC-HAMBUR-001"
+}
+```
+
+#### Response 400 Bad Request
+
+```json
+{
+  "ok": false,
+  "message": "Profundidad máxima de recursión excedida (loop detectado en receta). Max: 10 niveles.",
+  "recipe_id": "REC-LOOP-001"
+}
+```
+
+#### Response 500 Internal Server Error
+
+```json
+{
+  "ok": false,
+  "message": "Error al procesar BOM: Database connection failed",
+  "recipe_id": "REC-HAMBUR-001"
+}
+```
+
+#### Ejemplo Receta Simple
+
+**Receta**: Ensalada Simple  
+**Ingredientes directos**: Lechuga (100gr) + Tomate (50gr)
 
 ```bash
-curl -X GET "https://app.terrena.com/api/recipes/REC-HAMBUR-001/bom/implode" \
+curl -X GET "https://app.terrena.com/api/recipes/REC-ENSALADA-001/bom/implode" \
   -H "Authorization: Bearer 1|abc123..." \
   -H "Accept: application/json"
 ```
+
+**Response**:
+```json
+{
+  "ok": true,
+  "recipe_id": "REC-ENSALADA-001",
+  "recipe_name": "Ensalada Simple",
+  "base_ingredients": [
+    {"item_id": "ITEM-LECHUGA", "total_qty": 100.0, "uom": "GR"},
+    {"item_id": "ITEM-TOMATE", "total_qty": 50.0, "uom": "GR"}
+  ],
+  "total_ingredients": 2
+}
+```
+
+#### Ejemplo Receta Compuesta
+
+**Receta**: Pasta con Salsa  
+**Ingredientes**:
+- Pasta (100gr) - item base
+- Salsa Roja (1 porción) - **SUB-RECETA**
+
+**Sub-receta "Salsa Roja"**:
+- Tomate (200gr)
+- Cebolla (50gr)
+
+```bash
+curl -X GET "https://app.terrena.com/api/recipes/REC-PASTA-SALSA/bom/implode" \
+  -H "Authorization: Bearer 1|abc123..." \
+  -H "Accept: application/json"
+```
+
+**Response** (nota que la sub-receta fue implosionada):
+```json
+{
+  "ok": true,
+  "recipe_id": "REC-PASTA-SALSA",
+  "recipe_name": "Pasta con Salsa",
+  "base_ingredients": [
+    {"item_id": "ITEM-PASTA", "total_qty": 100.0, "uom": "GR"},
+    {"item_id": "ITEM-TOMATE", "total_qty": 200.0, "uom": "GR"},
+    {"item_id": "ITEM-CEBOLLA", "total_qty": 50.0, "uom": "GR"}
+  ],
+  "total_ingredients": 3,
+  "aggregated": true
+}
+```
+
+#### Ejemplo Ingredientes Duplicados
+
+**Receta**: Combo de Salsas  
+**Ingredientes**:
+- Salsa Roja (1 porción) - contiene: Tomate 100gr
+- Salsa Verde (1 porción) - contiene: Tomate 50gr
+
+```bash
+curl -X GET "https://app.terrena.com/api/recipes/REC-COMBO-SALSAS/bom/implode" \
+  -H "Authorization: Bearer 1|abc123..." \
+  -H "Accept: application/json"
+```
+
+**Response** (nota que tomate fue agregado):
+```json
+{
+  "ok": true,
+  "recipe_id": "REC-COMBO-SALSAS",
+  "recipe_name": "Combo de Salsas",
+  "base_ingredients": [
+    {"item_id": "ITEM-TOMATE", "total_qty": 150.0, "uom": "GR"}
+  ],
+  "total_ingredients": 1,
+  "aggregated": true
+}
+```
+
+#### Notas Técnicas
+
+**Lógica de Implosión**:
+1. Se obtiene la versión publicada de la receta (o la última versión si no hay publicada)
+2. Se itera sobre cada ingrediente de la receta
+3. Si el `item_id` comienza con `REC-`, se trata como sub-receta y se resuelve recursivamente
+4. Si es un item normal, se agrega directamente al resultado
+5. Ingredientes duplicados se consolidan sumando cantidades
+6. Protección contra loops infinitos (max 10 niveles de profundidad)
+
+**Identificación de Sub-recetas**:
+- Sub-recetas se identifican por `item_id` que comienza con `REC-`
+- Ejemplo: `REC-SALSA-001` es una sub-receta, `ITEM-PAN-001` es un ingrediente base
+
+**Protección contra Loops**:
+- Si la receta A contiene receta B, y receta B contiene receta A (loop), el algoritmo detecta y previene recursión infinita
+- Max profundidad: 10 niveles
+- Si se excede, retorna error 400
+
+**Performance**:
+- Eager loading de relaciones para evitar N+1 queries
+- Complejidad: O(n * d) donde n = ingredientes y d = profundidad máxima
 
 ---
 
