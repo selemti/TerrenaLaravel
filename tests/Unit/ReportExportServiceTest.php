@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Services\Reports\ReportExportService;
 use Carbon\Carbon;
 use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
 
 class ReportExportServiceTest extends TestCase
@@ -21,7 +22,7 @@ class ReportExportServiceTest extends TestCase
             charts: ['ventas_por_dia' => [['fecha' => '01/11', 'total' => 100.0]]],
         );
 
-        $this->assertInstanceOf(Response::class, $response);
+        $this->assertInstanceOf(StreamedResponse::class, $response);
         $this->assertStringContainsString('text/csv', $response->headers->get('Content-Type'));
     }
 
