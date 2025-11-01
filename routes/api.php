@@ -24,7 +24,7 @@ use App\Http\Controllers\Api\Inventory\StockController;
 use App\Http\Controllers\Api\MeController;
 use App\Http\Controllers\Api\Inventory\VendorController;
 use App\Http\Controllers\Inventory\InsumoController;
-use App\Http\Controllers\Inventory\TransferController;
+use App\Http\Controllers\Api\Inventory\TransferController as ApiTransferController;
 use App\Http\Controllers\Api\CatalogsController;
 use App\Http\Controllers\Production\ProductionController;
 use App\Http\Controllers\Purchasing\PurchaseSuggestionController;
@@ -163,12 +163,14 @@ Route::prefix('inventory')->group(function () {
     // Movements
     Route::post('/movements', [StockController::class, 'createMovement']);
 
-    Route::prefix('transfers')->group(function () {
-        Route::post('/create', [TransferController::class, 'create']);
-        Route::post('/{transfer_id}/approve', [TransferController::class, 'approve']);
-        Route::post('/{transfer_id}/ship', [TransferController::class, 'ship']);
-        Route::post('/{transfer_id}/receive', [TransferController::class, 'receive']);
-        Route::post('/{transfer_id}/post', [TransferController::class, 'post']);
+    Route::prefix('transfers')->middleware(['auth:sanctum'])->group(function () {
+        Route::get('/', [ApiTransferController::class, 'index']);
+        Route::post('/', [ApiTransferController::class, 'store']);
+        Route::get('/{id}', [ApiTransferController::class, 'show']);
+        Route::post('/{id}/approve', [ApiTransferController::class, 'approve']);
+        Route::post('/{id}/ship', [ApiTransferController::class, 'ship']);
+        Route::post('/{id}/receive', [ApiTransferController::class, 'receive']);
+        Route::post('/{id}/post', [ApiTransferController::class, 'post']);
     });
 
     // Items
