@@ -60,7 +60,7 @@ class InspectCatalogos extends Command
         try {
             $almacenes = DB::connection('pgsql')
                 ->table('selemti.cat_almacenes')
-                ->select('id', 'descripcion', 'sucursal_id', 'activo')
+                ->select('id', 'clave', 'nombre', 'sucursal_id', 'activo')
                 ->limit(200)
                 ->get();
             $output['almacenes'] = $almacenes->toArray();

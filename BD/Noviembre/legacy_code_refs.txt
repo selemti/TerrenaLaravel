@@ -1,0 +1,564 @@
+=== AUDITORÍA DE REFERENCIAS A TABLAS LEGACY EN CÓDIGO ===
+
+Fecha: dom.,  2 de nov. de 2025 01:09:46 p. m.
+
+──────────────────────────────────────────────
+Buscando referencias a: usuario
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 29 referencias
+app/Models/AuditLog.php:38:     * Usuario que realizó la acción
+app/Models/Caja/SesionCajon.php:18:        'id', 'terminal_id', 'cajero_usuario_id', 'apertura_ts', 'cierre_ts',
+app/Models/Caja/SesionCajon.php:36:        return $this->belongsTo(User::class, 'cajero_usuario_id', 'auto_id'); // Asumiendo users de Floreant
+app/Models/CashFund.php:45:     * Usuario responsable del fondo
+app/Models/CashFund.php:53:     * Usuario que creó el fondo
+  ⚠️ MIGRACIONES: 5 referencias
+database/migrations/2025_10_17_000001_fix_caja_gaps.sql:23:COMMENT ON COLUMN selemti.conciliacion.conciliado_por IS 'Usuario que realizó la conciliación (supervisor/gerente)';
+database/migrations/2025_10_24_100000_create_replenishment_suggestions_table.php:33:                $table->decimal('qty_aprobada', 18, 6)->nullable()->comment('Cantidad ajustada por usuario');
+database/migrations/2025_10_24_100000_create_replenishment_suggestions_table.php:51:                // Fechas y usuarios
+database/migrations/2025_10_24_100000_create_replenishment_suggestions_table.php:61:                $table->text('notas')->nullable()->comment('Notas del usuario');
+database/migrations/2025_10_24_120101_create_purchase_suggestion_lines_table.php:33:                  ->comment('Cantidad modificada manualmente por usuario');
+  ⚠️ CONTROLADORES: 53 referencias
+app/Http/Controllers/Api/Caja/AuthController.php:24:            // Buscar usuario en la base de datos
+app/Http/Controllers/Api/Caja/CajaController.php:21:                    id, terminal_id, cajero_usuario_id, apertura_ts, cierre_ts,
+app/Http/Controllers/Api/Caja/CajaController.php:29:              us.opening_float, us.closing_float, us.cajero_usuario_id AS assigned_user,
+app/Http/Controllers/Api/Caja/CajaController.php:32:              (us.estatus = 'ACTIVA') AS activa, (us.cajero_usuario_id IS NOT NULL) AS asignada,
+app/Http/Controllers/Api/Caja/CajaController.php:40:            LEFT JOIN public.users u ON u.auto_id = us.cajero_usuario_id
+  ⚠️ SERVICIOS: 16 referencias
+app/Services/Cash/CashFundService.php:17:            if (! empty($data['usuarios'])) {
+app/Services/Cash/CashFundService.php:18:                $this->syncUsers($id, $data['usuarios']);
+app/Services/Cash/CashFundService.php:101:            'usuarios' => Arr::get($payload, 'usuarios', []),
+app/Services/Cash/CashFundService.php:105:            throw new \InvalidArgumentException('Sucursal y usuario creador son obligatorios.');
+app/Services/Cash/CashFundService.php:117:        DB::table('caja_fondo_usuario')->where('fondo_id', $fundId)->delete();
+  ⚠️ LIVEWIRE: 40 referencias
+app/Livewire/Audit/Index.php:10: * Este componente permite a usuarios con permisos filtrar y visualizar
+app/Livewire/Audit/Index.php:36:     * desde la sesión del usuario autenticado) para hacer la solicitud HTTP.
+app/Livewire/Audit/Index.php:40:        // En una implementación completa, se usaría el token Sanctum del usuario
+app/Livewire/CashFund/Detail.php:120:        // Obtener nombres de usuarios directamente desde la BD sin cargar relaciones
+app/Livewire/CashFund/Detail.php:127:                                    'Usuario #' . $this->fondo->responsable_user_id;
+  ❌ TOTAL: 143 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: rol
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 8 referencias
+app/Models/Core/UserRole.php:7:class UserRole extends Model
+app/Models/Core/UserRole.php:9:    protected $table = 'selemti.user_roles';
+app/Models/Core/UserRole.php:11:    protected $primaryKey = ['user_id', 'role_id'];
+app/Models/Core/UserRole.php:15:        'user_id', 'role_id', 'assigned_at', 'assigned_by'
+app/Models/User.php:9:use Spatie\Permission\Traits\HasRoles;
+  ⚠️ MIGRACIONES: 34 referencias
+database/migrations/2025_09_26_205955_create_permission_tables.php:17:        $pivotRole = $columnNames['role_pivot_key'] ?? 'role_id';
+database/migrations/2025_09_26_205955_create_permission_tables.php:35:        if (! Schema::hasTable($tableNames['roles'])) {
+database/migrations/2025_09_26_205955_create_permission_tables.php:36:            Schema::create($tableNames['roles'], static function (Blueprint $table) use ($teams, $columnNames) {
+database/migrations/2025_09_26_205955_create_permission_tables.php:38:                $table->bigIncrements('id'); // role id
+database/migrations/2025_09_26_205955_create_permission_tables.php:41:                    $table->index($columnNames['team_foreign_key'], 'roles_team_foreign_key_index');
+  ⚠️ CONTROLADORES: 178 referencias
+app/Http/Controllers/Api/AlertsController.php:3:namespace App\Http\Controllers\Api;
+app/Http/Controllers/Api/AlertsController.php:5:use App\Http\Controllers\Controller;
+app/Http/Controllers/Api/AlertsController.php:10:class AlertsController extends Controller
+app/Http/Controllers/Api/Caja/AuthController.php:3:namespace App\Http\Controllers\Api\Caja;
+app/Http/Controllers/Api/Caja/AuthController.php:5:use App\Http\Controllers\Controller;
+  ⚠️ SERVICIOS: 10 referencias
+app/Services/Cash/CashFundService.php:124:                    'rol' => Arr::get($user, 'rol', 'TITULAR'),
+app/Services/Costing/RecipeCostingService.php:119:            ->leftJoin('labor_roles as lr', 'lr.id', '=', 'rls.labor_role_id')
+Binary file app/Services/Pos/Avance.zip matches
+app/Services/Pos/PosConsumptionService.php:119:                DB::connection('pgsql')->rollBack();
+app/Services/Pos/PosConsumptionService.php:129:                DB::connection('pgsql')->rollBack();
+  ⚠️ LIVEWIRE: 183 referencias
+app/Livewire/Inventory/InsumoCreate.php:64:            && ($user->can('inventory.items.manage') || $user->hasRole('Super Admin'));
+app/Livewire/InventoryCount/Detail.php:79:            body: 'Exportación a PDF en desarrollo'
+app/Livewire/InventoryCount/Detail.php:87:            body: 'Exportación a Excel en desarrollo'
+app/Livewire/People/UsersIndex.php:15:use Spatie\Permission\Models\Role;
+app/Livewire/People/UsersIndex.php:40:    public bool $showRoleModal = false;
+  ❌ TOTAL: 413 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: sucursal
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 65 referencias
+app/Models/Almacen.php:20:     * Sucursal a la que pertenece
+app/Models/Almacen.php:22:    public function sucursal(): BelongsTo
+app/Models/Almacen.php:24:        return $this->belongsTo(Sucursal::class, 'sucursal_id', 'id');
+app/Models/CashFund.php:27:        'sucursal_id',
+app/Models/Catalogs/Almacen.php:15:        'sucursal_id',
+  ⚠️ MIGRACIONES: 77 referencias
+database/migrations/2025_01_23_100000_create_cash_funds_table.php:16:            $table->integer('sucursal_id'); // FK a selemti.cat_sucursales (PostgreSQL)
+database/migrations/2025_01_23_100000_create_cash_funds_table.php:36:            $table->index('sucursal_id');
+database/migrations/2025_10_18_000001_create_cat_sucursales_table.php:10:        if (! Schema::hasTable('cat_sucursales')) {
+database/migrations/2025_10_18_000001_create_cat_sucursales_table.php:11:            Schema::create('cat_sucursales', function (Blueprint $table) {
+database/migrations/2025_10_18_000001_create_cat_sucursales_table.php:24:        Schema::dropIfExists('cat_sucursales');
+  ⚠️ CONTROLADORES: 31 referencias
+app/Http/Controllers/Api/CatalogsController.php:7:use App\Models\Catalogs\Sucursal;
+app/Http/Controllers/Api/CatalogsController.php:54:        if ($r->filled('sucursal_id')) {
+app/Http/Controllers/Api/CatalogsController.php:55:            $query->where('sucursal_id', $r->get('sucursal_id'));
+app/Http/Controllers/Api/CatalogsController.php:58:        $almacenes = $query->with('sucursal')
+app/Http/Controllers/Api/CatalogsController.php:69:    // GET /api/catalogs/sucursales (branches)
+  ⚠️ SERVICIOS: 51 referencias
+app/Services/Cash/CashFundService.php:93:            'sucursal_id' => Arr::get($payload, 'sucursal_id'),
+app/Services/Cash/CashFundService.php:104:        if (! $data['sucursal_id'] || ! $data['creado_por']) {
+app/Services/Cash/CashFundService.php:105:            throw new \InvalidArgumentException('Sucursal y usuario creador son obligatorios.');
+app/Services/Inventory/InventoryCountService.php:21:                'sucursal_id'    => $header['branch_id'] ?? null,
+app/Services/Inventory/InventoryCountService.php:104:                        $count->sucursal_id,
+  ⚠️ LIVEWIRE: 228 referencias
+app/Livewire/CashFund/Approvals.php:307:                    'sucursal_id' => $fondo->sucursal_id,
+app/Livewire/CashFund/Approvals.php:308:                    'sucursal_nombre' => $this->getSucursalNombre($fondo->sucursal_id),
+app/Livewire/CashFund/Approvals.php:348:                'sucursal_nombre' => $this->getSucursalNombre($this->selectedFondo->sucursal_id),
+app/Livewire/CashFund/Approvals.php:381:    protected function getSucursalNombre(int $sucursalId): string
+app/Livewire/CashFund/Approvals.php:384:            $sucursal = DB::connection('pgsql')
+  ❌ TOTAL: 452 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: almacen
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 32 referencias
+app/Models/Almacen.php:9:class Almacen extends Model
+app/Models/Almacen.php:12:    protected $table = 'cat_almacenes';
+app/Models/Almacen.php:32:        return $this->hasMany(ReplenishmentSuggestion::class, 'almacen_id', 'id');
+app/Models/Catalogs/Almacen.php:7:class Almacen extends Model
+app/Models/Catalogs/Almacen.php:10:    protected $table = 'selemti.cat_almacenes';
+  ⚠️ MIGRACIONES: 69 referencias
+database/migrations/2025_10_18_000002_create_cat_almacenes_table.php:10:        if (! Schema::hasTable('cat_almacenes')) {
+database/migrations/2025_10_18_000002_create_cat_almacenes_table.php:11:            Schema::create('cat_almacenes', function (Blueprint $table) {
+database/migrations/2025_10_18_000002_create_cat_almacenes_table.php:24:        Schema::dropIfExists('cat_almacenes');
+database/migrations/2025_10_24_000000_add_almacen_id_to_recepcion_cab.php:18:                // Agregar almacen_id si no existe
+database/migrations/2025_10_24_000000_add_almacen_id_to_recepcion_cab.php:19:                if (!$schema->hasColumn('selemti.recepcion_cab', 'almacen_id')) {
+  ⚠️ CONTROLADORES: 35 referencias
+app/Http/Controllers/Api/CatalogsController.php:6:use App\Models\Catalogs\Almacen;
+app/Http/Controllers/Api/CatalogsController.php:44:    // GET /api/catalogs/almacenes (warehouses)
+app/Http/Controllers/Api/CatalogsController.php:45:    public function almacenes(Request $r)
+app/Http/Controllers/Api/CatalogsController.php:47:        $query = Almacen::query();
+app/Http/Controllers/Api/CatalogsController.php:58:        $almacenes = $query->with('sucursal')
+  ⚠️ SERVICIOS: 51 referencias
+app/Services/Inventory/InventoryCountService.php:22:                'almacen_id'     => $header['warehouse_id'] ?? null,
+app/Services/Inventory/InventoryCountService.php:105:                        $count->almacen_id
+app/Services/Inventory/InventoryCountService.php:125:                        $count->almacen_id
+app/Services/Inventory/InventoryCountService.php:210:            'almacen_id'         => $warehouseId,
+app/Services/Inventory/ProductionService.php:34:                'almacen_id'     => $header['warehouse_id'] ?? null,
+  ⚠️ LIVEWIRE: 86 referencias
+app/Livewire/Catalogs/AlmacenesIndex.php:5:use App\Models\Catalogs\Almacen;
+app/Livewire/Catalogs/AlmacenesIndex.php:12:class AlmacenesIndex extends Component
+app/Livewire/Catalogs/AlmacenesIndex.php:32:                Rule::unique('cat_almacenes', 'clave')->ignore($this->editId),
+app/Livewire/Catalogs/AlmacenesIndex.php:49:        $this->dispatch('toggle-almacen-modal', open: true);
+app/Livewire/Catalogs/AlmacenesIndex.php:54:        $almacen = Almacen::findOrFail($id);
+  ❌ TOTAL: 273 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: bodega
+──────────────────────────────────────────────
+  ⚠️ CONTROLADORES: 1 referencias
+app/Http/Controllers/Inventory/TransferController.php:42:                'origen_nombre' => 'Bodega Central',
+  ⚠️ LIVEWIRE: 1 referencias
+app/Livewire/Inventory/TransferDetail.php:58:     *     "origen_nombre": "Bodega Central",
+  ❌ TOTAL: 2 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: proveedor
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 35 referencias
+app/Models/CashFundMovement.php:34:        'proveedor_id',
+app/Models/CashFundMovement.php:118:     * Obtener nombre del proveedor desde PostgreSQL
+app/Models/CashFundMovement.php:120:    public function getProveedorNombreAttribute(): ?string
+app/Models/CashFundMovement.php:122:        if (!$this->proveedor_id) {
+app/Models/CashFundMovement.php:127:            $proveedor = \DB::connection('pgsql')
+  ⚠️ MIGRACIONES: 55 referencias
+database/migrations/2025_01_23_100001_create_cash_fund_movements_table.php:22:            $table->integer('proveedor_id')->nullable(); // FK a selemti.cat_proveedores (PostgreSQL)
+database/migrations/2025_10_18_000003_create_cat_proveedores_table.php:10:        if (! Schema::hasTable('cat_proveedores')) {
+database/migrations/2025_10_18_000003_create_cat_proveedores_table.php:11:            Schema::create('cat_proveedores', function (Blueprint $table) {
+database/migrations/2025_10_18_000003_create_cat_proveedores_table.php:25:        Schema::dropIfExists('cat_proveedores');
+database/migrations/2025_10_21_100100_alter_cat_proveedores_add_fields.php:12:  WHERE table_schema='selemti' AND table_name='cat_proveedores' AND column_name='razon_social'
+  ⚠️ CONTROLADORES: 10 referencias
+app/Http/Controllers/Api/Inventory/VendorController.php:30:            'codigo_proveedor' => 'nullable|string|max:64',
+app/Http/Controllers/Purchasing/ReturnController.php:11: * Controlador REST para devoluciones a proveedores.
+app/Http/Controllers/Purchasing/ReturnController.php:45:            'message' => 'Devolución al proveedor creada en borrador.',
+app/Http/Controllers/Purchasing/ReturnController.php:111:     * Confirma que el proveedor recibió el material devuelto.
+app/Http/Controllers/Purchasing/ReturnController.php:117:     * @todo Adjuntar evidencia (PDF/Fotos) de la recepción del proveedor.
+  ⚠️ SERVICIOS: 20 referencias
+app/Services/Cash/CashFundService.php:149:            'proveedor_id' => Arr::get($payload, 'proveedor_id'),
+app/Services/Inventory/ProductionService.php:207:                'lote_proveedor'    => $output['lot'] ?? (string) Str::uuid(),
+app/Services/Inventory/ProductionService.php:253:                'lote_proveedor'    => $waste['lot'],
+app/Services/Inventory/ReceptionService.php:24:                'proveedor_id'          => $header['supplier_id'],
+app/Services/Inventory/ReceptionService.php:48:                    'lote_proveedor'        => $line['lot'] ?: (string) Str::uuid(),
+  ⚠️ LIVEWIRE: 75 referencias
+app/Livewire/CashFund/Approvals.php:333:                        'proveedor_nombre' => $mov->proveedor_nombre,
+app/Livewire/CashFund/Arqueo.php:133:                    'proveedor_nombre' => $mov->proveedor_nombre,
+app/Livewire/CashFund/Detail.php:76:                    'proveedor_nombre' => $mov->proveedor_nombre,
+app/Livewire/CashFund/Movements.php:40:        'proveedor_id' => null,
+app/Livewire/CashFund/Movements.php:47:    public array $proveedores = [];
+  ❌ TOTAL: 195 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: unidad_medida_legacy
+──────────────────────────────────────────────
+  ✅ Sin referencias - SAFE TO DROP
+
+──────────────────────────────────────────────
+Buscando referencias a: unidades_medida_legacy
+──────────────────────────────────────────────
+  ⚠️ LIVEWIRE: 3 referencias
+app/Livewire/Inventory/InsumoCreate.php:129:                ->table('selemti.unidades_medida_legacy')
+app/Livewire/Inventory/InsumoCreate.php:193:            ->table('selemti.unidades_medida_legacy')
+app/Livewire/Inventory/ItemsManage.php:602:            ->table('selemti.unidades_medida_legacy')
+  ❌ TOTAL: 3 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: conversiones_unidad_legacy
+──────────────────────────────────────────────
+  ✅ Sin referencias - SAFE TO DROP
+
+──────────────────────────────────────────────
+Buscando referencias a: uom_conversion_legacy
+──────────────────────────────────────────────
+  ✅ Sin referencias - SAFE TO DROP
+
+──────────────────────────────────────────────
+Buscando referencias a: insumo
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 2 referencias
+app/Models/Insumo.php:8:class Insumo extends Model
+app/Models/Insumo.php:14:    protected $table = 'insumo';
+  ⚠️ MIGRACIONES: 10 referencias
+database/migrations/2025_10_30_120000_add_code_columns_to_insumo.php:10:        Schema::table('insumo', function (Blueprint $table) {
+database/migrations/2025_10_30_120000_add_code_columns_to_insumo.php:16:            // TODO: En producción esta tabla es selemti.insumo (esquema selemti).
+database/migrations/2025_10_30_120000_add_code_columns_to_insumo.php:19:            $table->unique('codigo', 'insumo_codigo_unique');
+database/migrations/2025_10_30_120000_add_code_columns_to_insumo.php:23:                'insumo_cat_sub_cons_idx'
+database/migrations/2025_10_30_120000_add_code_columns_to_insumo.php:30:        Schema::table('insumo', function (Blueprint $table) {
+  ⚠️ CONTROLADORES: 13 referencias
+app/Http/Controllers/Inventory/InsumoController.php:7:use App\Services\Inventory\InsumoCodeService;
+app/Http/Controllers/Inventory/InsumoController.php:12:class InsumoController extends Controller
+app/Http/Controllers/Inventory/InsumoController.php:15:        private readonly InsumoCodeService $codeService,
+app/Http/Controllers/Inventory/InsumoController.php:24:        return view('inventory.insumos.create');
+app/Http/Controllers/Inventory/InsumoController.php:53:        $id = DB::table('insumo')->insertGetId([
+  ⚠️ SERVICIOS: 32 referencias
+app/Services/Inventory/InsumoCodeService.php:7:class InsumoCodeService
+app/Services/Inventory/InsumoCodeService.php:10:     * Genera el siguiente código interno para un insumo en selemti.items.
+app/Services/Inventory/ProductionService.php:14:            throw new InvalidArgumentException('Debe registrar al menos un insumo a consumir.');
+app/Services/Inventory/ProductionService.php:164:            throw new InvalidArgumentException('El insumo requiere item_id.');
+app/Services/Inventory/ProductionService.php:168:            throw new InvalidArgumentException('El insumo requiere unidad de medida.');
+  ⚠️ LIVEWIRE: 9 referencias
+app/Livewire/Inventory/InsumoCreate.php:5:use App\Services\Inventory\InsumoCodeService;
+app/Livewire/Inventory/InsumoCreate.php:12:class InsumoCreate extends Component
+app/Livewire/Inventory/InsumoCreate.php:67:            session()->flash('warning', 'No tienes permiso para dar de alta insumos.');
+app/Livewire/Inventory/InsumoCreate.php:115:            $codes = app(InsumoCodeService::class)->generateCode($this->categoria, $this->subcategoria);
+app/Livewire/Inventory/InsumoCreate.php:150:            session()->flash('success', 'Insumo creado correctamente.');
+  ❌ TOTAL: 66 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: lote
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 14 referencias
+app/Models/Core/PerdidaLog.php:17:        'ts', 'item_id', 'lote_id', 'sucursal_id', 'clase', 'motivo', 
+app/Models/Core/PerdidaLog.php:34:    public function lote()
+app/Models/Core/PerdidaLog.php:36:        return $this->belongsTo(Batch::class, 'lote_id');
+app/Models/Inv/Batch.php:16:        'item_id', 'lote_proveedor', 'fecha_recepcion', 'fecha_caducidad', 
+app/Models/Inv/LoteInventario.php:7:class LoteInventario extends Model
+  ⚠️ MIGRACIONES: 6 referencias
+database/migrations/2025_10_26_000004_add_unit_cost_to_inventory_batch.php:24:                $table->decimal('unit_cost', 12, 4)->default(0.00)->comment('Costo unitario del lote para costeo por batch.');
+database/migrations/2025_11_15_000000_create_inventory_receiving_tables.php:47:                $table->string('lote_proveedor', 120);
+database/migrations/2025_11_15_000000_create_inventory_receiving_tables.php:61:                $table->index('lote_proveedor');
+database/migrations/2025_11_15_000000_create_inventory_receiving_tables.php:64:                $table->unique(['item_id', 'lote_proveedor', 'sucursal_id', 'almacen_id'], 'inventory_batch_item_lote_unique');
+database/migrations/2025_11_15_000000_create_inventory_receiving_tables.php:74:                $table->string('lote_proveedor', 120)->nullable();
+  ⚠️ CONTROLADORES: 5 referencias
+app/Http/Controllers/Api/Inventory/StockController.php:165:        if ($r->filled('lote_id')) $q->where('lote_id', $r->get('lote_id'));
+app/Http/Controllers/Api/Inventory/StockController.php:204:            'lote_id' => 'nullable|integer',
+app/Http/Controllers/Api/Inventory/StockController.php:225:                'lote_id' => $data['lote_id'] ?? null,
+app/Http/Controllers/Inventory/TransferController.php:197:     * @todo Validar que `lines` incluya lote y diferencias máximas permitidas.
+app/Http/Controllers/Production/ProductionController.php:94:     * @todo Registrar métricas de rendimiento y lotes generados.
+  ⚠️ SERVICIOS: 10 referencias
+app/Services/Inventory/ProductionService.php:207:                'lote_proveedor'    => $output['lot'] ?? (string) Str::uuid(),
+app/Services/Inventory/ProductionService.php:224:            'lote_producido'     => $output['lot'] ?? null,
+app/Services/Inventory/ProductionService.php:253:                'lote_proveedor'    => $waste['lot'],
+app/Services/Inventory/ReceivingService.php:47:     * @todo Upsert real en recepcion_det y enlazar lotes / tolerancias.
+app/Services/Inventory/ReceptionService.php:48:                    'lote_proveedor'        => $line['lot'] ?: (string) Str::uuid(),
+  ⚠️ LIVEWIRE: 3 referencias
+app/Livewire/Inventory/ItemsIndex.php:48:    public ?string $moveLote = null;
+app/Livewire/Inventory/ItemsIndex.php:199:                'lote_codigo'   => $this->moveLote,
+app/Livewire/Inventory/LotsIndex.php:21:                'b.lote_proveedor as lote',
+  ❌ TOTAL: 38 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: merma
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 4 referencias
+app/Models/Insumo.php:29:        'merma_pct',
+app/Models/ProductionOrder.php:18:        'qty_merma' => 'decimal:2',
+app/Models/Rec/RecetaDetalle.php:18:        'merma_porcentaje', 'instrucciones_especificas', 'orden', 'created_at'
+app/Models/Rec/RecetaDetalle.php:23:        'merma_porcentaje' => 'decimal:2',
+  ⚠️ MIGRACIONES: 1 referencias
+database/migrations/2025_11_15_020000_create_production_tables.php:21:                $table->decimal('qty_merma', 18, 6)->default(0);
+  ⚠️ CONTROLADORES: 6 referencias
+app/Http/Controllers/Api/CatalogsController.php:114:                'value' => 'MERMA',
+app/Http/Controllers/Api/CatalogsController.php:115:                'label' => 'Merma',
+app/Http/Controllers/Api/CatalogsController.php:116:                'description' => 'Merma o desperdicio',
+app/Http/Controllers/Api/Inventory/StockController.php:199:            'tipo' => 'required|string|in:ENTRADA,SALIDA,AJUSTE,MERMA',
+app/Http/Controllers/Inventory/InsumoController.php:38:            'merma_pct'           => ['sometimes', 'numeric', 'between:0,100'],
+  ⚠️ SERVICIOS: 12 referencias
+app/Services/Inventory/ProductionService.php:31:                'qty_merma'      => 0,
+app/Services/Inventory/ProductionService.php:121:                    'tipo'               => 'MERMA',
+app/Services/Inventory/ProductionService.php:140:                    'qty_merma'     => $totals['waste'],
+app/Services/Inventory/ProductionService.php:235:            throw new InvalidArgumentException('La merma requiere item_id.');
+app/Services/Inventory/ProductionService.php:239:            throw new InvalidArgumentException('La merma requiere unidad de medida.');
+  ⚠️ LIVEWIRE: 20 referencias
+app/Livewire/Inventory/InsumoCreate.php:20:    public float $merma_pct = 0.0;
+app/Livewire/Inventory/InsumoCreate.php:94:                'merma_pct'    => $this->merma_pct,
+app/Livewire/Inventory/InsumoCreate.php:103:                'merma_pct'    => ['required', 'numeric', 'between:0,100', 'decimal:0,3'],
+app/Livewire/Inventory/InsumoCreate.php:110:                'merma_pct'    => 'merma %',
+app/Livewire/Inventory/InsumoCreate.php:159:                'merma_pct',
+  ❌ TOTAL: 43 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: stock_policy
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 3 referencias
+app/Models/Catalogs/StockPolicy.php:11:    protected $table = 'inv_stock_policy';
+app/Models/Inv/PoliticaStock.php:9:    protected $table = 'selemti.stock_policy';
+app/Models/StockPolicy.php:11:    protected $table = 'stock_policy';
+  ⚠️ MIGRACIONES: 5 referencias
+database/migrations/2025_10_18_000005_create_inv_stock_policy_table.php:10:        if (! Schema::hasTable('inv_stock_policy')) {
+database/migrations/2025_10_18_000005_create_inv_stock_policy_table.php:11:            Schema::create('inv_stock_policy', function (Blueprint $table) {
+database/migrations/2025_10_18_000005_create_inv_stock_policy_table.php:21:                $table->unique(['item_id', 'sucursal_id'], 'inv_stock_policy_item_store_unique');
+database/migrations/2025_10_18_000005_create_inv_stock_policy_table.php:32:        Schema::dropIfExists('inv_stock_policy');
+Binary file database/migrations/Migraciones al 27_10_2025.zip matches
+  ⚠️ SERVICIOS: 3 referencias
+app/Services/Replenishment/ReplenishmentService.php:26:     * Genera sugerencias diarias de reposición basadas en stock_policy
+app/Services/Replenishment/ReplenishmentService.php:56:            ->table('stock_policy')
+app/Services/Replenishment/ReplenishmentService.php:130:                            'stock_policy_id' => $policy->id,
+  ⚠️ LIVEWIRE: 1 referencias
+app/Livewire/Catalogs/StockPolicyIndex.php:31:        $uniqueRule = Rule::unique('inv_stock_policy', 'item_id')
+  ❌ TOTAL: 12 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: transfer_cab
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 1 referencias
+app/Models/Inventory/TransferHeader.php:17:    protected $table = 'selemti.transfer_cab';
+  ❌ TOTAL: 1 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: transfer_det
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 1 referencias
+app/Models/Inventory/TransferLine.php:15:    protected $table = 'selemti.transfer_det';
+  ❌ TOTAL: 1 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: traspaso_cab
+──────────────────────────────────────────────
+  ✅ Sin referencias - SAFE TO DROP
+
+──────────────────────────────────────────────
+Buscando referencias a: traspaso_det
+──────────────────────────────────────────────
+  ✅ Sin referencias - SAFE TO DROP
+
+──────────────────────────────────────────────
+Buscando referencias a: op_cab
+──────────────────────────────────────────────
+  ✅ Sin referencias - SAFE TO DROP
+
+──────────────────────────────────────────────
+Buscando referencias a: op_produccion_cab
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 1 referencias
+app/Models/Rec/OrdenProduccion.php:9:    protected $table = 'selemti.op_produccion_cab';
+  ❌ TOTAL: 1 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: prod_cab
+──────────────────────────────────────────────
+  ✅ Sin referencias - SAFE TO DROP
+
+──────────────────────────────────────────────
+Buscando referencias a: sol_prod_cab
+──────────────────────────────────────────────
+  ✅ Sin referencias - SAFE TO DROP
+
+──────────────────────────────────────────────
+Buscando referencias a: op_insumo
+──────────────────────────────────────────────
+  ✅ Sin referencias - SAFE TO DROP
+
+──────────────────────────────────────────────
+Buscando referencias a: prod_det
+──────────────────────────────────────────────
+  ✅ Sin referencias - SAFE TO DROP
+
+──────────────────────────────────────────────
+Buscando referencias a: sol_prod_det
+──────────────────────────────────────────────
+  ✅ Sin referencias - SAFE TO DROP
+
+──────────────────────────────────────────────
+Buscando referencias a: op_yield
+──────────────────────────────────────────────
+  ✅ Sin referencias - SAFE TO DROP
+
+──────────────────────────────────────────────
+Buscando referencias a: receta
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 37 referencias
+app/Models/AuditLog.php:55:            'receta' => 'Recetas',
+app/Models/AuditLog.php:83:            'receta' => 'receta',
+app/Models/Core/JobRecalculo.php:14:        'scope_type', 'scope_from', 'scope_to', 'item_id', 'receta_id', 'sucursal_id', 
+app/Models/Pos/MenuItem.php:6:use App\Models\Rec\Receta;
+app/Models/Pos/MenuItem.php:15:     'name', 'description', 'price', 'group_id', 'visible', 'recepie', // recepie es la FK a la receta
+  ⚠️ MIGRACIONES: 11 referencias
+database/migrations/2025_10_21_200200_recipe_versioning_and_history.php:31:  uom_receta        VARCHAR(20) NOT NULL
+database/migrations/2025_10_21_200300_fn_recipe_cost_at.php:30:     SELECT item_id, qty, uom_receta
+database/migrations/2025_10_21_200300_fn_recipe_cost_at.php:35:       selemti.fn_item_unit_cost_at(r.item_id, p_at, r.uom_receta) * r.qty, 0
+database/migrations/2025_10_26_000005_create_pos_map_table.php:12: * @see /docs/Recetas/POS_MAPPING.md
+database/migrations/2025_10_26_000006_create_ticket_item_modifiers_table.php:12: * @see /docs/Recetas/POS_REPROCESSING.md
+  ⚠️ CONTROLADORES: 46 referencias
+app/Http/Controllers/Api/Inventory/RecipeCostController.php:6:use App\Models\Rec\Receta;
+app/Http/Controllers/Api/Inventory/RecipeCostController.php:7:use App\Models\Rec\RecetaVersion;
+app/Http/Controllers/Api/Inventory/RecipeCostController.php:41:                'message' => 'No se encontró información de costo para la receta solicitada.',
+app/Http/Controllers/Api/Inventory/RecipeCostController.php:52:     * Implotar BOM (Bill of Materials) de una receta
+app/Http/Controllers/Api/Inventory/RecipeCostController.php:53:     * Retorna solo ingredientes base (items de inventario), resolviendo sub-recetas recursivamente
+  ⚠️ SERVICIOS: 155 referencias
+app/Services/Inventory/PosConsumptionService.php:41:            'origen' => Arr::get($line, 'origen', 'RECETA'),
+Binary file app/Services/Pos/Avance.zip matches
+app/Services/Pos/DTO/PosConsumptionDiagnostics.php:10:     * @param int $itemsConReceta
+app/Services/Pos/DTO/PosConsumptionDiagnostics.php:11:     * @param int $itemsSinReceta
+app/Services/Pos/DTO/PosConsumptionDiagnostics.php:18:     * @param array|null $itemsSinRecetaDetalle Lista de items sin receta con detalles
+  ⚠️ LIVEWIRE: 56 referencias
+app/Livewire/Audit/LogViewer.php:161:            'recetas',
+app/Livewire/Inventory/AlertsList.php:92:            'pageTitle' => 'Alertas de costo de recetas',
+app/Livewire/Inventory/OrquestadorPanel.php:7:use App\Services\Recetas\RecalcularCostosRecetasService;
+app/Livewire/Inventory/OrquestadorPanel.php:51:            $recalculationService = app(RecalcularCostosRecetasService::class);
+app/Livewire/Pos/PosMap.php:27:        'receta_id' => '',
+  ❌ TOTAL: 305 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: receta_cab
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 2 referencias
+app/Models/Pos/MenuItem.php:27:        // Asume que la columna 'recepie' guarda el ID de la tabla selemti.receta_cab
+app/Models/Rec/Receta.php:12:    protected $table = 'receta_cab'; // Asume DB_SCHEMA=selemti
+  ⚠️ LIVEWIRE: 3 referencias
+app/Livewire/Recipes/RecipeEditor.php:132:        $last = DB::table('selemti.receta_cab')
+app/Livewire/Recipes/RecipeEditor.php:193:                DB::table('selemti.receta_cab')->insert([
+app/Livewire/Recipes/RecipeEditor.php:208:                DB::table('selemti.receta_cab')
+  ❌ TOTAL: 5 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: receta_det
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 1 referencias
+app/Models/Rec/RecetaDetalle.php:12:    protected $table = 'selemti.receta_det';
+  ⚠️ SERVICIOS: 3 referencias
+app/Services/Pos/DTO/PosConsumptionDiagnostics.php:118:            'items_sin_receta_detalle' => $this->itemsSinRecetaDetalle,
+app/Services/Recetas/RecalcularCostosRecetasService.php:297:            ->join('receta_version', 'receta_det.receta_version_id', '=', 'receta_version.id')
+app/Services/Recetas/RecalcularCostosRecetasService.php:317:            ->join('receta_version', 'receta_det.receta_version_id', '=', 'receta_version.id')
+  ❌ TOTAL: 4 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: receta_insumo
+──────────────────────────────────────────────
+  ✅ Sin referencias - SAFE TO DROP
+
+──────────────────────────────────────────────
+Buscando referencias a: receta_version
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 6 referencias
+app/Models/Rec/OrdenProduccion.php:14:        'receta_version_id', 'cantidad_planeada', 'cantidad_real', 
+app/Models/Rec/OrdenProduccion.php:26:        return $this->belongsTo(RecetaVersion::class, 'receta_version_id');
+app/Models/Rec/RecetaDetalle.php:17:        'receta_version_id', 'item_id', 'cantidad', 'unidad_medida', 
+app/Models/Rec/RecetaDetalle.php:29:        return $this->belongsTo(RecetaVersion::class, 'receta_version_id');
+app/Models/Rec/RecetaVersion.php:11:    protected $table = 'selemti.receta_version';
+  ⚠️ SERVICIOS: 8 referencias
+app/Services/Recetas/RecalcularCostosRecetasService.php:297:            ->join('receta_version', 'receta_det.receta_version_id', '=', 'receta_version.id')
+app/Services/Recetas/RecalcularCostosRecetasService.php:298:            ->where('receta_version.version_publicada', true)
+app/Services/Recetas/RecalcularCostosRecetasService.php:299:            ->where('receta_version.fecha_efectiva', '<=', $date)
+app/Services/Recetas/RecalcularCostosRecetasService.php:300:            ->pluck('receta_version.receta_id')
+app/Services/Recetas/RecalcularCostosRecetasService.php:317:            ->join('receta_version', 'receta_det.receta_version_id', '=', 'receta_version.id')
+  ⚠️ LIVEWIRE: 6 referencias
+app/Livewire/Pos/PosMap.php:28:        'receta_version_id' => null,
+app/Livewire/Pos/PosMap.php:132:                'receta_version_id' => $mapping->receta_version_id,
+app/Livewire/Pos/PosMap.php:159:            'receta_version_id' => $this->form['receta_version_id'] ?: null,
+app/Livewire/Pos/PosMap.php:221:            'receta_version_id' => null,
+app/Livewire/Recipes/RecipeEditor.php:235:            RecetaDetalle::where('receta_version_id', $version->id)->delete();
+  ❌ TOTAL: 20 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: receta_shadow
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 1 referencias
+app/Models/Rec/RecetaShadow.php:9:    protected $table = 'selemti.receta_shadow';
+  ❌ TOTAL: 1 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: caja_fondo
+──────────────────────────────────────────────
+  ⚠️ SERVICIOS: 8 referencias
+app/Services/Cash/CashFundService.php:15:            $id = DB::table('caja_fondo')->insertGetId($data);
+app/Services/Cash/CashFundService.php:30:        return (int) DB::connection('pgsql')->table('caja_fondo_mov')->insertGetId($data);
+app/Services/Cash/CashFundService.php:35:        DB::connection('pgsql')->table('caja_fondo_mov')
+app/Services/Cash/CashFundService.php:61:            DB::connection('pgsql')->table('caja_fondo_adj')->insert($rows->all());
+app/Services/Cash/CashFundService.php:70:            DB::table('caja_fondo_arqueo')->insert([
+  ❌ TOTAL: 8 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: caja_fondo_mov
+──────────────────────────────────────────────
+  ⚠️ SERVICIOS: 2 referencias
+app/Services/Cash/CashFundService.php:30:        return (int) DB::connection('pgsql')->table('caja_fondo_mov')->insertGetId($data);
+app/Services/Cash/CashFundService.php:35:        DB::connection('pgsql')->table('caja_fondo_mov')
+  ❌ TOTAL: 2 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: caja_fondo_adj
+──────────────────────────────────────────────
+  ⚠️ SERVICIOS: 1 referencias
+app/Services/Cash/CashFundService.php:61:            DB::connection('pgsql')->table('caja_fondo_adj')->insert($rows->all());
+  ❌ TOTAL: 1 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: caja_fondo_arqueo
+──────────────────────────────────────────────
+  ⚠️ SERVICIOS: 1 referencias
+app/Services/Cash/CashFundService.php:70:            DB::table('caja_fondo_arqueo')->insert([
+  ❌ TOTAL: 1 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: auditoria
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 2 referencias
+app/Models/Core/Auditoria.php:7:class Auditoria extends Model
+app/Models/Core/Auditoria.php:9:    protected $table = 'selemti.auditoria';
+  ⚠️ CONTROLADORES: 2 referencias
+app/Http/Controllers/Api/Caja/PostcorteController.php:99:                    INSERT INTO selemti.auditoria (quien, que, payload)
+app/Http/Controllers/Api/Caja/PostcorteController.php:221:                    INSERT INTO selemti.auditoria (quien, que, payload)
+  ❌ TOTAL: 4 referencias - REQUIERE REVISIÓN
+
+──────────────────────────────────────────────
+Buscando referencias a: audit_log
+──────────────────────────────────────────────
+  ⚠️ MODELOS: 2 referencias
+app/Models/AuditLog.php:16:    protected $table = 'selemti.audit_log';
+app/Models/CashFundMovementAuditLog.php:16:    protected $table = 'selemti.cash_fund_movement_audit_log';
+  ⚠️ MIGRACIONES: 37 referencias
+database/migrations/2025_01_23_110000_create_cash_fund_movement_audit_log_table.php:14:        Schema::connection('pgsql')->create('selemti.cash_fund_movement_audit_log', function (Blueprint $table) {
+database/migrations/2025_01_23_110000_create_cash_fund_movement_audit_log_table.php:48:        Schema::connection('pgsql')->dropIfExists('selemti.cash_fund_movement_audit_log');
+database/migrations/2025_10_28_000010_create_audit_log_table.php:15:        Schema::connection('pgsql')->create('selemti.audit_log', function (Blueprint $table) {
+database/migrations/2025_10_28_000010_create_audit_log_table.php:37:        Schema::connection('pgsql')->dropIfExists('selemti.audit_log');
+database/migrations/2025_10_28_200000_add_indexes_to_audit_log_table.php:15:        if (!Schema::hasTable('selemti.audit_log')) {
+  ⚠️ CONTROLADORES: 2 referencias
+app/Http/Controllers/Audit/AuditLogController.php:38:            ->table('selemti.audit_log')
+app/Http/Controllers/Audit/LogController.php:135:            ->table('selemti.audit_log')
+  ⚠️ SERVICIOS: 2 referencias
+app/Services/Audit/AuditLogService.php:27:            ->table('selemti.audit_log')
+app/Services/Audit/AuditQueryService.php:33:        $query = DB::connection('pgsql')->table('selemti.audit_log')
+  ⚠️ LIVEWIRE: 3 referencias
+app/Livewire/Audit/LogViewer.php:147:            ->table('selemti.audit_log')
+app/Livewire/People/UsersIndex.php:400:     * Esta bitácora se guarda en selemti.audit_log y es requisito de auditoría
+app/Livewire/People/UsersIndex.php:438:     * Cada acción de suspensión / reactivación debe registrarse en selemti.audit_log con:
+  ❌ TOTAL: 46 referencias - REQUIERE REVISIÓN
+
+══════════════════════════════════════════════
+=== RESUMEN FINAL ===
+══════════════════════════════════════════════
+Total de referencias a tablas legacy: 2040
+
+⚠️ SE ENCONTRARON 2040 REFERENCIAS
+   Revisar manualmente antes de ejecutar DROPs.
+
+=== FIN DE AUDITORÍA ===

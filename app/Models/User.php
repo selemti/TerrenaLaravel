@@ -16,11 +16,11 @@ class User extends Authenticatable
     protected $connection = 'pgsql';
     protected $table = 'selemti.users';
     protected $primaryKey = 'id';
-    
+
+    // La tabla selemti.users usa 'username' y 'password_hash' en lugar de 'name' y 'password'
     protected $fillable = [
         'username',
         'password_hash',
-        'remember_token',
         'email',
         'nombre_completo',
         'sucursal_id',
@@ -28,8 +28,6 @@ class User extends Authenticatable
         'fecha_ultimo_login',
         'intentos_login',
         'bloqueado_hasta',
-        'created_at',
-        'updated_at',
     ];
 
     /**
@@ -50,33 +48,23 @@ class User extends Authenticatable
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'intentos_login' => 'integer',
-        // Nota: 'password_hash' debe manejarse externamente, no con 'hashed'.
     ];
-    
+
     /**
-     * Define la columna que contiene el hash de la contraseña para Laravel Auth.
+     * Get the password for the user.
+     * Laravel espera 'password' pero la tabla usa 'password_hash'
      */
     public function getAuthPassword()
     {
         return $this->password_hash;
     }
 
-    public function getNameAttribute(): string
+    /**
+     * Accessor para compatibilidad con código que use 'name'
+     */
+    public function getNameAttribute()
     {
-        return $this->attributes['nombre_completo']
-            ?? $this->attributes['username']
-            ?? $this->attributes['email']
-            ?? '';
-    }
-
-    public function getEmailAttribute($value): ?string
-    {
-        return $value ?: null;
-    }
-
-    public function setEmailAttribute($value): void
-    {
-        $this->attributes['email'] = $value ? strtolower(trim($value)) : null;
+        return $this->username ?? $this->nombre_completo;
     }
 
     public function legacyRoles()

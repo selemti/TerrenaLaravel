@@ -35,9 +35,10 @@ class Unidad extends Model
     public $timestamps = true;
 
     protected $fillable = [
-        'clave',   // VARCHAR(16) UNIQUE NOT NULL
-        'nombre',  // VARCHAR(64) NOT NULL
-        'activo',  // boolean DEFAULT true
+        'clave',     // VARCHAR(16) UNIQUE NOT NULL
+        'nombre',    // VARCHAR(64) NOT NULL
+        'categoria', // VARCHAR(20) NULL - BASE, COCINA, COMPRA, PORCION
+        'activo',    // boolean DEFAULT true
     ];
 
     protected $casts = [
@@ -90,7 +91,12 @@ class Unidad extends Model
 
     public function scopeBase($query)
     {
-        return $query->whereIn('clave', ['KG', 'L', 'PZ']);
+        return $query->where('categoria', 'BASE');
+    }
+
+    public function scopePorCategoria($query, string $categoria)
+    {
+        return $query->where('categoria', $categoria);
     }
 
     // =====================================================

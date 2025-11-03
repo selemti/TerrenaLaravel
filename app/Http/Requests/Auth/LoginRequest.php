@@ -71,14 +71,6 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        if (! $user->activo) {
-            RateLimiter::hit($this->throttleKey());
-
-            throw ValidationException::withMessages([
-                'login' => __('Esta cuenta está desactivada.'),
-            ]);
-        }
-
         $credentials = $this->credentialsFor($user, $login, $password);
 
         if (! Auth::attempt($credentials, $this->boolean('remember'))) {
@@ -136,6 +128,7 @@ class LoginRequest extends FormRequest
         if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
             $query->whereRaw('LOWER(email) = ?', [Str::lower($login)]);
         } else {
+            // Buscar por username si no es email
             $query->whereRaw('LOWER(username) = ?', [Str::lower($login)]);
         }
 
@@ -146,12 +139,12 @@ class LoginRequest extends FormRequest
     {
         $credentials = [
             'password' => $password,
-            'activo' => true,
         ];
 
         if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
             $credentials['email'] = $user->email;
         } else {
+            // Autenticar por username si no es email
             $credentials['username'] = $user->username;
         }
 

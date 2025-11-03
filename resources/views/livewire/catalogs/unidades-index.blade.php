@@ -9,75 +9,70 @@
     <div class="card shadow-sm border-0">
       <div class="card-body">
         <div class="row g-2 align-items-end">
-          <div class="col-md-4">
+          <div class="col-md-6">
             <label class="form-label small text-muted mb-1">Búsqueda</label>
-            <input type="search" class="form-control form-control-sm" placeholder="Código o nombre" wire:model.live.debounce.400ms="q">
-          </div>
-          <div class="col-md-3">
-            <label class="form-label small text-muted mb-1">Tipo</label>
-            <select class="form-select form-select-sm" wire:model.live="tipo">
-              <option value="">Todos</option>
-              <option value="PESO">PESO</option>
-              <option value="VOLUMEN">VOLUMEN</option>
-              <option value="UNIDAD">UNIDAD</option>
-              <option value="TIEMPO">TIEMPO</option>
-            </select>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+              <input type="search" class="form-control" placeholder="Clave o nombre" wire:model.live.debounce.400ms="search">
+            </div>
           </div>
           <div class="col-md-3">
             <label class="form-label small text-muted mb-1">Categoría</label>
             <select class="form-select form-select-sm" wire:model.live="categoria">
               <option value="">Todas</option>
-              <option value="METRICO">MÉTRICO</option>
-              <option value="IMPERIAL">IMPERIAL</option>
-              <option value="CULINARIO">CULINARIO</option>
+              <option value="BASE">Base (KG, L, PZ)</option>
+              <option value="COCINA">Cocina (Recetas)</option>
+              <option value="COMPRA">Compra (Empaques)</option>
+              <option value="PORCION">Porción (Servicio)</option>
             </select>
           </div>
-          <div class="col-md-2">
-            <label class="form-label small text-muted mb-1">Por página</label>
-            <select class="form-select form-select-sm" wire:model.live="perPage">
-              <option value="10">10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-            </select>
+          <div class="col-md-3 text-md-end">
+            <label class="form-label small text-muted mb-1">&nbsp;</label>
+            <button class="btn btn-sm btn-primary w-100" wire:click="createNew">
+              <i class="fa-solid fa-plus me-1"></i> Nueva unidad
+            </button>
           </div>
-        </div>
-        <div class="text-end mt-3">
-          <button class="btn btn-sm btn-primary" wire:click="createNew">
-            <i class="fa-solid fa-plus me-1"></i> Nueva unidad
-          </button>
         </div>
       </div>
       <div class="table-responsive">
         <table class="table table-striped table-sm align-middle mb-0">
           <thead class="table-light">
           <tr>
-            <th>Código</th>
+            <th>Clave</th>
             <th>Nombre</th>
-            <th>Tipo</th>
             <th>Categoría</th>
-            <th class="text-center">Base</th>
-            <th class="text-end">Factor</th>
-            <th class="text-center">Dec</th>
+            <th class="text-center">Activa</th>
             <th class="text-end">Acciones</th>
           </tr>
           </thead>
           <tbody>
           @forelse($rows as $row)
             <tr>
-              <td class="fw-semibold">{{ $row->codigo }}</td>
+              <td class="fw-semibold">{{ $row->clave }}</td>
               <td>{{ $row->nombre }}</td>
-              <td>{{ $row->tipo ?? '—' }}</td>
-              <td>{{ $row->categoria ?? '—' }}</td>
+              <td>
+                @if($row->categoria)
+                  @php
+                    $badgeClass = match($row->categoria) {
+                      'BASE' => 'bg-primary',
+                      'COCINA' => 'bg-info',
+                      'COMPRA' => 'bg-success',
+                      'PORCION' => 'bg-warning text-dark',
+                      default => 'bg-secondary'
+                    };
+                  @endphp
+                  <span class="badge {{ $badgeClass }}">{{ $row->categoria }}</span>
+                @else
+                  <span class="text-muted">—</span>
+                @endif
+              </td>
               <td class="text-center">
-                @if($row->es_base)
+                @if($row->activo)
                   <span class="badge bg-success">Sí</span>
                 @else
                   <span class="badge bg-secondary">No</span>
                 @endif
               </td>
-              <td class="text-end">{{ number_format((float) $row->factor_conversion_base, 6) }}</td>
-              <td class="text-center">{{ $row->decimales }}</td>
               <td class="text-end">
                 <button class="btn btn-sm btn-outline-primary me-1" wire:click="edit({{ $row->id }})">
                   <i class="fa-regular fa-pen-to-square"></i>
@@ -91,7 +86,7 @@
             </tr>
           @empty
             <tr>
-              <td colspan="8" class="text-center text-muted py-4">Sin resultados.</td>
+              <td colspan="5" class="text-center text-muted py-4">Sin resultados.</td>
             </tr>
           @endforelse
           </tbody>
@@ -116,58 +111,42 @@
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label">Código</label>
-                <input type="text" class="form-control @error('form.codigo') is-invalid @enderror"
-                       wire:model.defer="form.codigo" maxlength="10">
-                @error('form.codigo')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <label class="form-label">Clave <span class="text-danger">*</span></label>
+                <input type="text" class="form-control @error('form.clave') is-invalid @enderror"
+                       wire:model.defer="form.clave" maxlength="16" required>
+                @error('form.clave')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <small class="form-text text-muted">
+                  <i class="fa-solid fa-lightbulb me-1"></i>
+                  Código único para identificar la unidad (ej: KG, L, PZ, TAZA)
+                </small>
               </div>
               <div class="mb-3">
-                <label class="form-label">Nombre</label>
+                <label class="form-label">Nombre <span class="text-danger">*</span></label>
                 <input type="text" class="form-control @error('form.nombre') is-invalid @enderror"
-                       wire:model.defer="form.nombre" maxlength="50">
+                       wire:model.defer="form.nombre" maxlength="64" required>
                 @error('form.nombre')<div class="invalid-feedback">{{ $message }}</div>@enderror
               </div>
-              <div class="row g-3">
-                <div class="col-6">
-                  <label class="form-label">Tipo</label>
-                  <select class="form-select @error('form.tipo') is-invalid @enderror" wire:model.defer="form.tipo">
-                    <option value="PESO">PESO</option>
-                    <option value="VOLUMEN">VOLUMEN</option>
-                    <option value="UNIDAD">UNIDAD</option>
-                    <option value="TIEMPO">TIEMPO</option>
-                  </select>
-                  @error('form.tipo')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-                <div class="col-6">
-                  <label class="form-label">Categoría</label>
-                  <select class="form-select @error('form.categoria') is-invalid @enderror" wire:model.defer="form.categoria">
-                    <option value="">(ninguna)</option>
-                    <option value="METRICO">MÉTRICO</option>
-                    <option value="IMPERIAL">IMPERIAL</option>
-                    <option value="CULINARIO">CULINARIO</option>
-                  </select>
-                  @error('form.categoria')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
+              <div class="mb-3">
+                <label class="form-label">Categoría <span class="text-danger">*</span></label>
+                <select class="form-select @error('form.categoria') is-invalid @enderror" wire:model.defer="form.categoria" required>
+                  <option value="">-- Seleccione --</option>
+                  <option value="BASE">Base (Inventario normalizado)</option>
+                  <option value="COCINA">Cocina (Recetas)</option>
+                  <option value="COMPRA">Compra (Empaques)</option>
+                  <option value="PORCION">Porción (Servicio)</option>
+                </select>
+                @error('form.categoria')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <small class="form-text text-muted">
+                  <i class="fa-solid fa-circle-info me-1"></i>
+                  <strong>BASE:</strong> Solo KG, L, PZ.
+                  <strong>COCINA:</strong> Para recetas.
+                  <strong>COMPRA:</strong> Empaques.
+                  <strong>PORCION:</strong> Servicio.
+                </small>
               </div>
-              <div class="row g-3 mt-1">
-                <div class="col-6">
-                  <label class="form-label">Factor base</label>
-                  <input type="number" step="0.000001" min="0.000001"
-                         class="form-control @error('form.factor_conversion_base') is-invalid @enderror"
-                         wire:model.defer="form.factor_conversion_base">
-                  @error('form.factor_conversion_base')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-                <div class="col-6">
-                  <label class="form-label">Decimales</label>
-                  <input type="number" min="0" max="6"
-                         class="form-control @error('form.decimales') is-invalid @enderror"
-                         wire:model.defer="form.decimales">
-                  @error('form.decimales')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-              </div>
-              <div class="form-check mt-3">
-                <input class="form-check-input" type="checkbox" id="unidadBase" wire:model.defer="form.es_base">
-                <label class="form-check-label" for="unidadBase">Unidad base</label>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="unidadActiva" wire:model.defer="form.activo">
+                <label class="form-check-label" for="unidadActiva">Unidad activa</label>
               </div>
             </div>
             <div class="modal-footer">

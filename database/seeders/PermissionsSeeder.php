@@ -178,7 +178,7 @@ class PermissionsSeeder extends Seeder
         // Ya que MeController trata 'Super Admin' como acceso total, aquí sólo
         // reforzamos que el usuario soporte SIEMPRE tenga ese rol.
         // El usuario 'soporte' siempre mantiene el rol Super Admin como acceso raíz del sistema.
-        $super = User::where('username', 'soporte')->first();
+        $super = User::where('email', 'soporte@terrena.com')->first();
         if ($super && ! $super->hasRole('Super Admin')) {
             $super->assignRole('Super Admin');
         }

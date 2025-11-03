@@ -232,6 +232,11 @@ Route::prefix('recipes')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/{id}/cost', [RecipeCostController::class, 'show']);
     // BOM Implosion endpoint
     Route::get('/{id}/bom/implode', [RecipeCostController::class, 'implodeBom']);
+    
+    // Cost Snapshots endpoints
+    Route::post('/{id}/cost/snapshot', [RecipeCostController::class, 'createSnapshot']);
+    Route::get('/{id}/cost/history', [RecipeCostController::class, 'getHistory']);
+    Route::get('/{id}/cost/compare', [RecipeCostController::class, 'compareSnapshots']);
 });
 
 // Transfers API

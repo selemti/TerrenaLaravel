@@ -2,7 +2,9 @@
 
 namespace App\Services\Costing;
 
+use App\Models\Rec\RecipeCostSnapshot;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -202,5 +204,129 @@ class RecipeCostingService
             'batch_cost' => round($total, 6),
             'items' => $items,
         ];
+    }
+
+    /**
+     * Create a cost snapshot for a recipe
+     * Uses sp_snapshot_recipe_cost stored procedure
+     */
+    public function createSnapshot(int $recipeId, ?CarbonInterface $at = null, ?string $notes = null): RecipeCostSnapshot
+    {
+        $at = $at ?? now();
+        
+        // Call stored procedure to create snapshot
+        DB::connection($this->connection)->statement(
+            'SELECT selemti.sp_snapshot_recipe_cost(?, ?)',
+            [$recipeId, $at->toDateTimeString()]
+        );
+
+        // Retrieve the created snapshot
+        $snapshot = RecipeCostSnapshot::forRecipe($recipeId)
+            ->where('snapshot_at', $at->toDateTimeString())
+            ->latest()
+            ->firstOrFail();
+
+        // Update notes if provided
+        if ($notes) {
+            $snapshot->notes = $notes;
+            $snapshot->save();
+        }
+
+        return $snapshot;
+    }
+
+    /**
+     * Get cost history for a recipe
+     */
+    public function getHistory(
+        int $recipeId,
+        ?CarbonInterface $from = null,
+        ?CarbonInterface $to = null,
+        int $limit = 100
+    ): Collection {
+        $query = RecipeCostSnapshot::forRecipe($recipeId)->latest();
+
+        if ($from && $to) {
+            $query->betweenDates($from->toDateTimeString(), $to->toDateTimeString());
+        } elseif ($from) {
+            $query->where('snapshot_at', '>=', $from->toDateTimeString());
+        } elseif ($to) {
+            $query->where('snapshot_at', '<=', $to->toDateTimeString());
+        }
+
+        return $query->limit($limit)->get();
+    }
+
+    /**
+     * Get latest snapshot for a recipe
+     */
+    public function getLatestSnapshot(int $recipeId): ?RecipeCostSnapshot
+    {
+        return RecipeCostSnapshot::forRecipe($recipeId)
+            ->latest()
+            ->first();
+    }
+
+    /**
+     * Compare two snapshots and calculate variance
+     */
+    public function compareSnapshots(RecipeCostSnapshot $current, RecipeCostSnapshot $previous): array
+    {
+        $portionDiff = $current->portion_cost - $previous->portion_cost;
+        $portionPct = $previous->portion_cost > 0 
+            ? ($portionDiff / $previous->portion_cost) * 100 
+            : 0;
+
+        $batchDiff = $current->batch_cost - $previous->batch_cost;
+        $batchPct = $previous->batch_cost > 0 
+            ? ($batchDiff / $previous->batch_cost) * 100 
+            : 0;
+
+        return [
+            'current' => [
+                'id' => $current->id,
+                'snapshot_at' => $current->snapshot_at,
+                'portion_cost' => $current->portion_cost,
+                'batch_cost' => $current->batch_cost,
+            ],
+            'previous' => [
+                'id' => $previous->id,
+                'snapshot_at' => $previous->snapshot_at,
+                'portion_cost' => $previous->portion_cost,
+                'batch_cost' => $previous->batch_cost,
+            ],
+            'variance' => [
+                'portion_diff' => round($portionDiff, 4),
+                'portion_pct' => round($portionPct, 2),
+                'batch_diff' => round($batchDiff, 4),
+                'batch_pct' => round($batchPct, 2),
+                'days_between' => $previous->snapshot_at->diffInDays($current->snapshot_at),
+            ],
+        ];
+    }
+
+    /**
+     * Check if cost variance exceeds threshold (for auto-snapshot triggers)
+     */
+    public function shouldCreateAutoSnapshot(int $recipeId, float $thresholdPct = 2.0): bool
+    {
+        $latest = $this->getLatestSnapshot($recipeId);
+        
+        if (!$latest) {
+            return true; // No snapshot exists, create first one
+        }
+
+        // Calculate current cost
+        $current = $this->calculate($recipeId);
+        $currentPortionCost = $current['portion_cost'];
+        $latestPortionCost = $latest->portion_cost;
+
+        if ($latestPortionCost == 0) {
+            return false;
+        }
+
+        $variance = abs(($currentPortionCost - $latestPortionCost) / $latestPortionCost) * 100;
+
+        return $variance >= $thresholdPct;
     }
 }

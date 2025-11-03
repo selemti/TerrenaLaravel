@@ -24,7 +24,6 @@ class VerifyCatalogTables extends Command
         'cat_almacenes'       => ['clave', 'nombre'],
         'inv_stock_policy'    => ['item_id', 'sucursal_id'],
         'items'               => ['id', 'nombre'],
-        'selemti.unidades_medida' => ['codigo', 'nombre'],
     ];
 
     public function handle(): int

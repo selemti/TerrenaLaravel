@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Inventory;
 use App\Http\Controllers\Controller;
 use App\Models\Rec\Receta;
 use App\Models\Rec\RecetaVersion;
+use App\Services\Costing\RecipeCostingService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,8 +13,9 @@ use Illuminate\Support\Facades\DB;
 
 class RecipeCostController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        private readonly RecipeCostingService $costingService
+    ) {
         $this->middleware(['auth:sanctum', 'permission:can_view_recipe_dashboard']);
     }
 
@@ -213,5 +215,140 @@ class RecipeCostController extends Controller
         }
 
         return $ingredients;
+    }
+
+    /**
+     * Create a cost snapshot for a recipe
+     * POST /api/recipes/{id}/cost/snapshot
+     */
+    public function createSnapshot(Request $request, string $id): JsonResponse
+    {
+        $request->validate([
+            'at' => 'nullable|date',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $receta = Receta::findOrFail($id);
+            
+            $at = $request->input('at') ? Carbon::parse($request->input('at')) : now();
+            $notes = $request->input('notes');
+
+            $snapshot = $this->costingService->createSnapshot(
+                (int) $receta->id,
+                $at,
+                $notes
+            );
+
+            return response()->json([
+                'ok' => true,
+                'message' => 'Snapshot creado exitosamente',
+                'data' => [
+                    'id' => $snapshot->id,
+                    'recipe_id' => $snapshot->recipe_id,
+                    'snapshot_at' => $snapshot->snapshot_at,
+                    'portion_cost' => $snapshot->portion_cost,
+                    'batch_cost' => $snapshot->batch_cost,
+                    'yield_portions' => $snapshot->yield_portions,
+                    'notes' => $snapshot->notes,
+                ],
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Error al crear snapshot: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get cost history for a recipe
+     * GET /api/recipes/{id}/cost/history
+     */
+    public function getHistory(Request $request, string $id): JsonResponse
+    {
+        $request->validate([
+            'from' => 'nullable|date',
+            'to' => 'nullable|date',
+            'limit' => 'nullable|integer|min:1|max:500',
+        ]);
+
+        try {
+            $receta = Receta::findOrFail($id);
+            
+            $from = $request->input('from') ? Carbon::parse($request->input('from')) : null;
+            $to = $request->input('to') ? Carbon::parse($request->input('to')) : null;
+            $limit = $request->input('limit', 100);
+
+            $history = $this->costingService->getHistory(
+                (int) $receta->id,
+                $from,
+                $to,
+                $limit
+            );
+
+            return response()->json([
+                'ok' => true,
+                'data' => $history->map(fn($snapshot) => [
+                    'id' => $snapshot->id,
+                    'snapshot_at' => $snapshot->snapshot_at,
+                    'portion_cost' => $snapshot->portion_cost,
+                    'batch_cost' => $snapshot->batch_cost,
+                    'yield_portions' => $snapshot->yield_portions,
+                    'cost_change_pct' => $snapshot->cost_change_percentage,
+                    'notes' => $snapshot->notes,
+                ]),
+                'meta' => [
+                    'count' => $history->count(),
+                    'recipe_id' => $id,
+                    'from' => $from?->toIso8601String(),
+                    'to' => $to?->toIso8601String(),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Error al obtener historial: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Compare two cost snapshots
+     * GET /api/recipes/{id}/cost/compare
+     */
+    public function compareSnapshots(Request $request, string $id): JsonResponse
+    {
+        $request->validate([
+            'current_id' => 'required|integer|exists:selemti.recipe_cost_history,id',
+            'previous_id' => 'required|integer|exists:selemti.recipe_cost_history,id',
+        ]);
+
+        try {
+            $receta = Receta::findOrFail($id);
+            
+            $current = \App\Models\Rec\RecipeCostSnapshot::findOrFail($request->input('current_id'));
+            $previous = \App\Models\Rec\RecipeCostSnapshot::findOrFail($request->input('previous_id'));
+
+            // Verify both snapshots belong to same recipe
+            if ($current->recipe_id != $receta->id || $previous->recipe_id != $receta->id) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Los snapshots no pertenecen a la receta especificada',
+                ], 422);
+            }
+
+            $comparison = $this->costingService->compareSnapshots($current, $previous);
+
+            return response()->json([
+                'ok' => true,
+                'data' => $comparison,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Error al comparar snapshots: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

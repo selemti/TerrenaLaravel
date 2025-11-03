@@ -15,11 +15,12 @@ class UnidadesIndex extends Component
     protected string $paginationTheme = 'bootstrap';
 
     // Filtros / querystring
-    public string $q = '';
-    public int $perPage = 25;
+    public string $search = '';
+    public string $categoria = '';
 
     protected $queryString = [
-        'q' => ['except' => ''],
+        'search' => ['except' => ''],
+        'categoria' => ['except' => ''],
     ];
 
     // Form modal/simple
@@ -27,11 +28,12 @@ class UnidadesIndex extends Component
     public array $form = [
         'clave' => '',
         'nombre' => '',
+        'categoria' => '',
         'activo' => true,
     ];
 
-    public function updatingQ() { $this->resetPage(); }
-    public function updatedPerPage() { $this->resetPage(); }
+    public function updatingSearch() { $this->resetPage(); }
+    public function updatedCategoria() { $this->resetPage(); }
 
     protected function rules()
     {
@@ -41,8 +43,9 @@ class UnidadesIndex extends Component
         }
 
         return [
-            'form.clave' => ['required', 'string', 'max:16', 'regex:/^[A-Z0-9]{1,16}$/', $uniqueClave],
+            'form.clave' => ['required', 'string', 'max:16', 'regex:/^[A-Z0-9_]{1,16}$/', $uniqueClave],
             'form.nombre' => ['required', 'string', 'max:64'],
+            'form.categoria' => ['required', 'string', 'in:BASE,COCINA,COMPRA,PORCION'],
             'form.activo' => ['boolean'],
         ];
     }
@@ -52,6 +55,7 @@ class UnidadesIndex extends Component
         return [
             'clave' => '',
             'nombre' => '',
+            'categoria' => '',
             'activo' => true,
         ];
     }
@@ -75,6 +79,7 @@ class UnidadesIndex extends Component
         $this->form = [
             'clave' => $u->clave,
             'nombre' => $u->nombre,
+            'categoria' => $u->categoria ?? '',
             'activo' => $u->activo,
         ];
         $this->dispatch('toggle-unidad-modal', open: true);
@@ -116,18 +121,23 @@ class UnidadesIndex extends Component
     {
         $q = Unidad::query();
 
-        if ($this->q !== '') {
-            $needle = mb_strtoupper($this->q);
+        if ($this->search !== '') {
+            $needle = mb_strtoupper($this->search);
             $q->where(function ($qq) use ($needle) {
                 $qq->whereRaw('UPPER(clave) LIKE ?', ["%{$needle}%"])
                    ->orWhereRaw('UPPER(nombre) LIKE ?', ["%{$needle}%"]);
             });
         }
 
-        $q->orderBy('clave');
+        if ($this->categoria !== '') {
+            $q->where('categoria', $this->categoria);
+        }
+
+        $q->orderBy('categoria', 'asc')
+          ->orderBy('clave', 'asc');
 
         return view('livewire.catalogs.unidades-index', [
-            'rows' => $q->paginate($this->perPage),
+            'rows' => $q->paginate(50),
         ])->layout('layouts.terrena', [
             'active'    => 'config',
             'title'     => 'Catálogo · Unidades de Medida',

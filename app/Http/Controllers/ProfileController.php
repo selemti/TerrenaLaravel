@@ -24,10 +24,10 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
-        $user->nombre_completo = trim($validated['name']);
+        $user->name = trim($validated['name']);
 
         if (! empty($validated['password'])) {
-            $user->password_hash = Hash::make($validated['password']);
+            $user->password = Hash::make($validated['password']);
         }
 
         $user->save();

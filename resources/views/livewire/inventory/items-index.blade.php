@@ -59,49 +59,122 @@
 
     {{-- Tabla --}}
     <div class="card">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Catálogo de Items</h6>
+            <a href="{{ route('inventory.items.new') }}" class="btn btn-sm btn-primary">
+                <i class="fa-solid fa-plus me-1"></i> Nuevo Item
+            </a>
+        </div>
         <div class="card-body table-responsive">
-            <table class="table align-middle">
-                <thead>
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
                 <tr>
-                    <th>SKU</th>
-                    <th>Producto</th>
-                    <th>UDM base</th>
-                    <th class="text-end">Existencia</th>
-                    <th class="text-end">Mín</th>
-                    <th class="text-end">Máx</th>
-                    <th class="text-end">Costo (base)</th>
-                    <th>Sucursal</th>
+                    <th>SKU / Código</th>
+                    <th>Categoría</th>
+                    <th>Unidad base</th>
+                    <th>Tipo</th>
+                    <th class="text-end">Precio vigente</th>
+                    <th>Proveedor</th>
+                    <th>Estado</th>
                     <th class="text-end">Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
-                @foreach($rows as $r)
-                    @php
-                        $low = ($r->existencia ?? 0) < ($r->minimo ?? 0);
-                    @endphp
+                @forelse($rows as $r)
                     <tr>
-                        <td>{{ $r->sku }}</td>
-                        <td>{{ $r->producto }}</td>
-                        <td>{{ $r->udm_base }}</td>
-                        <td class="text-end {{ $low ? 'text-danger fw-semibold' : '' }}">{{ number_format($r->existencia ?? 0, 2) }}</td>
-                        <td class="text-end">{{ number_format($r->minimo ?? 0, 0) }}</td>
-                        <td class="text-end">{{ number_format($r->maximo ?? 0, 0) }}</td>
-                        <td class="text-end">${{ number_format($r->costo_base ?? 0, 4) }}</td>
-                        <td><span class="badge text-bg-secondary">{{ $r->sucursal }}</span></td>
+                        <td>
+                            <div class="fw-semibold">{{ $r->sku ?: $r->item_id }}</div>
+                            <small class="text-muted d-block">{{ $r->producto }}</small>
+                            @if($r->descripcion)
+                                <small class="text-muted fst-italic d-block">{{ Str::limit($r->descripcion, 60) }}</small>
+                            @endif
+                            @if($r->perishable)
+                                <span class="badge bg-warning text-dark">Perecedero</span>
+                            @endif
+                            @if($r->activo)
+                                <span class="badge bg-success">Activo</span>
+                            @else
+                                <span class="badge bg-secondary">Inactivo</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($r->categoria_nombre)
+                                <span class="badge bg-info">{{ $r->categoria_nombre }}</span>
+                            @else
+                                <span class="text-muted">{{ $r->categoria_id ?: '—' }}</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($r->udm_base)
+                                <span class="badge bg-primary">{{ $r->udm_base }}</span>
+                                @if($r->udm_base_nombre)
+                                    <small class="text-muted d-block">{{ $r->udm_base_nombre }}</small>
+                                @endif
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($r->tipo)
+                                <span class="badge" style="background-color:
+                                    {{ $r->tipo === 'MATERIA_PRIMA' ? '#6c757d' : ($r->tipo === 'ELABORADO' ? '#0d6efd' : '#198754') }}">
+                                    {{ $r->tipo }}
+                                </span>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
                         <td class="text-end">
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary"
-                                        wire:click="openMove('{{ $r->item_id }}','{{ addslashes($r->producto) }}','{{ $r->udm_base }}')">Mover</button>
-                                <button class="btn btn-sm btn-outline-secondary"
-                                        wire:click="openKardex('{{ $r->item_id }}','{{ addslashes($r->producto) }}')">Kardex</button>
-                                <a class="btn btn-sm btn-outline-dark" href="#">Editar</a>
+                            @if($r->costo_promedio)
+                                <span class="fw-semibold">${{ number_format($r->costo_promedio, 2) }}</span>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
+                        <td>
+                            <span class="text-muted">—</span>
+                            {{-- TODO: JOIN con item_vendor para mostrar proveedor principal --}}
+                        </td>
+                        <td>
+                            @if($r->activo)
+                                <span class="badge bg-success">Activo</span>
+                            @else
+                                <span class="badge bg-secondary">Inactivo</span>
+                            @endif
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-secondary"
+                                        wire:click="openKardex('{{ $r->item_id }}','{{ addslashes($r->producto) }}')"
+                                        title="Ver Kardex">
+                                    <i class="fa-solid fa-list"></i>
+                                </button>
+                                <a class="btn btn-outline-primary"
+                                   href="{{ route('inventory.items.edit', $r->item_id) }}"
+                                   title="Editar">
+                                    <i class="fa-regular fa-pen-to-square"></i>
+                                </a>
                             </div>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="fa-regular fa-folder-open fa-3x mb-2 d-block"></i>
+                            No se encontraron items.
+                        </td>
+                    </tr>
+                @endforelse
                 </tbody>
             </table>
-            {{ $rows->links() }}
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="text-muted">
+                    Mostrando {{ $rows->count() }} de {{ $rows->total() }} items
+                </div>
+                <div>
+                    {{ $rows->links() }}
+                </div>
+            </div>
         </div>
     </div>
 

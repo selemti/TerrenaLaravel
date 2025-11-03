@@ -10,21 +10,25 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $password = Hash::make('Terrena123#');
-
         $user = User::query()->updateOrCreate(
-            ['email' => 'soporte@selemti.com'],
+            ['username' => 'soporte'],
             [
-                'username' => 'soporte',
-                'password_hash' => $password,
-                'nombre_completo' => 'Soporte SelemTI',
-                'sucursal_id' => 'CENTRO',
+                'email' => 'soporte@terrena.com',
+                'nombre_completo' => 'Usuario Soporte',
+                'password_hash' => Hash::make('password'), // Cambiar en producción
+                'sucursal_id' => 'SUR',
                 'activo' => true,
-                'intentos_login' => 0,
             ]
         );
 
-        $user->syncRoles(['Super Admin']);
+        // Sincronizar roles si la tabla existe
+        try {
+            $user->syncRoles(['Super Admin']);
+        } catch (\Exception $e) {
+            $this->command->warn('No se pudieron asignar roles: ' . $e->getMessage());
+        }
+
+        $this->command->info('Usuario creado: username=soporte / password=password');
     }
 }
 
