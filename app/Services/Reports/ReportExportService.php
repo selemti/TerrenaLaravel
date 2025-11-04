@@ -31,27 +31,47 @@ class ReportExportService
 
         $callback = function () use ($range, $from, $to, $kpis, $charts) {
             $output = fopen('php://output', 'w');
+            // Añadir BOM para que se muestre correctamente en Excel
+            fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+            
             fputcsv($output, ['Dashboard Terrena ERP']);
             fputcsv($output, ['Rango', $range]);
             fputcsv($output, ['Desde', $from->toDateTimeString()]);
             fputcsv($output, ['Hasta', $to->toDateTimeString()]);
             fputcsv($output, []);
+            
             fputcsv($output, ['KPIs']);
-
+            fputcsv($output, ['Nombre', 'Valor']);
+            
             foreach ($kpis as $key => $value) {
-                fputcsv($output, [Str::headline(str_replace('_', ' ', $key)), $value]);
+                $formattedValue = $this->formatValue($key, $value);
+                fputcsv($output, [Str::headline(str_replace('_', ' ', $key)), $formattedValue]);
             }
 
             fputcsv($output, []);
-            fputcsv($output, ['Gráficas']);
-
+            
             foreach ($charts as $key => $dataset) {
                 fputcsv($output, [Str::headline(str_replace('_', ' ', $key))]);
-                if (is_array($dataset)) {
-                    foreach ($dataset as $row) {
-                        fputcsv($output, array_values((array) $row));
+                
+                if (is_array($dataset) && count($dataset) > 0) {
+                    $firstRow = reset($dataset);
+                    if (is_array($firstRow)) {
+                        // Si los datos son estructurados (con claves), incluir encabezados
+                        fputcsv($output, array_keys($firstRow));
+                        foreach ($dataset as $row) {
+                            fputcsv($output, array_values((array) $row));
+                        }
+                    } else {
+                        // Si los datos son simples, usar una columna
+                        fputcsv($output, ['Valor']);
+                        foreach ($dataset as $row) {
+                            fputcsv($output, [(string)$row]);
+                        }
                     }
+                } else {
+                    fputcsv($output, ['No hay datos disponibles']);
                 }
+                
                 fputcsv($output, []);
             }
 
@@ -65,12 +85,120 @@ class ReportExportService
     {
         $filename = sprintf('dashboard_%s_%s.pdf', $range, now()->format('Ymd_His'));
 
-        $content = $this->buildMinimalPdf($range, $from, $to, $kpis, $charts);
+        // Generar contenido HTML para convertir a PDF
+        $html = $this->buildHtmlForPdf($range, $from, $to, $kpis, $charts);
 
-        return response($content, 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-        ]);
+        // Intentar usar una librería de PDF si está disponible, o usar el método actual
+        if (class_exists('Barryvdh\DomPDF\ServiceProvider')) {
+            $pdf = app('dompdf.wrapper');
+            $pdf->loadHTML($html);
+            return $pdf->download($filename);
+        } else {
+            // Si no está instalada la librería, generamos un PDF básico
+            $content = $this->buildMinimalPdf($range, $from, $to, $kpis, $charts);
+
+            return response($content, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            ]);
+        }
+    }
+
+    /**
+     * Genera un HTML para el PDF
+     *
+     * @param  array<string,float>  $kpis
+     * @param  array<string,array<int,mixed>>  $charts
+     */
+    protected function buildHtmlForPdf(string $range, Carbon $from, Carbon $to, array $kpis, array $charts): string
+    {
+        $html = '<!DOCTYPE html>';
+        $html .= '<html>';
+        $html .= '<head>';
+        $html .= '<meta charset="utf-8">';
+        $html .= '<title>Dashboard Reporte</title>';
+        $html .= '<style>';
+        $html .= 'body { font-family: Arial, sans-serif; margin: 20px; }';
+        $html .= 'h1, h2 { color: #333; }';
+        $html .= 'table { width: 100%; border-collapse: collapse; margin: 20px 0; }';
+        $html .= 'th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }';
+        $html .= 'th { background-color: #f2f2f2; }';
+        $html .= '.header { background-color: #4e73df; color: white; padding: 10px; margin-bottom: 20px; }';
+        $html .= '</style>';
+        $html .= '</head>';
+        $html .= '<body>';
+        $html .= '<div class="header"><h1>Dashboard Terrena ERP</h1></div>';
+        $html .= '<p><strong>Rango:</strong> ' . htmlspecialchars($range) . '</p>';
+        $html .= '<p><strong>Desde:</strong> ' . htmlspecialchars($from->toDateTimeString()) . '</p>';
+        $html .= '<p><strong>Hasta:</strong> ' . htmlspecialchars($to->toDateTimeString()) . '</p>';
+        $html .= '<h2>KPIs</h2>';
+        $html .= '<table>';
+        $html .= '<thead><tr><th>Nombre</th><th>Valor</th></tr></thead>';
+        $html .= '<tbody>';
+
+        foreach ($kpis as $key => $value) {
+            $formattedKey = Str::headline(str_replace('_', ' ', $key));
+            $formattedValue = $this->formatValue($key, $value);
+            $html .= '<tr><td>' . htmlspecialchars($formattedKey) . '</td><td>' . htmlspecialchars($formattedValue) . '</td></tr>';
+        }
+
+        $html .= '</tbody></table>';
+
+        foreach ($charts as $key => $rows) {
+            $html .= '<h2>' . htmlspecialchars(Str::headline(str_replace('_', ' ', $key))) . '</h2>';
+            if (is_array($rows) && count($rows) > 0) {
+                $html .= '<table>';
+                $html .= '<thead><tr>';
+                
+                // Crear encabezados basados en las claves del primer elemento
+                $firstRow = reset($rows);
+                if (is_array($firstRow)) {
+                    foreach (array_keys($firstRow) as $header) {
+                        $html .= '<th>' . htmlspecialchars(Str::headline(str_replace('_', ' ', $header))) . '</th>';
+                    }
+                } else {
+                    $html .= '<th>Valor</th>';
+                }
+                
+                $html .= '</tr></thead>';
+                $html .= '<tbody>';
+                
+                foreach ($rows as $row) {
+                    $html .= '<tr>';
+                    if (is_array($row)) {
+                        foreach ($row as $cell) {
+                            $html .= '<td>' . htmlspecialchars((string)$cell) . '</td>';
+                        }
+                    } else {
+                        $html .= '<td>' . htmlspecialchars((string)$row) . '</td>';
+                    }
+                    $html .= '</tr>';
+                }
+                
+                $html .= '</tbody></table>';
+            } else {
+                $html .= '<p>No hay datos disponibles</p>';
+            }
+        }
+
+        $html .= '</body>';
+        $html .= '</html>';
+
+        return $html;
+    }
+
+    /**
+     * Formatea valores según el tipo de KPI
+     */
+    protected function formatValue(string $key, float $value): string
+    {
+        if (Str::contains($key, ['ventas', 'compras', 'inventario', 'costo'])) {
+            return '$' . number_format($value, 2);
+        } elseif (Str::contains($key, ['merma', 'eficiencia'])) {
+            return number_format($value, 1) . '%';
+        } else {
+            return number_format($value, 1);
+        }
     }
 
     /**
@@ -90,7 +218,7 @@ class ReportExportService
         $lines[] = 'KPIs';
 
         foreach ($kpis as $key => $value) {
-            $lines[] = sprintf('- %s: %s', Str::headline(str_replace('_', ' ', $key)), number_format($value, 2));
+            $lines[] = sprintf('- %s: %s', Str::headline(str_replace('_', ' ', $key)), $this->formatValue($key, $value));
         }
 
         $lines[] = '';

@@ -4,6 +4,10 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\SessionApiTokenController;
 use App\Http\Controllers\Audit\AuditLogController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Reports\SalesDiagController;
+use App\Http\Controllers\Reports\SalesDrawerController;
+use App\Http\Controllers\Reports\SalesMixController;
+use App\Http\Controllers\Reports\SalesModsController;
 use App\Services\Audit\AuditLogService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -361,12 +365,30 @@ Route::middleware('auth')->group(function () {
         ->name('session.api-token.revoke');
 
     // Reportes de Ventas
-    Route::prefix('reports')->middleware('auth')->group(function () {
-        Route::get('/sales', [App\Http\Controllers\Reports\SalesReportController::class, 'index'])
-            ->name('reports.sales');
-        Route::get('/sales/mix', [App\Http\Controllers\Reports\SalesReportWebController::class, 'salesMix'])
-            ->name('reports.sales.mix');
-    });
+    Route::prefix('reports')
+        ->middleware(['auth', 'permission:reports.view'])
+        ->group(function () {
+            Route::get('/sales', [App\Http\Controllers\Reports\SalesReportController::class, 'index'])
+                ->name('reports.sales');
+
+            Route::prefix('sales')->group(function () {
+                Route::get('/mix', [SalesMixController::class, 'show'])->name('reports.sales.mix');
+                Route::get('/mix/export/xlsx', [SalesMixController::class, 'exportExcel'])->name('reports.sales.mix.export.xlsx');
+                Route::get('/mix/export/pdf', [SalesMixController::class, 'exportPdf'])->name('reports.sales.mix.export.pdf');
+
+                Route::get('/drawer', [SalesDrawerController::class, 'show'])->name('reports.sales.drawer');
+                Route::get('/drawer/export/xlsx', [SalesDrawerController::class, 'exportExcel'])->name('reports.sales.drawer.export.xlsx');
+                Route::get('/drawer/export/pdf', [SalesDrawerController::class, 'exportPdf'])->name('reports.sales.drawer.export.pdf');
+
+                Route::get('/diagnostics', [SalesDiagController::class, 'show'])->name('reports.sales.diagnostics');
+                Route::get('/diagnostics/export/xlsx', [SalesDiagController::class, 'exportExcel'])->name('reports.sales.diagnostics.export.xlsx');
+                Route::get('/diagnostics/export/pdf', [SalesDiagController::class, 'exportPdf'])->name('reports.sales.diagnostics.export.pdf');
+
+                Route::get('/mods', [SalesModsController::class, 'show'])->name('reports.sales.mods');
+                Route::get('/mods/export/xlsx', [SalesModsController::class, 'exportExcel'])->name('reports.sales.mods.export.xlsx');
+                Route::get('/mods/export/pdf', [SalesModsController::class, 'exportPdf'])->name('reports.sales.mods.export.pdf');
+            });
+        });
 });
 
 /* =========================================================================

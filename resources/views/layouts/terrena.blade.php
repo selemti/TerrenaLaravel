@@ -355,10 +355,22 @@
           </a>
           <div class="collapse {{ in_array($active ?? '', ['reportes','reports']) ? 'show' : '' }} ms-3" id="menuReportes">
             <a class="nav-link submenu-link" href="{{ route('reports.dashboard') }}">
-              <i class="fa-solid fa-gauge-high"></i> <span class="label">Dashboard</span>
+              <i class="fa-solid fa-gauge-high"></i> <span class="label">Dashboard ERP</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.sales') }}">
+              <i class="fa-solid fa-clipboard-list"></i> <span class="label">Centro ventas</span>
             </a>
             <a class="nav-link submenu-link" href="{{ route('reports.sales.mix') }}">
               <i class="fa-solid fa-chart-pie"></i> <span class="label">Mix de Ventas</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.sales.drawer') }}">
+              <i class="fa-solid fa-cash-register"></i> <span class="label">Cajón vs Efectivo</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.sales.diagnostics') }}">
+              <i class="fa-solid fa-stethoscope"></i> <span class="label">Diagnósticos diarios</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.sales.mods') }}">
+              <i class="fa-solid fa-bowl-food"></i> <span class="label">Ítems + Modificadores</span>
             </a>
           </div>
         </div>

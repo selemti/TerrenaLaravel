@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Reports;
 use App\Http\Controllers\Controller;
 use App\Traits\Reports\ConfiguresReportConnection;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 /**
  * Controlador base para todos los reportes
@@ -59,15 +62,47 @@ abstract class BaseReportController extends Controller
      */
     protected function parseDateRange(Request $request): array
     {
-        $start = $this->parseDate($request, 'start_date');
-        $end = $this->parseDate($request, 'end_date');
+        $startInput = $request->input('start_date');
+        $endInput = $request->input('end_date');
 
-        // Si end es anterior a start, invertir
+        if (!$startInput && !$endInput) {
+            $single = $this->parseDate($request);
+            $singleDay = $single->copy()->startOfDay();
+
+            return [$singleDay, $singleDay];
+        }
+
+        $start = $startInput
+            ? Carbon::parse($startInput, 'America/Mexico_City')
+            : $this->parseDate($request)->copy();
+
+        $end = $endInput
+            ? Carbon::parse($endInput, 'America/Mexico_City')
+            : $start->copy();
+
         if ($end->lt($start)) {
             [$start, $end] = [$end, $start];
         }
 
-        return [$start, $end];
+        return [$start->startOfDay(), $end->startOfDay()];
+    }
+
+    /**
+     * Extrae una sucursal desde la request
+     */
+    protected function parseBranch(Request $request, string $param = 'branch'): ?string
+    {
+        $branch = trim((string) $request->input($param, ''));
+        return $branch !== '' ? strtoupper($branch) : null;
+    }
+
+    /**
+     * Extrae un filtro genérico en mayúsculas
+     */
+    protected function parseEnum(Request $request, string $param): ?string
+    {
+        $value = trim((string) $request->input($param, ''));
+        return $value !== '' ? strtoupper($value) : null;
     }
 
     /**
@@ -134,5 +169,30 @@ abstract class BaseReportController extends Controller
     protected function formatMoney(float $value): string
     {
         return '$' . number_format($this->round($value), 2);
+    }
+
+    /**
+     * Genera un PDF utilizando Dompdf a partir de una vista Blade
+     */
+    protected function renderPdf(string $view, array $data, string $filename, string $paper = 'letter', string $orientation = 'portrait', bool $inline = false): Response
+    {
+        $html = view($view, $data)->render();
+
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+        $options->setChroot(public_path());
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper($paper, $orientation);
+        $dompdf->render();
+
+        $disposition = $inline ? 'inline' : 'attachment';
+
+        return response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => sprintf('%s; filename="%s"', $disposition, $filename),
+        ]);
     }
 }

@@ -37,16 +37,33 @@ class Dashboard extends Component
     /** @var array<int, array{id:int,key:string,label:string,meta:array}> */
     public array $favorites = [];
 
+    /** @var array<string, mixed> */
+    public array $summary = [];
+    
+    public array $dashboardLayout = [
+        'summary' => true,
+        'kpis' => true,
+        'ventas_por_dia' => true,
+        'top_productos' => true,
+        'mermas_por_categoria' => true,
+        'stock_por_almacen' => true,
+    ];
+    
+    public bool $autoRefreshEnabled = false;
+    public int $refreshInterval = 300; // 5 minutos por defecto
+
     public function mount(): void
     {
         $this->setDateRange();
         $this->loadFavorites();
+        $this->loadSummary();
         $this->loadData();
     }
 
     public function updatedDateRange(): void
     {
         $this->setDateRange();
+        $this->loadSummary();
         $this->loadData();
     }
 
@@ -122,6 +139,14 @@ class Dashboard extends Component
         
         // Desplazar hacia el KPI correspondiente
         $this->dispatch('scroll-to-kpi', $key);
+    }
+
+    public function onChartClick(string $chartKey, array $data)
+    {
+        // Este método manejará los clics en los gráficos
+        // Por ejemplo, al hacer clic en una barra del gráfico de productos,
+        // podríamos navegar a un reporte detallado del producto
+        $this->dispatch('toast', type: 'info', body: "Clic en ${chartKey}: " . json_encode($data));
     }
 
     public function render()
@@ -232,6 +257,23 @@ class Dashboard extends Component
 
         $rotacion = $this->calculateInventoryTurnover($from, $to);
         $eficiencia = $this->calculateProductionEfficiency($from, $to);
+        
+        // Métricas adicionales
+        $tickets = $this->safeAggregate(fn () =>
+            (int) $connection->table('ticket')
+                ->whereBetween('create_date', [$from, $to])
+                ->where('voided', false)
+                ->count()
+        );
+        
+        $productosDistintosVendidos = $this->safeAggregate(fn () =>
+            (int) $connection->table('ticket_item')
+                ->join('ticket', 'ticket_item.ticket_id', '=', 'ticket.id')
+                ->whereBetween('ticket.create_date', [$from, $to])
+                ->where('ticket.voided', false)
+                ->distinct('ticket_item.item_name')
+                ->count('ticket_item.item_name')
+        );
 
         return [
             'ventas_totales' => $ventas,
@@ -242,6 +284,8 @@ class Dashboard extends Component
             'costo_receta_promedio' => $costoPromedio,
             'rotacion_inventario' => $rotacion,
             'eficiencia_produccion' => $eficiencia,
+            'tickets_totales' => $tickets,
+            'productos_distintos_vendidos' => $productosDistintosVendidos,
         ];
     }
 
@@ -335,11 +379,31 @@ class Dashboard extends Component
         );
 
         return [
-            'ventas_por_dia' => $ventasPorDia,
-            'top_productos' => $topProductos,
-            'mermas_por_categoria' => $mermas,
-            'stock_por_almacen' => $stockPorAlmacen,
-            'costos_recetas' => $costosRecetas,
+            'ventas_por_dia' => [
+                'data' => $ventasPorDia,
+                'empty' => empty($ventasPorDia),
+                'message' => empty($ventasPorDia) ? 'No hay datos de ventas en el rango de fechas seleccionado' : null
+            ],
+            'top_productos' => [
+                'data' => $topProductos,
+                'empty' => empty($topProductos),
+                'message' => empty($topProductos) ? 'No hay productos vendidos en el rango de fechas seleccionado' : null
+            ],
+            'mermas_por_categoria' => [
+                'data' => $mermas,
+                'empty' => empty($mermas),
+                'message' => empty($mermas) ? 'No se han registrado mermas en el rango de fechas seleccionado' : null
+            ],
+            'stock_por_almacen' => [
+                'data' => $stockPorAlmacen,
+                'empty' => empty($stockPorAlmacen),
+                'message' => empty($stockPorAlmacen) ? 'No hay datos de inventario disponibles' : null
+            ],
+            'costos_recetas' => [
+                'data' => $costosRecetas,
+                'empty' => empty($costosRecetas),
+                'message' => empty($costosRecetas) ? 'No hay datos históricos de costos de recetas' : null
+            ],
         ];
     }
 
@@ -431,5 +495,94 @@ class Dashboard extends Component
                 'meta' => $favorite->meta ?? [],
             ])
             ->all();
+    }
+
+    protected function loadSummary(): void
+    {
+        $from = $this->fechaDesde->toDateTimeString();
+        $to = $this->fechaHasta->toDateTimeString();
+        $connection = DB::connection('pgsql');
+
+        try {
+            $ventas = $connection->table('ticket')
+                ->whereBetween('create_date', [$from, $to])
+                ->where('voided', false)
+                ->sum('total_price');
+
+            $ventasCount = $connection->table('ticket')
+                ->whereBetween('create_date', [$from, $to])
+                ->where('voided', false)
+                ->count();
+
+            $productosVendidos = $connection->table('ticket_item')
+                ->whereBetween('created_at', [$from, $to])
+                ->sum('qty');
+
+            $productosCount = $connection->table('ticket_item')
+                ->whereBetween('created_at', [$from, $to])
+                ->distinct('item_name')
+                ->count('item_name');
+
+            $this->summary = [
+                'ventas_totales' => $ventas,
+                'transacciones' => $ventasCount,
+                'productos_vendidos' => $productosVendidos,
+                'productos_distintos' => $productosCount,
+                'ticket_promedio' => $ventasCount > 0 ? $ventas / $ventasCount : 0,
+            ];
+        } catch (\Throwable $e) {
+            report($e);
+            $this->summary = [
+                'ventas_totales' => 0,
+                'transacciones' => 0,
+                'productos_vendidos' => 0,
+                'productos_distintos' => 0,
+                'ticket_promedio' => 0,
+            ];
+        }
+    }
+
+    public function updateLayout(string $component, bool $visible): void
+    {
+        $this->dashboardLayout[$component] = $visible;
+    }
+
+    public function resetLayout(): void
+    {
+        $this->dashboardLayout = [
+            'summary' => true,
+            'kpis' => true,
+            'ventas_por_dia' => true,
+            'top_productos' => true,
+            'mermas_por_categoria' => true,
+            'stock_por_almacen' => true,
+        ];
+    }
+
+    public function toggleAutoRefresh(): void
+    {
+        $this->autoRefreshEnabled = !$this->autoRefreshEnabled;
+        
+        if ($this->autoRefreshEnabled) {
+            $this->dispatch('start-auto-refresh', interval: $this->refreshInterval * 1000);
+        } else {
+            $this->dispatch('stop-auto-refresh');
+        }
+    }
+
+    public function updatedRefreshInterval(): void
+    {
+        if ($this->autoRefreshEnabled) {
+            $this->dispatch('start-auto-refresh', interval: $this->refreshInterval * 1000);
+        }
+    }
+
+    #[\Livewire\Attributes\On('auto-refresh')]
+    public function handleAutoRefresh(): void
+    {
+        if ($this->autoRefreshEnabled) {
+            $this->loadSummary();
+            $this->loadData();
+        }
     }
 }

@@ -28,7 +28,10 @@ use App\Http\Controllers\Inventory\InsumoController;
 use App\Http\Controllers\Inventory\TransferController;
 use App\Http\Controllers\Api\CatalogsController;
 use App\Http\Controllers\Production\ProductionController;
-use App\Http\Controllers\Reports\Sales\SalesMixController;
+use App\Http\Controllers\Reports\SalesDiagController;
+use App\Http\Controllers\Reports\SalesDrawerController;
+use App\Http\Controllers\Reports\SalesMixController;
+use App\Http\Controllers\Reports\SalesModsController;
 use App\Http\Controllers\Purchasing\PurchaseSuggestionController;
 use App\Http\Controllers\Purchasing\ReceivingController;
 use App\Http\Controllers\Purchasing\ReturnController;
@@ -388,10 +391,15 @@ Route::middleware(['auth:sanctum', 'permission:audit.view'])
 | Reports - Sales Mix (Sin autenticación para pruebas)
 |--------------------------------------------------------------------------
 */
-Route::prefix('reports/sales')->group(function () {
-    Route::get('/mix', [SalesMixController::class, 'index'])->name('api.reports.sales.mix');
-    Route::get('/mix/today', [SalesMixController::class, 'today'])->name('api.reports.sales.mix.today');
-});
+Route::prefix('reports/sales')
+    ->middleware(['auth:sanctum', 'permission:reports.view'])
+    ->group(function () {
+        Route::get('/mix', [SalesMixController::class, 'index'])->name('api.reports.sales.mix');
+        Route::get('/mix/today', [SalesMixController::class, 'today'])->name('api.reports.sales.mix.today');
+        Route::get('/drawer', [SalesDrawerController::class, 'index'])->name('api.reports.sales.drawer');
+        Route::get('/diagnostics', [SalesDiagController::class, 'index'])->name('api.reports.sales.diagnostics');
+        Route::get('/mods', [SalesModsController::class, 'index'])->name('api.reports.sales.mods');
+    });
 
 /*
 |--------------------------------------------------------------------------
