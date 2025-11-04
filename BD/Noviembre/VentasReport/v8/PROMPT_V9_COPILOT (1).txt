@@ -1,0 +1,45 @@
+
+🧠 PROMPT v9 — Sistema Integral de Reportes de Ventas ERP (FloreantPOS + Laravel + PostgreSQL)
+Rol: Desarrollador Laravel + PostgreSQL con acceso SOLO LECTURA.
+
+Objetivo: Compilar y validar los reportes/vistas/diagnósticos y el módulo de MODIFICADORES usando el esquema real (public.* y selemti.*). NO inventes columnas. Haz introspección y usa lo ya creado.
+
+### Reglas de conexión por sesión
+- Ejecuta en la conexión: 
+  DB::statement("SET TIME ZONE 'America/Mexico_City'");
+  DB::statement("SET search_path TO public, selemti");
+
+### Reglas de negocio
+- Tickets válidos: paid=TRUE AND voided=FALSE
+- Neto ticket = total_price - total_discount (servicio separados).
+- Cobros válidos: transaction_type='CREDIT' AND voided=FALSE excl. payment_type IN ('REFUND','VOID_TRANS')
+- Normalización pagos: selemti.fn_normalizar_forma_pago(...)
+- folio_date = COALESCE(settled_at, paid_at, closed_at)::date (si existe). Usa la columna folio_date existente en ticket si ya está poblada.
+
+### Tareas a ejecutar
+1) Cargar y ejecutar **/BD/Noviembre/VentasReport/v8/script_sql_corregido.sql** en la BD.
+   - Verifica que TODAS las vistas compilen.
+   - Confirma que COUNT(*) de diag_checklist.sql devuelve números coherentes.
+2) Generar endpoints Laravel (solo lectura) para datasets claves:
+   - GET /api/reports/sales/mix?date=YYYY-MM-DD  -> f_sales_mix_payment_on
+   - GET /api/reports/diag/summary/today        -> vw_daily_diagnostics_summary
+   - GET /api/reports/mods/detail?date=...      -> f_item_mods_detailed_on
+   - GET /api/reports/mods/summary/today        -> vw_item_mods_daily_summary
+   Filtros comunes: ?date, ?start_date&end_date, ?branch, ?terminal, ?export=xlsx|pdf
+3) Exportes (maatwebsite/excel y dompdf) sobre los mismos datasets. Redondeo 2 decimales.
+4) Validaciones:
+   - vw_item_mods_* devuelve cantidades y montos esperados (ej.: 2025-10-24).
+   - vw_diag_* devuelve severidades y error_code correctos.
+   - Tiempo de respuesta < 2s con índices existentes en tablas base.
+
+### Entregables esperados (código)
+- Controladores en app/Http/Controllers/Reports/Sales/*
+- Resources en app/Http/Resources/Reports/*
+- Rutas en routes/api.php (con auth:sanctum)
+- Exports en app/Exports/*
+- Documentación rápida en /BD/Noviembre/VentasReport/v8/README_API_SALES.md
+
+### Importante
+- No modifiques datos.
+- Si alguna vista falla por ausencia de columna, ajusta usando to_jsonb(campos) como en el SQL consolidado para tolerar variaciones.
+- Reporta en consola cualquier vista que no devuelva filas “hoy” y prueba con fechas con datos reales (por ejemplo 2025-10-24).

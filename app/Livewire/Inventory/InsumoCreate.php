@@ -76,7 +76,7 @@ class InsumoCreate extends Component
         $this->subcategoria = '';
     }
 
-    public function save(): void
+    public function save()
     {
         if (! $this->authorized) {
             $this->dispatch('form-error', 'Sin permiso');
@@ -126,9 +126,9 @@ class InsumoCreate extends Component
 
             // Obtener el código de unidad
             $unit = DB::connection('pgsql')
-                ->table('selemti.unidades_medida_legacy')
+                ->table('selemti.cat_unidades')
                 ->where('id', (int) $this->um_id)
-                ->first(['codigo']);
+                ->first(['clave']);
 
             $payload = [
                 'id'                  => $codes['codigo'], // MP-LAC-00001
@@ -136,9 +136,10 @@ class InsumoCreate extends Component
                 'descripcion'         => null,
                 'categoria_id'        => 'CAT-' . str_pad($categoryId, 4, '0', STR_PAD_LEFT), // CAT-0001
                 'category_id'         => $categoryId,
-                'unidad_medida'       => $unit ? $unit->codigo : 'KG',
+                'unidad_medida'       => $unit ? $unit->clave : 'KG',
                 'unidad_medida_id'    => (int) $this->um_id,
                 'perishable'          => (bool) $this->perecible,
+                'tipo'                => 'MATERIA_PRIMA',
                 'activo'              => true,
                 'created_at'          => now(),
                 'updated_at'          => now(),
@@ -147,18 +148,12 @@ class InsumoCreate extends Component
             // Insertar en la tabla selemti.items usando conexión PostgreSQL
             DB::connection('pgsql')->table('selemti.items')->insert($payload);
 
-            session()->flash('success', 'Insumo creado correctamente.');
+            session()->flash('success', 'Insumo creado correctamente. Ahora puedes completar la información adicional.');
 
-            $this->reset([
-                'categoria',
-                'subcategoria',
-                'nombre',
-                'sku',
-                'um_id',
-                'perecible',
-                'merma_pct',
-            ]);
-            $this->merma_pct = 0.0;
+            // Redirigir al listado con el item recién creado
+            return redirect()->route('inventory.items.index')
+                ->with('openItemModal', $codes['codigo'])
+                ->with('success', '✓ Insumo creado. Completa proveedores, unidades de compra y otros detalles.');
         } catch (\Throwable $e) {
             report($e);
             $this->addError('form', 'No se pudo guardar el insumo. Intenta nuevamente.');
@@ -188,12 +183,13 @@ class InsumoCreate extends Component
 
     protected function loadUnits(): void
     {
-        $allowedCodes = ['KG', 'LT', 'PZ']; // Códigos reales en la tabla
+        $allowedCodes = ['KG', 'L', 'PZ']; // Códigos corregidos: L en lugar de LT
         $this->units = DB::connection('pgsql')
-            ->table('selemti.unidades_medida_legacy')
-            ->whereIn('codigo', $allowedCodes)
-            ->orderBy('codigo')
-            ->get(['id', 'codigo as clave', 'nombre'])
+            ->table('selemti.cat_unidades')
+            ->whereIn('clave', $allowedCodes)
+            ->where('activo', true)
+            ->orderBy('clave')
+            ->get(['id', 'clave', 'nombre'])
             ->map(fn ($row) => [
                 'id'    => (int) $row->id,
                 'clave' => $row->clave,

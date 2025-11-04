@@ -359,6 +359,14 @@ Route::middleware('auth')->group(function () {
         ->name('session.api-token.generate');
     Route::post('/session/api-token/revoke', [SessionApiTokenController::class, 'revoke'])
         ->name('session.api-token.revoke');
+
+    // Reportes de Ventas
+    Route::prefix('reports')->middleware('auth')->group(function () {
+        Route::get('/sales', [App\Http\Controllers\Reports\SalesReportController::class, 'index'])
+            ->name('reports.sales');
+        Route::get('/sales/mix', [App\Http\Controllers\Reports\SalesReportWebController::class, 'salesMix'])
+            ->name('reports.sales.mix');
+    });
 });
 
 /* =========================================================================

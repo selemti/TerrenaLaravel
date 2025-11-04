@@ -345,12 +345,23 @@
         </a>
 
         {{-- Reportes (reports.view) --}}
-        <a class="nav-link {{ ($active ?? '') === 'reportes' ? 'active' : '' }}"
-           href="{{ route('reports.dashboard') }}"
-           x-show="permsLoaded && window.TerrenaHasPerm('reports.view')"
-           x-cloak>
-          <i class="fa-solid fa-chart-column"></i> <span class="label">Reportes</span>
-        </a>
+        <div class="nav-item"
+             x-show="permsLoaded && window.TerrenaHasPerm('reports.view')"
+             x-cloak>
+          <a class="nav-link {{ in_array($active ?? '', ['reportes','reports']) ? 'active' : '' }}"
+             data-bs-toggle="collapse" href="#menuReportes" role="button" aria-expanded="false">
+            <i class="fa-solid fa-chart-column"></i> <span class="label">Reportes</span>
+            <i class="fa-solid fa-chevron-down ms-auto small"></i>
+          </a>
+          <div class="collapse {{ in_array($active ?? '', ['reportes','reports']) ? 'show' : '' }} ms-3" id="menuReportes">
+            <a class="nav-link submenu-link" href="{{ route('reports.dashboard') }}">
+              <i class="fa-solid fa-gauge-high"></i> <span class="label">Dashboard</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.sales.mix') }}">
+              <i class="fa-solid fa-chart-pie"></i> <span class="label">Mix de Ventas</span>
+            </a>
+          </div>
+        </div>
 
         {{-- Configuración / Catálogos --}}
         @can('admin.access')

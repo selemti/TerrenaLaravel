@@ -101,6 +101,13 @@ class ItemsManage extends Component
         $this->loadUnits();
         $this->loadProviders();
         $this->loadCategories();
+
+        // Si viene de alta rápida, abrir modal automáticamente
+        if (session()->has('openItemModal')) {
+            $itemId = session('openItemModal');
+            $this->openEdit($itemId);
+            session()->forget('openItemModal');
+        }
     }
 
     public function updatingQ(): void
@@ -358,6 +365,11 @@ class ItemsManage extends Component
 
     public function render()
     {
+        // Recargar catálogos en cada render para que estén disponibles en el modal
+        $this->loadUnits();
+        $this->loadProviders();
+        $this->loadCategories();
+
         $itemsQuery = DB::connection('pgsql')
             ->table(DB::raw('selemti.items as i'))
             ->leftJoin(DB::raw('selemti.vw_item_last_price_pref as lp'), 'lp.item_id', '=', 'i.id')
@@ -448,9 +460,9 @@ class ItemsManage extends Component
             'form.nombre' => 'required|string|min:3|max:100',
             'form.descripcion' => 'nullable|string|max:500',
             'form.categoria_id' => 'required|string|regex:/^CAT-[A-Z0-9\-]{2,}$/',
-            'form.unidad_base_id' => 'required|integer|exists:selemti.unidades_medida,id',
-            'form.unidad_compra_id' => 'nullable|integer|exists:selemti.unidades_medida,id',
-            'form.unidad_salida_id' => 'nullable|integer|exists:selemti.unidades_medida,id',
+            'form.unidad_base_id' => 'required|integer|exists:selemti.cat_unidades,id',
+            'form.unidad_compra_id' => 'nullable|integer|exists:selemti.cat_unidades,id',
+            'form.unidad_salida_id' => 'nullable|integer|exists:selemti.cat_unidades,id',
             'form.factor_compra' => 'nullable|numeric|min:0.0001',
             'form.factor_conversion' => 'nullable|numeric|min:0.0001',
             'form.perishable' => 'boolean',
@@ -479,7 +491,7 @@ class ItemsManage extends Component
             $rules = [
                 'vendor_id' => 'required|integer|exists:selemti.cat_proveedores,id',
                 'presentacion' => 'required|string|max:120',
-                'unidad_presentacion_id' => 'required|integer|exists:selemti.unidades_medida,id',
+                'unidad_presentacion_id' => 'required|integer|exists:selemti.cat_unidades,id',
                 'factor_a_canonica' => 'required|numeric|min:0.0001',
                 'costo_ultimo' => 'required|numeric|min:0',
                 'moneda' => 'required|string|in:MXN,USD',
@@ -599,9 +611,10 @@ class ItemsManage extends Component
     protected function loadUnits(): void
     {
         $this->units = DB::connection('pgsql')
-            ->table('selemti.unidades_medida_legacy')
+            ->table('selemti.cat_unidades')
+            ->where('activo', true)
             ->orderBy('nombre')
-            ->get(['id', 'codigo', 'nombre'])
+            ->get(['id', 'clave as codigo', 'nombre'])
             ->map(fn ($row) => [
                 'id' => (int) $row->id,
                 'codigo' => $row->codigo,

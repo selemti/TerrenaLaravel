@@ -3,7 +3,6 @@
 @endphp
 
 <div>
-    <div class="container-fluid py-4">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
             <div>
                 <h2 class="h3 mb-0">Dashboard de Reportes</h2>
@@ -31,9 +30,18 @@
                             <option value="last_30_days">Últimos 30 días</option>
                             <option value="this_month">Este mes</option>
                             <option value="last_month">Mes anterior</option>
+                            <option value="custom">Personalizado</option>
                         </select>
                     </div>
-                    <div class="col-md-6 text-md-end text-muted small">
+                    <div class="col-md-3" wire:show="dateRange === 'custom'">
+                        <label class="form-label">Fecha desde</label>
+                        <input type="date" class="form-control" wire:model.live="fechaDesdePersonalizada" />
+                    </div>
+                    <div class="col-md-3" wire:show="dateRange === 'custom'">
+                        <label class="form-label">Fecha hasta</label>
+                        <input type="date" class="form-control" wire:model.live="fechaHastaPersonalizada" />
+                    </div>
+                    <div class="col-md-3 text-md-end text-muted small">
                         <div>Desde <strong>{{ $fechaDesde->format('d/m/Y H:i') }}</strong></div>
                         <div>Hasta <strong>{{ $fechaHasta->format('d/m/Y H:i') }}</strong></div>
                     </div>
@@ -45,8 +53,11 @@
                             <ul class="dropdown-menu dropdown-menu-end">
                                 @forelse($favorites as $favorite)
                                     <li>
-                                        <a class="dropdown-item" href="#" wire:click="toggleFavorite('{{ $favorite['key'] }}')">
+                                        <a class="dropdown-item" href="#" wire:click="goToFavoriteReport('{{ $favorite['key'] }}')">
                                             <i class="fas fa-star text-warning me-2"></i>{{ $favorite['label'] }}
+                                            <button class="btn btn-sm btn-outline-danger float-end" wire:click.stop="toggleFavorite('{{ $favorite['key'] }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         </a>
                                     </li>
                                 @empty
@@ -75,7 +86,12 @@
 
             @foreach($kpis as $key => $value)
                 <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="card shadow-sm h-100 border-0">
+                    <div class="card shadow-sm h-100 border-0" 
+                         data-kpi="{{ $key }}"
+                         @if($key === 'ventas_totales') 
+                           wire:click="goToSalesReport" 
+                           style="cursor: pointer;" 
+                         @endif>
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
@@ -98,6 +114,9 @@
                                 <i class="fas fa-star me-1 text-warning"></i>
                                 Guardar como favorito
                             </button>
+                            @if($key === 'ventas_totales')
+                                <small class="text-muted">Haz clic para ver detalles</small>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -106,7 +125,7 @@
 
         <div class="row g-3">
             <div class="col-12 col-xl-6">
-                <div class="card shadow-sm h-100">
+                <div class="card shadow-sm h-100" style="cursor: pointer;" wire:click="goToSalesReport">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
                         <h6 class="mb-0 text-primary">Ventas por día</h6>
                         <small class="text-muted">Ticket POS</small>
@@ -148,7 +167,6 @@
                 </div>
             </div>
         </div>
-    </div>
 
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -234,6 +252,17 @@
 
                 Livewire.on('dashboard-data-updated', ({ data }) => buildCharts(data));
                 setTimeout(() => buildCharts({ charts: @json($charts) }), 200);
+            });
+            
+            Livewire.on('scroll-to-kpi', (key) => {
+                const element = document.querySelector(`[data-kpi="${key}"]`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                    element.classList.add('bg-warning-subtle');
+                    setTimeout(() => {
+                        element.classList.remove('bg-warning-subtle');
+                    }, 2000);
+                }
             });
         </script>
     @endpush

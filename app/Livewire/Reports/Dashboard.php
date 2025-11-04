@@ -25,6 +25,8 @@ class Dashboard extends Component
     public string $dateRange = 'last_30_days';
     public Carbon $fechaDesde;
     public Carbon $fechaHasta;
+    public string $fechaDesdePersonalizada = '';
+    public string $fechaHastaPersonalizada = '';
 
     /** @var array<string, float> */
     public array $kpis = [];
@@ -97,6 +99,7 @@ class Dashboard extends Component
                 'report_key' => $key,
                 'meta' => [
                     'range' => $this->dateRange,
+                    'title' => Str::headline(str_replace('_', ' ', $key)),
                 ],
             ]);
 
@@ -104,6 +107,21 @@ class Dashboard extends Component
         }
 
         $this->loadFavorites();
+    }
+
+    public function goToFavoriteReport(string $key)
+    {
+        if ($key === 'ventas_totales') {
+            return $this->goToSalesReport();
+        }
+        
+        // Para otros tipos de reportes, simplemente actualizamos el rango de fechas
+        $this->dateRange = 'custom';
+        $this->fechaDesdePersonalizada = $this->fechaDesde->format('Y-m-d');
+        $this->fechaHastaPersonalizada = $this->fechaHasta->format('Y-m-d');
+        
+        // Desplazar hacia el KPI correspondiente
+        $this->dispatch('scroll-to-kpi', $key);
     }
 
     public function render()
@@ -116,38 +134,53 @@ class Dashboard extends Component
             ]);
     }
 
+    public function goToSalesReport()
+    {
+        $params = [
+            'fecha_desde' => $this->fechaDesde->format('Y-m-d'),
+            'fecha_hasta' => $this->fechaHasta->format('Y-m-d'),
+        ];
+        
+        return redirect()->route('reports.sales', $params);
+    }
+
     protected function setDateRange(): void
     {
         $now = now();
 
-        $ranges = [
-            'today' => [
-                $now->copy()->startOfDay(),
-                $now->copy()->endOfDay(),
-            ],
-            'yesterday' => [
-                $now->copy()->subDay()->startOfDay(),
-                $now->copy()->subDay()->endOfDay(),
-            ],
-            'last_7_days' => [
-                $now->copy()->subDays(6)->startOfDay(),
-                $now->copy()->endOfDay(),
-            ],
-            'last_30_days' => [
-                $now->copy()->subDays(29)->startOfDay(),
-                $now->copy()->endOfDay(),
-            ],
-            'this_month' => [
-                $now->copy()->startOfMonth(),
-                $now->copy()->endOfMonth(),
-            ],
-            'last_month' => [
-                $now->copy()->subMonth()->startOfMonth(),
-                $now->copy()->subMonth()->endOfMonth(),
-            ],
-        ];
+        if ($this->dateRange === 'custom' && $this->fechaDesdePersonalizada && $this->fechaHastaPersonalizada) {
+            $this->fechaDesde = Carbon::parse($this->fechaDesdePersonalizada)->startOfDay();
+            $this->fechaHasta = Carbon::parse($this->fechaHastaPersonalizada)->endOfDay();
+        } else {
+            $ranges = [
+                'today' => [
+                    $now->copy()->startOfDay(),
+                    $now->copy()->endOfDay(),
+                ],
+                'yesterday' => [
+                    $now->copy()->subDay()->startOfDay(),
+                    $now->copy()->subDay()->endOfDay(),
+                ],
+                'last_7_days' => [
+                    $now->copy()->subDays(6)->startOfDay(),
+                    $now->copy()->endOfDay(),
+                ],
+                'last_30_days' => [
+                    $now->copy()->subDays(29)->startOfDay(),
+                    $now->copy()->endOfDay(),
+                ],
+                'this_month' => [
+                    $now->copy()->startOfMonth(),
+                    $now->copy()->endOfMonth(),
+                ],
+                'last_month' => [
+                    $now->copy()->subMonth()->startOfMonth(),
+                    $now->copy()->subMonth()->endOfMonth(),
+                ],
+            ];
 
-        [$this->fechaDesde, $this->fechaHasta] = $ranges[$this->dateRange] ?? $ranges['last_30_days'];
+            [$this->fechaDesde, $this->fechaHasta] = $ranges[$this->dateRange] ?? $ranges['last_30_days'];
+        }
     }
 
     /**

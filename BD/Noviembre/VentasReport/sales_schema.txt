@@ -1,0 +1,88 @@
+SALES SCHEMA · INTROSPECCIÓN — Terrena · V8
+Generado: 2025-11-04 05:32:39
+
+Este archivo sirve como **fuente de verdad** del esquema consultado por los reportes.
+Repite estos comandos en tu entorno (psql 9.5) y pega los resultados debajo de cada sección.
+
+──────────────────────────────────────────────────────────────────────────────
+
+0) Sesión recomendada
+-------------------------------------------------------------------------------
+\timing on
+SET TIME ZONE 'America/Mexico_City';
+SET search_path TO public, selemti;
+
+1) Versiones y search_path
+-------------------------------------------------------------------------------
+SELECT version();
+SHOW search_path;
+
+2) Funciones núcleo (deben existir)
+-------------------------------------------------------------------------------
+SELECT proname, nspname
+FROM pg_proc p
+JOIN pg_namespace n ON n.oid=p.pronamespace
+WHERE proname IN ('get_daily_stats','fn_daily_reconciliation',
+                  'fn_reconciliation_detail','fn_correct_drawer_report',
+                  'fn_normalizar_forma_pago')
+ORDER BY 1;
+
+3) Tablas núcleo
+-------------------------------------------------------------------------------
+\dt public.ticket
+\dt public.ticket_item
+\dt public.transactions
+\dt public.terminal
+\dt public.drawer_pull_report
+
+-- Columnas esperadas (ajustadas a tu BD real)
+SELECT table_schema, table_name, column_name, data_type
+FROM information_schema.columns
+WHERE (table_schema, table_name) IN (('public','ticket'),
+                                     ('public','ticket_item'),
+                                     ('public','transactions'),
+                                     ('public','terminal'))
+ORDER BY 1,2,3;
+
+4) Vistas/Funciones de reportes (V8)
+-------------------------------------------------------------------------------
+\dv public.vw_sales_by_terminal
+\dv public.vw_sales_mix_payment
+\dv public.vw_sales_by_hour
+\dv public.vw_top_items_today
+\dv public.vw_sales_exceptions_today
+
+\dv public.vw_diag_neto_vs_cobros
+\dv public.vw_diag_discount_header_vs_lines
+\dv public.vw_diag_paid_but_no_payments
+\dv public.vw_diag_unnormalized_payments
+\dv public.vw_diag_service_charge_vs_paid
+\dv public.vw_diag_drawer_vs_cash_transactions
+\dv public.vw_diag_orphans_tickets
+\dv public.vw_diag_orphans_tx
+\dv public.vw_diag_high_discounts
+\dv public.vw_diag_folio_date_inconsistency
+\dv public.vw_daily_diagnostics_summary
+
+\df+ public.f_sales_mix_payment_on
+\df+ public.f_diag_drawer_vs_cash_transactions_on
+\df+ public.f_daily_diagnostics_summary_on
+
+5) Muestras rápidas (QA)
+-------------------------------------------------------------------------------
+-- Ventas por terminal
+SELECT * FROM vw_sales_by_terminal ORDER BY folio_date DESC, branch_key, terminal_id LIMIT 10;
+
+-- Mix de pago (hoy y parametrizada)
+SELECT * FROM vw_sales_mix_payment_today LIMIT 10;
+SELECT * FROM f_sales_mix_payment_on(CURRENT_DATE - INTERVAL '7 days') LIMIT 10;
+
+-- Diagnósticos (día con datos)
+SELECT * FROM f_daily_diagnostics_summary_on('2025-10-24');
+
+6) Notas
+-------------------------------------------------------------------------------
+- PG 9.5: forzar casts `::numeric`, `::text` en vistas para evitar "unknown".
+- `folio_date` puede estar NULL; usar COALESCE(closing_date::date, create_date::date).
+- `fn_correct_drawer_report(date)` devuelve: terminal_id, original_total_revenue, corrected_neto_tickets, adjustment.
+- Para cajón vs efectivo se usa `f_diag_drawer_vs_cash_transactions_on(date)` y wrapper `vw_diag_drawer_vs_cash_transactions` (hoy).

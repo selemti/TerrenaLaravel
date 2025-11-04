@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Item extends Model
 {
     protected $connection = 'pgsql';
-    protected $table = 'items';
+    protected $table = 'selemti.items';
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
@@ -19,6 +19,9 @@ class Item extends Model
         'costo_promedio' => 'decimal:2',
         'factor_conversion' => 'decimal:6',
         'factor_compra' => 'decimal:6',
+        'es_producible' => 'boolean',
+        'es_consumible_operativo' => 'boolean',
+        'es_empaque_to_go' => 'boolean',
     ];
 
     /**

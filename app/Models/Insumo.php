@@ -5,13 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * DEPRECATED: Este modelo apunta a la tabla legacy selemti.insumo
+ * que ya no se utiliza. Todos los insumos ahora se gestionan
+ * mediante el modelo Item (selemti.items).
+ * 
+ * @deprecated v2.0 Use App\Models\Item instead
+ * @see \App\Models\Item
+ */
 class Insumo extends Model
 {
     use HasFactory;
 
     protected $connection = 'pgsql';
 
-    protected $table = 'insumo';
+    protected $table = 'selemti.insumo';
 
     protected $primaryKey = 'id';
 

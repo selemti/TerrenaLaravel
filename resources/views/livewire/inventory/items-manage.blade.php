@@ -122,6 +122,14 @@
               <div class="small text-muted">
                 {{ $row->perishable ? 'Perecedero · ' : '' }}{{ $row->activo ? 'Activo' : 'Inactivo' }}
               </div>
+              @php
+                $needsCompletion = !$row->unidad_compra_id || !$row->preferente_vendor;
+              @endphp
+              @if($needsCompletion)
+                <span class="badge bg-warning text-dark mt-1">
+                  <i class="fa-solid fa-triangle-exclamation"></i> Pendiente completar
+                </span>
+              @endif
             </td>
             <td>{{ $row->categoria_id ?? '—' }}</td>
             <td>{{ $unit['codigo'] ?? '—' }}</td>
@@ -165,14 +173,25 @@
               </span>
             </td>
             <td class="text-end">
-              <button class="btn btn-sm btn-outline-primary" wire:click="openEdit('{{ $row->id }}')">
-                <i class="fa-solid fa-pen-to-square"></i> Editar
-              </button>
-                @can('inventory.prices.manage')
-                  <button class="btn btn-sm btn-outline-secondary mt-1" wire:click="openPriceModal('{{ $row->id }}')">
-                    <i class="fa-solid fa-tag"></i>
-                  </button>
-                @endcan
+              @php
+                $needsCompletion = !$row->unidad_compra_id || !$row->preferente_vendor;
+              @endphp
+              
+              @if($needsCompletion)
+                <button class="btn btn-sm btn-warning" wire:click="openEdit('{{ $row->id }}')">
+                  <i class="fa-solid fa-circle-exclamation"></i> Completar
+                </button>
+              @else
+                <button class="btn btn-sm btn-outline-primary" wire:click="openEdit('{{ $row->id }}')">
+                  <i class="fa-solid fa-pen-to-square"></i> Editar
+                </button>
+              @endif
+              
+              @can('inventory.prices.manage')
+                <button class="btn btn-sm btn-outline-secondary mt-1" wire:click="openPriceModal('{{ $row->id }}')">
+                  <i class="fa-solid fa-tag"></i>
+                </button>
+              @endcan
             </td>
           </tr>
         @empty
@@ -197,11 +216,23 @@
           <div class="modal-header">
             <h5 class="modal-title">
               <i class="fa-solid fa-box-open me-2"></i>
-              {{ $isEditing ? 'Editar ítem' : 'Nuevo ítem' }}
+              {{ $isEditing ? 'Completar ítem' : 'Nuevo ítem' }}
             </h5>
             <button type="button" class="btn-close" wire:click="closeForm" aria-label="Cerrar"></button>
           </div>
           <div class="modal-body">
+            @if($isEditing && session()->has('success'))
+              <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-circle-check me-2"></i>
+                <strong>Alta rápida completada.</strong> Ahora agrega la información complementaria:
+                <ul class="mb-0 mt-2">
+                  <li><strong>Unidades de compra/salida</strong> para conversiones precisas</li>
+                  <li><strong>Proveedores y costos</strong> para órdenes de compra</li>
+                  <li><strong>Temperaturas</strong> si es perecedero</li>
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            @endif
             <div class="row g-3">
               <div class="col-md-4">
                 <label class="form-label">SKU / Clave</label>
@@ -255,7 +286,12 @@
                 @error('form.unidad_base_id') <div class="text-danger small">{{ $message }}</div> @enderror
               </div>
               <div class="col-md-4">
-                <label class="form-label">Unidad compra</label>
+                <label class="form-label">
+                  Unidad compra
+                  @if(!$form['unidad_compra_id'])
+                    <span class="badge bg-warning text-dark ms-1">Requerido</span>
+                  @endif
+                </label>
                 <select class="form-select" wire:model.defer="form.unidad_compra_id">
                   <option value="">-- Selecciona --</option>
                   @foreach($units as $unit)
@@ -263,9 +299,13 @@
                   @endforeach
                 </select>
                 @error('form.unidad_compra_id') <div class="text-danger small">{{ $message }}</div> @enderror
+                <small class="text-muted">Unidad en la que compras al proveedor</small>
               </div>
               <div class="col-md-4">
-                <label class="form-label">Unidad salida</label>
+                <label class="form-label">
+                  Unidad salida
+                  <span class="badge bg-info text-dark ms-1">Opcional</span>
+                </label>
                 <select class="form-select" wire:model.defer="form.unidad_salida_id">
                   <option value="">-- Selecciona --</option>
                   @foreach($units as $unit)
@@ -273,6 +313,7 @@
                   @endforeach
                 </select>
                 @error('form.unidad_salida_id') <div class="text-danger small">{{ $message }}</div> @enderror
+                <small class="text-muted">Unidad para usar en recetas de cocina</small>
               </div>
 
               <div class="col-md-3">
@@ -305,100 +346,208 @@
               </div>
 
               <div class="col-12">
-                <hr>
-                <h6 class="fw-bold mb-2">Proveedores y costos</h6>
-                <div class="table-responsive">
-                  <table class="table table-sm align-middle">
-                    <thead class="table-light">
-                      <tr>
-                        <th>Proveedor</th>
-                        <th>Presentación</th>
-                        <th>Unidad</th>
-                        <th>Factor</th>
-                        <th>Costo</th>
-                        <th>Moneda</th>
-                        <th>Lead time (días)</th>
-                        <th>SKU proveedor</th>
-                        <th>Preferente</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @foreach($providers as $index => $provider)
-                        <tr>
-                          <td style="width: 200px;">
-                            <select class="form-select form-select-sm"
-                                    wire:model.defer="providers.{{ $index }}.vendor_id">
-                              <option value="">-- Selecciona --</option>
-                              @foreach($providerOptions as $option)
-                                <option value="{{ $option['id'] }}">{{ $option['nombre'] }}</option>
-                              @endforeach
-                            </select>
-                            @error("providers.$index.vendor_id") <div class="text-danger small">{{ $message }}</div> @enderror
-                          </td>
-                          <td>
-                            <input type="text" class="form-control form-control-sm"
-                                   wire:model.defer="providers.{{ $index }}.presentacion"
-                                   placeholder="Caja 12 x 1L">
-                            @error("providers.$index.presentacion") <div class="text-danger small">{{ $message }}</div> @enderror
-                          </td>
-                          <td style="width: 160px;">
-                            <select class="form-select form-select-sm"
-                                    wire:model.defer="providers.{{ $index }}.unidad_presentacion_id">
-                              <option value="">--</option>
-                              @foreach($units as $unit)
-                                <option value="{{ $unit['id'] }}">{{ $unit['codigo'] }}</option>
-                              @endforeach
-                            </select>
-                            @error("providers.$index.unidad_presentacion_id") <div class="text-danger small">{{ $message }}</div> @enderror
-                          </td>
-                          <td style="width: 110px;">
-                            <input type="number" step="0.0001" class="form-control form-control-sm text-end"
-                                   wire:model.defer="providers.{{ $index }}.factor_a_canonica">
-                            @error("providers.$index.factor_a_canonica") <div class="text-danger small">{{ $message }}</div> @enderror
-                          </td>
-                          <td style="width: 130px;">
-                            <div class="input-group input-group-sm">
-                              <span class="input-group-text">$</span>
-                              <input type="number" step="0.01" class="form-control text-end"
-                                     wire:model.defer="providers.{{ $index }}.costo_ultimo">
-                            </div>
-                            @error("providers.$index.costo_ultimo") <div class="text-danger small">{{ $message }}</div> @enderror
-                          </td>
-                          <td style="width: 90px;">
-                            <select class="form-select form-select-sm"
-                                    wire:model.defer="providers.{{ $index }}.moneda">
-                              <option value="MXN">MXN</option>
-                              <option value="USD">USD</option>
-                            </select>
-                          </td>
-                          <td style="width: 120px;">
-                            <input type="number" class="form-control form-control-sm text-end"
-                                   wire:model.defer="providers.{{ $index }}.lead_time_dias">
-                          </td>
-                          <td>
-                            <input type="text" class="form-control form-control-sm"
-                                   wire:model.defer="providers.{{ $index }}.codigo_proveedor">
-                          </td>
-                          <td class="text-center">
-                            <input class="form-check-input" type="radio" name="preferredVendor"
-                                   @checked($provider['preferente'])
-                                   wire:click="setPreferred({{ $index }})">
-                          </td>
-                          <td class="text-end">
-                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                    wire:click="removeProviderLine({{ $index }})">
-                              <i class="fa-solid fa-xmark"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      @endforeach
-                    </tbody>
-                  </table>
+                <hr class="my-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="fw-bold mb-0">
+                    <i class="fa-solid fa-truck me-2"></i>Proveedores y Presentaciones
+                  </h6>
+                  <button type="button" class="btn btn-sm btn-primary" wire:click="addProviderLine">
+                    <i class="fa-solid fa-plus me-1"></i> Agregar proveedor
+                  </button>
                 </div>
-                <button type="button" class="btn btn-sm btn-outline-primary" wire:click="addProviderLine">
-                  <i class="fa-solid fa-plus"></i> Agregar proveedor
-                </button>
+
+                @if(empty($providers))
+                  <div class="alert alert-info">
+                    <i class="fa-solid fa-info-circle me-2"></i>
+                    No hay proveedores configurados. Agrega al menos uno para completar el item.
+                  </div>
+                @else
+                  <div class="accordion" id="accordionProviders">
+                    @foreach($providers as $index => $provider)
+                      @php
+                        $providerName = collect($providerOptions)->firstWhere('id', $provider['vendor_id'])['nombre'] ?? 'Proveedor sin seleccionar';
+                        $isPreferred = $provider['preferente'] ?? false;
+                        $hasErrors = $errors->has("providers.$index.*");
+                      @endphp
+                      
+                      <div class="accordion-item {{ $hasErrors ? 'border-danger' : '' }}">
+                        <h2 class="accordion-header" id="heading{{ $index }}">
+                          <button class="accordion-button {{ $index > 0 ? 'collapsed' : '' }}" type="button" 
+                                  data-bs-toggle="collapse" 
+                                  data-bs-target="#collapse{{ $index }}" 
+                                  aria-expanded="{{ $index === 0 ? 'true' : 'false' }}" 
+                                  aria-controls="collapse{{ $index }}">
+                            <div class="d-flex align-items-center gap-3 w-100">
+                              @if($isPreferred)
+                                <span class="badge bg-success">
+                                  <i class="fa-solid fa-star"></i> Preferente
+                                </span>
+                              @else
+                                <span class="badge bg-secondary">Alternativo</span>
+                              @endif
+                              <span class="fw-semibold">{{ $providerName }}</span>
+                              @if($provider['presentacion'])
+                                <span class="text-muted small">· {{ $provider['presentacion'] }}</span>
+                              @endif
+                              @if($provider['costo_ultimo'])
+                                <span class="ms-auto text-success fw-bold me-5">
+                                  ${{ number_format($provider['costo_ultimo'], 2) }} {{ $provider['moneda'] ?? 'MXN' }}
+                                </span>
+                              @endif
+                            </div>
+                          </button>
+                        </h2>
+                        <div id="collapse{{ $index }}" 
+                             class="accordion-collapse collapse {{ $index === 0 ? 'show' : '' }}" 
+                             aria-labelledby="heading{{ $index }}" 
+                             data-bs-parent="#accordionProviders">
+                          <div class="accordion-body">
+                            <div class="row g-3">
+                              <!-- Proveedor -->
+                              <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                  <i class="fa-solid fa-building me-1"></i>Proveedor
+                                  <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" wire:model.live="providers.{{ $index }}.vendor_id">
+                                  <option value="">-- Selecciona un proveedor --</option>
+                                  @foreach($providerOptions as $option)
+                                    <option value="{{ $option['id'] }}">{{ $option['nombre'] }}</option>
+                                  @endforeach
+                                </select>
+                                @error("providers.$index.vendor_id") 
+                                  <div class="text-danger small mt-1">{{ $message }}</div> 
+                                @enderror
+                              </div>
+
+                              <!-- Preferente -->
+                              <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                  <i class="fa-solid fa-star me-1"></i>Proveedor principal
+                                </label>
+                                <div class="form-check form-switch mt-2">
+                                  <input class="form-check-input" type="checkbox" role="switch"
+                                         id="preferente{{ $index }}"
+                                         {{ $isPreferred ? 'checked' : '' }}
+                                         wire:click="setPreferred({{ $index }})">
+                                  <label class="form-check-label" for="preferente{{ $index }}">
+                                    Marcar como proveedor preferente
+                                  </label>
+                                </div>
+                                <small class="text-muted">Solo puede haber un proveedor preferente</small>
+                              </div>
+
+                              <!-- Presentación -->
+                              <div class="col-md-8">
+                                <label class="form-label fw-semibold">
+                                  <i class="fa-solid fa-box me-1"></i>Presentación comercial
+                                  <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control"
+                                       wire:model.defer="providers.{{ $index }}.presentacion"
+                                       placeholder="Ej: Caja 12 pzas × 1 L">
+                                @error("providers.$index.presentacion") 
+                                  <div class="text-danger small mt-1">{{ $message }}</div> 
+                                @enderror
+                                <small class="text-muted">Describe cómo vende este proveedor el producto</small>
+                              </div>
+
+                              <!-- Unidad de presentación -->
+                              <div class="col-md-4">
+                                <label class="form-label fw-semibold">
+                                  Unidad empaque <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" wire:model.defer="providers.{{ $index }}.unidad_presentacion_id">
+                                  <option value="">-- Selecciona --</option>
+                                  @foreach($units as $unit)
+                                    <option value="{{ $unit['id'] }}">
+                                      {{ $unit['codigo'] }} - {{ $unit['nombre'] }}
+                                    </option>
+                                  @endforeach
+                                </select>
+                                @error("providers.$index.unidad_presentacion_id") 
+                                  <div class="text-danger small mt-1">{{ $message }}</div> 
+                                @enderror
+                              </div>
+
+                              <!-- Factor de conversión -->
+                              <div class="col-md-4">
+                                <label class="form-label fw-semibold">
+                                  <i class="fa-solid fa-calculator me-1"></i>Factor a base
+                                  <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" step="0.0001" class="form-control"
+                                       wire:model.defer="providers.{{ $index }}.factor_a_canonica"
+                                       placeholder="12.0">
+                                @error("providers.$index.factor_a_canonica") 
+                                  <div class="text-danger small mt-1">{{ $message }}</div> 
+                                @enderror
+                                <small class="text-muted">Cuántas unidades base contiene</small>
+                              </div>
+
+                              <!-- Costo -->
+                              <div class="col-md-4">
+                                <label class="form-label fw-semibold">
+                                  <i class="fa-solid fa-dollar-sign me-1"></i>Costo
+                                  <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                  <span class="input-group-text">$</span>
+                                  <input type="number" step="0.01" class="form-control"
+                                         wire:model.defer="providers.{{ $index }}.costo_ultimo"
+                                         placeholder="150.00">
+                                </div>
+                                @error("providers.$index.costo_ultimo") 
+                                  <div class="text-danger small mt-1">{{ $message }}</div> 
+                                @enderror
+                              </div>
+
+                              <!-- Moneda -->
+                              <div class="col-md-4">
+                                <label class="form-label fw-semibold">Moneda</label>
+                                <select class="form-select" wire:model.defer="providers.{{ $index }}.moneda">
+                                  <option value="MXN">MXN - Peso Mexicano</option>
+                                  <option value="USD">USD - Dólar</option>
+                                </select>
+                              </div>
+
+                              <!-- Lead time -->
+                              <div class="col-md-4">
+                                <label class="form-label fw-semibold">
+                                  <i class="fa-solid fa-clock me-1"></i>Lead time (días)
+                                </label>
+                                <input type="number" class="form-control"
+                                       wire:model.defer="providers.{{ $index }}.lead_time_dias"
+                                       placeholder="3">
+                                <small class="text-muted">Tiempo de entrega del proveedor</small>
+                              </div>
+
+                              <!-- SKU proveedor -->
+                              <div class="col-md-8">
+                                <label class="form-label fw-semibold">
+                                  <i class="fa-solid fa-barcode me-1"></i>SKU del proveedor
+                                </label>
+                                <input type="text" class="form-control"
+                                       wire:model.defer="providers.{{ $index }}.codigo_proveedor"
+                                       placeholder="Código/SKU que usa el proveedor">
+                              </div>
+
+                              <!-- Botón eliminar -->
+                              <div class="col-12">
+                                <hr>
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        wire:click="removeProviderLine({{ $index }})">
+                                  <i class="fa-solid fa-trash me-1"></i>
+                                  Eliminar este proveedor
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    @endforeach
+                  </div>
+                @endif
               </div>
 
               @if($priceHistory)

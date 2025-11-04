@@ -28,6 +28,7 @@ use App\Http\Controllers\Inventory\InsumoController;
 use App\Http\Controllers\Inventory\TransferController;
 use App\Http\Controllers\Api\CatalogsController;
 use App\Http\Controllers\Production\ProductionController;
+use App\Http\Controllers\Reports\Sales\SalesMixController;
 use App\Http\Controllers\Purchasing\PurchaseSuggestionController;
 use App\Http\Controllers\Purchasing\ReceivingController;
 use App\Http\Controllers\Purchasing\ReturnController;
@@ -381,6 +382,16 @@ Route::middleware(['auth:sanctum', 'permission:audit.view'])
         Route::get('/users', [App\Http\Controllers\Audit\LogController::class, 'users'])->name('api.audit.log.users');
         Route::get('/modules', [App\Http\Controllers\Audit\LogController::class, 'modules'])->name('api.audit.log.modules');
     });
+
+/*
+|--------------------------------------------------------------------------
+| Reports - Sales Mix (Sin autenticación para pruebas)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('reports/sales')->group(function () {
+    Route::get('/mix', [SalesMixController::class, 'index'])->name('api.reports.sales.mix');
+    Route::get('/mix/today', [SalesMixController::class, 'today'])->name('api.reports.sales.mix.today');
+});
 
 /*
 |--------------------------------------------------------------------------
