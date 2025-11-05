@@ -32,6 +32,12 @@ use App\Http\Controllers\Reports\SalesDiagController;
 use App\Http\Controllers\Reports\SalesDrawerController;
 use App\Http\Controllers\Reports\SalesMixController;
 use App\Http\Controllers\Reports\SalesModsController;
+use App\Http\Controllers\Reports\SalesDetailController;
+use App\Http\Controllers\Reports\SalesSummaryController;
+use App\Http\Controllers\Reports\SalesBalanceController;
+use App\Http\Controllers\Reports\SalesExceptionsController;
+use App\Http\Controllers\Reports\MenuUsageController;
+use App\Http\Controllers\Reports\SalesJournalController;
 use App\Http\Controllers\Purchasing\PurchaseSuggestionController;
 use App\Http\Controllers\Purchasing\ReceivingController;
 use App\Http\Controllers\Purchasing\ReturnController;
@@ -61,6 +67,18 @@ Route::prefix('reports')->group(function () {
     Route::get('/purchasing/late-po', [\App\Http\Controllers\Reports\ReportsController::class, 'purchasingLatePO']);
     Route::get('/inventory/over-tolerance', [\App\Http\Controllers\Reports\ReportsController::class, 'inventoryOverTolerance']);
     Route::get('/inventory/top-urgent', [\App\Http\Controllers\Reports\ReportsController::class, 'inventoryTopUrgent']);
+});
+
+// API: reportes Jasper equivalentes (solo lectura)
+Route::prefix('reports')->group(function () {
+    Route::get('/sales/detail', [SalesDetailController::class, 'index']);
+    Route::get('/sales/summary', [SalesSummaryController::class, 'index']);
+    Route::get('/sales/balance', [SalesBalanceController::class, 'index']);
+    Route::get('/sales/exceptions', [SalesExceptionsController::class, 'index']);
+    Route::get('/menu/usage', [MenuUsageController::class, 'index']);
+    Route::get('/sales/journal', [SalesJournalController::class, 'index']);
+    // Alias canónico sin prefijo /sales
+    Route::get('/journal', [SalesJournalController::class, 'index']);
 });
 
 /*

@@ -8,6 +8,12 @@ use App\Http\Controllers\Reports\SalesDiagController;
 use App\Http\Controllers\Reports\SalesDrawerController;
 use App\Http\Controllers\Reports\SalesMixController;
 use App\Http\Controllers\Reports\SalesModsController;
+use App\Http\Controllers\Reports\SalesDetailController;
+use App\Http\Controllers\Reports\SalesSummaryController;
+use App\Http\Controllers\Reports\SalesBalanceController;
+use App\Http\Controllers\Reports\SalesExceptionsController;
+use App\Http\Controllers\Reports\MenuUsageController;
+use App\Http\Controllers\Reports\SalesJournalController;
 use App\Services\Audit\AuditLogService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -387,7 +393,18 @@ Route::middleware('auth')->group(function () {
                 Route::get('/mods', [SalesModsController::class, 'show'])->name('reports.sales.mods');
                 Route::get('/mods/export/xlsx', [SalesModsController::class, 'exportExcel'])->name('reports.sales.mods.export.xlsx');
                 Route::get('/mods/export/pdf', [SalesModsController::class, 'exportPdf'])->name('reports.sales.mods.export.pdf');
+
+                // Nuevos reportes (Jasper equivalents)
+                Route::get('/detail', [SalesDetailController::class, 'show'])->name('reports.sales.detail');
+                Route::get('/summary', [SalesSummaryController::class, 'show'])->name('reports.sales.summary');
+                Route::get('/balance', [SalesBalanceController::class, 'show'])->name('reports.sales.balance');
+                Route::get('/exceptions', [SalesExceptionsController::class, 'show'])->name('reports.sales.exceptions');
+                Route::get('/journal', [SalesJournalController::class, 'show'])->name('reports.sales.journal');
             });
+
+            Route::get('/menu/usage', [MenuUsageController::class, 'show'])->name('reports.menu.usage');
+            // Alias canónico para Journal sin el prefijo /sales
+            Route::get('/journal', [SalesJournalController::class, 'show'])->name('reports.journal');
         });
 });
 

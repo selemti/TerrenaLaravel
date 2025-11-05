@@ -36,11 +36,22 @@ SELECT
   t.branch_key,
   COALESCE(t.folio_date, t.closing_date::date, t.create_date::date) AS folio_date,
   COALESCE(t.total_price,0)::numeric(12,2)    AS total_price,
-  COALESCE(t.total_discount,0)::numeric(12,2) AS total_discount,
-  COALESCE(t.tip_amount,0)::numeric(12,2)     AS tip_amount,
-  COALESCE(t.service_charges,0)::numeric(12,2) AS service_charges
+  COALESCE((
+    SELECT SUM(COALESCE(ti.discount,0))
+    FROM public.ticket_item ti
+    WHERE ti.ticket_id = t.id
+  ),0)::numeric(12,2) AS total_discount,
+  COALESCE((
+    SELECT SUM(g.amount)
+    FROM public.gratuity g
+    WHERE g.ticket_id = t.id AND COALESCE(g.refunded,false)=FALSE AND COALESCE(g.paid,true)=TRUE
+  ),0)::numeric(12,2)                          AS tip_amount,
+  COALESCE(t.service_charge,0)::numeric(12,2)  AS service_charges
 FROM public.ticket t
 WHERE t.paid=TRUE AND t.voided=FALSE;
+
+
+
 
 -- ---------------------------------------------------------------
 -- 1) Sales Report (detalle por ticket / item)  [Jasper: sales_report_*]
@@ -56,10 +67,10 @@ SELECT
   ti.id              AS ticket_item_id,
   ti.item_name::text AS item_name,
   COALESCE(ti.item_quantity,0)::numeric(12,2) AS qty,
-  COALESCE(ti.unit_price, COALESCE(ti.total_price,0)/NULLIF(ti.item_quantity,0))::numeric(12,2) AS unit_price,
+  COALESCE(ti.item_price, COALESCE(ti.total_price,0)/NULLIF(ti.item_quantity,0))::numeric(12,2) AS unit_price,
   COALESCE(ti.total_price,0)::numeric(12,2)   AS line_total,
-  COALESCE(ti.discount_amount,0)::numeric(12,2) AS line_discount,
-  (COALESCE(ti.total_price,0)-COALESCE(ti.discount_amount,0))::numeric(12,2) AS line_neto
+  COALESCE(ti.discount,0)::numeric(12,2) AS line_discount,
+  (COALESCE(ti.total_price,0)-COALESCE(ti.discount,0))::numeric(12,2) AS line_neto
 FROM vw_ticket_base b
 JOIN public.ticket_item ti ON ti.ticket_id = b.ticket_id;
 
@@ -74,9 +85,7 @@ SELECT
   COUNT(DISTINCT b.ticket_id)                                AS tickets,
   ROUND(SUM(b.total_price),2)                                AS bruto,
   ROUND(SUM(b.total_discount),2)                             AS descuento,
-  ROUND(SUM(b.total_price - b.total_discount),2)             AS neto,
-  ROUND(SUM(b.tip_amount),2)                                 AS propina,
-  ROUND(SUM(b.service_charges),2)                            AS cargo_servicio
+  ROUND(SUM(b.total_price - b.total_discount),2)             AS neto
 FROM vw_ticket_base b
 GROUP BY 1,2;
 
@@ -114,14 +123,67 @@ ORDER BY 1,2,4 DESC;
 -- ---------------------------------------------------------------
 DROP VIEW IF EXISTS vw_report_sales_exceptions CASCADE;
 CREATE VIEW vw_report_sales_exceptions AS
-SELECT folio_date, branch_key, 'PAYMENT_VS_NET_MISMATCH' AS error_code, severity, ticket_id, diff::numeric(12,2) AS diff
-FROM vw_diag_neto_vs_cobros
+WITH base AS (
+  SELECT
+    b.folio_date,
+    b.branch_key,
+    b.ticket_id,
+    (b.total_price - b.total_discount)::numeric(12,2) AS neto
+  FROM vw_ticket_base b
+),
+paid AS (
+  SELECT
+    t.id AS ticket_id,
+    ROUND(SUM(CASE
+      WHEN COALESCE(tx.voided, FALSE)=FALSE
+       AND UPPER(tx.transaction_type)='CREDIT'
+       AND tx.payment_type NOT IN ('REFUND','VOID_TRANS')
+      THEN COALESCE(tx.amount,0) ELSE 0 END)::numeric, 2) AS paid_amount
+  FROM public.ticket t
+  LEFT JOIN public.transactions tx ON tx.ticket_id = t.id
+  GROUP BY t.id
+),
+tot_disc AS (
+  SELECT b.ticket_id, (b.total_discount)::numeric(12,2) AS total_discount
+  FROM vw_ticket_base b
+)
+SELECT
+  b.folio_date,
+  b.branch_key,
+  'PAYMENT_VS_NET_MISMATCH'::text AS error_code,
+  'WARN'::text AS severity,
+  b.ticket_id,
+  ROUND((b.neto - COALESCE(p.paid_amount,0))::numeric,2) AS diff
+FROM base b
+LEFT JOIN paid p ON p.ticket_id = b.ticket_id
+WHERE ABS((b.neto - COALESCE(p.paid_amount,0))) > 0.01
+
 UNION ALL
-SELECT folio_date, branch_key, 'DISCOUNT_OVER_THRESHOLD', severity, ticket_id, total_discount
-FROM vw_diag_high_discounts
+
+SELECT
+  b.folio_date,
+  b.branch_key,
+  'DISCOUNT_OVER_THRESHOLD'::text AS error_code,
+  'INFO'::text AS severity,
+  b.ticket_id,
+  td.total_discount AS diff
+FROM base b
+JOIN tot_disc td ON td.ticket_id = b.ticket_id
+WHERE td.total_discount > 100
+   OR ((b.neto + td.total_discount) > 0 AND td.total_discount / NULLIF((b.neto + td.total_discount),0) > 0.20)
+
 UNION ALL
-SELECT folio_date, branch_key, 'PAID_WITHOUT_TX', severity, ticket_id, neto
-FROM vw_diag_paid_but_no_payments;
+
+SELECT
+  b.folio_date,
+  b.branch_key,
+  'PAID_WITHOUT_TX'::text AS error_code,
+  'WARN'::text AS severity,
+  b.ticket_id,
+  b.neto AS diff
+FROM base b
+LEFT JOIN paid p ON p.ticket_id = b.ticket_id
+WHERE COALESCE(p.paid_amount,0) = 0 AND b.neto > 0;
 
 -- ---------------------------------------------------------------
 -- 5) Menu Usage Report [Jasper: menu_usage_report]
@@ -134,7 +196,7 @@ SELECT
   b.branch_key,
   ti.item_name::text AS item_name,
   SUM(COALESCE(ti.item_quantity,0))::numeric(12,2) AS qty,
-  ROUND(SUM(COALESCE(ti.total_price,0)-COALESCE(ti.discount_amount,0)),2) AS neto
+  ROUND(SUM(COALESCE(ti.total_price,0)-COALESCE(ti.discount,0))::numeric,2) AS neto
 FROM vw_ticket_base b
 JOIN public.ticket_item ti ON ti.ticket_id = b.ticket_id
 GROUP BY 1,2,3;
@@ -153,7 +215,7 @@ SELECT
   ti.item_name::text AS item_name,
   COALESCE(ti.item_quantity,0)::numeric(12,2) AS qty,
   COALESCE(ti.total_price,0)::numeric(12,2) AS line_total,
-  COALESCE(ti.discount_amount,0)::numeric(12,2) AS line_discount
+  COALESCE(ti.discount,0)::numeric(12,2) AS line_discount
 FROM vw_ticket_base b
 JOIN public.ticket_item ti ON ti.ticket_id = b.ticket_id;
 

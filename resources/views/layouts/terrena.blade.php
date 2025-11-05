@@ -275,6 +275,43 @@
           </div>
         </div>
 
+        {{-- Reportes (requiere reports.view) --}}
+        <div class="nav-item"
+             x-show="permsLoaded && window.TerrenaHasPerm('reports.view')"
+             x-cloak>
+          <a class="nav-link {{ ($active ?? '') === 'reportes' ? 'active' : '' }}"
+             data-bs-toggle="collapse" href="#menuReportes" role="button" aria-expanded="false">
+            <i class="fa-solid fa-chart-line"></i> <span class="label">Reportes</span>
+            <i class="fa-solid fa-chevron-down ms-auto small"></i>
+          </a>
+          <div class="collapse {{ ($active ?? '') === 'reportes' ? 'show' : '' }} ms-3" id="menuReportes">
+            <a class="nav-link submenu-link" href="{{ route('reports.dashboard') }}">
+              <i class="fa-solid fa-grid-2"></i> <span class="label">Dashboard</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.sales.mix') }}">
+              <i class="fa-solid fa-chart-pie"></i> <span class="label">Mix de Ventas</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.sales.summary') }}">
+              <i class="fa-solid fa-table"></i> <span class="label">Resumen de Ventas</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.sales.detail') }}">
+              <i class="fa-solid fa-list"></i> <span class="label">Detalle de Ventas</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.sales.balance') }}">
+              <i class="fa-solid fa-wallet"></i> <span class="label">Balance por Forma de Pago</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.sales.exceptions') }}">
+              <i class="fa-solid fa-triangle-exclamation"></i> <span class="label">Excepciones</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.menu.usage') }}">
+              <i class="fa-solid fa-utensils"></i> <span class="label">Uso de Menú</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.sales.journal') }}">
+              <i class="fa-solid fa-book"></i> <span class="label">Journal</span>
+            </a>
+          </div>
+        </div>
+
         {{-- Inventario (grupo completo visible sólo si permiso can_manage_purchasing) --}}
         <div class="nav-item"
              x-show="permsLoaded && window.TerrenaHasPerm('can_manage_purchasing')"
