@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -20,7 +21,7 @@ return new class extends Migration
         $schema = Schema::connection('pgsql');
 
         $schema->table('selemti.inventory_batch', function (Blueprint $table) {
-            if (!Schema::hasColumn('selemti.inventory_batch', 'unit_cost')) {
+            if (! $this->columnExists('unit_cost')) {
                 $table->decimal('unit_cost', 12, 4)->default(0.00)->comment('Costo unitario del lote para costeo por batch.');
             }
         });
@@ -34,9 +35,26 @@ return new class extends Migration
         $schema = Schema::connection('pgsql');
 
         $schema->table('selemti.inventory_batch', function (Blueprint $table) {
-            if (Schema::hasColumn('selemti.inventory_batch', 'unit_cost')) {
+            if ($this->columnExists('unit_cost')) {
                 $table->dropColumn('unit_cost');
             }
         });
+    }
+
+    protected function columnExists(string $column): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            <<<SQL
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = 'selemti'
+              AND table_name = 'inventory_batch'
+              AND column_name = ?
+            LIMIT 1
+            SQL,
+            [$column]
+        );
+
+        return ! empty($result);
     }
 };

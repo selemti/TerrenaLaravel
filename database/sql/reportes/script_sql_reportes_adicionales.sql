@@ -17,11 +17,21 @@ SELECT
   t.branch_key,
   COALESCE(t.folio_date, t.closing_date::date, t.create_date::date) AS folio_date,
   COALESCE(t.total_price,0)::numeric(12,2)    AS total_price,
-  COALESCE((
-    SELECT SUM(COALESCE(ti.discount,0))
-    FROM public.ticket_item ti
-    WHERE ti.ticket_id = t.id
-  ),0)::numeric(12,2) AS total_discount,
+  GREATEST(
+    0,
+    LEAST(
+      COALESCE(
+        t.total_discount,
+        (
+          SELECT SUM(COALESCE(ti.discount_amount, COALESCE(ti.discount, 0)))
+          FROM public.ticket_item ti
+          WHERE ti.ticket_id = t.id
+        ),
+        0
+      ),
+      COALESCE(t.total_price, 0)
+    )
+  )::numeric(12,2) AS total_discount,
   COALESCE((
     SELECT SUM(g.amount)
     FROM public.gratuity g

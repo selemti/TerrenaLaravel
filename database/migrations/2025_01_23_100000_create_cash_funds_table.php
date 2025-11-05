@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('cash_funds')) {
+            return;
+        }
+
         Schema::create('cash_funds', function (Blueprint $table) {
             $table->id();
             $table->integer('sucursal_id'); // FK a selemti.cat_sucursales (PostgreSQL)

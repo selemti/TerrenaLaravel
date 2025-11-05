@@ -2,16 +2,15 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        $schema = Schema::connection('pgsql');
-
-        if (! $schema->hasTable('purchase_requests')) {
-            $schema->create('purchase_requests', function (Blueprint $table) {
+        if (! $this->tableExists('purchase_requests')) {
+            Schema::connection('pgsql')->create('selemti.purchase_requests', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->string('folio', 40)->nullable()->unique();
                 $table->string('sucursal_id', 36)->nullable();
@@ -30,8 +29,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('purchase_request_lines')) {
-            $schema->create('purchase_request_lines', function (Blueprint $table) {
+        if (! $this->tableExists('purchase_request_lines')) {
+            Schema::connection('pgsql')->create('selemti.purchase_request_lines', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('request_id');
                 $table->unsignedBigInteger('item_id');
@@ -50,8 +49,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('purchase_vendor_quotes')) {
-            $schema->create('purchase_vendor_quotes', function (Blueprint $table) {
+        if (! $this->tableExists('purchase_vendor_quotes')) {
+            Schema::connection('pgsql')->create('selemti.purchase_vendor_quotes', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('request_id');
                 $table->unsignedBigInteger('vendor_id');
@@ -75,8 +74,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('purchase_vendor_quote_lines')) {
-            $schema->create('purchase_vendor_quote_lines', function (Blueprint $table) {
+        if (! $this->tableExists('purchase_vendor_quote_lines')) {
+            Schema::connection('pgsql')->create('selemti.purchase_vendor_quote_lines', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('quote_id');
                 $table->unsignedBigInteger('request_line_id');
@@ -96,8 +95,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('purchase_orders')) {
-            $schema->create('purchase_orders', function (Blueprint $table) {
+        if (! $this->tableExists('purchase_orders')) {
+            Schema::connection('pgsql')->create('selemti.purchase_orders', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->string('folio', 40)->nullable()->unique();
                 $table->unsignedBigInteger('quote_id')->nullable();
@@ -121,8 +120,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('purchase_order_lines')) {
-            $schema->create('purchase_order_lines', function (Blueprint $table) {
+        if (! $this->tableExists('purchase_order_lines')) {
+            Schema::connection('pgsql')->create('selemti.purchase_order_lines', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('order_id');
                 $table->unsignedBigInteger('request_line_id')->nullable();
@@ -141,8 +140,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('purchase_documents')) {
-            $schema->create('purchase_documents', function (Blueprint $table) {
+        if (! $this->tableExists('purchase_documents')) {
+            Schema::connection('pgsql')->create('selemti.purchase_documents', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('request_id')->nullable();
                 $table->unsignedBigInteger('quote_id')->nullable();
@@ -162,8 +161,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        $schema = Schema::connection('pgsql');
-
         foreach ([
             'purchase_documents',
             'purchase_order_lines',
@@ -173,9 +170,19 @@ return new class extends Migration
             'purchase_request_lines',
             'purchase_requests',
         ] as $table) {
-            if ($schema->hasTable($table)) {
-                $schema->drop($table);
+            if ($this->tableExists($table)) {
+                Schema::connection('pgsql')->drop("selemti.{$table}");
             }
         }
+    }
+
+    private function tableExists(string $table): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT to_regclass('selemti.' || ?) AS regclass",
+            [$table]
+        );
+
+        return ! empty($result?->regclass);
     }
 };

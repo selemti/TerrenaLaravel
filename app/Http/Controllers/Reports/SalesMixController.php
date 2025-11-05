@@ -22,6 +22,7 @@ class SalesMixController extends BaseReportController
         $dataset = $this->fetchData($start, $end);
         $filtered = $this->applyBranchFilter($dataset, $branch);
         $summary = $this->summarize($filtered);
+        $adjustments = $this->fetchSalesAdjustments($start, $end, $branch);
 
         return response()->json([
             'success' => true,
@@ -31,6 +32,7 @@ class SalesMixController extends BaseReportController
             ],
             'branch' => $branch,
             'summary' => $summary,
+            'adjustments' => $adjustments,
             'data' => $filtered->values(),
             'generated_at' => now('America/Mexico_City')->toIso8601String(),
         ]);
@@ -44,6 +46,12 @@ class SalesMixController extends BaseReportController
         $branches = $this->extractBranches($dataset);
         $filtered = $this->applyBranchFilter($dataset, $branch);
         $summary = $this->summarize($filtered);
+        $pivot = $this->buildPivot($filtered);
+
+        $pivotTotals = $this->sumPivot($pivot);
+        $branchPivot = $this->buildBranchPivot($filtered);
+        $branchTotals = $this->sumPivot($branchPivot);
+        $adjustments = $this->fetchSalesAdjustments($start, $end, $branch);
 
         return view('reports.sales.mix', [
             'active' => 'reportes',
@@ -52,7 +60,12 @@ class SalesMixController extends BaseReportController
             'branch' => $branch,
             'branches' => $branches,
             'rows' => $filtered,
+            'pivotRows' => $pivot,
+            'pivotTotals' => $pivotTotals,
+            'branchPivot' => $branchPivot,
+            'branchTotals' => $branchTotals,
             'summary' => $summary,
+            'adjustments' => $adjustments,
             'generatedAt' => now('America/Mexico_City'),
         ]);
     }
@@ -96,6 +109,11 @@ class SalesMixController extends BaseReportController
 
         $dataset = $this->applyBranchFilter($this->fetchData($start, $end), $branch);
         $summary = $this->summarize($dataset);
+        $pivot = $this->buildPivot($dataset);
+        $pivotTotals = $this->sumPivot($pivot);
+        $branchPivot = $this->buildBranchPivot($dataset);
+        $branchTotals = $this->sumPivot($branchPivot);
+        $adjustments = $this->fetchSalesAdjustments($start, $end, $branch);
 
         $filename = sprintf(
             'reporte_mix_ventas_%s_%s%s.pdf',
@@ -110,6 +128,11 @@ class SalesMixController extends BaseReportController
             'branch' => $branch,
             'rows' => $dataset,
             'summary' => $summary,
+            'pivotRows' => $pivot,
+            'pivotTotals' => $pivotTotals,
+            'branchPivot' => $branchPivot,
+            'branchTotals' => $branchTotals,
+            'adjustments' => $adjustments,
             'generatedAt' => now('America/Mexico_City'),
         ], $filename, paper: 'letter', orientation: 'portrait');
     }
@@ -117,8 +140,12 @@ class SalesMixController extends BaseReportController
     protected function resolveFilters(Request $request): array
     {
         [$start, $end] = $this->parseDateRange($request);
-        $branch = $this->parseBranch($request);
-
+        $branchParam = $request->input('branch');
+        if (is_array($branchParam)) {
+            $branch = strtoupper(implode(',', array_filter(array_map('strval', $branchParam))));
+        } else {
+            $branch = $this->parseBranch($request);
+        }
         return [$start, $end, $branch];
     }
 
@@ -141,13 +168,11 @@ class SalesMixController extends BaseReportController
         if (!$branch) {
             return $rows->values();
         }
-
-        $normalized = strtoupper($branch);
-
+        $normalized = array_map('trim', explode(',', strtoupper($branch)));
         return $rows
             ->filter(function (object $row) use ($normalized) {
                 $value = strtoupper((string) ($row->branch_key ?? $row->branch ?? $row->branch_name ?? ''));
-                return $value === $normalized;
+                return in_array($value, $normalized, true);
             })
             ->values();
     }
@@ -238,5 +263,149 @@ class SalesMixController extends BaseReportController
             'DIGITAL' => 'Digital',
             default => ucfirst(strtolower(str_replace('_', ' ', $key))),
         };
+    }
+
+    protected function fetchSalesAdjustments(Carbon $start, Carbon $end, ?string $branch): array
+    {
+        $sql = <<<SQL
+            SELECT
+                COALESCE(SUM(bruto), 0) AS bruto,
+                COALESCE(SUM(descuento), 0) AS descuento,
+                COALESCE(SUM(neto), 0) AS neto,
+                COALESCE(SUM(propina), 0) AS propina,
+                COALESCE(SUM(cargo_servicio), 0) AS cargo_servicio
+            FROM public.vw_report_sales_summary
+            WHERE folio_date BETWEEN ? AND ?
+        SQL;
+
+        $bindings = [$start->format('Y-m-d'), $end->format('Y-m-d')];
+
+        if ($branch) {
+            if (str_contains($branch, ',')) {
+                $sql .= " AND UPPER(branch_key) IN (SELECT UNNEST(string_to_array(?, ',')))";
+            } else {
+                $sql .= " AND UPPER(branch_key) = ?";
+            }
+            $bindings[] = $branch;
+        }
+
+        $row = DB::connection('pgsql')->selectOne($sql, $bindings);
+
+        if (!$row) {
+            return [
+                'gross' => 0.0,
+                'discount' => 0.0,
+                'net' => 0.0,
+                'tips' => 0.0,
+                'service' => 0.0,
+                'total_with_charges' => 0.0,
+            ];
+        }
+
+        $gross = $this->round((float) ($row->bruto ?? 0));
+        $discount = $this->round((float) ($row->descuento ?? 0));
+        $net = $this->round((float) ($row->neto ?? 0));
+        $tips = $this->round((float) ($row->propina ?? 0));
+        $service = $this->round((float) ($row->cargo_servicio ?? 0));
+        $totalWithCharges = $this->round($net + $tips + $service);
+
+        return [
+            'gross' => $gross,
+            'discount' => $discount,
+            'net' => $net,
+            'tips' => $tips,
+            'service' => $service,
+            'total_with_charges' => $totalWithCharges,
+        ];
+    }
+
+    protected function buildPivot(Collection $rows): array
+    {
+        $grouped = $rows->groupBy(function (object $row) {
+            $date = (string) ($row->report_date ?? '');
+            $branch = strtoupper((string) ($row->branch_key ?? $row->branch ?? $row->branch_name ?? ''));
+            return $date.'|'.$branch;
+        });
+
+        $result = [];
+        foreach ($grouped as $key => $items) {
+            [$date, $branch] = explode('|', $key, 2);
+
+            $cash = 0.0; $credit = 0.0; $debit = 0.0; $other = 0.0; $net = 0.0;
+            foreach ($items as $row) {
+                $amount = (float) ($row->total ?? 0);
+                $method = strtoupper((string) ($row->normalized_payment ?? $row->payment_method ?? $row->payment ?? $row->pay_norm ?? ''));
+                switch ($method) {
+                    case 'CASH': $cash += $amount; break;
+                    case 'CREDIT_CARD': $credit += $amount; break;
+                    case 'DEBIT_CARD': $debit += $amount; break;
+                    default: $other += $amount; break;
+                }
+                $net += $amount;
+            }
+
+            $result[] = [
+                'report_date' => $date,
+                'branch_key' => $branch,
+                'cash' => $this->round($cash),
+                'credit' => $this->round($credit),
+                'debit' => $this->round($debit),
+                'other' => $this->round($other),
+                'net' => $this->round($net),
+            ];
+        }
+
+        usort($result, function ($a, $b) {
+            return strcmp(($a['report_date'] ?? ''), ($b['report_date'] ?? '')) ?: strcmp(($a['branch_key'] ?? ''), ($b['branch_key'] ?? ''));
+        });
+
+        return $result;
+    }
+
+    protected function sumPivot(array $pivot): array
+    {
+        $totals = ['cash' => 0.0, 'credit' => 0.0, 'debit' => 0.0, 'other' => 0.0, 'net' => 0.0];
+        foreach ($pivot as $r) {
+            $totals['cash'] += (float)($r['cash'] ?? 0);
+            $totals['credit'] += (float)($r['credit'] ?? 0);
+            $totals['debit'] += (float)($r['debit'] ?? 0);
+            $totals['other'] += (float)($r['other'] ?? 0);
+            $totals['net'] += (float)($r['net'] ?? 0);
+        }
+        foreach ($totals as $k => $v) { $totals[$k] = $this->round($v); }
+        return $totals;
+    }
+
+    protected function buildBranchPivot(Collection $rows): array
+    {
+        $grouped = $rows->groupBy(function (object $row) {
+            return strtoupper((string) ($row->branch_key ?? $row->branch ?? $row->branch_name ?? ''));
+        });
+
+        $result = [];
+        foreach ($grouped as $branch => $items) {
+            $cash = 0.0; $credit = 0.0; $debit = 0.0; $other = 0.0; $net = 0.0;
+            foreach ($items as $row) {
+                $amount = (float) ($row->total ?? 0);
+                $method = strtoupper((string) ($row->normalized_payment ?? $row->payment_method ?? $row->payment ?? $row->pay_norm ?? ''));
+                switch ($method) {
+                    case 'CASH': $cash += $amount; break;
+                    case 'CREDIT_CARD': $credit += $amount; break;
+                    case 'DEBIT_CARD': $debit += $amount; break;
+                    default: $other += $amount; break;
+                }
+                $net += $amount;
+            }
+            $result[] = [
+                'branch_key' => $branch,
+                'cash' => $this->round($cash),
+                'credit' => $this->round($credit),
+                'debit' => $this->round($debit),
+                'other' => $this->round($other),
+                'net' => $this->round($net),
+            ];
+        }
+        usort($result, fn($a,$b) => strcmp($a['branch_key'] ?? '', $b['branch_key'] ?? ''));
+        return $result;
     }
 }

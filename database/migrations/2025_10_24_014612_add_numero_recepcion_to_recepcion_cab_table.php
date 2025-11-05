@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,7 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('recepcion_cab', function (Blueprint $table) {
+        if ($this->columnExists()) {
+            return;
+        }
+
+        Schema::connection('pgsql')->table('selemti.recepcion_cab', function (Blueprint $table) {
             $table->string('numero_recepcion')->nullable()->after('id');
         });
     }
@@ -21,8 +26,28 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('recepcion_cab', function (Blueprint $table) {
+        if (! $this->columnExists()) {
+            return;
+        }
+
+        Schema::connection('pgsql')->table('selemti.recepcion_cab', function (Blueprint $table) {
             $table->dropColumn('numero_recepcion');
         });
+    }
+
+    protected function columnExists(): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            <<<SQL
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema IN ('selemti', 'public')
+              AND table_name = 'recepcion_cab'
+              AND column_name = 'numero_recepcion'
+            LIMIT 1
+            SQL
+        );
+
+        return ! empty($result);
     }
 };

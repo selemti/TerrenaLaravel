@@ -364,6 +364,11 @@ Route::middleware('auth')->group(function () {
         })
         ->name('inv.counts.index');
 
+    // Demo del sistema de diseño
+    Route::middleware(['auth', 'permission:admin.access'])
+        ->get('/design-system-demo', \App\Livewire\Examples\DesignSystemDemo::class)
+        ->name('design.system.demo');
+
     // Token Sanctum para consumo desde dashboard
     Route::get('/session/api-token', [SessionApiTokenController::class, 'generate'])
         ->name('session.api-token.generate');
@@ -397,12 +402,19 @@ Route::middleware('auth')->group(function () {
                 // Nuevos reportes (Jasper equivalents)
                 Route::get('/detail', [SalesDetailController::class, 'show'])->name('reports.sales.detail');
                 Route::get('/summary', [SalesSummaryController::class, 'show'])->name('reports.sales.summary');
+                Route::get('/summary/export/pdf', [SalesSummaryController::class, 'exportPdf'])->name('reports.sales.summary.export.pdf');
                 Route::get('/balance', [SalesBalanceController::class, 'show'])->name('reports.sales.balance');
+                Route::get('/balance/export/pdf', [SalesBalanceController::class, 'exportPdf'])->name('reports.sales.balance.export.pdf');
                 Route::get('/exceptions', [SalesExceptionsController::class, 'show'])->name('reports.sales.exceptions');
+                Route::get('/exceptions/export/pdf', [SalesExceptionsController::class, 'exportPdf'])->name('reports.sales.exceptions.export.pdf');
                 Route::get('/journal', [SalesJournalController::class, 'show'])->name('reports.sales.journal');
+                Route::get('/journal/export/pdf', [SalesJournalController::class, 'exportPdf'])->name('reports.sales.journal.export.pdf');
+                Route::get('/detail', [SalesDetailController::class, 'show'])->name('reports.sales.detail');
+                Route::get('/detail/export/pdf', [SalesDetailController::class, 'exportPdf'])->name('reports.sales.detail.export.pdf');
             });
 
             Route::get('/menu/usage', [MenuUsageController::class, 'show'])->name('reports.menu.usage');
+            Route::get('/menu/usage/export/pdf', [MenuUsageController::class, 'exportPdf'])->name('reports.menu.usage.export.pdf');
             // Alias canónico para Journal sin el prefijo /sales
             Route::get('/journal', [SalesJournalController::class, 'show'])->name('reports.journal');
         });

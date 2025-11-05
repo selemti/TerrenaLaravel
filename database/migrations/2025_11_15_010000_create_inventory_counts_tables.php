@@ -2,16 +2,15 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        $schema = Schema::connection('pgsql');
-
-        if (! $schema->hasTable('inventory_counts')) {
-            $schema->create('inventory_counts', function (Blueprint $table) {
+        if (! $this->tableExists('inventory_counts')) {
+            Schema::connection('pgsql')->create('selemti.inventory_counts', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->string('folio', 40)->nullable()->unique();
                 $table->string('sucursal_id', 36)->nullable();
@@ -36,8 +35,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('inventory_count_lines')) {
-            $schema->create('inventory_count_lines', function (Blueprint $table) {
+        if (! $this->tableExists('inventory_count_lines')) {
+            Schema::connection('pgsql')->create('selemti.inventory_count_lines', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('inventory_count_id');
                 $table->unsignedBigInteger('item_id');
@@ -59,12 +58,20 @@ return new class extends Migration
 
     public function down(): void
     {
-        $schema = Schema::connection('pgsql');
-
         foreach (['inventory_count_lines', 'inventory_counts'] as $table) {
-            if ($schema->hasTable($table)) {
-                $schema->drop($table);
+            if ($this->tableExists($table)) {
+                Schema::connection('pgsql')->drop("selemti.{$table}");
             }
         }
+    }
+
+    private function tableExists(string $table): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT to_regclass('selemti.' || ?) AS regclass",
+            [$table]
+        );
+
+        return ! empty($result?->regclass);
     }
 };

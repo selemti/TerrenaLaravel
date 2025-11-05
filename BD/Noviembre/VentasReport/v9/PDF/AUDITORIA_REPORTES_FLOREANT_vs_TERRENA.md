@@ -1,0 +1,284 @@
+# Auditoría de Reportes (PDF) — FloreantPOS vs Terrena
+
+**Resumen de archivos detectados**
+
+| file                                             | report_type        | branch       | date_range   |
+|:-------------------------------------------------|:-------------------|:-------------|:-------------|
+| Balance por Forma de Pago.pdf                    | Unknown            | Todas        |              |
+| Cajón vs efectivo.pdf                            | Drawer/Cash        | Todas        |              |
+| Detalle de Ventas.pdf                            | Unknown            | Todas        |              |
+| Diagnósticos diarios.pdf                         | Discounts          | PRINCIPAL 19 |              |
+| JasperReports - credit_card_report (1).pdf       | GenericTotalReport |              |              |
+| JasperReports - credit_card_report.pdf           | GenericTotalReport |              |              |
+| JasperReports - journal_report.pdf               | GenericTotalReport |              |              |
+| JasperReports - menu_usage_report.pdf            | Discounts          |              |              |
+| JasperReports - open_ticket_summary_report.pdf   | GenericTotalReport |              |              |
+| JasperReports - sales_report.pdf                 | ItemSales          |              |              |
+| JasperReports - sales_summary_balace_detail.pdf  | SalesSummary       |              |              |
+| JasperReports - sales_summary_balance_report.pdf | TaxSummary         |              |              |
+| JasperReports - sales_summary_exception.pdf      | Voids              |              |              |
+| JasperReports - sales_summary_report1 (1).pdf    | GenericTotalReport |              |              |
+| JasperReports - sales_summary_report2 (1).pdf    | GenericTotalReport |              |              |
+| JasperReports - sales_summary_report2.pdf        | GenericTotalReport |              |              |
+| JasperReports - server_productivity_report.pdf   | GenericTotalReport |              |              |
+| Journal de Ventas.pdf                            | GenericTotalReport | Todas        |              |
+| Mix de ventas.pdf                                | GenericTotalReport | Todas        |              |
+| Resumen de Ventas.pdf                            | Unknown            | Todas        |              |
+| Ítems y modificadores.pdf                        | Unknown            | Todas        |              |
+
+**Distribución por tipo de reporte (detectado)**
+
+| report_type        |   count |
+|:-------------------|--------:|
+| GenericTotalReport |      10 |
+| Unknown            |       4 |
+| Discounts          |       2 |
+| Drawer/Cash        |       1 |
+| ItemSales          |       1 |
+| SalesSummary       |       1 |
+| TaxSummary         |       1 |
+| Voids              |       1 |
+
+## Observaciones Automáticas (por archivo)
+
+### Balance por Forma de Pago.pdf  
+Tipo: `Unknown`  
+Rango: `None`  
+Sucursal: `Todas`
+
+> Extracto: Dashboard Caja  Reportes  Inventario  ⛟Compras  Recetas Producción Reportes  ⚙Conﬁguración  Catálogos Perﬁl Personal Auditoría KDS « Balance por forma de pago Rango: 01/10/2025 — 01/10/2025 Sucursal: Todas · Terminal: Todas⎙ Im prim ir Desde 01/10/2025Hasta 01/10/2025Sucursal SELEMTITerminal(es) 101,102 Buscar Lim piar Generado: 04/11/2025 19:34 Fecha Sucursal Forma de pago Monto 01/10/2025 PRINCIPAL CREDIT_CARD $11,958.00 01/10/2025 PRINCIPAL CASH $9,323.00 01/10/2025 PRINCIPAL DEBIT_CARD $50.00 Sucursal: PRINCIPAL 19:43Balance por Forma de Pago 19:43  04/11/2025  soporte
+
+
+---
+
+### Cajón vs efectivo.pdf  
+Tipo: `Drawer/Cash`  
+Rango: `None`  
+Sucursal: `Todas`
+
+> Extracto: Dashboard Caja  Reportes  Inventario  ⛟Compras  Recetas Producción Reportes  ⚙Conﬁguración  Catálogos Perﬁl Personal Auditoría KDS « Cajón vs efectivo Rango: 01/10/2025 — 01/10/2025 Sucursal: Todas · Severidad: Todas Inicio/Reportes/Cajón vs efectivo⎙ Imprimir  PDF  Excel Desde 01/10/2025Hasta 01/10/2025Sucursal Todas las sucursalesSeveridad Todas  Buscar  Limpiar Generado: 04/11/2025 19:37 Terminales evaluadas 1 0 con discrepanciaEfectivo esperado $0.00 Consolidado del rangoEfectivo registrado $0.00 Cortes capturadosDiferencia neta $0.00 Cuadre perfecto Un solo día  Severidad por terminal Fecha Terminal Sucursal Esperado Registrado Diferencia Severidad 01/10/2025 — — $0.00 $0.00 $0.00 INFO  Resumen por sucursal Sucursal Esperado Registrado Diferencia SIN_SUCURSAL…
+
+**Campos esperados (checklist):** Efectivo esperado vs cobrado, Ajustes, Faltante/sobrante
+
+---
+
+### Detalle de Ventas.pdf  
+Tipo: `Unknown`  
+Rango: `None`  
+Sucursal: `Todas`
+
+> Extracto:        ⛟      ⚙       « Detalle de ventas (items) Rango: 01/10/2025 — 01/10/2025 Sucursal: Todas · Terminal: Todas⎙ Im prim ir Desde 01/10/2025Hasta 01/10/2025Sucursal SELEMTITerminal(es) 101,102 Buscar Lim piar Generado: 04/11/2025 19:34 Fecha Sucursal Terminal Ticket Item Cant. Unitario Descuento Neto 01/10/2025 PRINCIPAL 101 15229 Agua Embotellada 1 L 0.00 $15.00 $0.00 $15.00 01/10/2025 PRINCIPAL 102 15235 Agua Embotellada 1 L 0.00 $15.00 $0.00 $30.00 01/10/2025 PRINCIPAL 102 15235 Tacos de Guisado 0.00 $19.00 $0.00 $57.00 01/10/2025 PRINCIPAL 101 15478 MENU DEL DIA 0.00 $65.00 $0.00 $65.00 01/10/2025 PRINCIPAL 102 15243 Naranjada 0.00 $20.00 $0.00 $20.00 01/10/2025 PRINCIPAL 102 15243 Cuernito Jamón con Queso 0.00 $45.00 $0.00 $45.00 01/10/2025 PRINCIPAL 101 15244…
+
+
+---
+
+### Diagnósticos diarios.pdf  
+Tipo: `Discounts`  
+Rango: `None`  
+Sucursal: `PRINCIPAL 19`
+
+> Extracto:        ⛟      ⚙       « Diagnósticos diarios Rango: 01/10/2025 — 01/10/2025 Severidad: Todas Inicio/Reportes/Diagnósticos diarios⎙ Imprimir  PDF  Excel Desde 01/10/2025Hasta 01/10/2025Severidad Todas  Buscar  Limpiar Generado: 04/11/2025 19:38 Total de veriﬁcaciones 8 2 vistas en 1 díasCoincidencias con ﬁltros 8 Severidad aplicada: todasTotal ﬁlas afectadas 8 Registros que requieren revisión Distribución por severidad Críticas 4 Advertencias 4 Informativas 0  Resumen de vistas monitorizadas Vista / ﬂujo Fecha Severidad Filas detectadas Neto vs cobros vw_diag_neto_vs_cobros01/10/2025 CRITICAL 4 Descuentos altos vw_diag_high_discounts01/10/2025 WARN 4  Detalle completo Fecha Vista origen Severidad Filas afectadas 01/10/2025Neto vs cobros…
+
+**Campos esperados (checklist):** Motivo/Autorización, Descuento ticket vs línea, Top descuentos
+**Totales encontrados (heurístico):** [('Total', '8'), ('Total', '8')]
+
+---
+
+### JasperReports - credit_card_report (1).pdf  
+Tipo: `GenericTotalReport`  
+Rango: `None`  
+Sucursal: `None`
+
+> Extracto: TERRENA REPORTE PAGOS PERSONALIZADOS Fecha: nov 04 2025, 07:49 PMDesde ago 01 2025 Hasta oct 31 2025 : : REF # PAGO TOTAL FECHA CAJERO 752 CUSTOM PAYMENT 90.00 19-08-2025 Jose Eumir Rodriguez 2606 CUSTOM PAYMENT 98.00 27-08-2025 Jose Eumir Rodriguez 22363 CUSTOM PAYMENT 280.00 20-10-2025 Jose Eumir Rodriguez NÚM TOTAL DE VENTAS TOTAL: :3 468.00
+
+**Totales encontrados (heurístico):** [('TOTAL', '752'), ('TOTAL', '3')]
+
+---
+
+### JasperReports - credit_card_report.pdf  
+Tipo: `GenericTotalReport`  
+Rango: `None`  
+Sucursal: `None`
+
+> Extracto: TERRENA REPORTE TARJETAS CRÉDITO FECHA: nov 04 2025, 07:46 PM DESDE: oct 01 2025 HASTA: oct 01 2025 REF # TIPO TARJETA PROPINA TOTAL AUTORICACIÓN FECHA CAJERO 0.00 289 VISA 0.10 5649 16-08-2025 Aldo Abraham 0.00 291 VISA 0.10 1 16-08-2025 Aldo Abraham 0.00 292 MASTER CARD 5.00 3600 16-08-2025 Aldo Abraham 0.00 335 VISA 90.00 1 18-08-2025 Jose Eumir 0.00 442 VISA 50.00 1 18-08-2025 Admin System 0.00 5 VISA 57.00 2345 15-08-2025 Admin System 0.00 12 VISA 128.00 4567 15-08-2025 Admin System 0.00 29 VISA 203.00 36476859854 15-08-2025 Aldo Abraham 0.00 312 VISA 183.00 4641 16-08-2025 Aldo Abraham 0.00 338 VISA 45.00 1 18-08-2025 Jose Eumir 0.00 351 VISA 65.00 1 18-08-2025 Admin System 0.00 314 VISA 45.00 2541 16-08-2025 Aldo Abraham 0.00 321 VISA 45.00 1 18-08-2025 Jose Eumir 0.00 323 VISA…
+
+**Totales encontrados (heurístico):** [('TOTAL', '0.00'), ('TOTAL', '0.00'), ('TOTAL', '0.00')]
+
+---
+
+### JasperReports - journal_report.pdf  
+Tipo: `GenericTotalReport`  
+Rango: `None`  
+Sucursal: `None`
+
+> Extracto: TERRENA REPORTE DIARIO Fecha nov 04 2025, 07:50 PMDesde: oct 01 2025 Hasta oct 01 2025 Pág.: 1 Ref # Tiempo Acción Usuario Comentarios 10101/Jose Eumir Rodriguez Rranco47661 01 oct, 07:55 AM NUEVA CUENTA CHK#: :15220 10101/Jose Eumir Rodriguez Rranco47662 01 oct, 07:55 AM EDITAR CUENTA CHK#: :15220 10101/Jose Eumir Rodriguez Rranco47663 01 oct, 07:55 AM PAGAR CUENTA CHK#: :15220;TOTAL:35.00 10101/Jose Eumir Rodriguez Rranco47664 01 oct, 09:02 AM NUEVA CUENTA CHK#: :15221 10101/Jose Eumir Rodriguez Rranco47665 01 oct, 09:02 AM EDITAR CUENTA CHK#: :15221 10101/Jose Eumir Rodriguez Rranco47666 01 oct, 09:02 AM PAGAR CUENTA CHK#: :15221;TOTAL:10.00 10101/Jose Eumir Rodriguez Rranco47667 01 oct, 09:05 AM NUEVA CUENTA CHK#: :15222 10101/Jose Eumir Rodriguez Rranco47668 01 oct, 09:06 AM EDITAR…
+
+**Totales encontrados (heurístico):** [('TOTAL', '35.00'), ('TOTAL', '10.00'), ('TOTAL', '15.00'), ('TOTAL', '45.00'), ('TOTAL', '135.00')]
+
+---
+
+### JasperReports - menu_usage_report.pdf  
+Tipo: `Discounts`  
+Rango: `None`  
+Sucursal: `None`
+
+> Extracto: MENU USAGE REPORT Report Time: nov 04 2025, 07:49 PM From: oct 01 2025 To: nov 01 2025 TERRENA CATEGORÍA VENTA BRUTA CANT DESCUENTOS VENTA NETA PROM VE NTA GANANCIA COSTO-% [%] 1 Pág: ALIMENTOS 230,236.00 6283 822.40 229,413.60 0.00 BEBIDAS CALIENTES 54,470.00 1249 240.00 54,230.00 0.00 POSTRES 31,319.00 1252 366.40 30,952.60 0.00 BEBIDAS FRÍAS 92,538.00 4396 326.00 92,212.00 0.00 DESAYUNOS 155,495.00 4128 1,097.20 154,397.80 0.00 OTROS 25,139.00 1832 56.40 25,082.60 0.00 MAKU 0.00 0 0.00 0.00 0.00 MISCELÁNEA 9,498.00 502 0.00 9,498.00 0.00 Pág: 1
+
+**Campos esperados (checklist):** Motivo/Autorización, Descuento ticket vs línea, Top descuentos
+
+---
+
+### JasperReports - open_ticket_summary_report.pdf  
+Tipo: `GenericTotalReport`  
+Rango: `None`  
+Sucursal: `None`
+
+> Extracto: TERRENA Resumen Tickets Abiertos Fecha de Cajero:nov 04 2025, 07:45 PM TODOS Tipo Usuario: TODOS Precio en MXN ($) Moneda: ID HORA CREACIÓN MESA(S) TOTAL POR COBRAR 25417 0.00 29 oct, 2025 25294 20.00 29 oct, 2025 25024 46.00 28 oct, 2025 24983 0.00 28 oct, 2025 24955 0.00 28 oct, 2025 24726 24.00 27 oct, 2025 24641 0.00 27 oct, 2025 24456 138.00 27 oct, 2025 24189 63.00 25 oct, 2025 23957 0.00 24 oct, 2025 23988 15.00 24 oct, 2025 23680 0.00 24 oct, 2025 23432 0.00 23 oct, 2025 23312 55.00 22 oct, 2025 23189 0.00 22 oct, 2025 22697 0.00 21 oct, 2025 22689 58.00 21 oct, 2025 22641 18.00 21 oct, 2025 22634 125.00 21 oct, 2025 22549 0.00 20 oct, 2025 22523 0.00 20 oct, 2025 22447 20.00 20 oct, 2025 22441 100.00 20 oct, 2025 22353 0.00 20 oct, 2025 22129 45.00 18 oct, 2025 21896 20.00 18…
+
+**Totales encontrados (heurístico):** [('TOTAL', '25417'), ('TOTAL', '21778'), ('TOTAL', '4004'), ('Total', '3')]
+
+---
+
+### JasperReports - sales_report.pdf  
+Tipo: `ItemSales`  
+Rango: `None`  
+Sucursal: `None`
+
+> Extracto: TERRENA Reporte Diario de Ventas Hora del reporte: Rango de fechas: Caja:nov 04 2025, 07:44 PM oct 01 2025 to oct 01 2025 TODOS Moneda: Precio en MXN ($) Item Sales Nombre Precio Cant. Imp. ID Total Imp. Total Total Bruto Desc. 0 GALLETAS 35.00 1.0 35.00 0.0 0.0% 0.00 35.00 0 10 PESOS QUESO 10.00 1.0 10.00 0.0 0.0% 0.00 10.00 0 VASOS 6.00 1.0 6.00 0.0 0.0% 0.00 6.00 0 TORTILLAS 10 PESOS 10.00 1.0 10.00 0.0 0.0% 0.00 10.00 0 MAKU 20.00 3.0 60.00 0.0 0.0% 0.00 60.00 0 3 TORTILLAS 0.00 1.0 0.00 0.0 0.0% 0.00 0.00 0 TORTILLAS 0.00 1.0 0.00 0.0 0.0% 0.00 0.00 0 EXTRA PASTOR 20.00 1.0 20.00 0.0 0.0% 0.00 20.00 0 5 PESOS DE TORTILLA 5.00 2.0 10.00 0.0 0.0% 0.00 10.00 0 vasos 10.00 1.0 10.00 0.0 0.0% 0.00 10.00 0 MASAFINA 7.00 2.0 14.00 0.0 0.0% 0.00 14.00 0 CACAHUATES 20.00 1.0 20.00 0.0 0.0%…
+
+**Campos esperados (checklist):** Artículo, Cantidad, Precio unitario, Descuento, Neto
+**Totales encontrados (heurístico):** [('Total', '0'), ('Total', '10'), ('Total', '66'), ('Total', '660.0'), ('Total', '1')]
+
+---
+
+### JasperReports - sales_summary_balace_detail.pdf  
+Tipo: `SalesSummary`  
+Rango: `None`  
+Sucursal: `None`
+
+> Extracto: TERRENA Hora: Hasta: Desde: 2025 nov 04, 07:55 PM 2025 oct 01 2025 oct 01REPORTE DE RESUMEN DE VENTAS Tipo: Total del Sistema TODOS LOS PERIODOS TODAS LAS SUCURSALES DETALLE DEL BALANCE DE VENTAS CONTEO IDEAL REAL DIFERENCIA RETIRO CAJÓN #92 305 6749.00 9239.0 -2490.00 TOTAL DE RETIROS DE CAJA 305 6749.00 9239.00 -2490.00 TARJETA DE CRÉDITO VENTAS $ VENTAS # DEV. # DEV. $ NETO $ PRP. NET [%] MASTER CARD 1 50.00 0 0.00 50.00 0.00 0.00 VISA 185 11958.00 0 0.00 11958.00 0.00 0.00 TOTAL 186 12008.00 0 0.00 12008.00 0.00 0.00 DEVOLUCIÓN DE VALES DE REGALO 0 0.00 CAMBIO DE VALES DE REGALO 0 0.00 TOTAL DE PROPINAS CARGADAS 0 0.00 DESCUENTO EN PROPINAS 0.00 PROPINAS PAGADAS 0 DIFERENCIA DE PROPINAS 0.0 Pág.: 1
+
+**Campos esperados (checklist):** Subtotales por sucursal/turno, Gran total, Impuestos, Propinas (si aplica)
+**Totales encontrados (heurístico):** [('Total', '92'), ('TOTAL', '305'), ('TOTAL', '186'), ('TOTAL', '0')]
+
+---
+
+### JasperReports - sales_summary_balance_report.pdf  
+Tipo: `TaxSummary`  
+Rango: `None`  
+Sucursal: `None`
+
+> Extracto: TERRENA Días: Hora del Reporte:Hasta:Desde: 04 nov 2025, 07:51 01 oct 2025 01 oct 20251REPORTE DE VENTAS Tipo: Total del SistemaTODOS LOS PERIODOS TODAS LAS SUCURSALES BALANCE DE VENTAS TODOS Usuario: RESUMEN DE COBROS: VENTAS BRUTAS C/ IMPUESTO : 21,640.00 +VENTAS SIN IMPUESTO : 0.00 -DESCUENTOS : 284.00 =VENTAS NETAS : 21,356.00 VENTAS NETAS : 21,356.00 +IMPUESTOS : 0.00 =TOTAL INGRESOS : 21,356.00 +VALES DE REGALO VENDIDOS : 0.00 +ENTRADAS A CAJA : 0.00 +PROPINAS CARGADAS : 0.00 =TOTAL COBRADO : 21,356.00 -VENTAS EFECTIVO : 9,339.00 -VENTAS TARJETAS : 11,958.00 -VENTAS A CRÉDITO : 0.00 -DEVOLUCIÓN DE VALES : 0.00 +CAMBIO VALES DE REGALO : 0.00 +CAMBIO EN EFECTIVO : 0.00 =DIFERENCIA EN CAJA : 59.00 RESUMEN EFECTIVO RECIBOS EFECTIVO : 9,339.00 -PROPINAS PAGADAS : 0.00 +DESCUENTO EN…
+
+**Totales encontrados (heurístico):** [('Total', '21,640.00'), ('TOTAL', '21,356.00'), ('TOTAL', '21,356.00')]
+
+---
+
+### JasperReports - sales_summary_exception.pdf  
+Tipo: `Voids`  
+Rango: `None`  
+Sucursal: `None`
+
+> Extracto: TERRENA REPORTE DE EXCEPCIONESTODAS LAS SUCURSALESTODOS LOS PERIODOS Total del Sistema Tipo:REPORTE DE VENTAS 2025 oct 012025 oct 012025 nov 04, 07:55 PM Desde: Hasta:Hora del Reporte: ********** ANULACIONES / DEVOLUCIONES ********** CÓDIGO MOTIVO MERMA CANT. MONTO 15319 PRUEBA SISTEMAS N 1 16.00 TOTAL ANULACIONES C/MERMA 0.00 TOTAL ANULACIONES 16.00: : ********** DESCUENTOS / CUPONES ********** DESCUENTOS / CUPONES NO NOMBRE#TOTAL #DESC. VTA. NETA # CLIENTEGRUP O# CHSCK[%] US % DESC / 3 40% Colaborador 0 0.00 0.00 0.00 0.00 0.00 0.00 0.00 4 JGM 1 100.00 214.00 1.00 1.00 214.00 0.00 0.00 1 100.00 214.00 1.00 1.00 214.00 0.00 0.00 TOTAL DESCUENTOS Pág: 1
+
+**Totales encontrados (heurístico):** [('Total', '2025'), ('TOTAL', '0.00'), ('TOTAL', '16.00'), ('TOTAL', '3'), ('TOTAL', '1')]
+
+---
+
+### JasperReports - sales_summary_report1 (1).pdf  
+Tipo: `GenericTotalReport`  
+Rango: `None`  
+Sucursal: `None`
+
+> Extracto: TERRENA Hora: 2025 nov 04, 07:45 PM Tipo:REPORTE RESUMEN VENTAS Total Sistema Desde: 2025 oct 01 Días:Hasta: 12025 oct 01 Turno: TODOSCentro TODOS ESTADÍSTICAS CLAVE Capacidad Número de clientes Cliente/Asiento Rotación de mesas Cliente promedioMesas: Número de cheques: Cliente/cheque: Tiempo de rotación: Cheque promedio: Cheques abiertos Cheques anulados Cheques pospuestos Cheques de Cheques reabiertos Cheques sin Monto abierto: Monto anulado Cheques pagados: Monto de Monto reabierto: Monto sin impuesto: Cheques unificados Horas laboradas Horas/ventasMonto unificado: Mano de obra: Costo laboral:0 398 1.00 0.00 53.660 398 1.00 54.37 0 1 0 0 14.73 21,640.000.00 16.00 0.0 0.00 0.00 0.00 0.00: : : : : : : : : : : : : :: : : : : : : : : : : : : : Parte del día Cheque Clientes Platos Ventas…
+
+**Totales encontrados (heurístico):** [('Total', '2025')]
+
+---
+
+### JasperReports - sales_summary_report2 (1).pdf  
+Tipo: `GenericTotalReport`  
+Rango: `None`  
+Sucursal: `None`
+
+> Extracto: TERRENA Hora: 2025 nov 04, 07:45 PM Tipo:REPORTE RESUMEN VENTAS Total SistemaDesde: 2025 oct 01 Días: Hasta:1 2025 oct 01Turno: TODOS Centro: TODOS ANÁLISIS DE VENTAS Categoría CantidadProm. netoProm descProm. brutoVentas netas Descuento Bruto % VENTAS COMIDA 16836.0 62.0 16898.0 467 VENTAS NO 4750.0 8.0 4758.0 194 TOTAL VENTAS A&B 21656.00 70.00 21586.00 0.00 0.00 0.00 0.00 661.00 General ALIMENTOS 9232.0 26.0 9258.0 217 BEBIDAS 1575.0 0.0 1575.0 36 POSTRES 1127.0 10.0 1137.0 42 BEBIDAS FRÍAS 3175.0 8.0 3183.0 158 DESAYUNOS 5058.0 26.0 5084.0 137 OTROS 1104.0 0.0 1104.0 49 MAKU 0.0 0.0 0.0 0 MISCELÁNEA 315.0 0.0 315.0 22 TOTAL VENTAS A&B 21656.00 70.00 21586.00 0.00 0.00 0.00 0.00 661.00 ALL DAY ALIMENTOS 9232.0 26.0 9258.0 217 BEBIDAS 1575.0 0.0 1575.0 36 POSTRES 1127.0 10.0 1137.0 42…
+
+**Totales encontrados (heurístico):** [('Total', '2025'), ('TOTAL VENTAS', '21656.00'), ('TOTAL VENTAS', '21656.00'), ('TOTAL VENTAS', '21656.00')]
+
+---
+
+### JasperReports - sales_summary_report2.pdf  
+Tipo: `GenericTotalReport`  
+Rango: `None`  
+Sucursal: `None`
+
+> Extracto: TERRENA Hora: 2025 nov 04, 07:45 PM Tipo:REPORTE RESUMEN VENTAS Total SistemaDesde: 2025 oct 01 Días: Hasta:1 2025 oct 01Turno: TODOS Centro: TODOS ANÁLISIS DE VENTAS Categoría CantidadProm. netoProm descProm. brutoVentas netas Descuento Bruto % VENTAS COMIDA 16836.0 62.0 16898.0 467 VENTAS NO 4750.0 8.0 4758.0 194 TOTAL VENTAS A&B 21656.00 70.00 21586.00 0.00 0.00 0.00 0.00 661.00 General ALIMENTOS 9232.0 26.0 9258.0 217 BEBIDAS 1575.0 0.0 1575.0 36 POSTRES 1127.0 10.0 1137.0 42 BEBIDAS FRÍAS 3175.0 8.0 3183.0 158 DESAYUNOS 5058.0 26.0 5084.0 137 OTROS 1104.0 0.0 1104.0 49 MAKU 0.0 0.0 0.0 0 MISCELÁNEA 315.0 0.0 315.0 22 TOTAL VENTAS A&B 21656.00 70.00 21586.00 0.00 0.00 0.00 0.00 661.00 ALL DAY ALIMENTOS 9232.0 26.0 9258.0 217 BEBIDAS 1575.0 0.0 1575.0 36 POSTRES 1127.0 10.0 1137.0 42…
+
+**Totales encontrados (heurístico):** [('Total', '2025'), ('TOTAL VENTAS', '21656.00'), ('TOTAL VENTAS', '21656.00'), ('TOTAL VENTAS', '21656.00')]
+
+---
+
+### JasperReports - server_productivity_report.pdf  
+Tipo: `GenericTotalReport`  
+Rango: `None`  
+Sucursal: `None`
+
+> Extracto: TERRENA REPORTE PRODUCTIVIDAD SERVIDOR Hora del reporte: nov 04 2025, 07:50 PM Desde: oct 01 2025 Hasta: oct 01 2025 CAJERO # CHEQUES CATEGORY # CLIENTES DESCUENT NETO CLIENTE %TOTAL TOTAL TOTAL CHK CHK PROM ASIGNA 10103/Yair Zarate 91 91 5,362.00 58.92 58.92 0.00 1,789.00 ALIMENTOS 260.00 35 51.11 0.00 1,789.00 450.00 BEBIDAS 827.27 11 40.91 0.00 450.00 185.00 POSTRES 1,300.00 7 25.00 10.00 175.00 861.00 BEBIDAS 202.22 45 18.96 8.00 853.00 1,752.00 DESAYUNOS 165.45 55 31.85 0.00 1,752.00 233.00 OTROS 827.27 11 21.18 0.00 233.00 0.00 MAKU 0.00 0 0.00 0.00 0.00 110.00 MISCELÁNEA 2,275.00 4 27.50 0.00 110.00 30102/Luis Ronaldo 0 0 0.00 0.00 0.00 0.00 0.00 ALIMENTOS 0 0.00 0.00 0.00 0.00 BEBIDAS 0 0.00 0.00 0.00 0.00 POSTRES 0 0.00 0.00 0.00 0.00 BEBIDAS 0 0.00 0.00 0.00 0.00 DESAYUNOS 0…
+
+**Totales encontrados (heurístico):** [('TOTAL', '10103'), ('TOTAL', '0.00'), ('TOTAL', '0.00')]
+
+---
+
+### Journal de Ventas.pdf  
+Tipo: `GenericTotalReport`  
+Rango: `None`  
+Sucursal: `Todas`
+
+> Extracto: Dashboard Caja  Reportes  Inventario  ⛟Compras  Recetas Producción Reportes  ⚙Conﬁguración  Catálogos Perﬁl Personal Auditoría KDS « Jou rnal Rango: 01/10/2025 — 01/10/2025 Sucursal: Todas · Terminal: Todas⎙ Im prim ir Desde 01/10/2025Hasta 01/10/2025Sucursal SELEMTITerminal(es) 101,102 Buscar Lim piar Generado: 04/11/2025 19:37 Líneas Fecha TicketItem Cant. TotalDesc. 01/10/202515229Agua Embotellada 1 L 0.00 $15.00 $0.00 01/10/202515235Agua Embotellada 1 L 0.00 $30.00 $0.00 01/10/202515235Tacos de Guisado 0.00 $57.00 $0.00 01/10/202515478MENU DEL DIA 0.00 $65.00 $0.00 01/10/202515243Naranjada 0.00 $20.00 $0.00 01/10/202515243Cuernito Jamón con Queso 0.00 $45.00 $0.00 01/10/202515244Chilaquiles 0.00 $65.00 $0.00 01/10/202515245Tacos de Guisado 0.00 $38.00 $0.00…
+
+**Totales encontrados (heurístico):** [('Total', '01'), ('Total', '01'), ('Total', '01')]
+
+---
+
+### Mix de ventas.pdf  
+Tipo: `GenericTotalReport`  
+Rango: `None`  
+Sucursal: `Todas`
+
+> Extracto:  Mix de ventas por forma de pago Rango: 01/10/2025 — 01/10/2025 Sucursal: Todas Ventas totales $21,331.00 100%Formas de pago activas 3 Incluye pagos digitales y valesSucursales activas 1 Un solo día  Distribución por forma de pago Forma Monto Participación Tarjeta crédito $11,958.00 56.06% Efectivo $9,323.00 43.71% Tarjeta débito $50.00 0.23%  Participación por sucursal Sucursal Monto Participación PRINCIPAL $21,331.00 100.00%  Detalle de registros Fecha Sucursal Forma de pago Monto 01/10/2025 PRINCIPAL CREDIT_CARD $11,958.00 01/10/2025 PRINCIPAL CASH $9,323.00 01/10/2025 PRINCIPAL DEBIT_CARD $50.00 Sucursal: PRINCIPAL 19:42Mix de ventas 19:42  04/11/2025
+
+**Totales encontrados (heurístico):** [('total', '21,331.00')]
+
+---
+
+### Resumen de Ventas.pdf  
+Tipo: `Unknown`  
+Rango: `None`  
+Sucursal: `Todas`
+
+> Extracto:        ⛟      ⚙       « Resum en de ventas Rango: 01/10/2025 — 01/11/2025 Sucursal: Todas · Terminal: Todas⎙ Im prim ir Desde 01/10/2025Hasta 01/11/2025Sucursal SELEMTITerminal(es) 101,102 Buscar Lim piar Generado: 04/11/2025 19:33 Fecha Sucursal Tickets Bruto Descuento Neto PropinaServicio 01/10/2025 PRIN CIPAL 393 $21,331.00 $70.00 $21,261.00 $0.00 $0.00 02/10/2025 EN TRAD A 13 $495.00 $0.00 $495.00 $0.00 $0.00 02/10/2025 PRIN CIPAL 492 $28,784.80 $103.20 $28,681.60 $0.00 $0.00 03/10/2025 EN TRAD A 16 $445.00 $0.00 $445.00 $0.00 $0.00 03/10/2025 PRIN CIPAL 343 $19,395.20 $90.80 $19,304.40 $0.00 $0.00 04/10/2025 PRIN CIPAL 488 $34,040.20 $102.80 $33,937.40 $0.00 $0.00 06/10/2025 EN TRAD A 6 $185.00 $0.00 $185.00 $0.00 $0.00 06/10/2025 PRIN CIPAL 470 $25,780.40 $83.60…
+
+
+---
+
+### Ítems y modificadores.pdf  
+Tipo: `Unknown`  
+Rango: `None`  
+Sucursal: `Todas`
+
+> Extracto:        ⛟      ⚙       « Ítem s con m od iﬁcadores Rango: 01/10/2025 — 01/10/2025 Sucursal: Todas Inicio/Reportes/Ítems + modiﬁcadores← Volver a mix de ventas ⎙ Imprimir  PDF  Excel Desde 01/10/2025Hasta 01/10/2025Sucursal Todas las sucursales  Buscar  Limpiar Generado: 04/11/2025 19:38 Ítems únicos 28 Productos con modiﬁcadores 1 día analizadoModiﬁcadores únicos 53 Extras aplicadosMonto adicional $763.00 Ingreso extra obtenidoPromedio por selección $2.72 281 selecciones ⭐ Top modiﬁcadores por monto 1.Pollo 39 selecciones$401.00 2.Huevo 7 selecciones$107.00 3.Milanesa 22 selecciones$105.00 4.Pierna 7 selecciones$45.00 5.Pastor 3 selecciones$26.00  Detalle por ítem y modiﬁcador Fecha Ítem ModiﬁcadorCantidad ítemSeleccionesMonto extraSucursal 01/10/2025Boneless 10 pz…
+
+
+---
+
+
+## Recomendaciones UI/UX (drill-down y navegación)
+1) **Listado maestro → detalle expandible**: cada fila (día / sucursal / categoría) con un caret ▸ que al hacer clic despliegue:
+   - Totales y subtotales
+   - Tabla de detalle (ítems/modificadores) con paginación
+   - Acciones rápidas: Exportar XLSX/PDF, Copiar link con filtros
+2) **Filtro persistente superior**: rango de fechas, sucursal(es), terminal(es), forma de pago, con chips removibles.
+3) **Tabla “ancha” segmentada en bloques**: separa “Volumen (cantidad, tickets)” de “$ (bruto, descuento, neto, impuestos)”. Colapsables por bloque.
+4) **Enlaces cruzados**: desde “Resumen por categoría” click al detalle “Items de la categoría” y a “Modificadores más usados”.
+5) **Indicadores de calidad**: insignias en fila si hay diagnósticos (⚠ dif. neto vs cobros, descuentos >30%, cajón vs efectivo) con tooltip y link al reporte de auditoría correspondiente.
+6) **Performance**: para rangos largos usa MVs con `REFRESH CONCURRENTLY` y `?export=async`.

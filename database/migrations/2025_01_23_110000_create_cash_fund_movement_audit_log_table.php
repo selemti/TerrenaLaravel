@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,6 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if ($this->tableExists()) {
+            return;
+        }
+
         Schema::connection('pgsql')->create('selemti.cash_fund_movement_audit_log', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('movement_id'); // FK a cash_fund_movements
@@ -46,5 +51,14 @@ return new class extends Migration
     public function down(): void
     {
         Schema::connection('pgsql')->dropIfExists('selemti.cash_fund_movement_audit_log');
+    }
+
+    protected function tableExists(): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT to_regclass('selemti.cash_fund_movement_audit_log') AS regclass"
+        );
+
+        return ! empty($result?->regclass);
     }
 };

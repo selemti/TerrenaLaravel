@@ -9,10 +9,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $schema = Schema::connection('pgsql');
-
-        if (! $schema->hasTable('selemti.recepcion_cab')) {
-            $schema->create('selemti.recepcion_cab', function (Blueprint $table) {
+        if (! $this->tableExists('recepcion_cab')) {
+            Schema::connection('pgsql')->create('selemti.recepcion_cab', function (Blueprint $table) {
                 $table->increments('id');
                 $table->string('numero_recepcion', 20)->nullable()->unique();
                 $table->unsignedBigInteger('proveedor_id');
@@ -40,8 +38,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('inventory_batch')) {
-            $schema->create('inventory_batch', function (Blueprint $table) {
+        if (! $this->tableExists('inventory_batch')) {
+            Schema::connection('pgsql')->create('selemti.inventory_batch', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('item_id');
                 $table->string('lote_proveedor', 120);
@@ -65,8 +63,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('recepcion_det')) {
-            $schema->create('recepcion_det', function (Blueprint $table) {
+        if (! $this->tableExists('recepcion_det')) {
+            Schema::connection('pgsql')->create('selemti.recepcion_det', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('recepcion_id');
                 $table->unsignedBigInteger('item_id');
@@ -92,8 +90,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('mov_inv')) {
-            $schema->create('mov_inv', function (Blueprint $table) {
+        if (! $this->tableExists('mov_inv')) {
+            Schema::connection('pgsql')->create('selemti.mov_inv', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('item_id');
                 $table->unsignedBigInteger('inventory_batch_id')->nullable();
@@ -121,8 +119,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('recepcion_adjuntos')) {
-            $schema->create('recepcion_adjuntos', function (Blueprint $table) {
+        if (! $this->tableExists('recepcion_adjuntos')) {
+            Schema::connection('pgsql')->create('selemti.recepcion_adjuntos', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('recepcion_id');
                 $table->string('tipo', 20);
@@ -138,12 +136,20 @@ return new class extends Migration
 
     public function down(): void
     {
-        $schema = Schema::connection('pgsql');
-
         foreach (['recepcion_adjuntos', 'mov_inv', 'recepcion_det', 'inventory_batch', 'recepcion_cab'] as $table) {
-            if ($schema->hasTable($table)) {
-                $schema->drop($table);
+            if ($this->tableExists($table)) {
+                Schema::connection('pgsql')->drop("selemti.{$table}");
             }
         }
+    }
+
+    private function tableExists(string $table): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT to_regclass('selemti.' || ?) AS regclass",
+            [$table]
+        );
+
+        return ! empty($result?->regclass);
     }
 };

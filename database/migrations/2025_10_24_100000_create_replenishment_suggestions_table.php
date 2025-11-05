@@ -2,16 +2,17 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        $schema = Schema::connection('pgsql');
+        DB::connection('pgsql')->statement('CREATE SCHEMA IF NOT EXISTS selemti');
 
-        if (! $schema->hasTable('replenishment_suggestions')) {
-            $schema->create('replenishment_suggestions', function (Blueprint $table) {
+        if (! $this->tableExists('replenishment_suggestions')) {
+            Schema::connection('pgsql')->create('selemti.replenishment_suggestions', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->string('folio', 40)->unique()->nullable()->comment('Folio único de la sugerencia');
 
@@ -64,16 +65,18 @@ return new class extends Migration
                 $table->timestampsTz();
 
                 // Índices para performance
-                $table->index('tipo');
-                $table->index('prioridad');
-                $table->index('estado');
-                $table->index(['item_id', 'sucursal_id']);
-                $table->index('sugerido_en');
-                $table->index('fecha_agotamiento_estimada');
-                $table->index('revisado_por');
-                $table->index('purchase_request_id');
-                $table->index('production_order_id');
+                $table->index('tipo', 'idx_replenishment_tipo');
+                $table->index('prioridad', 'idx_replenishment_prioridad');
+                $table->index('estado', 'idx_replenishment_estado');
+                $table->index(['item_id', 'sucursal_id'], 'idx_replenishment_item_sucursal');
+                $table->index('sugerido_en', 'idx_replenishment_sugerido_en');
+                $table->index('fecha_agotamiento_estimada', 'idx_replenishment_agotamiento');
+                $table->index('revisado_por', 'idx_replenishment_revisado_por');
+                $table->index('purchase_request_id', 'idx_replenishment_purchase_request');
+                $table->index('production_order_id', 'idx_replenishment_production_order');
             });
+
+            DB::connection('pgsql')->statement("COMMENT ON TABLE selemti.replenishment_suggestions IS 'Sugerencias automáticas de compra basadas en stock policies'");
         }
 
         // Vista para dashboard de gerente
@@ -103,12 +106,20 @@ return new class extends Migration
 
     public function down(): void
     {
-        $schema = Schema::connection('pgsql');
-
         DB::connection('pgsql')->statement('DROP VIEW IF EXISTS selemti.vw_replenishment_dashboard');
 
-        if ($schema->hasTable('replenishment_suggestions')) {
-            $schema->drop('replenishment_suggestions');
+        if ($this->tableExists('replenishment_suggestions')) {
+            Schema::connection('pgsql')->drop('selemti.replenishment_suggestions');
         }
+    }
+
+    private function tableExists(string $table): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT to_regclass('selemti.' || ?) AS regclass",
+            [$table]
+        );
+
+        return ! empty($result?->regclass);
     }
 };

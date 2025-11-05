@@ -87,16 +87,20 @@
                            required>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-semibold">Sucursal</label>
-                    <select name="branch" class="form-select">
-                        <option value="">Todas las sucursales</option>
+                    <label class="form-label fw-semibold">Sucursales</label>
+                    <select name="branch[]" class="form-select" multiple size="{{ max(3, min(8, count($branches))) }}">
                         @foreach($branches as $option)
-                            <option value="{{ $option['key'] }}"
-                                @selected($branch === $option['key'])>
+                            @php
+                                $selected = false;
+                                $current = $branch ? explode(',', strtoupper($branch)) : [];
+                                if (in_array(strtoupper($option['key']), $current, true)) { $selected = true; }
+                            @endphp
+                            <option value="{{ $option['key'] }}" @selected($selected)>
                                 {{ $option['label'] }}
                             </option>
                         @endforeach
                     </select>
+                    <div class="form-text">Ctrl/Cmd + click para seleccionar varias. Deja vacío para todas.</div>
                 </div>
                 <div class="col-md-3 d-flex gap-2">
                     <button type="submit" class="btn btn-primary flex-fill">
@@ -251,6 +255,84 @@
             </div>
         </div>
 
+        @php
+            $gross = $adjustments['gross'] ?? 0.0;
+            $discount = $adjustments['discount'] ?? 0.0;
+            $net = $adjustments['net'] ?? 0.0;
+            $tips = $adjustments['tips'] ?? 0.0;
+            $service = $adjustments['service'] ?? 0.0;
+            $operated = $adjustments['total_with_charges'] ?? 0.0;
+            $mixTotal = $summary['total_general'] ?? 0.0;
+            $mixGap = $operated - $mixTotal;
+        @endphp
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="fa-solid fa-receipt me-2 text-warning"></i>
+                    Resumen financiero complementario
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <tbody>
+                                <tr>
+                                    <th>Venta bruta</th>
+                                    <td class="text-end">${{ number_format($gross, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Descuentos</th>
+                                    <td class="text-end text-danger">-${{ number_format($discount, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Venta neta</th>
+                                    <td class="text-end fw-semibold">${{ number_format($net, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Propinas</th>
+                                    <td class="text-end text-success">+${{ number_format($tips, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Cargos por servicio</th>
+                                    <td class="text-end text-success">+${{ number_format($service, 2) }}</td>
+                                </tr>
+                                <tr class="table-light">
+                                    <th>Total operado (neto + extras)</th>
+                                    <td class="text-end fw-semibold">${{ number_format($operated, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Diferencia vs mix</th>
+                                    <td class="text-end {{ abs($mixGap) < 0.05 ? 'text-muted' : 'text-danger fw-semibold' }}">
+                                        {{ $mixGap >= 0 ? '+' : '' }}${{ number_format($mixGap, 2) }}
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <p class="text-muted small mb-2">Notas rápidas</p>
+                        <ul class="list-unstyled small mb-0">
+                            <li class="mb-2">
+                                <i class="fa-solid fa-info-circle me-2 text-secondary"></i>
+                                Usa este bloque para contrastar descuentos y cargos extra contra el total del mix.
+                            </li>
+                            <li class="mb-2">
+                                <i class="fa-solid fa-coins me-2 text-secondary"></i>
+                                Las salidas de efectivo y retiros se analizan a detalle en <a href="{{ route('reports.sales.drawer') }}">Cajón vs efectivo</a>.
+                            </li>
+                            <li>
+                                <i class="fa-solid fa-scale-balanced me-2 text-secondary"></i>
+                                Si la diferencia no es cero, revisa tickets con ajustes o terminales con discrepancias.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="card border-0 shadow-sm mt-4">
             <div class="card-header bg-white">
                 <h5 class="mb-0 fw-semibold">
@@ -265,19 +347,95 @@
                             <tr>
                                 <th>Fecha</th>
                                 <th>Sucursal</th>
-                                <th>Forma de pago</th>
-                                <th class="text-end">Monto</th>
+                                <th class="text-end">Efectivo</th>
+                                <th class="text-end">Crédito</th>
+                                <th class="text-end">Débito</th>
+                                <th class="text-end">Otras</th>
+                                <th class="text-end">Venta neta</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($rows as $row)
+                            @php $currentMonth = null; @endphp
+                            @foreach($pivotRows as $r)
+                                @php
+                                    $dateObj = isset($r['report_date']) && $r['report_date'] ? Carbon::parse($r['report_date']) : $startDate;
+                                    $monthKey = $dateObj->format('Y-m');
+                                @endphp
+                                @if(count($summary['days'] ?? []) > 1 && $currentMonth !== $monthKey)
+                                    @php $currentMonth = $monthKey; @endphp
+                                    <tr class="table-secondary">
+                                        <td colspan="7" class="fw-semibold">
+                                            {{ $dateObj->translatedFormat('F Y') }}
+                                        </td>
+                                    </tr>
+                                @endif
                                 <tr>
-                                    <td>{{ isset($row->report_date) ? Carbon::parse($row->report_date)->format('d/m/Y') : $startDate->format('d/m/Y') }}</td>
-                                    <td>{{ $row->branch_key ?? $row->branch ?? $row->branch_name ?? '—' }}</td>
-                                    <td>{{ $row->normalized_payment ?? $row->payment_method ?? '—' }}</td>
-                                    <td class="text-end">${{ number_format((float) ($row->total ?? 0), 2) }}</td>
+                                    <td>{{ $dateObj->format('d/m/Y') }}</td>
+                                    <td>{{ $r['branch_key'] ?? '—' }}</td>
+                                    <td class="text-end">${{ number_format((float)($r['cash'] ?? 0), 2) }}</td>
+                                    <td class="text-end">${{ number_format((float)($r['credit'] ?? 0), 2) }}</td>
+                                    <td class="text-end">${{ number_format((float)($r['debit'] ?? 0), 2) }}</td>
+                                    <td class="text-end">${{ number_format((float)($r['other'] ?? 0), 2) }}</td>
+                                    <td class="text-end fw-semibold">${{ number_format((float)($r['net'] ?? 0), 2) }}</td>
                                 </tr>
                             @endforeach
+                            @if(!empty($pivotRows))
+                                <tr class="table-light fw-semibold">
+                                    <td colspan="2" class="text-end">Totales</td>
+                                    <td class="text-end">${{ number_format((float)($pivotTotals['cash'] ?? 0), 2) }}</td>
+                                    <td class="text-end">${{ number_format((float)($pivotTotals['credit'] ?? 0), 2) }}</td>
+                                    <td class="text-end">${{ number_format((float)($pivotTotals['debit'] ?? 0), 2) }}</td>
+                                    <td class="text-end">${{ number_format((float)($pivotTotals['other'] ?? 0), 2) }}</td>
+                                    <td class="text-end">${{ number_format((float)($pivotTotals['net'] ?? 0), 2) }}</td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="fa-solid fa-building me-2 text-secondary"></i>
+                    Detalle por sucursal (formas de pago)
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0 align-middle">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Sucursal</th>
+                            <th class="text-end">Efectivo</th>
+                            <th class="text-end">Crédito</th>
+                            <th class="text-end">Débito</th>
+                            <th class="text-end">Otras</th>
+                            <th class="text-end">Venta neta</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($branchPivot ?? [] as $bp)
+                            <tr>
+                                <td>{{ $bp['branch_key'] ?? '—' }}</td>
+                                <td class="text-end">${{ number_format((float)($bp['cash'] ?? 0), 2) }}</td>
+                                <td class="text-end">${{ number_format((float)($bp['credit'] ?? 0), 2) }}</td>
+                                <td class="text-end">${{ number_format((float)($bp['debit'] ?? 0), 2) }}</td>
+                                <td class="text-end">${{ number_format((float)($bp['other'] ?? 0), 2) }}</td>
+                                <td class="text-end fw-semibold">${{ number_format((float)($bp['net'] ?? 0), 2) }}</td>
+                            </tr>
+                        @endforeach
+                        @if(!empty($branchPivot))
+                            <tr class="table-light fw-semibold">
+                                <td class="text-end">Totales</td>
+                                <td class="text-end">${{ number_format((float)($branchTotals['cash'] ?? 0), 2) }}</td>
+                                <td class="text-end">${{ number_format((float)($branchTotals['credit'] ?? 0), 2) }}</td>
+                                <td class="text-end">${{ number_format((float)($branchTotals['debit'] ?? 0), 2) }}</td>
+                                <td class="text-end">${{ number_format((float)($branchTotals['other'] ?? 0), 2) }}</td>
+                                <td class="text-end">${{ number_format((float)($branchTotals['net'] ?? 0), 2) }}</td>
+                            </tr>
+                        @endif
                         </tbody>
                     </table>
                 </div>

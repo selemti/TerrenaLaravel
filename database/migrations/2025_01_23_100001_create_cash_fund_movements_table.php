@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('cash_fund_movements')) {
+            return;
+        }
+
         Schema::create('cash_fund_movements', function (Blueprint $table) {
             $table->id();
             $table->foreignId('cash_fund_id')

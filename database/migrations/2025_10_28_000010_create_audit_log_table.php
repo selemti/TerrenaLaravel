@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,7 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // TODO: asegurarse de que el esquema `selemti` exista antes de ejecutar esta migración.
+        if ($this->tableExists()) {
+            return;
+        }
+
         Schema::connection('pgsql')->create('selemti.audit_log', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->timestamp('timestamp')->useCurrent();
@@ -23,9 +27,10 @@ return new class extends Migration
             $table->text('evidencia_url')->nullable(); // TODO: hacer obligatorio cuando el frontend soporte captura de evidencia.
             $table->jsonb('payload_json')->nullable();
 
-            $table->index(['entidad', 'entidad_id']);
-            $table->index('user_id');
-            $table->index('timestamp');
+            $table->index(['entidad', 'entidad_id'], 'idx_audit_log_entidad_id');
+            $table->index('user_id', 'idx_audit_log_user_id');
+            $table->index('accion', 'idx_audit_log_accion');
+            $table->index('timestamp', 'idx_audit_log_timestamp');
         });
     }
 
@@ -35,5 +40,14 @@ return new class extends Migration
     public function down(): void
     {
         Schema::connection('pgsql')->dropIfExists('selemti.audit_log');
+    }
+
+    private function tableExists(): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT to_regclass('selemti.audit_log') AS regclass"
+        );
+
+        return ! empty($result?->regclass);
     }
 };

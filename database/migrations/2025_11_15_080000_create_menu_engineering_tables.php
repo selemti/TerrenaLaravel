@@ -2,12 +2,17 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
+        if ($this->tableExists('menu_engineering_snapshots')) {
+            return;
+        }
+
         Schema::connection('pgsql')->create('selemti.menu_engineering_snapshots', function (Blueprint $table): void {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('menu_item_id');
@@ -36,5 +41,15 @@ return new class extends Migration
     public function down(): void
     {
         Schema::connection('pgsql')->dropIfExists('selemti.menu_engineering_snapshots');
+    }
+
+    private function tableExists(string $table): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT to_regclass('selemti.' || ?) AS regclass",
+            [$table]
+        );
+
+        return ! empty($result?->regclass);
     }
 };

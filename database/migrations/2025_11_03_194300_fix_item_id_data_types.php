@@ -12,7 +12,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::connection('pgsql')->statement('SET search_path TO selemti');
+        if (! $this->tableExists('inventory_count_lines')) {
+            return;
+        }
+
+        if (! $this->columnExists('inventory_count_lines', 'item_id')) {
+            return;
+        }
+
+        if ($this->columnIsVarchar('inventory_count_lines', 'item_id')) {
+            return;
+        }
 
         // 1. inventory_count_lines.item_id: BIGINT → VARCHAR
         $this->fixInventoryCountLines();
@@ -26,7 +36,17 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::connection('pgsql')->statement('SET search_path TO selemti');
+        if (! $this->tableExists('inventory_count_lines')) {
+            return;
+        }
+
+        if (! $this->columnExists('inventory_count_lines', 'item_id')) {
+            return;
+        }
+
+        if (! $this->columnIsVarchar('inventory_count_lines', 'item_id')) {
+            return;
+        }
 
         // Revertir item_id a BIGINT
         $sql = <<<SQL
@@ -39,6 +59,12 @@ return new class extends Migration
 
     protected function fixInventoryCountLines(): void
     {
+        $columnType = $this->columnDataType('inventory_count_lines', 'item_id');
+
+        if (in_array($columnType, ['character varying', 'text'], true)) {
+            return;
+        }
+
         // Primero verificar si hay datos
         $count = DB::connection('pgsql')
             ->table('selemti.inventory_count_lines')
@@ -112,5 +138,44 @@ return new class extends Migration
         } else {
             echo "✓ No se encontraron otras tablas con item_id numérico\n";
         }
+    }
+
+    protected function tableExists(string $table): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT to_regclass('selemti.' || ?) AS regclass",
+            [$table]
+        );
+
+        return ! empty($result?->regclass);
+    }
+
+    protected function columnExists(string $table, string $column): bool
+    {
+        return $this->columnDataType($table, $column) !== null;
+    }
+
+    protected function columnIsVarchar(string $table, string $column): bool
+    {
+        $type = $this->columnDataType($table, $column);
+
+        return in_array($type, ['character varying', 'text'], true);
+    }
+
+    protected function columnDataType(string $table, string $column): ?string
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            <<<SQL
+            SELECT data_type
+            FROM information_schema.columns
+            WHERE table_schema = 'selemti'
+              AND table_name = ?
+              AND column_name = ?
+            LIMIT 1
+            SQL,
+            [$table, $column]
+        );
+
+        return $result?->data_type ?? null;
     }
 };

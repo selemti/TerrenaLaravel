@@ -9,10 +9,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $schema = Schema::connection('pgsql');
-
-        if (! $schema->hasTable('inv_consumo_pos')) {
-            $schema->create('inv_consumo_pos', function (Blueprint $table) {
+        if (! $this->tableExists('inv_consumo_pos')) {
+            Schema::connection('pgsql')->create('selemti.inv_consumo_pos', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('ticket_id');
                 $table->unsignedBigInteger('ticket_item_id')->nullable();
@@ -23,13 +21,13 @@ return new class extends Migration
                 $table->timestampTz('created_at')->useCurrent();
                 $table->timestampTz('updated_at')->nullable();
 
-                $table->index(['ticket_id']);
-                $table->index(['estado']);
+                $table->index(['ticket_id'], 'idx_inv_consumo_pos_ticket');
+                $table->index(['estado'], 'idx_inv_consumo_pos_estado');
             });
         }
 
-        if (! $schema->hasTable('inv_consumo_pos_det')) {
-            $schema->create('inv_consumo_pos_det', function (Blueprint $table) {
+        if (! $this->tableExists('inv_consumo_pos_det')) {
+            Schema::connection('pgsql')->create('selemti.inv_consumo_pos_det', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('consumo_id');
                 $table->unsignedBigInteger('item_id');
@@ -39,20 +37,23 @@ return new class extends Migration
                 $table->string('origen', 20)->default('RECETA');
                 $table->jsonb('meta')->nullable();
 
-                $table->foreign('consumo_id')->references('id')->on('inv_consumo_pos')->onDelete('cascade');
-                $table->index(['item_id']);
+                $table->foreign('consumo_id', 'fk_inv_consumo_pos_det_consumo')
+                    ->references('id')
+                    ->on('selemti.inv_consumo_pos')
+                    ->onDelete('cascade');
+                $table->index(['item_id'], 'idx_inv_consumo_pos_det_item');
             });
         }
 
-        if (! $schema->hasTable('inv_consumo_pos_log')) {
-            $schema->create('inv_consumo_pos_log', function (Blueprint $table) {
+        if (! $this->tableExists('inv_consumo_pos_log')) {
+            Schema::connection('pgsql')->create('selemti.inv_consumo_pos_log', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('ticket_id');
                 $table->string('accion', 20);
                 $table->timestampTz('registrado_en')->useCurrent();
                 $table->jsonb('payload')->nullable();
 
-                $table->index(['ticket_id']);
+                $table->index(['ticket_id'], 'idx_inv_consumo_pos_log_ticket');
             });
         }
 
@@ -305,8 +306,18 @@ DROP FUNCTION IF EXISTS selemti.fn_confirmar_consumo_ticket(bigint);
 DROP FUNCTION IF EXISTS selemti.fn_expandir_consumo_ticket(bigint);
 SQL);
 
-        Schema::connection('pgsql')->dropIfExists('inv_consumo_pos_log');
-        Schema::connection('pgsql')->dropIfExists('inv_consumo_pos_det');
-        Schema::connection('pgsql')->dropIfExists('inv_consumo_pos');
+        Schema::connection('pgsql')->dropIfExists('selemti.inv_consumo_pos_log');
+        Schema::connection('pgsql')->dropIfExists('selemti.inv_consumo_pos_det');
+        Schema::connection('pgsql')->dropIfExists('selemti.inv_consumo_pos');
+    }
+
+    private function tableExists(string $table): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT to_regclass('selemti.' || ?) AS regclass",
+            [$table]
+        );
+
+        return ! empty($result?->regclass);
     }
 };

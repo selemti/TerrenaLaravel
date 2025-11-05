@@ -17,9 +17,18 @@ return new class extends Migration
             throw new \Exception('Error: config/permission.php not found and defaults could not be merged.');
         }
 
-        Schema::table($tableNames['roles'], function (Blueprint $table) {
-            $table->string('display_name')->nullable()->after('guard_name');
-            $table->text('description')->nullable()->after('display_name');
+        $rolesTable = $tableNames['roles'];
+
+        Schema::table($rolesTable, function (Blueprint $table) use ($rolesTable) {
+            if (!Schema::hasColumn($rolesTable, 'display_name')) {
+                $table->string('display_name')->nullable()->after('guard_name');
+            }
+            if (!Schema::hasColumn($rolesTable, 'description')) {
+                $table->text('description')->nullable()->after('display_name');
+            }
+            if (!Schema::hasColumn($rolesTable, 'color')) {
+                $table->string('color', 7)->nullable()->after('description');
+            }
         });
     }
 
@@ -34,8 +43,18 @@ return new class extends Migration
             throw new \Exception('Error: config/permission.php not found and defaults could not be merged.');
         }
 
-        Schema::table($tableNames['roles'], function (Blueprint $table) {
-            $table->dropColumn(['display_name', 'description']);
+        $rolesTable = $tableNames['roles'];
+
+        Schema::table($rolesTable, function (Blueprint $table) use ($rolesTable) {
+            $columns = array_filter([
+                Schema::hasColumn($rolesTable, 'display_name') ? 'display_name' : null,
+                Schema::hasColumn($rolesTable, 'description') ? 'description' : null,
+                Schema::hasColumn($rolesTable, 'color') ? 'color' : null,
+            ]);
+            
+            if (!empty($columns)) {
+                $table->dropColumn($columns);
+            }
         });
     }
 };

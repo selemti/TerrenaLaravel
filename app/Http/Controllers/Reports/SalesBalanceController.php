@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Illuminate\Http\Response;
 
 class SalesBalanceController extends BaseReportController
 {
@@ -37,6 +38,7 @@ class SalesBalanceController extends BaseReportController
     {
         [$start, $end, $branch, $terminal] = $this->resolveFilters($request);
         $rows = $this->fetch($start, $end, $branch, $terminal);
+        $pivot = $this->buildPivot($rows);
 
         return view('reports.sales.balance', [
             'active' => 'reportes',
@@ -45,8 +47,33 @@ class SalesBalanceController extends BaseReportController
             'branch' => $branch,
             'terminal' => $terminal,
             'rows' => $rows,
+            'pivotRows' => $pivot,
             'generatedAt' => now('America/Mexico_City'),
         ]);
+    }
+
+    public function exportPdf(Request $request): Response
+    {
+        [$start, $end, $branch, $terminal] = $this->resolveFilters($request);
+        $rows = $this->fetch($start, $end, $branch, $terminal);
+        $pivot = $this->buildPivot($rows);
+
+        $filename = sprintf(
+            'reporte_balance_formas_%s_%s%s.pdf',
+            $start->format('Ymd'),
+            $end->format('Ymd'),
+            $branch ? '_' . str_replace(' ', '_', strtolower($branch)) : ''
+        );
+
+        return $this->renderPdf('reports.exports.sales.balance', [
+            'startDate' => $start,
+            'endDate' => $end,
+            'branch' => $branch,
+            'terminal' => $terminal,
+            'rows' => $rows,
+            'pivotRows' => $pivot,
+            'generatedAt' => now('America/Mexico_City'),
+        ], $filename);
     }
 
     protected function resolveFilters(Request $request): array
@@ -113,5 +140,42 @@ class SalesBalanceController extends BaseReportController
         }
         $sql .= " GROUP BY 1,2,3 ORDER BY 1,2,4 DESC";
         return collect(DB::connection('pgsql')->select($sql, $bindings));
+    }
+
+    protected function buildPivot(Collection $rows): array
+    {
+        $grouped = $rows->groupBy(function ($r) {
+            $date = (string)($r->folio_date ?? '');
+            $branch = strtoupper((string)($r->branch_key ?? ''));
+            return $date.'|'.$branch;
+        });
+
+        $result = [];
+        foreach ($grouped as $key => $items) {
+            [$date, $branch] = explode('|', $key, 2);
+            $cash=0.0; $credit=0.0; $debit=0.0; $other=0.0; $net=0.0;
+            foreach ($items as $r) {
+                $amount = (float)($r->monto ?? 0);
+                $method = strtoupper((string)($r->payment ?? ''));
+                switch ($method) {
+                    case 'CASH': $cash += $amount; break;
+                    case 'CREDIT_CARD': $credit += $amount; break;
+                    case 'DEBIT_CARD': $debit += $amount; break;
+                    default: $other += $amount; break;
+                }
+                $net += $amount;
+            }
+            $result[] = [
+                'folio_date' => $date,
+                'branch_key' => $branch,
+                'cash' => $this->round($cash),
+                'credit' => $this->round($credit),
+                'debit' => $this->round($debit),
+                'other' => $this->round($other),
+                'net' => $this->round($net),
+            ];
+        }
+        usort($result, fn($a,$b) => strcmp($a['folio_date'] ?? '', $b['folio_date'] ?? '') ?: strcmp($a['branch_key'] ?? '', $b['branch_key'] ?? ''));
+        return $result;
     }
 }

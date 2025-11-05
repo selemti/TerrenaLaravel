@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,15 +12,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (! Schema::hasTable('cat_unidades')) {
-            Schema::create('cat_unidades', function (Blueprint $table) {
-                $table->id();
-                $table->string('clave', 16)->unique();   // KG, LT, PZA...
-                $table->string('nombre', 64);
-                $table->boolean('activo')->default(true);
-                $table->timestamps();
-            });
+        if ($this->tableExists()) {
+            return;
         }
+
+        Schema::connection('pgsql')->create('selemti.cat_unidades', function (Blueprint $table) {
+            $table->id();
+            $table->string('clave', 16)->unique();   // KG, LT, PZA...
+            $table->string('nombre', 64);
+            $table->boolean('activo')->default(true);
+            $table->timestamps();
+        });
     }
 
     /**
@@ -27,6 +30,15 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cat_unidades');
+        Schema::connection('pgsql')->dropIfExists('selemti.cat_unidades');
+    }
+
+    private function tableExists(): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT to_regclass('selemti.cat_unidades') AS regclass"
+        );
+
+        return ! empty($result?->regclass);
     }
 };

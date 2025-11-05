@@ -42,6 +42,50 @@
         </tbody>
     </table>
 
+    @php
+        $gross = $adjustments['gross'] ?? 0.0;
+        $discount = $adjustments['discount'] ?? 0.0;
+        $net = $adjustments['net'] ?? 0.0;
+        $tips = $adjustments['tips'] ?? 0.0;
+        $service = $adjustments['service'] ?? 0.0;
+        $operated = $adjustments['total_with_charges'] ?? 0.0;
+        $mixTotal = $summary['total_general'] ?? 0.0;
+        $mixGap = $operated - $mixTotal;
+    @endphp
+    <h2>Resumen financiero complementario</h2>
+    <table>
+        <tbody>
+            <tr>
+                <td>Venta bruta</td>
+                <td class="text-right">${{ number_format($gross, 2) }}</td>
+            </tr>
+            <tr>
+                <td>Descuentos</td>
+                <td class="text-right">-${{ number_format($discount, 2) }}</td>
+            </tr>
+            <tr>
+                <td>Venta neta</td>
+                <td class="text-right">${{ number_format($net, 2) }}</td>
+            </tr>
+            <tr>
+                <td>Propinas</td>
+                <td class="text-right">+${{ number_format($tips, 2) }}</td>
+            </tr>
+            <tr>
+                <td>Cargos por servicio</td>
+                <td class="text-right">+${{ number_format($service, 2) }}</td>
+            </tr>
+            <tr>
+                <td>Total operado (neto + extras)</td>
+                <td class="text-right">${{ number_format($operated, 2) }}</td>
+            </tr>
+            <tr>
+                <td>Diferencia vs mix</td>
+                <td class="text-right">{{ $mixGap >= 0 ? '+' : '' }}${{ number_format($mixGap, 2) }}</td>
+            </tr>
+        </tbody>
+    </table>
+
     <h2>Distribución por forma de pago</h2>
     <table>
         <thead>
@@ -59,6 +103,11 @@
                     <td class="text-right">{{ number_format($payment['percentage'] ?? 0, 2) }}%</td>
                 </tr>
             @endforeach
+            <tr>
+                <td><strong>Total</strong></td>
+                <td class="text-right"><strong>${{ number_format($summary['total_general'] ?? 0, 2) }}</strong></td>
+                <td class="text-right"><strong>100%</strong></td>
+            </tr>
         </tbody>
     </table>
 
@@ -79,6 +128,85 @@
                     <td class="text-right">{{ number_format($row['percentage'] ?? 0, 2) }}%</td>
                 </tr>
             @endforeach
+            <tr>
+                <td><strong>Total</strong></td>
+                <td class="text-right"><strong>${{ number_format($summary['total_general'] ?? 0, 2) }}</strong></td>
+                <td class="text-right"><strong>100%</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Detalle consolidado por fecha y sucursal</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Sucursal</th>
+                <th class="text-right">Efectivo</th>
+                <th class="text-right">Crédito</th>
+                <th class="text-right">Débito</th>
+                <th class="text-right">Otras</th>
+                <th class="text-right">Venta neta</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($pivotRows ?? [] as $pivotRow)
+                <tr>
+                    <td>{{ isset($pivotRow['report_date']) ? Carbon::parse($pivotRow['report_date'])->format('d/m/Y') : $startDate->format('d/m/Y') }}</td>
+                    <td>{{ $pivotRow['branch_key'] ?? 'N/D' }}</td>
+                    <td class="text-right">${{ number_format((float)($pivotRow['cash'] ?? 0), 2) }}</td>
+                    <td class="text-right">${{ number_format((float)($pivotRow['credit'] ?? 0), 2) }}</td>
+                    <td class="text-right">${{ number_format((float)($pivotRow['debit'] ?? 0), 2) }}</td>
+                    <td class="text-right">${{ number_format((float)($pivotRow['other'] ?? 0), 2) }}</td>
+                    <td class="text-right">${{ number_format((float)($pivotRow['net'] ?? 0), 2) }}</td>
+                </tr>
+            @endforeach
+            @if(!empty($pivotRows))
+                <tr>
+                    <td colspan="2"><strong>Totales</strong></td>
+                    <td class="text-right"><strong>${{ number_format((float)($pivotTotals['cash'] ?? 0), 2) }}</strong></td>
+                    <td class="text-right"><strong>${{ number_format((float)($pivotTotals['credit'] ?? 0), 2) }}</strong></td>
+                    <td class="text-right"><strong>${{ number_format((float)($pivotTotals['debit'] ?? 0), 2) }}</strong></td>
+                    <td class="text-right"><strong>${{ number_format((float)($pivotTotals['other'] ?? 0), 2) }}</strong></td>
+                    <td class="text-right"><strong>${{ number_format((float)($pivotTotals['net'] ?? 0), 2) }}</strong></td>
+                </tr>
+            @endif
+        </tbody>
+    </table>
+
+    <h2>Detalle por sucursal (formas de pago)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Sucursal</th>
+                <th class="text-right">Efectivo</th>
+                <th class="text-right">Crédito</th>
+                <th class="text-right">Débito</th>
+                <th class="text-right">Otras</th>
+                <th class="text-right">Venta neta</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($branchPivot ?? [] as $branchRow)
+                <tr>
+                    <td>{{ $branchRow['branch_key'] ?? 'N/D' }}</td>
+                    <td class="text-right">${{ number_format((float)($branchRow['cash'] ?? 0), 2) }}</td>
+                    <td class="text-right">${{ number_format((float)($branchRow['credit'] ?? 0), 2) }}</td>
+                    <td class="text-right">${{ number_format((float)($branchRow['debit'] ?? 0), 2) }}</td>
+                    <td class="text-right">${{ number_format((float)($branchRow['other'] ?? 0), 2) }}</td>
+                    <td class="text-right">${{ number_format((float)($branchRow['net'] ?? 0), 2) }}</td>
+                </tr>
+            @endforeach
+            @if(!empty($branchPivot))
+                <tr>
+                    <td><strong>Totales</strong></td>
+                    <td class="text-right"><strong>${{ number_format((float)($branchTotals['cash'] ?? 0), 2) }}</strong></td>
+                    <td class="text-right"><strong>${{ number_format((float)($branchTotals['credit'] ?? 0), 2) }}</strong></td>
+                    <td class="text-right"><strong>${{ number_format((float)($branchTotals['debit'] ?? 0), 2) }}</strong></td>
+                    <td class="text-right"><strong>${{ number_format((float)($branchTotals['other'] ?? 0), 2) }}</strong></td>
+                    <td class="text-right"><strong>${{ number_format((float)($branchTotals['net'] ?? 0), 2) }}</strong></td>
+                </tr>
+            @endif
         </tbody>
     </table>
 

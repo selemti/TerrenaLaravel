@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,10 +12,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Verificar si la tabla ya existe
-        if (!Schema::hasTable('selemti.audit_log')) {
-            // Crear tabla si no existe (aunque ya debería existir según análisis previo)
-            Schema::create('selemti.audit_log', function (Blueprint $table) {
+        if (! $this->tableExists()) {
+            Schema::connection('pgsql')->create('selemti.audit_log', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->timestamp('timestamp')->nullable();
                 $table->unsignedBigInteger('user_id')->nullable();
@@ -24,7 +23,7 @@ return new class extends Migration
                 $table->text('motivo')->nullable();
                 $table->text('evidencia_url')->nullable();
                 $table->jsonb('payload_json')->nullable();
-                
+
                 $table->index(['timestamp'], 'idx_audit_log_timestamp');
                 $table->index(['user_id'], 'idx_audit_log_user_id');
                 $table->index(['accion'], 'idx_audit_log_accion');
@@ -32,40 +31,46 @@ return new class extends Migration
                 $table->index(['entidad_id'], 'idx_audit_log_entidad_id');
                 $table->foreign('user_id')->references('id')->on('selemti.users')->onDelete('set null');
             });
-        } else {
-            // Asegurar que los índices existan
-            Schema::table('selemti.audit_log', function (Blueprint $table) {
-                // Verificar y crear índices si no existen
-                if (!Schema::hasIndex('selemti.audit_log', 'idx_audit_log_timestamp')) {
+            return;
+        }
+
+        $needsTimestamp = ! $this->indexExists('idx_audit_log_timestamp');
+        $needsUser = ! $this->indexExists('idx_audit_log_user_id');
+        $needsAccion = ! $this->indexExists('idx_audit_log_accion');
+        $needsEntidad = ! $this->indexExists('idx_audit_log_entidad');
+        $needsEntidadId = ! $this->indexExists('idx_audit_log_entidad_id');
+        $needsForeign = ! $this->foreignExists('selemti_audit_log_user_id_foreign');
+
+        if ($needsTimestamp || $needsUser || $needsAccion || $needsEntidad || $needsEntidadId || $needsForeign) {
+            Schema::connection('pgsql')->table('selemti.audit_log', function (Blueprint $table) use (
+                $needsTimestamp,
+                $needsUser,
+                $needsAccion,
+                $needsEntidad,
+                $needsEntidadId,
+                $needsForeign
+            ) {
+                if ($needsTimestamp) {
                     $table->index(['timestamp'], 'idx_audit_log_timestamp');
                 }
-                
-                if (!Schema::hasIndex('selemti.audit_log', 'idx_audit_log_user_id')) {
+
+                if ($needsUser) {
                     $table->index(['user_id'], 'idx_audit_log_user_id');
                 }
-                
-                if (!Schema::hasIndex('selemti.audit_log', 'idx_audit_log_accion')) {
+
+                if ($needsAccion) {
                     $table->index(['accion'], 'idx_audit_log_accion');
                 }
-                
-                if (!Schema::hasIndex('selemti.audit_log', 'idx_audit_log_entidad')) {
+
+                if ($needsEntidad) {
                     $table->index(['entidad'], 'idx_audit_log_entidad');
                 }
-                
-                if (!Schema::hasIndex('selemti.audit_log', 'idx_audit_log_entidad_id')) {
+
+                if ($needsEntidadId) {
                     $table->index(['entidad_id'], 'idx_audit_log_entidad_id');
                 }
-                
-                // Verificar constraint de foreign key
-                $indexes = DB::select("
-                    SELECT conname 
-                    FROM pg_constraint 
-                    WHERE conrelid = 'selemti.audit_log'::regclass 
-                    AND contype = 'f' 
-                    AND conname = 'audit_log_user_id_foreign'
-                ");
-                
-                if (empty($indexes)) {
+
+                if ($needsForeign) {
                     $table->foreign('user_id')->references('id')->on('selemti.users')->onDelete('set null');
                 }
             });
@@ -77,13 +82,57 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('selemti.audit_log', function (Blueprint $table) {
-            $table->dropForeign(['user_id']);
-            $table->dropIndex(['idx_audit_log_timestamp']);
-            $table->dropIndex(['idx_audit_log_user_id']);
-            $table->dropIndex(['idx_audit_log_accion']);
-            $table->dropIndex(['idx_audit_log_entidad']);
-            $table->dropIndex(['idx_audit_log_entidad_id']);
+        if (! $this->tableExists()) {
+            return;
+        }
+
+        $self = $this;
+
+        Schema::connection('pgsql')->table('selemti.audit_log', function (Blueprint $table) use ($self) {
+            if ($self->foreignExists('selemti_audit_log_user_id_foreign')) {
+                $table->dropForeign('selemti_audit_log_user_id_foreign');
+            }
+
+            foreach ([
+                'idx_audit_log_timestamp',
+                'idx_audit_log_user_id',
+                'idx_audit_log_accion',
+                'idx_audit_log_entidad',
+                'idx_audit_log_entidad_id',
+            ] as $index) {
+                if ($self->indexExists($index)) {
+                    $table->dropIndex($index);
+                }
+            }
         });
+    }
+
+    protected function tableExists(): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT to_regclass('selemti.audit_log') AS regclass"
+        );
+
+        return ! empty($result?->regclass);
+    }
+
+    protected function indexExists(string $indexName): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT 1 AS exists FROM pg_indexes WHERE schemaname = 'selemti' AND indexname = ? LIMIT 1",
+            [$indexName]
+        );
+
+        return ! empty($result);
+    }
+
+    protected function foreignExists(string $constraint): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM pg_constraint WHERE conname = ? LIMIT 1",
+            [$constraint]
+        );
+
+        return ! empty($result);
     }
 };

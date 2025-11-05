@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Illuminate\Http\Response;
 
 class SalesDetailController extends BaseReportController
 {
@@ -46,6 +47,28 @@ class SalesDetailController extends BaseReportController
             'rows' => $rows,
             'generatedAt' => now('America/Mexico_City'),
         ]);
+    }
+
+    public function exportPdf(Request $request): Response
+    {
+        [$start, $end, $branch, $terminal] = $this->resolveFilters($request);
+        $rows = $this->fetch($start, $end, $branch, $terminal);
+
+        $filename = sprintf(
+            'reporte_detalle_ventas_%s_%s%s.pdf',
+            $start->format('Ymd'),
+            $end->format('Ymd'),
+            $branch ? '_' . str_replace(' ', '_', strtolower($branch)) : ''
+        );
+
+        return $this->renderPdf('reports.exports.sales.detail', [
+            'startDate' => $start,
+            'endDate' => $end,
+            'branch' => $branch,
+            'terminal' => $terminal,
+            'rows' => $rows,
+            'generatedAt' => now('America/Mexico_City'),
+        ], $filename);
     }
 
     protected function resolveFilters(Request $request): array

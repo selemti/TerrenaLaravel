@@ -2,16 +2,15 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        $schema = Schema::connection('pgsql');
-
-        if (! $schema->hasTable('production_orders')) {
-            $schema->create('production_orders', function (Blueprint $table) {
+        if (! $this->tableExists('production_orders')) {
+            Schema::connection('pgsql')->create('selemti.production_orders', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->string('folio', 40)->nullable()->unique();
                 $table->unsignedBigInteger('recipe_id')->nullable();
@@ -41,8 +40,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('production_order_inputs')) {
-            $schema->create('production_order_inputs', function (Blueprint $table) {
+        if (! $this->tableExists('production_order_inputs')) {
+            Schema::connection('pgsql')->create('selemti.production_order_inputs', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('production_order_id');
                 $table->unsignedBigInteger('item_id');
@@ -58,8 +57,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('production_order_outputs')) {
-            $schema->create('production_order_outputs', function (Blueprint $table) {
+        if (! $this->tableExists('production_order_outputs')) {
+            Schema::connection('pgsql')->create('selemti.production_order_outputs', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('production_order_id');
                 $table->unsignedBigInteger('item_id');
@@ -77,8 +76,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('inventory_wastes')) {
-            $schema->create('inventory_wastes', function (Blueprint $table) {
+        if (! $this->tableExists('inventory_wastes')) {
+            Schema::connection('pgsql')->create('selemti.inventory_wastes', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('production_order_id')->nullable();
                 $table->unsignedBigInteger('item_id');
@@ -106,12 +105,20 @@ return new class extends Migration
 
     public function down(): void
     {
-        $schema = Schema::connection('pgsql');
-
         foreach (['inventory_wastes', 'production_order_outputs', 'production_order_inputs', 'production_orders'] as $table) {
-            if ($schema->hasTable($table)) {
-                $schema->drop($table);
+            if ($this->tableExists($table)) {
+                Schema::connection('pgsql')->drop("selemti.{$table}");
             }
         }
+    }
+
+    private function tableExists(string $table): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT to_regclass('selemti.' || ?) AS regclass",
+            [$table]
+        );
+
+        return ! empty($result?->regclass);
     }
 };

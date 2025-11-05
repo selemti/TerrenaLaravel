@@ -36,11 +36,21 @@ SELECT
   t.branch_key,
   COALESCE(t.folio_date, t.closing_date::date, t.create_date::date) AS folio_date,
   COALESCE(t.total_price,0)::numeric(12,2)    AS total_price,
-  COALESCE((
-    SELECT SUM(COALESCE(ti.discount,0))
-    FROM public.ticket_item ti
-    WHERE ti.ticket_id = t.id
-  ),0)::numeric(12,2) AS total_discount,
+  GREATEST(
+    0,
+    LEAST(
+      COALESCE(
+        t.total_discount,
+        (
+          SELECT SUM(COALESCE(ti.discount, COALESCE(ti.discount, 0)))
+          FROM public.ticket_item ti
+          WHERE ti.ticket_id = t.id
+        ),
+        0
+      ),
+      COALESCE(t.total_price, 0)
+    )
+  )::numeric(12,2) AS total_discount,
   COALESCE((
     SELECT SUM(g.amount)
     FROM public.gratuity g
@@ -85,7 +95,9 @@ SELECT
   COUNT(DISTINCT b.ticket_id)                                AS tickets,
   ROUND(SUM(b.total_price),2)                                AS bruto,
   ROUND(SUM(b.total_discount),2)                             AS descuento,
-  ROUND(SUM(b.total_price - b.total_discount),2)             AS neto
+  ROUND(SUM(b.total_price - b.total_discount),2)             AS neto,
+  ROUND(SUM(b.tip_amount),2)                                 AS propina,
+  ROUND(SUM(b.service_charges),2)                            AS cargo_servicio
 FROM vw_ticket_base b
 GROUP BY 1,2;
 
@@ -237,3 +249,5 @@ GROUP BY 1,2,3,4;
 -- ================================================================
 -- FIN DEL SCRIPT
 -- ================================================================
+
+

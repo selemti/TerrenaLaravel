@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Illuminate\Http\Response;
 
 class SalesJournalController extends BaseReportController
 {
@@ -41,6 +42,29 @@ class SalesJournalController extends BaseReportController
             'payments' => $payments,
             'generatedAt' => now('America/Mexico_City'),
         ]);
+    }
+
+    public function exportPdf(Request $request): Response
+    {
+        [$start, $end, $branch, $terminal] = $this->resolveFilters($request);
+        [$lines, $payments] = $this->fetch($start, $end, $branch, $terminal);
+
+        $filename = sprintf(
+            'reporte_journal_%s_%s%s.pdf',
+            $start->format('Ymd'),
+            $end->format('Ymd'),
+            $branch ? '_' . str_replace(' ', '_', strtolower($branch)) : ''
+        );
+
+        return $this->renderPdf('reports.exports.sales.journal', [
+            'startDate' => $start,
+            'endDate' => $end,
+            'branch' => $branch,
+            'terminal' => $terminal,
+            'lines' => $lines,
+            'payments' => $payments,
+            'generatedAt' => now('America/Mexico_City'),
+        ], $filename);
     }
 
     protected function resolveFilters(Request $request): array

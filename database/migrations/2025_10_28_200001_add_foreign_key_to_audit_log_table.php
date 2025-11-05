@@ -23,7 +23,7 @@ return new class extends Migration
             FROM pg_constraint 
             WHERE conrelid = 'selemti.audit_log'::regclass 
             AND contype = 'f' 
-            AND conname = 'audit_log_user_id_foreign'
+            AND conname IN ('audit_log_user_id_foreign', 'selemti_audit_log_user_id_foreign')
         ");
 
         if (empty($fks)) {
@@ -53,7 +53,7 @@ return new class extends Migration
             FROM pg_constraint 
             WHERE conrelid = 'selemti.audit_log'::regclass 
             AND contype = 'f' 
-            AND conname = 'audit_log_user_id_foreign'
+            AND conname IN ('audit_log_user_id_foreign', 'selemti_audit_log_user_id_foreign')
         ");
 
         if (!empty($fks)) {

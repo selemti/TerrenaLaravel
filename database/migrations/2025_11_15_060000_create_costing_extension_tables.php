@@ -2,16 +2,15 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        $schema = Schema::connection('pgsql');
-
-        if (! $schema->hasTable('labor_roles')) {
-            $schema->create('labor_roles', function (Blueprint $table) {
+        if (! $this->tableExists('labor_roles')) {
+            Schema::connection('pgsql')->create('selemti.labor_roles', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->string('clave', 40)->unique();
                 $table->string('nombre', 120);
@@ -25,8 +24,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('recipe_labor_steps')) {
-            $schema->create('recipe_labor_steps', function (Blueprint $table) {
+        if (! $this->tableExists('recipe_labor_steps')) {
+            Schema::connection('pgsql')->create('selemti.recipe_labor_steps', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('recipe_id');
                 $table->unsignedBigInteger('labor_role_id')->nullable();
@@ -42,8 +41,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('overhead_definitions')) {
-            $schema->create('overhead_definitions', function (Blueprint $table) {
+        if (! $this->tableExists('overhead_definitions')) {
+            Schema::connection('pgsql')->create('selemti.overhead_definitions', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->string('clave', 60)->unique();
                 $table->string('nombre', 160);
@@ -58,8 +57,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('recipe_overhead_allocations')) {
-            $schema->create('recipe_overhead_allocations', function (Blueprint $table) {
+        if (! $this->tableExists('recipe_overhead_allocations')) {
+            Schema::connection('pgsql')->create('selemti.recipe_overhead_allocations', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('recipe_id');
                 $table->unsignedBigInteger('overhead_id');
@@ -72,8 +71,8 @@ return new class extends Migration
             });
         }
 
-        if (! $schema->hasTable('recipe_extended_cost_history')) {
-            $schema->create('recipe_extended_cost_history', function (Blueprint $table) {
+        if (! $this->tableExists('recipe_extended_cost_history')) {
+            Schema::connection('pgsql')->create('selemti.recipe_extended_cost_history', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('recipe_id');
                 $table->timestampTz('snapshot_at')->useCurrent();
@@ -93,12 +92,24 @@ return new class extends Migration
 
     public function down(): void
     {
-        $schema = Schema::connection('pgsql');
+        foreach ([
+            'recipe_extended_cost_history',
+            'recipe_overhead_allocations',
+            'overhead_definitions',
+            'recipe_labor_steps',
+            'labor_roles',
+        ] as $table) {
+            Schema::connection('pgsql')->dropIfExists("selemti.{$table}");
+        }
+    }
 
-        $schema->dropIfExists('recipe_extended_cost_history');
-        $schema->dropIfExists('recipe_overhead_allocations');
-        $schema->dropIfExists('overhead_definitions');
-        $schema->dropIfExists('recipe_labor_steps');
-        $schema->dropIfExists('labor_roles');
+    private function tableExists(string $table): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT to_regclass('selemti.' || ?) AS regclass",
+            [$table]
+        );
+
+        return ! empty($result?->regclass);
     }
 };

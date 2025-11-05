@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -20,13 +21,13 @@ return new class extends Migration
         $schema = Schema::connection('pgsql');
 
         $schema->table('selemti.items', function (Blueprint $table) {
-            if (!Schema::hasColumn('selemti.items', 'es_producible')) {
+            if (! $this->columnExists('es_producible')) {
                 $table->boolean('es_producible')->default(false)->comment('Indicates if this item is produced internally (sub-recipe).');
             }
-            if (!Schema::hasColumn('selemti.items', 'es_consumible_operativo')) {
+            if (! $this->columnExists('es_consumible_operativo')) {
                 $table->boolean('es_consumible_operativo')->default(false)->comment('Identifies operational use materials (cleaning, gloves).');
             }
-            if (!Schema::hasColumn('selemti.items', 'es_empaque_to_go')) {
+            if (! $this->columnExists('es_empaque_to_go')) {
                 $table->boolean('es_empaque_to_go')->default(false)->comment('Marks items as to-go packaging.');
             }
         });
@@ -40,15 +41,32 @@ return new class extends Migration
         $schema = Schema::connection('pgsql');
 
         $schema->table('selemti.items', function (Blueprint $table) {
-            if (Schema::hasColumn('selemti.items', 'es_producible')) {
+            if ($this->columnExists('es_producible')) {
                 $table->dropColumn('es_producible');
             }
-            if (Schema::hasColumn('selemti.items', 'es_consumible_operativo')) {
+            if ($this->columnExists('es_consumible_operativo')) {
                 $table->dropColumn('es_consumible_operativo');
             }
-            if (Schema::hasColumn('selemti.items', 'es_empaque_to_go')) {
+            if ($this->columnExists('es_empaque_to_go')) {
                 $table->dropColumn('es_empaque_to_go');
             }
         });
+    }
+
+    protected function columnExists(string $column): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            <<<SQL
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = 'selemti'
+              AND table_name = 'items'
+              AND column_name = ?
+            LIMIT 1
+            SQL,
+            [$column]
+        );
+
+        return ! empty($result);
     }
 };
