@@ -176,6 +176,9 @@ export async function cargarTabla() {
   const j = await GET_FALLBACK([primaryUrl, secondaryUrl].filter(Boolean));
   state.date = j?.date || currentDate();
   state.data = Array.isArray(j?.terminals) ? j.terminals : [];
+  if (els.filterDate && els.filterDate.value !== state.date) {
+    els.filterDate.value = state.date;
+  }
   if (els.badgeFecha) els.badgeFecha.textContent = state.date;
   renderKPIs();
   renderTabla();

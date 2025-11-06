@@ -15,6 +15,22 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class SalesMixController extends BaseReportController
 {
+    /**
+     * Paleta utilizada cuando no hay color definido en config/reports.php.
+     */
+    protected array $fallbackPalette = [
+        '#2563eb',
+        '#16a34a',
+        '#f97316',
+        '#0ea5e9',
+        '#f43f5e',
+        '#8b5cf6',
+        '#f59e0b',
+        '#22c55e',
+        '#7c3aed',
+        '#ef4444',
+        '#0f172a',
+    ];
     public function index(Request $request): JsonResponse
     {
         [$start, $end, $branch] = $this->resolveFilters($request);
@@ -44,6 +60,11 @@ class SalesMixController extends BaseReportController
 
         $dataset = $this->fetchData($start, $end);
         $branches = $this->extractBranches($dataset);
+        $selectedBranches = $this->explodeBranchList($branch);
+        $branchColors = $this->prepareBranchColors($branches->pluck('key')->filter()->values()->all());
+        $branchOptions = $this->buildBranchOptions($branches, $selectedBranches, $branchColors);
+        $branchLegend = $this->buildBranchLegend($branches, $branchColors);
+
         $filtered = $this->applyBranchFilter($dataset, $branch);
         $summary = $this->summarize($filtered);
         $pivot = $this->buildPivot($filtered);
@@ -59,6 +80,10 @@ class SalesMixController extends BaseReportController
             'endDate' => $end,
             'branch' => $branch,
             'branches' => $branches,
+            'branchOptions' => $branchOptions,
+            'branchLegend' => $branchLegend,
+            'branchColors' => $branchColors,
+            'selectedBranches' => $selectedBranches,
             'rows' => $filtered,
             'pivotRows' => $pivot,
             'pivotTotals' => $pivotTotals,
@@ -107,7 +132,13 @@ class SalesMixController extends BaseReportController
     {
         [$start, $end, $branch] = $this->resolveFilters($request);
 
-        $dataset = $this->applyBranchFilter($this->fetchData($start, $end), $branch);
+        $datasetRaw = $this->fetchData($start, $end);
+        $branches = $this->extractBranches($datasetRaw);
+        $branchColors = $this->prepareBranchColors($branches->pluck('key')->filter()->values()->all());
+        $branchLegend = $this->buildBranchLegend($branches, $branchColors);
+        $selectedBranches = $this->explodeBranchList($branch);
+
+        $dataset = $this->applyBranchFilter($datasetRaw, $branch);
         $summary = $this->summarize($dataset);
         $pivot = $this->buildPivot($dataset);
         $pivotTotals = $this->sumPivot($pivot);
@@ -134,6 +165,9 @@ class SalesMixController extends BaseReportController
             'branchTotals' => $branchTotals,
             'adjustments' => $adjustments,
             'generatedAt' => now('America/Mexico_City'),
+            'branchColors' => $branchColors,
+            'branchLegend' => $branchLegend,
+            'selectedBranches' => $selectedBranches,
         ], $filename, paper: 'letter', orientation: 'portrait');
     }
 
@@ -317,6 +351,102 @@ class SalesMixController extends BaseReportController
             'service' => $service,
             'total_with_charges' => $totalWithCharges,
         ];
+    }
+
+    protected function explodeBranchList(?string $branch): array
+    {
+        if (!$branch) {
+            return [];
+        }
+
+        return collect(explode(',', $branch))
+            ->map(fn ($value) => strtoupper(trim((string) $value)))
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    protected function prepareBranchColors(array $branchKeys): array
+    {
+        $configured = collect(config('reports.branch_colors', []))
+            ->mapWithKeys(fn ($color, $key) => [strtoupper((string) $key) => $color])
+            ->toArray();
+
+        $palette = config('reports.branch_palette', $this->fallbackPalette);
+        if (empty($palette)) {
+            $palette = $this->fallbackPalette;
+        }
+
+        $colors = $configured;
+        $index = 0;
+
+        foreach ($branchKeys as $key) {
+            $upper = strtoupper((string) $key);
+            if ($upper === '') {
+                continue;
+            }
+
+            if (!isset($colors[$upper])) {
+                $colors[$upper] = $palette[$index % count($palette)];
+                $index++;
+            }
+        }
+
+        return $colors;
+    }
+
+    protected function buildBranchOptions(Collection $branches, array $selected, array $branchColors): Collection
+    {
+        $selectedSet = collect($selected)
+            ->map(fn ($value) => strtoupper((string) $value))
+            ->filter()
+            ->values()
+            ->all();
+
+        return $branches
+            ->map(function (array $branch) use ($selectedSet, $branchColors) {
+                $key = strtoupper((string) ($branch['key'] ?? ''));
+                $label = (string) ($branch['label'] ?? $key);
+                if ($key === '') {
+                    return null;
+                }
+
+                $color = $branchColors[$key] ?? $this->fallbackPalette[0];
+
+                return [
+                    'key' => $key,
+                    'value' => $key,
+                    'label' => $label,
+                    'indicator_color' => $color,
+                    'color' => $color,
+                    'selected' => in_array($key, $selectedSet, true),
+                    'badge' => null,
+                    'highlight' => false,
+                ];
+            })
+            ->filter()
+            ->sortBy(fn (array $opt) => $opt['label'])
+            ->values();
+    }
+
+    protected function buildBranchLegend(Collection $branches, array $branchColors): Collection
+    {
+        return $branches
+            ->map(function (array $branch) use ($branchColors) {
+                $key = strtoupper((string) ($branch['key'] ?? ''));
+                if ($key === '') {
+                    return null;
+                }
+
+                return [
+                    'key' => $key,
+                    'label' => (string) ($branch['label'] ?? $key),
+                    'color' => $branchColors[$key] ?? $this->fallbackPalette[0],
+                ];
+            })
+            ->filter()
+            ->sortBy(fn (array $item) => $item['label'])
+            ->values();
     }
 
     protected function buildPivot(Collection $rows): array

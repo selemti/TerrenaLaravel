@@ -17,9 +17,9 @@ class SalesModsController extends BaseReportController
 {
     public function index(Request $request): JsonResponse
     {
-        [$start, $end, $branch] = $this->resolveFilters($request);
+        [$start, $end, $branches] = $this->resolveFilters($request);
 
-        $dataset = $this->applyBranchFilter($this->fetchData($start, $end), $branch);
+        $dataset = $this->applyBranchFilter($this->fetchData($start, $end), $branches);
         $summary = $this->summarize($dataset);
 
         return response()->json([
@@ -28,7 +28,10 @@ class SalesModsController extends BaseReportController
                 'start' => $start->format('Y-m-d'),
                 'end' => $end->format('Y-m-d'),
             ],
-            'branch' => $branch,
+            'branch' => $this->stringifyFilter($branches),
+            'filters' => [
+                'branches' => $branches,
+            ],
             'summary' => $summary,
             'data' => $dataset->values(),
             'generated_at' => now('America/Mexico_City')->toIso8601String(),
@@ -37,19 +40,29 @@ class SalesModsController extends BaseReportController
 
     public function show(Request $request): View
     {
-        [$start, $end, $branch] = $this->resolveFilters($request);
+        [$start, $end, $branches] = $this->resolveFilters($request);
 
         $dataset = $this->fetchData($start, $end);
-        $branches = $this->extractBranches($dataset);
-        $filtered = $this->applyBranchFilter($dataset, $branch);
+        $branchCandidates = $this->extractBranches($dataset);
+        $filtered = $this->applyBranchFilter($dataset, $branches);
         $summary = $this->summarize($filtered);
+
+        $observedBranches = $branchCandidates
+            ->pluck('key')
+            ->merge($filtered->map(fn ($row) => $row->branch_key ?? $row->branch ?? $row->sucursal ?? null))
+            ->filter()
+            ->all();
+
+        [$branchColors, $branchOptions, $branchLabels] = $this->buildBranchContext($observedBranches, $branches);
 
         return view('reports.sales.mods', [
             'active' => 'reportes',
             'startDate' => $start,
             'endDate' => $end,
-            'branch' => $branch,
-            'branches' => $branches,
+            'branchFilter' => $branches,
+            'branchOptions' => $branchOptions,
+            'branchColors' => $branchColors,
+            'branchLabels' => $branchLabels,
             'rows' => $filtered,
             'summary' => $summary,
             'generatedAt' => now('America/Mexico_City'),
@@ -58,17 +71,19 @@ class SalesModsController extends BaseReportController
 
     public function exportExcel(Request $request): BinaryFileResponse
     {
-        [$start, $end, $branch] = $this->resolveFilters($request);
+        [$start, $end, $branches] = $this->resolveFilters($request);
 
-        $dataset = $this->applyBranchFilter($this->fetchData($start, $end), $branch);
+        $dataset = $this->applyBranchFilter($this->fetchData($start, $end), $branches);
         $summary = $this->summarize($dataset);
 
-        $export = new SalesModsExport($start, $end, $dataset, $summary, $branch);
+        $export = new SalesModsExport($start, $end, $dataset, $summary, $this->stringifyFilter($branches));
         $filename = sprintf(
             'reporte_items_mods_%s_%s%s.xlsx',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            $branch ? '_' . str_replace(' ', '_', strtolower($branch)) : ''
+            !empty($branches)
+                ? '_' . str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
+                : ''
         );
 
         return Excel::download($export, $filename);
@@ -76,22 +91,24 @@ class SalesModsController extends BaseReportController
 
     public function exportPdf(Request $request): Response
     {
-        [$start, $end, $branch] = $this->resolveFilters($request);
+        [$start, $end, $branches] = $this->resolveFilters($request);
 
-        $dataset = $this->applyBranchFilter($this->fetchData($start, $end), $branch);
+        $dataset = $this->applyBranchFilter($this->fetchData($start, $end), $branches);
         $summary = $this->summarize($dataset);
 
         $filename = sprintf(
             'reporte_items_mods_%s_%s%s.pdf',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            $branch ? '_' . str_replace(' ', '_', strtolower($branch)) : ''
+            !empty($branches)
+                ? '_' . str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
+                : ''
         );
 
         return $this->renderPdf('reports.exports.sales.mods', [
             'startDate' => $start,
             'endDate' => $end,
-            'branch' => $branch,
+            'branch' => $this->stringifyFilter($branches),
             'rows' => $dataset,
             'summary' => $summary,
             'generatedAt' => now('America/Mexico_City'),
@@ -101,9 +118,9 @@ class SalesModsController extends BaseReportController
     protected function resolveFilters(Request $request): array
     {
         [$start, $end] = $this->parseDateRange($request);
-        $branch = $this->parseBranch($request);
+        $branches = $this->normalizeFilterList($request->input('branch'), uppercase: true);
 
-        return [$start, $end, $branch];
+        return [$start, $end, $branches];
     }
 
     protected function fetchData(Carbon $start, Carbon $end): Collection
@@ -120,18 +137,23 @@ class SalesModsController extends BaseReportController
         return collect($rows);
     }
 
-    protected function applyBranchFilter(Collection $rows, ?string $branch): Collection
+    protected function applyBranchFilter(Collection $rows, array $branches): Collection
     {
-        if (!$branch) {
+        if (empty($branches)) {
             return $rows->values();
         }
 
-        $normalized = strtoupper($branch);
+        $normalized = collect($branches)
+            ->map(fn ($value) => strtoupper(trim((string) $value)))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
 
         return $rows
             ->filter(function (object $row) use ($normalized) {
                 $value = strtoupper((string) ($row->branch_key ?? $row->branch ?? $row->sucursal ?? ''));
-                return $value === $normalized;
+                return in_array($value, $normalized, true);
             })
             ->values();
     }

@@ -419,6 +419,12 @@ Route::prefix('reports/sales')
         Route::get('/mods', [SalesModsController::class, 'index'])->name('api.reports.sales.mods');
     });
 
+Route::prefix('reports/tickets')
+    ->middleware(['auth:sanctum', 'permission:reports.view'])
+    ->group(function () {
+        Route::get('/open', [\App\Http\Controllers\Reports\OpenTicketsController::class, 'index'])->name('api.reports.tickets.open');
+    });
+
 /*
 |--------------------------------------------------------------------------
 | Fallback - 404 JSON

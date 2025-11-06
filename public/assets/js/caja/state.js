@@ -3,6 +3,7 @@ export const els = {
   // listado principal
   tbody:     document.querySelector('#tbodyCajas') ||    document.querySelector('#tablaCajas tbody') ||    document.querySelector('#tbl_cajas tbody'),
   badgeFecha:  document.querySelector('#badgeFecha'),
+  filterDate: document.querySelector('#filtroFecha'),
 
   // KPIs
   kpiAbiertas:   document.querySelector('#kpiAbiertas'),

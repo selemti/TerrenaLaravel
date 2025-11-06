@@ -275,42 +275,6 @@
           </div>
         </div>
 
-        {{-- Reportes (requiere reports.view) --}}
-        <div class="nav-item"
-             x-show="permsLoaded && window.TerrenaHasPerm('reports.view')"
-             x-cloak>
-          <a class="nav-link {{ ($active ?? '') === 'reportes' ? 'active' : '' }}"
-             data-bs-toggle="collapse" href="#menuReportes" role="button" aria-expanded="false">
-            <i class="fa-solid fa-chart-line"></i> <span class="label">Reportes</span>
-            <i class="fa-solid fa-chevron-down ms-auto small"></i>
-          </a>
-          <div class="collapse {{ ($active ?? '') === 'reportes' ? 'show' : '' }} ms-3" id="menuReportes">
-            <a class="nav-link submenu-link" href="{{ route('reports.dashboard') }}">
-              <i class="fa-solid fa-grid-2"></i> <span class="label">Dashboard</span>
-            </a>
-            <a class="nav-link submenu-link" href="{{ route('reports.sales.mix') }}">
-              <i class="fa-solid fa-chart-pie"></i> <span class="label">Mix de Ventas</span>
-            </a>
-            <a class="nav-link submenu-link" href="{{ route('reports.sales.summary') }}">
-              <i class="fa-solid fa-table"></i> <span class="label">Resumen de Ventas</span>
-            </a>
-            <a class="nav-link submenu-link" href="{{ route('reports.sales.detail') }}">
-              <i class="fa-solid fa-list"></i> <span class="label">Detalle de Ventas</span>
-            </a>
-            <a class="nav-link submenu-link" href="{{ route('reports.sales.balance') }}">
-              <i class="fa-solid fa-wallet"></i> <span class="label">Balance por Forma de Pago</span>
-            </a>
-            <a class="nav-link submenu-link" href="{{ route('reports.sales.exceptions') }}">
-              <i class="fa-solid fa-triangle-exclamation"></i> <span class="label">Excepciones</span>
-            </a>
-            <a class="nav-link submenu-link" href="{{ route('reports.menu.usage') }}">
-              <i class="fa-solid fa-utensils"></i> <span class="label">Uso de Menú</span>
-            </a>
-            <a class="nav-link submenu-link" href="{{ route('reports.sales.journal') }}">
-              <i class="fa-solid fa-book"></i> <span class="label">Journal</span>
-            </a>
-          </div>
-        </div>
 
         {{-- Inventario (grupo completo visible sólo si permiso can_manage_purchasing) --}}
         <div class="nav-item"
@@ -394,17 +358,42 @@
             <a class="nav-link submenu-link" href="{{ route('reports.dashboard') }}">
               <i class="fa-solid fa-gauge-high"></i> <span class="label">Dashboard ERP</span>
             </a>
+            <div class="border-top my-1"></div>
+            <div class="text-muted small ps-3 mb-1" style="font-size: 0.75rem;">VENTAS</div>
             <a class="nav-link submenu-link" href="{{ route('reports.sales') }}">
-              <i class="fa-solid fa-clipboard-list"></i> <span class="label">Centro ventas</span>
+              <i class="fa-solid fa-clipboard-list"></i> <span class="label">Centro de Ventas</span>
             </a>
             <a class="nav-link submenu-link" href="{{ route('reports.sales.mix') }}">
               <i class="fa-solid fa-chart-pie"></i> <span class="label">Mix de Ventas</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.sales.summary') }}">
+              <i class="fa-solid fa-table"></i> <span class="label">Resumen de Ventas</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.sales.detail') }}">
+              <i class="fa-solid fa-list"></i> <span class="label">Detalle de Ventas</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.sales.balance') }}">
+              <i class="fa-solid fa-wallet"></i> <span class="label">Balance por Forma de Pago</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.sales.exceptions') }}">
+              <i class="fa-solid fa-triangle-exclamation"></i> <span class="label">Excepciones</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.sales.journal') }}">
+              <i class="fa-solid fa-book"></i> <span class="label">Journal</span>
             </a>
             <a class="nav-link submenu-link" href="{{ route('reports.sales.drawer') }}">
               <i class="fa-solid fa-cash-register"></i> <span class="label">Cajón vs Efectivo</span>
             </a>
             <a class="nav-link submenu-link" href="{{ route('reports.sales.diagnostics') }}">
               <i class="fa-solid fa-stethoscope"></i> <span class="label">Diagnósticos diarios</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('reports.tickets.open') }}">
+              <i class="fa-solid fa-ticket"></i> <span class="label">Cuentas Abiertas/Pagadas</span>
+            </a>
+            <div class="border-top my-1"></div>
+            <div class="text-muted small ps-3 mb-1" style="font-size: 0.75rem;">MENÚ</div>
+            <a class="nav-link submenu-link" href="{{ route('reports.menu.usage') }}">
+              <i class="fa-solid fa-utensils"></i> <span class="label">Uso de Menú</span>
             </a>
             <a class="nav-link submenu-link" href="{{ route('reports.sales.mods') }}">
               <i class="fa-solid fa-bowl-food"></i> <span class="label">Ítems + Modificadores</span>
@@ -415,14 +404,17 @@
         {{-- Configuración / Catálogos --}}
         @can('admin.access')
         <div class="nav-item">
-          <a class="nav-link {{ in_array($active ?? '', ['catalogos','config']) ? 'active' : '' }}"
+          <a class="nav-link {{ in_array($active ?? '', ['catalogos','config','admin']) ? 'active' : '' }}"
              data-bs-toggle="collapse" href="#menuConfig" role="button" aria-expanded="false">
             <i class="fa-solid fa-gear"></i> <span class="label">Configuración</span>
             <i class="fa-solid fa-chevron-down ms-auto small"></i>
           </a>
-          <div class="collapse {{ in_array($active ?? '', ['catalogos','config']) ? 'show' : '' }} ms-3" id="menuConfig">
+          <div class="collapse {{ in_array($active ?? '', ['catalogos','config','admin']) ? 'show' : '' }} ms-3" id="menuConfig">
             <a class="nav-link submenu-link" href="{{ url('/catalogos') }}">
               <i class="fa-solid fa-database"></i> <span class="label">Catálogos</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('admin.tickets.management') }}">
+              <i class="fa-solid fa-ticket"></i> <span class="label">Gestión de Tickets</span>
             </a>
             <a class="nav-link submenu-link" href="{{ url('/profile') }}">
               <i class="fa-solid fa-user-gear"></i> <span class="label">Perfil</span>
@@ -609,7 +601,7 @@
     function saveCollapseStates() {
       try {
         const states = {};
-        ['menuCaja', 'menuInventario', 'menuCompras', 'menuConfig'].forEach(id => {
+        ['menuCaja', 'menuReportes', 'menuInventario', 'menuCompras', 'menuConfig'].forEach(id => {
           const el = document.getElementById(id);
           if (el) {
             states[id] = el.classList.contains('show');
@@ -626,7 +618,7 @@
       restoreCollapseStates();
 
       // Observar cambios en collapse
-      ['menuCaja', 'menuInventario', 'menuCompras', 'menuConfig'].forEach(id => {
+      ['menuCaja', 'menuReportes', 'menuInventario', 'menuCompras', 'menuConfig'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
           el.addEventListener('shown.bs.collapse', saveCollapseStates);

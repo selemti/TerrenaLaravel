@@ -330,6 +330,18 @@ Route::middleware('auth')->group(function () {
         Route::view('/admin', 'admin')
             ->middleware('can:admin.access')
             ->name('admin');
+
+        // Gestión de Tickets Problemáticos
+        Route::prefix('admin/tickets')->middleware('can:admin.access')->group(function () {
+            Route::get('/management', [\App\Http\Controllers\Admin\TicketManagementController::class, 'index'])->name('admin.tickets.management');
+            Route::post('/void', [\App\Http\Controllers\Admin\TicketManagementController::class, 'void'])->name('admin.tickets.void');
+            Route::post('/close', [\App\Http\Controllers\Admin\TicketManagementController::class, 'close'])->name('admin.tickets.close');
+            Route::post('/mark-paid', [\App\Http\Controllers\Admin\TicketManagementController::class, 'markAsPaid'])->name('admin.tickets.mark-paid');
+            Route::post('/reopen', [\App\Http\Controllers\Admin\TicketManagementController::class, 'reopen'])->name('admin.tickets.reopen');
+            Route::get('/massive-close/preview', [\App\Http\Controllers\Admin\TicketManagementController::class, 'previewMassiveClose'])->name('admin.tickets.massive-close.preview');
+            Route::post('/massive-close/execute', [\App\Http\Controllers\Admin\TicketManagementController::class, 'executeMassiveClose'])->name('admin.tickets.massive-close.execute');
+            Route::post('/close-full-discount', [\App\Http\Controllers\Admin\TicketManagementController::class, 'closeFullDiscountTickets'])->name('admin.tickets.close-full-discount');
+        });
     }
 
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
@@ -417,6 +429,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/menu/usage/export/pdf', [MenuUsageController::class, 'exportPdf'])->name('reports.menu.usage.export.pdf');
             // Alias canónico para Journal sin el prefijo /sales
             Route::get('/journal', [SalesJournalController::class, 'show'])->name('reports.journal');
+
+            // Reporte de Cuentas Abiertas/Pagadas
+            Route::get('/tickets/open', [\App\Http\Controllers\Reports\OpenTicketsController::class, 'show'])->name('reports.tickets.open');
+            Route::get('/tickets/open/export/pdf', [\App\Http\Controllers\Reports\OpenTicketsController::class, 'exportPdf'])->name('reports.tickets.open.export.pdf');
         });
 });
 

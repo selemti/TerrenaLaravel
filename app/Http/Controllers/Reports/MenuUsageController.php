@@ -14,20 +14,32 @@ class MenuUsageController extends BaseReportController
 {
     public function index(Request $request): JsonResponse
     {
-        [$start, $end, $branch, $terminal] = $this->resolveFilters($request);
-        $rows = $this->fetch($start, $end, $branch, $terminal);
+        [$start, $end, $branches, $terminals] = $this->resolveFilters($request);
+        $rows = $this->fetch($start, $end, $branches, $terminals);
 
         $summary = [
             'unique_items' => $rows->pluck('item_name')->filter()->unique()->count(),
-            'total_qty' => (float) $rows->sum(fn ($r) => (float)($r->qty ?? 0)),
-            'total_neto' => $this->round((float) $rows->sum(fn ($r) => (float)($r->neto ?? 0))),
+            'total_qty' => (float) $rows->sum(fn ($r) => (float) ($r->qty ?? 0)),
+            'total_neto' => $this->round((float) $rows->sum(fn ($r) => (float) ($r->neto ?? 0))),
         ];
+
+        $observedBranches = $rows
+            ->map(fn ($row) => $row->branch_key ?? $row->branch ?? null)
+            ->filter()
+            ->all();
+
+        [$branchColors] = $this->buildBranchContext($observedBranches, $branches);
 
         return response()->json([
             'success' => true,
             'range' => ['start' => $start->toDateString(), 'end' => $end->toDateString()],
-            'branch' => $branch,
-            'terminal' => $terminal,
+            'branch' => $this->stringifyFilter($branches),
+            'terminal' => $this->stringifyFilter($terminals),
+            'filters' => [
+                'branches' => $branches,
+                'terminals' => $terminals,
+            ],
+            'branch_colors' => $branchColors,
             'summary' => $summary,
             'data' => $rows->values(),
         ]);
@@ -35,15 +47,27 @@ class MenuUsageController extends BaseReportController
 
     public function show(Request $request): View
     {
-        [$start, $end, $branch, $terminal] = $this->resolveFilters($request);
-        $rows = $this->fetch($start, $end, $branch, $terminal);
+        [$start, $end, $branches, $terminals] = $this->resolveFilters($request);
+        $rows = $this->fetch($start, $end, $branches, $terminals);
+
+        $observedBranches = $rows
+            ->map(fn ($row) => $row->branch_key ?? $row->branch ?? null)
+            ->filter()
+            ->all();
+
+        [$branchColors, $branchOptions, $branchLabels] = $this->buildBranchContext($observedBranches, $branches);
+        $terminalOptions = $this->loadTerminalOptions($branchColors, $branchLabels, $terminals, $branches);
 
         return view('reports.menu.usage', [
             'active' => 'reportes',
             'startDate' => $start,
             'endDate' => $end,
-            'branch' => $branch,
-            'terminal' => $terminal,
+            'branchFilter' => $branches,
+            'terminalFilter' => $terminals,
+            'branchOptions' => $branchOptions,
+            'terminalOptions' => $terminalOptions,
+            'branchColors' => $branchColors,
+            'branchLabels' => $branchLabels,
             'rows' => $rows,
             'generatedAt' => now('America/Mexico_City'),
         ]);
@@ -51,21 +75,23 @@ class MenuUsageController extends BaseReportController
 
     public function exportPdf(Request $request): Response
     {
-        [$start, $end, $branch, $terminal] = $this->resolveFilters($request);
-        $rows = $this->fetch($start, $end, $branch, $terminal);
+        [$start, $end, $branches, $terminals] = $this->resolveFilters($request);
+        $rows = $this->fetch($start, $end, $branches, $terminals);
 
         $filename = sprintf(
             'reporte_uso_menu_%s_%s%s.pdf',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            $branch ? '_' . str_replace(' ', '_', strtolower($branch)) : ''
+            !empty($branches)
+                ? '_' . str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
+                : ''
         );
 
         return $this->renderPdf('reports.exports.menu.usage', [
             'startDate' => $start,
             'endDate' => $end,
-            'branch' => $branch,
-            'terminal' => $terminal,
+            'branch' => $this->stringifyFilter($branches),
+            'terminal' => $this->stringifyFilter($terminals),
             'rows' => $rows,
             'generatedAt' => now('America/Mexico_City'),
         ], $filename);
@@ -73,34 +99,43 @@ class MenuUsageController extends BaseReportController
 
     protected function resolveFilters(Request $request): array
     {
-        $start = $request->input('start') ?? $request->input('start_date');
-        $end = $request->input('end') ?? $request->input('end_date');
-        $start = $start ? Carbon::parse($start, 'America/Mexico_City') : now('America/Mexico_City')->startOfDay();
-        $end = $end ? Carbon::parse($end, 'America/Mexico_City') : $start->copy();
-        if ($end->lt($start)) [$start, $end] = [$end, $start];
+        $startInput = $request->input('start') ?? $request->input('start_date');
+        $endInput = $request->input('end') ?? $request->input('end_date');
+
+        $start = $startInput
+            ? Carbon::parse($startInput, 'America/Mexico_City')
+            : now('America/Mexico_City')->startOfDay();
+        $end = $endInput
+            ? Carbon::parse($endInput, 'America/Mexico_City')
+            : $start->copy();
+
+        if ($end->lt($start)) {
+            [$start, $end] = [$end, $start];
+        }
+
         $start = $start->startOfDay();
         $end = $end->startOfDay();
 
-        $branch = trim((string) $request->input('branch', ''));
-        $branch = $branch !== '' ? strtoupper($branch) : null;
-        $terminal = trim((string) $request->input('terminal', ''));
-        $terminal = $terminal !== '' ? $terminal : null;
+        $branchParam = $request->input('branch');
+        $terminalParam = $request->input('terminal');
 
-        return [$start, $end, $branch, $terminal];
+        $branches = $this->normalizeFilterList($branchParam, uppercase: true);
+        $terminals = $this->normalizeFilterList($terminalParam, uppercase: false);
+
+        return [$start, $end, $branches, $terminals];
     }
 
-    protected function fetch(Carbon $start, Carbon $end, ?string $branch, ?string $terminal): Collection
+    protected function fetch(Carbon $start, Carbon $end, array $branches, array $terminals): Collection
     {
-        if (!$terminal) {
+        $branchList = $this->stringifyFilter($branches);
+        $terminalList = $this->stringifyFilter($terminals);
+
+        if (!$terminalList) {
             $sql = "SELECT * FROM public.vw_report_menu_usage WHERE folio_date BETWEEN ? AND ?";
             $bindings = [$start->toDateString(), $end->toDateString()];
-            if ($branch) {
-                if (str_contains($branch, ',')) {
-                    $sql .= " AND UPPER(branch_key) IN (SELECT UNNEST(string_to_array(?, ',')))";
-                } else {
-                    $sql .= " AND UPPER(branch_key) = ?";
-                }
-                $bindings[] = $branch;
+            if ($branchList) {
+                $sql .= " AND UPPER(branch_key) IN (SELECT UNNEST(string_to_array(?, ',')))";
+                $bindings[] = $branchList;
             }
             return collect(DB::connection('pgsql')->select($sql, $bindings));
         }
@@ -114,14 +149,10 @@ class MenuUsageController extends BaseReportController
             WHERE b.folio_date BETWEEN ? AND ?
               AND CAST(b.terminal_id AS text) IN (SELECT UNNEST(string_to_array(?, ',')))
         SQL;
-        $bindings = [$start->toDateString(), $end->toDateString(), $terminal];
-        if ($branch) {
-            if (str_contains($branch, ',')) {
-                $sql .= " AND UPPER(b.branch_key) IN (SELECT UNNEST(string_to_array(?, ',')))";
-            } else {
-                $sql .= " AND UPPER(b.branch_key) = ?";
-            }
-            $bindings[] = $branch;
+        $bindings = [$start->toDateString(), $end->toDateString(), $terminalList];
+        if ($branchList) {
+            $sql .= " AND UPPER(b.branch_key) IN (SELECT UNNEST(string_to_array(?, ',')))";
+            $bindings[] = $branchList;
         }
         $sql .= " GROUP BY 1,2,3";
         return collect(DB::connection('pgsql')->select($sql, $bindings));

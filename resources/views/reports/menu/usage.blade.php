@@ -4,18 +4,50 @@
     'pageTitle' => 'Uso de Menú',
 ])
 
-@php use Carbon\Carbon; @endphp
+@php
+    use Carbon\Carbon;
+
+    $branchFilter = $branchFilter ?? [];
+    $terminalFilter = $terminalFilter ?? [];
+    $formatQty = fn ($value) => number_format((float) $value, 2);
+    $formatMoney = fn ($value) => '$' . number_format((float) $value, 2);
+@endphp
 
 @section('content')
 <section class="report-shell">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <style>
+        .report-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            border-radius: 999px;
+            padding: 0.15rem 0.65rem;
+            font-size: 0.75rem;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: #f8fafc;
+        }
+    </style>
+
+    <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-start gap-3 mb-4">
         <div>
-            <h1 class="h3 mb-1"><i class="fa-solid fa-utensils text-primary me-2"></i> Uso de menú</h1>
-            <p class="text-muted small mb-0">Rango: {{ $startDate->format('d/m/Y') }} — {{ $endDate->format('d/m/Y') }}</p>
-            <p class="text-muted small mb-0">Sucursal: {{ $branch ? strtoupper($branch) : 'Todas' }} · Terminal: {{ $terminal ?: 'Todas' }}</p>
+            <h1 class="h3 mb-1">
+                <i class="fa-solid fa-utensils text-primary me-2"></i>
+                Uso de menú
+            </h1>
+            <p class="text-muted small mb-0">
+                Rango: {{ $startDate->format('d/m/Y') }} — {{ $endDate->format('d/m/Y') }}
+            </p>
+            <p class="text-muted small mb-0">
+                Sucursales:
+                {{ !empty($branchFilter) ? implode(', ', $branchFilter) : 'Todas' }}
+                · Terminales:
+                {{ !empty($terminalFilter) ? implode(', ', $terminalFilter) : 'Todas' }}
+            </p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <button type="button" class="btn btn-outline-secondary" onclick="window.print()"><i class="fa-solid fa-print me-1"></i> Imprimir</button>
+            <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+                <i class="fa-solid fa-print me-1"></i> Imprimir
+            </button>
         </div>
     </div>
 
@@ -30,22 +62,53 @@
                     <label class="form-label fw-semibold">Hasta</label>
                     <input type="date" name="end" class="form-control" value="{{ request('end', $endDate->format('Y-m-d')) }}" required>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">Sucursal</label>
-                    <input type="text" name="branch" class="form-control" placeholder="SELEMTI" value="{{ request('branch', $branch) }}">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Sucursales</label>
+                    <x-ui.compact-multi-select
+                        name="branch[]"
+                        :options="$branchOptions"
+                        placeholder="Selecciona sucursales"
+                        search-placeholder="Buscar sucursal"
+                        clear-label="Limpiar"
+                        done-label="Hecho"
+                        empty-message="Sin sucursales disponibles." />
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">Terminal(es)</label>
-                    <input type="text" name="terminal" class="form-control" placeholder="101,102" value="{{ request('terminal', $terminal) }}">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Terminales</label>
+                    <x-ui.compact-multi-select
+                        name="terminal[]"
+                        :options="$terminalOptions"
+                        placeholder="Selecciona terminales"
+                        search-placeholder="Buscar terminal"
+                        clear-label="Limpiar"
+                        done-label="Hecho"
+                        empty-message="Sin terminales disponibles." />
                 </div>
-                <div class="col-md-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-fill"><i class="fa-solid fa-magnifying-glass me-1"></i> Buscar</button>
-                    <a href="{{ route('reports.menu.usage') }}" class="btn btn-outline-secondary flex-fill"><i class="fa-solid fa-rotate-left me-1"></i> Limpiar</a>
+                <div class="col-12 d-flex flex-wrap gap-2 justify-content-end pt-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> Aplicar filtros
+                    </button>
+                    <a href="{{ route('reports.menu.usage') }}" class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-rotate-left me-1"></i> Limpiar
+                    </a>
                 </div>
-                <div class="col-12 text-md-end small text-muted">Generado: <strong>{{ $generatedAt->format('d/m/Y H:i') }}</strong></div>
+                <div class="col-12 text-md-end small text-muted">
+                    Generado: <strong>{{ $generatedAt->format('d/m/Y H:i') }}</strong>
+                </div>
             </form>
         </div>
     </div>
+
+    @if(!empty($branchColors))
+        <div class="d-flex flex-wrap gap-2 mb-4">
+            @foreach($branchColors as $key => $color)
+                <span class="report-chip">
+                    <span class="report-dot" style="background-color: {{ $color }}"></span>
+                    {{ $branchLabels[$key] ?? $key }}
+                </span>
+            @endforeach
+        </div>
+    @endif
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
@@ -66,8 +129,8 @@
                                 <td>{{ isset($r->folio_date) ? Carbon::parse($r->folio_date)->format('d/m/Y') : '' }}</td>
                                 <td>{{ $r->branch_key ?? '—' }}</td>
                                 <td>{{ $r->item_name ?? '—' }}</td>
-                                <td class="text-end">{{ number_format((float)($r->qty ?? 0), 2) }}</td>
-                                <td class="text-end">${{ number_format((float)($r->neto ?? 0), 2) }}</td>
+                                <td class="text-end">{{ $formatQty($r->qty ?? 0) }}</td>
+                                <td class="text-end">{{ $formatMoney($r->neto ?? 0) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="5" class="text-center text-muted py-4">Sin datos</td></tr>
@@ -79,4 +142,3 @@
     </div>
 </section>
 @endsection
-

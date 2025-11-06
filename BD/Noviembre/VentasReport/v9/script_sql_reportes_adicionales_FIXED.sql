@@ -1,33 +1,14 @@
-
 -- ================================================================
 -- script_sql_reportes_adicionales.sql
 -- Terrena · Reportes adicionales equivalentes a JasperReports
 -- Target: PostgreSQL 9.5+
 -- Schemas: public (POS), selemti (ERP utilidades)
--- Autor: ChatGPT (GPT-5 Thinking)
 -- ================================================================
 
 SET TIME ZONE 'America/Mexico_City';
 SET search_path TO public, selemti;
 
--- ===================================================================
--- Notas base usadas por todos los reportes
---  - Ticket válido: paid=TRUE AND voided=FALSE
---  - folio_date inmutable: COALESCE(t.folio_date, t.closing_date::date, t.create_date::date)
---  - Normalización de pagos: selemti.fn_normalizar_forma_pago(...)
---  - Campos frecuentes:
---      ticket(id, terminal_id, branch_key, folio_date, closing_date, create_date,
---             total_price, total_discount, tip_amount, service_charges, paid, voided)
---      transactions(id, ticket_id, amount, voided, transaction_type, payment_type,
---                   payment_sub_type, custom_payment_name, transaction_time)
---      ticket_item(id, ticket_id, item_name, item_quantity, unit_price, total_price, discount)
---      ticket_item_modifier, ticket_item_modifier_relation (para modificadores)
---      menu_item(id, name, price, group_id, tax_id, ...), menu_modifier, menu_modifier_group
--- ===================================================================
-
--- ---------------------------------------------------------------
--- Helper: vista base de tickets válidos con folio_date normalizada
--- ---------------------------------------------------------------
+-- Helper: tickets válidos con folio_date normalizada
 DROP VIEW IF EXISTS vw_ticket_base CASCADE;
 CREATE VIEW vw_ticket_base AS
 SELECT
@@ -42,7 +23,12 @@ SELECT
       COALESCE(
         t.total_discount,
         (
-          SELECT SUM(COALESCE(ti.discount, COALESCE(ti.discount, 0)))
+          SELECT SUM(
+            COALESCE(
+              NULLIF(to_jsonb(ti)->>'discount_amount', '')::numeric,
+              COALESCE(ti.discount, 0)
+            )
+          )
           FROM public.ticket_item ti
           WHERE ti.ticket_id = t.id
         ),
@@ -60,13 +46,7 @@ SELECT
 FROM public.ticket t
 WHERE t.paid=TRUE AND t.voided=FALSE;
 
-
-
-
--- ---------------------------------------------------------------
--- 1) Sales Report (detalle por ticket / item)  [Jasper: sales_report_*]
---    Filtros: fecha, branch, terminal
--- ---------------------------------------------------------------
+-- 1) Sales detail
 DROP VIEW IF EXISTS vw_report_sales_detail CASCADE;
 CREATE VIEW vw_report_sales_detail AS
 SELECT
@@ -77,32 +57,136 @@ SELECT
   ti.id              AS ticket_item_id,
   ti.item_name::text AS item_name,
   COALESCE(ti.item_quantity,0)::numeric(12,2) AS qty,
-  COALESCE(ti.item_price, COALESCE(ti.total_price,0)/NULLIF(ti.item_quantity,0))::numeric(12,2) AS unit_price,
+  COALESCE(ti.unit_price, COALESCE(ti.total_price,0)/NULLIF(ti.item_quantity,0))::numeric(12,2) AS unit_price,
   COALESCE(ti.total_price,0)::numeric(12,2)   AS line_total,
-  COALESCE(ti.discount,0)::numeric(12,2) AS line_discount,
-  (COALESCE(ti.total_price,0)-COALESCE(ti.discount,0))::numeric(12,2) AS line_neto
+  COALESCE(
+    NULLIF(to_jsonb(ti)->>'discount_amount', '')::numeric,
+    COALESCE(ti.discount, 0)
+  )::numeric(12,2) AS line_discount,
+  (
+    COALESCE(ti.total_price,0)
+    - COALESCE(
+        NULLIF(to_jsonb(ti)->>'discount_amount', '')::numeric,
+        COALESCE(ti.discount, 0)
+      )
+  )::numeric(12,2) AS line_neto
 FROM vw_ticket_base b
 JOIN public.ticket_item ti ON ti.ticket_id = b.ticket_id;
 
--- ---------------------------------------------------------------
--- 2) Sales Summary (resumen por día / sucursal) [Jasper: sales_summary_report]
--- ---------------------------------------------------------------
+-- 2) Sales summary
 DROP VIEW IF EXISTS vw_report_sales_summary CASCADE;
 CREATE VIEW vw_report_sales_summary AS
+WITH valid AS (
+  SELECT
+    b.folio_date,
+    COALESCE(UPPER(TRIM(b.branch_key)), 'SIN_SUCURSAL') AS branch_key,
+    COUNT(DISTINCT b.ticket_id) AS tickets,
+    SUM(b.total_price)::numeric(14,2) AS bruto,
+    SUM(b.total_discount)::numeric(14,2) AS descuento,
+    SUM(b.tip_amount)::numeric(14,2) AS propina,
+    SUM(b.service_charges)::numeric(14,2) AS cargo_servicio
+  FROM vw_ticket_base b
+  GROUP BY 1,2
+),
+ticket_all AS (
+  SELECT
+    t.id,
+    COALESCE(t.folio_date, t.closing_date::date, t.create_date::date) AS folio_date,
+    COALESCE(UPPER(TRIM(t.branch_key)), 'SIN_SUCURSAL') AS branch_key,
+    COALESCE(t.total_price,0)::numeric(14,2) AS total_price,
+    GREATEST(
+      0,
+      LEAST(
+        COALESCE(
+          t.total_discount,
+          (
+            SELECT SUM(
+              COALESCE(
+                NULLIF(to_jsonb(ti)->>'discount_amount', '')::numeric,
+                COALESCE(ti.discount, 0)
+              )
+            )
+            FROM public.ticket_item ti
+            WHERE ti.ticket_id = t.id
+          ),
+          0
+        ),
+        COALESCE(t.total_price, 0)
+      )
+    )::numeric(14,2) AS total_discount,
+    COALESCE(t.paid, FALSE) AS paid,
+    COALESCE(t.voided, FALSE) AS voided
+  FROM public.ticket t
+),
+payments AS (
+  SELECT
+    ta.folio_date,
+    ta.branch_key,
+    SUM(
+      CASE
+        WHEN ta.voided = FALSE
+         AND COALESCE(tx.voided, FALSE) = FALSE
+         AND UPPER(COALESCE(tx.transaction_type, '')) IN ('CREDIT','DEBIT')
+         AND UPPER(COALESCE(tx.payment_type, '')) NOT IN ('REFUND','VOID_TRANS','REFUND_CARD')
+        THEN COALESCE(tx.amount,0)
+        ELSE 0
+      END
+    )::numeric(14,2) AS gross_payments,
+    SUM(
+      CASE
+        WHEN ta.voided = FALSE
+         AND COALESCE(tx.voided, FALSE) = FALSE
+         AND UPPER(COALESCE(tx.transaction_type, '')) IN ('CREDIT','DEBIT')
+         AND UPPER(COALESCE(tx.payment_type, '')) IN ('REFUND','VOID_TRANS','REFUND_CARD')
+        THEN COALESCE(tx.amount,0)
+        ELSE 0
+      END
+    )::numeric(14,2) AS refund_amount
+  FROM ticket_all ta
+  LEFT JOIN public.transactions tx ON tx.ticket_id = ta.id
+  GROUP BY 1,2
+),
+voids AS (
+  SELECT
+    ta.folio_date,
+    ta.branch_key,
+    SUM(ta.total_price - ta.total_discount)::numeric(14,2) AS void_amount
+  FROM ticket_all ta
+  WHERE ta.voided = TRUE
+  GROUP BY 1,2
+),
+keys AS (
+  SELECT folio_date, branch_key FROM valid
+  UNION
+  SELECT folio_date, branch_key FROM payments
+  UNION
+  SELECT folio_date, branch_key FROM voids
+)
 SELECT
-  b.folio_date,
-  b.branch_key,
-  COUNT(DISTINCT b.ticket_id)                                AS tickets,
-  ROUND(SUM(b.total_price),2)                                AS bruto,
-  ROUND(SUM(b.total_discount),2)                             AS descuento,
-  ROUND(SUM(b.total_price - b.total_discount),2)             AS neto
-FROM vw_ticket_base b
-GROUP BY 1,2;
+  k.folio_date,
+  k.branch_key,
+  COALESCE(v.tickets, 0) AS tickets,
+  ROUND(COALESCE(v.bruto, 0) + COALESCE(vo.void_amount, 0), 2) AS bruto,
+  ROUND(COALESCE(v.descuento, 0), 2) AS descuento,
+  ROUND(COALESCE(p.refund_amount, 0) + COALESCE(vo.void_amount, 0), 2) AS anulaciones,
+  ROUND(
+    COALESCE(v.bruto, 0) + COALESCE(vo.void_amount, 0)
+    - COALESCE(v.descuento, 0)
+    - (COALESCE(p.refund_amount, 0) + COALESCE(vo.void_amount, 0)),
+    2
+  ) AS neto,
+  ROUND(COALESCE(p.gross_payments, 0) - COALESCE(p.refund_amount, 0), 2) AS pagos_netos,
+  ROUND(COALESCE(v.propina, 0), 2) AS propina,
+  ROUND(COALESCE(v.cargo_servicio, 0), 2) AS cargo_servicio
+FROM keys k
+LEFT JOIN valid v
+  ON v.folio_date = k.folio_date AND v.branch_key = k.branch_key
+LEFT JOIN payments p
+  ON p.folio_date = k.folio_date AND p.branch_key = k.branch_key
+LEFT JOIN voids vo
+  ON vo.folio_date = k.folio_date AND vo.branch_key = k.branch_key;
 
--- ---------------------------------------------------------------
--- 3) Sales Summary - Balance Detail [Jasper: sales_summary_balance_detail]
---    Neto vs cobros por forma de pago normalizada
--- ---------------------------------------------------------------
+-- 3) Balance detail (pagos normalizados)
 DROP VIEW IF EXISTS vw_report_balance_detail CASCADE;
 CREATE VIEW vw_report_balance_detail AS
 WITH paid AS (
@@ -127,10 +211,7 @@ LEFT JOIN paid p ON p.ticket_id = b.ticket_id
 GROUP BY 1,2,3
 ORDER BY 1,2,4 DESC;
 
--- ---------------------------------------------------------------
--- 4) Sales Summary - Exceptions [Jasper: sales_summary_exception]
---    Usa diagnósticos existentes y produce un set consolidado
--- ---------------------------------------------------------------
+-- 4) Exceptions (usa diagnósticos existentes)
 DROP VIEW IF EXISTS vw_report_sales_exceptions CASCADE;
 CREATE VIEW vw_report_sales_exceptions AS
 WITH base AS (
@@ -157,6 +238,7 @@ tot_disc AS (
   SELECT b.ticket_id, (b.total_discount)::numeric(12,2) AS total_discount
   FROM vw_ticket_base b
 )
+-- 1) Neto vs cobros (mismatch)
 SELECT
   b.folio_date,
   b.branch_key,
@@ -170,6 +252,7 @@ WHERE ABS((b.neto - COALESCE(p.paid_amount,0))) > 0.01
 
 UNION ALL
 
+-- 2) Descuentos altos (umbral absoluto o porcentual)
 SELECT
   b.folio_date,
   b.branch_key,
@@ -184,6 +267,7 @@ WHERE td.total_discount > 100
 
 UNION ALL
 
+-- 3) Pagado sin transacciones
 SELECT
   b.folio_date,
   b.branch_key,
@@ -195,10 +279,7 @@ FROM base b
 LEFT JOIN paid p ON p.ticket_id = b.ticket_id
 WHERE COALESCE(p.paid_amount,0) = 0 AND b.neto > 0;
 
--- ---------------------------------------------------------------
--- 5) Menu Usage Report [Jasper: menu_usage_report]
---    Conteo de uso por ítem y modificadores
--- ---------------------------------------------------------------
+-- 5) Menu usage
 DROP VIEW IF EXISTS vw_report_menu_usage CASCADE;
 CREATE VIEW vw_report_menu_usage AS
 SELECT
@@ -211,10 +292,7 @@ FROM vw_ticket_base b
 JOIN public.ticket_item ti ON ti.ticket_id = b.ticket_id
 GROUP BY 1,2,3;
 
--- ---------------------------------------------------------------
--- 6) Journal Report [Jasper: journal_report]
---    Libro por ticket con líneas y pagos
--- ---------------------------------------------------------------
+-- 6) Journal
 DROP VIEW IF EXISTS vw_report_journal_lines CASCADE;
 CREATE VIEW vw_report_journal_lines AS
 SELECT
@@ -225,7 +303,10 @@ SELECT
   ti.item_name::text AS item_name,
   COALESCE(ti.item_quantity,0)::numeric(12,2) AS qty,
   COALESCE(ti.total_price,0)::numeric(12,2) AS line_total,
-  COALESCE(ti.discount,0)::numeric(12,2) AS line_discount
+  COALESCE(
+    NULLIF(to_jsonb(ti)->>'discount_amount', '')::numeric,
+    COALESCE(ti.discount, 0)
+  )::numeric(12,2) AS line_discount
 FROM vw_ticket_base b
 JOIN public.ticket_item ti ON ti.ticket_id = b.ticket_id;
 
@@ -243,8 +324,3 @@ SELECT
 FROM public.ticket t
 LEFT JOIN public.transactions tx ON tx.ticket_id = t.id
 GROUP BY 1,2,3,4;
-
--- ================================================================
--- FIN DEL SCRIPT
--- ================================================================
-

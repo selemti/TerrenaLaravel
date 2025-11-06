@@ -4,11 +4,31 @@
     'pageTitle' => 'Cajón vs efectivo',
 ])
 
-@php use Carbon\Carbon; @endphp
+@php
+    use Carbon\Carbon;
+
+    $branchFilter = $branchFilter ?? [];
+    $branchColors = $branchColors ?? [];
+    $branchLabels = $branchLabels ?? [];
+    $severity = $severity ?? null;
+@endphp
 
 @section('content')
 <section class="report-shell">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <style>
+        .report-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            border-radius: 999px;
+            padding: 0.15rem 0.65rem;
+            font-size: 0.75rem;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: #f8fafc;
+        }
+    </style>
+
+    <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-start gap-3 mb-4">
         <div>
             <h1 class="h3 mb-1">
                 <i class="fa-solid fa-cash-register text-primary me-2"></i>
@@ -18,7 +38,10 @@
                 Rango: {{ $startDate->format('d/m/Y') }} — {{ $endDate->format('d/m/Y') }}
             </p>
             <p class="text-muted small mb-0">
-                Sucursal: {{ $branch ? strtoupper($branch) : 'Todas' }} · Severidad: {{ $severity ?? 'Todas' }}
+                Sucursales:
+                {{ !empty($branchFilter) ? implode(', ', $branchFilter) : 'Todas' }}
+                · Severidad:
+                {{ $severity ?? 'Todas' }}
             </p>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 small">
@@ -35,9 +58,9 @@
             <form method="GET" action="{{ route('reports.sales.drawer.export.pdf') }}" class="d-inline">
                 <input type="hidden" name="start_date" value="{{ $startDate->format('Y-m-d') }}">
                 <input type="hidden" name="end_date" value="{{ $endDate->format('Y-m-d') }}">
-                @if($branch)
-                    <input type="hidden" name="branch" value="{{ $branch }}">
-                @endif
+                @foreach($branchFilter as $value)
+                    <input type="hidden" name="branch[]" value="{{ $value }}">
+                @endforeach
                 @if($severity)
                     <input type="hidden" name="severity" value="{{ $severity }}">
                 @endif
@@ -48,9 +71,9 @@
             <form method="GET" action="{{ route('reports.sales.drawer.export.xlsx') }}" class="d-inline">
                 <input type="hidden" name="start_date" value="{{ $startDate->format('Y-m-d') }}">
                 <input type="hidden" name="end_date" value="{{ $endDate->format('Y-m-d') }}">
-                @if($branch)
-                    <input type="hidden" name="branch" value="{{ $branch }}">
-                @endif
+                @foreach($branchFilter as $value)
+                    <input type="hidden" name="branch[]" value="{{ $value }}">
+                @endforeach
                 @if($severity)
                     <input type="hidden" name="severity" value="{{ $severity }}">
                 @endif
@@ -83,15 +106,15 @@
                            required>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-semibold">Sucursal</label>
-                    <select name="branch" class="form-select">
-                        <option value="">Todas las sucursales</option>
-                        @foreach($branches as $option)
-                            <option value="{{ $option['key'] }}" @selected($branch === $option['key'])>
-                                {{ $option['label'] }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <label class="form-label fw-semibold">Sucursales</label>
+                    <x-ui.compact-multi-select
+                        name="branch[]"
+                        :options="$branchOptions"
+                        placeholder="Selecciona sucursales"
+                        search-placeholder="Buscar sucursal"
+                        clear-label="Limpiar"
+                        done-label="Hecho"
+                        empty-message="Sin sucursales disponibles." />
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">Severidad</label>
@@ -102,11 +125,11 @@
                         <option value="INFO" @selected($severity === 'INFO')>Informativa</option>
                     </select>
                 </div>
-                <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-fill">
-                        <i class="fa-solid fa-magnifying-glass me-1"></i> Buscar
+                <div class="col-12 d-flex flex-wrap gap-2 justify-content-end pt-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> Aplicar filtros
                     </button>
-                    <a href="{{ route('reports.sales.drawer') }}" class="btn btn-outline-secondary flex-fill">
+                    <a href="{{ route('reports.sales.drawer') }}" class="btn btn-outline-secondary">
                         <i class="fa-solid fa-rotate-left me-1"></i> Limpiar
                     </a>
                 </div>
@@ -116,6 +139,17 @@
             </form>
         </div>
     </div>
+
+    @if(!empty($branchColors))
+        <div class="d-flex flex-wrap gap-2 mb-4">
+            @foreach($branchColors as $key => $color)
+                <span class="report-chip">
+                    <span class="report-dot" style="background-color: {{ $color }}"></span>
+                    {{ $branchLabels[$key] ?? $key }}
+                </span>
+            @endforeach
+        </div>
+    @endif
 
     @php $dayCount = count($summary['days'] ?? []); @endphp
 

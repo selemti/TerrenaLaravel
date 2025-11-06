@@ -17,9 +17,9 @@ class SalesDrawerController extends BaseReportController
 {
     public function index(Request $request): JsonResponse
     {
-        [$start, $end, $branch, $severity] = $this->resolveFilters($request);
+        [$start, $end, $branches, $severity] = $this->resolveFilters($request);
 
-        $dataset = $this->applyFilters($this->fetchData($start, $end), $branch, $severity);
+        $dataset = $this->applyFilters($this->fetchData($start, $end), $branches, $severity);
         $summary = $this->summarize($dataset);
 
         return response()->json([
@@ -28,8 +28,11 @@ class SalesDrawerController extends BaseReportController
                 'start' => $start->format('Y-m-d'),
                 'end' => $end->format('Y-m-d'),
             ],
-            'branch' => $branch,
+            'branch' => $this->stringifyFilter($branches),
             'severity' => $severity,
+            'filters' => [
+                'branches' => $branches,
+            ],
             'summary' => $summary,
             'data' => $dataset->values(),
             'generated_at' => now('America/Mexico_City')->toIso8601String(),
@@ -38,20 +41,30 @@ class SalesDrawerController extends BaseReportController
 
     public function show(Request $request): View
     {
-        [$start, $end, $branch, $severity] = $this->resolveFilters($request);
+        [$start, $end, $branches, $severity] = $this->resolveFilters($request);
 
         $dataset = $this->fetchData($start, $end);
-        $branches = $this->extractBranches($dataset);
-        $filtered = $this->applyFilters($dataset, $branch, $severity);
+        $branchCandidates = $this->extractBranches($dataset);
+        $filtered = $this->applyFilters($dataset, $branches, $severity);
         $summary = $this->summarize($filtered);
+
+        $observedBranches = $branchCandidates
+            ->pluck('key')
+            ->merge($filtered->map(fn ($row) => $row->branch_key ?? $row->branch ?? $row->sucursal ?? null))
+            ->filter()
+            ->all();
+
+        [$branchColors, $branchOptions, $branchLabels] = $this->buildBranchContext($observedBranches, $branches);
 
         return view('reports.sales.drawer', [
             'active' => 'reportes',
             'startDate' => $start,
             'endDate' => $end,
-            'branch' => $branch,
+            'branchFilter' => $branches,
             'severity' => $severity,
-            'branches' => $branches,
+            'branchOptions' => $branchOptions,
+            'branchColors' => $branchColors,
+            'branchLabels' => $branchLabels,
             'rows' => $filtered,
             'summary' => $summary,
             'generatedAt' => now('America/Mexico_City'),
@@ -60,17 +73,19 @@ class SalesDrawerController extends BaseReportController
 
     public function exportExcel(Request $request): BinaryFileResponse
     {
-        [$start, $end, $branch, $severity] = $this->resolveFilters($request);
+        [$start, $end, $branches, $severity] = $this->resolveFilters($request);
 
-        $dataset = $this->applyFilters($this->fetchData($start, $end), $branch, $severity);
+        $dataset = $this->applyFilters($this->fetchData($start, $end), $branches, $severity);
         $summary = $this->summarize($dataset);
 
-        $export = new SalesDrawerExport($start, $end, $dataset, $summary, $branch, $severity);
+        $export = new SalesDrawerExport($start, $end, $dataset, $summary, $this->stringifyFilter($branches), $severity);
         $filename = sprintf(
             'reporte_cajon_vs_efectivo_%s_%s%s.xlsx',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            $branch ? '_' . str_replace(' ', '_', strtolower($branch)) : ''
+            !empty($branches)
+                ? '_' . str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
+                : ''
         );
 
         return Excel::download($export, $filename);
@@ -78,22 +93,24 @@ class SalesDrawerController extends BaseReportController
 
     public function exportPdf(Request $request): Response
     {
-        [$start, $end, $branch, $severity] = $this->resolveFilters($request);
+        [$start, $end, $branches, $severity] = $this->resolveFilters($request);
 
-        $dataset = $this->applyFilters($this->fetchData($start, $end), $branch, $severity);
+        $dataset = $this->applyFilters($this->fetchData($start, $end), $branches, $severity);
         $summary = $this->summarize($dataset);
 
         $filename = sprintf(
             'reporte_cajon_vs_efectivo_%s_%s%s.pdf',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            $branch ? '_' . str_replace(' ', '_', strtolower($branch)) : ''
+            !empty($branches)
+                ? '_' . str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
+                : ''
         );
 
         return $this->renderPdf('reports.exports.sales.drawer', [
             'startDate' => $start,
             'endDate' => $end,
-            'branch' => $branch,
+            'branch' => $this->stringifyFilter($branches),
             'severity' => $severity,
             'rows' => $dataset,
             'summary' => $summary,
@@ -104,10 +121,10 @@ class SalesDrawerController extends BaseReportController
     protected function resolveFilters(Request $request): array
     {
         [$start, $end] = $this->parseDateRange($request);
-        $branch = $this->parseBranch($request);
+        $branches = $this->normalizeFilterList($request->input('branch'), uppercase: true);
         $severity = $this->parseEnum($request, 'severity');
 
-        return [$start, $end, $branch, $severity];
+        return [$start, $end, $branches, $severity];
     }
 
     protected function fetchData(Carbon $start, Carbon $end): Collection
@@ -124,13 +141,19 @@ class SalesDrawerController extends BaseReportController
         return collect($rows);
     }
 
-    protected function applyFilters(Collection $rows, ?string $branch, ?string $severity): Collection
+    protected function applyFilters(Collection $rows, array $branches, ?string $severity): Collection
     {
-        if ($branch) {
-            $normalized = strtoupper($branch);
+        if (!empty($branches)) {
+            $normalized = collect($branches)
+                ->map(fn ($value) => strtoupper(trim((string) $value)))
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
             $rows = $rows->filter(function (object $row) use ($normalized) {
                 $value = strtoupper((string) ($row->branch_key ?? $row->branch ?? $row->sucursal ?? ''));
-                return $value === $normalized;
+                return in_array($value, $normalized, true);
             });
         }
 

@@ -8,6 +8,25 @@
 
 @section('content')
 <section class="report-shell">
+    <style>
+        .report-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            border-radius: 999px;
+            padding: 0.15rem 0.65rem;
+            font-size: 0.75rem;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: #f8fafc;
+        }
+    </style>
+
+    @php
+        $branchLegend = isset($branchLegend) ? collect($branchLegend) : collect();
+        $branchColors = $branchColors ?? [];
+        $selectedBranches = $selectedBranches ?? [];
+    @endphp
+
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
             <h1 class="h3 mb-1">
@@ -62,6 +81,16 @@
                     <i class="fa-solid fa-file-excel me-1"></i> Excel
                 </button>
             </form>
+            @if($branchLegend->isNotEmpty())
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    @foreach($branchLegend as $legend)
+                        <span class="report-chip">
+                            <span class="report-dot" style="background-color: {{ $legend['color'] }}"></span>
+                            {{ $legend['label'] }}
+                        </span>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
 
@@ -88,19 +117,14 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">Sucursales</label>
-                    <select name="branch[]" class="form-select" multiple size="{{ max(3, min(8, count($branches))) }}">
-                        @foreach($branches as $option)
-                            @php
-                                $selected = false;
-                                $current = $branch ? explode(',', strtoupper($branch)) : [];
-                                if (in_array(strtoupper($option['key']), $current, true)) { $selected = true; }
-                            @endphp
-                            <option value="{{ $option['key'] }}" @selected($selected)>
-                                {{ $option['label'] }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="form-text">Ctrl/Cmd + click para seleccionar varias. Deja vacío para todas.</div>
+                    <x-ui.compact-multi-select
+                        name="branch[]"
+                        :options="$branchOptions"
+                        placeholder="Selecciona sucursales"
+                        search-placeholder="Buscar sucursal"
+                        clear-label="Limpiar"
+                        done-label="Hecho"
+                        empty-message="Sin sucursales disponibles." />
                 </div>
                 <div class="col-md-3 d-flex gap-2">
                     <button type="submit" class="btn btn-primary flex-fill">
@@ -239,8 +263,20 @@
                                 </thead>
                                 <tbody>
                                     @foreach($summary['branches'] as $row)
-                                        <tr>
-                                            <td>{{ $row['label'] ?? $row['key'] }}</td>
+                                        @php
+                                            $branchKey = strtoupper((string) ($row['key'] ?? ''));
+                                            $legend = isset($branchLegend) ? $branchLegend->firstWhere('key', $branchKey) : null;
+                                            $color = $legend['color'] ?? ($branchColors[$branchKey] ?? '#2563eb');
+                                            $label = $legend['label'] ?? ($row['label'] ?? ($branchKey ?: '—'));
+                                            $isSelected = !empty($selectedBranches) && in_array($branchKey, $selectedBranches, true);
+                                        @endphp
+                                        <tr @class(['table-info' => $isSelected])>
+                                            <td>
+                                                @if($branchKey !== '')
+                                                    <span class="report-dot me-2" style="background-color: {{ $color }}"></span>
+                                                @endif
+                                                {{ $label }}
+                                            </td>
                                             <td class="text-end">${{ number_format($row['amount'] ?? 0, 2) }}</td>
                                             <td class="text-end">
                                                 {{ number_format($row['percentage'] ?? 0, 2) }}%
@@ -369,9 +405,21 @@
                                         </td>
                                     </tr>
                                 @endif
-                                <tr>
+                                @php
+                                    $branchKey = strtoupper((string) ($r['branch_key'] ?? ''));
+                                    $legend = isset($branchLegend) ? $branchLegend->firstWhere('key', $branchKey) : null;
+                                    $color = $legend['color'] ?? ($branchColors[$branchKey] ?? '#2563eb');
+                                    $label = $legend['label'] ?? ($r['branch_key'] ?? '—');
+                                    $rowSelected = !empty($selectedBranches) && in_array($branchKey, $selectedBranches, true);
+                                @endphp
+                                <tr @class(['table-info' => $rowSelected])>
                                     <td>{{ $dateObj->format('d/m/Y') }}</td>
-                                    <td>{{ $r['branch_key'] ?? '—' }}</td>
+                                    <td>
+                                        @if($branchKey !== '')
+                                            <span class="report-dot me-2" style="background-color: {{ $color }}"></span>
+                                        @endif
+                                        {{ $label }}
+                                    </td>
                                     <td class="text-end">${{ number_format((float)($r['cash'] ?? 0), 2) }}</td>
                                     <td class="text-end">${{ number_format((float)($r['credit'] ?? 0), 2) }}</td>
                                     <td class="text-end">${{ number_format((float)($r['debit'] ?? 0), 2) }}</td>
@@ -417,8 +465,20 @@
                         </thead>
                         <tbody>
                         @foreach($branchPivot ?? [] as $bp)
-                            <tr>
-                                <td>{{ $bp['branch_key'] ?? '—' }}</td>
+                            @php
+                                $branchKey = strtoupper((string) ($bp['branch_key'] ?? ''));
+                                $legend = isset($branchLegend) ? $branchLegend->firstWhere('key', $branchKey) : null;
+                                $color = $legend['color'] ?? ($branchColors[$branchKey] ?? '#2563eb');
+                                $label = $legend['label'] ?? ($bp['branch_key'] ?? '—');
+                                $rowSelected = !empty($selectedBranches) && in_array($branchKey, $selectedBranches, true);
+                            @endphp
+                            <tr @class(['table-info' => $rowSelected])>
+                                <td>
+                                    @if($branchKey !== '')
+                                        <span class="report-dot me-2" style="background-color: {{ $color }}"></span>
+                                    @endif
+                                    {{ $label }}
+                                </td>
                                 <td class="text-end">${{ number_format((float)($bp['cash'] ?? 0), 2) }}</td>
                                 <td class="text-end">${{ number_format((float)($bp['credit'] ?? 0), 2) }}</td>
                                 <td class="text-end">${{ number_format((float)($bp['debit'] ?? 0), 2) }}</td>

@@ -9,6 +9,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Drop dependent tables first
+        Schema::connection('pgsql')->dropIfExists('selemti.menu_item_sync_map');
+        Schema::connection('pgsql')->dropIfExists('selemti.menu_items');
+        Schema::connection('pgsql')->dropIfExists('selemti.pos_sync_logs');
         Schema::connection('pgsql')->dropIfExists('selemti.pos_sync_batches');
         
         Schema::connection('pgsql')->create('selemti.pos_sync_batches', function (Blueprint $table): void {
@@ -24,8 +28,6 @@ return new class extends Migration
                 $table->jsonb('errors')->nullable();
                 $table->timestampsTz();
             });
-        
-        Schema::connection('pgsql')->dropIfExists('selemti.pos_sync_logs');
         
         Schema::connection('pgsql')->create('selemti.pos_sync_logs', function (Blueprint $table): void {
                 $table->bigIncrements('id');
@@ -45,8 +47,6 @@ return new class extends Migration
                 $table->index(['external_id'], 'idx_pos_sync_logs_external_id');
             });
         
-        Schema::connection('pgsql')->dropIfExists('selemti.menu_items');
-        
         Schema::connection('pgsql')->create('selemti.menu_items', function (Blueprint $table): void {
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('recipe_id')->nullable();
@@ -57,8 +57,6 @@ return new class extends Migration
                 $table->jsonb('metadata')->nullable();
                 $table->timestampsTz();
             });
-        
-        Schema::connection('pgsql')->dropIfExists('selemti.menu_item_sync_map');
         
         Schema::connection('pgsql')->create('selemti.menu_item_sync_map', function (Blueprint $table): void {
                 $table->bigIncrements('id');

@@ -13,21 +13,35 @@
 @section('content')
 
     <div class="dashboard-grid">
-		<div class="d-flex align-items-center justify-content-between mb-2">
-					<div class="d-flex align-items-center gap-2">
-						<h2 class="mb-0">Cajas</h2>
-						<span class="badge bg-secondary" id="badgeFecha">{{ $date ?? now()->format('Y-m-d') }}</span>
-					</div>
-					<div class="d-flex align-items-center gap-2">
-						<button id="btnRefrescar" class="btn btn-outline-secondary btn-sm">
-							<i class="fa-solid fa-rotate"></i> Refrescar
-						</button>
-						<!-- Botón global para abrir Wizard (opcional; igual habrá botón por fila) -->
-					</div>
-				</div>
-
-        {{-- Campo oculto para sincronizar fecha con JavaScript --}}
-        <input type="hidden" id="filtroFecha" value="{{ $date ?? now()->format('Y-m-d') }}">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <div class="d-flex align-items-center gap-2">
+                <h2 class="mb-0">Cajas</h2>
+                <span class="badge bg-secondary d-none d-md-inline" id="badgeFecha">{{ $date ?? now()->format('Y-m-d') }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <form id="formFiltroFecha" method="GET" action="{{ route('caja.cortes') }}" class="d-flex align-items-center gap-2">
+                    <label for="filtroFecha" class="visually-hidden">Fecha</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="fa-solid fa-calendar-day"></i></span>
+                        <input
+                            type="date"
+                            class="form-control"
+                            id="filtroFecha"
+                            name="date"
+                            value="{{ $date ?? now()->format('Y-m-d') }}"
+                            max="{{ now()->format('Y-m-d') }}"
+                        >
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </div>
+                </form>
+                <button id="btnRefrescar" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa-solid fa-rotate"></i> Refrescar
+                </button>
+                <!-- Botón global para abrir Wizard (opcional; igual habrá botón por fila) -->
+            </div>
+        </div>
 
         {{-- KPIs --}}
         <div class="row g-3 mb-3">
@@ -414,6 +428,23 @@
         .clickable:hover { transform: scale(1.05); }
         .cursor-pointer:hover { background-color: #f8f9fa; }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const formFecha = document.getElementById('formFiltroFecha');
+            const inputFecha = document.getElementById('filtroFecha');
+
+            if (formFecha && inputFecha) {
+                inputFecha.addEventListener('change', function () {
+                    if (typeof formFecha.requestSubmit === 'function') {
+                        formFecha.requestSubmit();
+                    } else {
+                        formFecha.submit();
+                    }
+                });
+            }
+        });
+    </script>
 
     <script>
         // Función global para ver detalle del ticket

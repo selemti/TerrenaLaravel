@@ -25,7 +25,16 @@
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -f \"C:/xampp3/htdocs/TerrenaLaravel/BD/Noviembre/09b_ejemplo_items_simplificado.sql\")",
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -f \"C:/xampp3/htdocs/TerrenaLaravel/BD/Noviembre/10_migrar_items_a_cat_unidades.sql\")",
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT viewname FROM pg_views WHERE schemaname = ''selemti'' AND viewname LIKE ''%stock%'' OR viewname LIKE ''%item%'' ORDER BY viewname;\")",
-      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.v_items_con_uom\")"
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.v_items_con_uom\")",
+      "Bash(PGPASSWORD=\"T3rr3n4#p0s\" psql:*)",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d public.ticket\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d+ public.vw_ticket_base\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT viewname FROM pg_views WHERE schemaname = ''public'' AND viewname LIKE ''%ticket%'' OR viewname LIKE ''%vent%'' OR viewname LIKE ''%sales%'' ORDER BY viewname;\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d+ public.vw_diag_orphans_tickets\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT t.id, t.create_date::date as fecha_creacion, t.closing_date::date as fecha_cierre, t.total_price, t.due_amount, t.terminal_id, t.branch_key, (SELECT COUNT(*) FROM transactions tx WHERE tx.ticket_id = t.id AND tx.voided = false) as num_trans, (SELECT SUM(tx.amount) FROM transactions tx WHERE tx.ticket_id = t.id AND tx.voided = false) as pagado FROM public.ticket t WHERE t.paid = false AND t.closing_date IS NOT NULL AND t.voided = false AND t.total_price > 0 ORDER BY t.total_price DESC;\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -f \"C:/xampp3/htdocs/TerrenaLaravel/BD/Noviembre/fix_tickets/03_corregir_vw_ticket_base.sql\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT viewname FROM pg_views WHERE schemaname = ''public'' AND viewname LIKE ''vw_report%'' ORDER BY viewname;\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT COUNT(*) as test FROM vw_report_sales_detail LIMIT 1;\")"
     ],
     "deny": [],
     "ask": []

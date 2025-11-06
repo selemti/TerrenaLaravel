@@ -1161,7 +1161,7 @@ CREATE INDEX tran_drawer_resetted
   ON public.transactions
   USING btree
   (drawer_resetted);
-
+ 
 
 -- Trigger: trg_selemti_tx_ai_forma_pago on public.transactions
 
