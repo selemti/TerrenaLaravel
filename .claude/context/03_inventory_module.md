@@ -14,7 +14,7 @@
 - Consultas por ítem: `GET /api/inventory/items/{id}/kardex` y `/batches` cruzan `mov_inv`, `inventory_batch`, `items`. Respetar filtros `from`, `to`, `lote_id`.
 
 **Recetas y costeo (Terrena POS Funcional V1.2)**
-- Modelos `App\Models\Rec` consumen tablas `receta_cab`, `receta_version`, `receta_det`, `receta_shadow`, `modificadores_pos` descritas en `docs/v3/Terrena Pos Funcional V1 2.pdf` y en el ERD `docs/DOC_ERD_INVENTARIO_RECETAS-20251017-081732.md`.
+- Modelos `App\Models\Rec` consumen tablas `receta_cab`, `receta_version`, `receta_det`, `receta_shadow`, `modificadores_pos` descritas en `docs/v3/Terrena Pos Funcional V1 2.pdf` y en el ERD `docs/BD/DOC_ERD_INVENTARIO_RECETAS-20251017-081732.md`.
 - `Receta` conserva metadata del plato y los métodos `publishedVersion()`/`latestVersion()` para transitar de borrador a publicado.
 - `RecetaVersion` controla `version`, `version_publicada`, `fecha_efectiva`, `usuario_publicador`; su BOM `RecetaDetalle` ordenado (`item_id`, `cantidad`, `unidad_medida`, `merma_porcentaje`) debe apuntar a `App\Models\Inv\Item`.
 - Integración POS: `RecetaShadow` enlaza modificadores y combos; `scripts/sync_menu_recipes.php` genera versiones iniciales y escribe `menu_item.recepie` con la publicación activa.

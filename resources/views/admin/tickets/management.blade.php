@@ -385,6 +385,24 @@
             </div>
         </div>
     </div>
+    
+    <!-- Modal para mostrar mensajes informativos -->
+    <div class="modal fade" id="messageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="messageModalLabel">Mensaje</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="messageContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 @push('scripts')
 <script>
@@ -835,20 +853,19 @@
         }
     }
     
-    // Función para mostrar mensajes usando el modal de información existente
+    // Función para mostrar mensajes usando el modal de información separado
     function showMessage(title, message, type) {
-        // Actualizar el contenido del modal actual
-        document.getElementById('actionDescription').innerHTML = `
-            <div class="alert alert-${type} mb-3">
+        // Actualizar el contenido del modal de mensajes
+        document.getElementById('messageContent').innerHTML = `
+            <div class="alert alert-${type}">
                 <i class="fa-solid fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
                 <strong>${title}:</strong> ${message}
             </div>
         `;
-        document.getElementById('ticketActionModalLabel').textContent = title;
-        document.getElementById('confirmActionBtn').style.display = 'none';
+        document.getElementById('messageModalLabel').textContent = title;
         
         // Mostrar el modal
-        const modal = new bootstrap.Modal(document.getElementById('ticketActionModal'));
+        const modal = new bootstrap.Modal(document.getElementById('messageModal'));
         modal.show();
         
         // Cerrar el modal después de 3 segundos si es éxito
@@ -857,11 +874,6 @@
                 modal.hide();
             }, 3000);
         }
-        
-        // Evento para restablecer el botón cuando se oculta el modal
-        document.getElementById('ticketActionModal').addEventListener('hidden.bs.modal', function () {
-            document.getElementById('confirmActionBtn').style.display = 'block';
-        }, { once: true }); // Usar 'once' para que se ejecute solo una vez
     }
 
     // ========== CIERRE MASIVO ==========

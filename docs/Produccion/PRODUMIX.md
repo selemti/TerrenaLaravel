@@ -52,7 +52,7 @@ Este documento describe el proceso **Produmix**, responsable de transformar la d
 | `can_edit_production_order` | Ejecutar producción y registrar mermas. | Cocina líder, Chef Ejecutivo |
 | `can_view_recipe_dashboard` | Consultar métricas de disponibilidad y pendientes. | Gerente, Chef Ejecutivo, Dirección |
 
-> El permiso `can_manage_produmix` se documenta también en `docs/SECURITY_AND_ROLES.md` y es obligatorio para acceder a la UI de Produmix y al endpoint correspondiente.
+> El permiso `can_manage_produmix` se documenta también en `docs/Seguridad/SECURITY_AND_ROLES.md` y es obligatorio para acceder a la UI de Produmix y al endpoint correspondiente.
 
 ---
 
@@ -117,4 +117,4 @@ Produmix alimenta el componente `MenuAvailabilityService`:
 **Referencias cruzadas:**  
 - `docs/Produccion/PRODUCTION_FLOW.md` – Flujo completo de producción y merma.  
 - `docs/POS/LIVE_AVAILABILITY.md` – Intervenciones en POS y control de disponibilidad.  
-- `docs/SECURITY_AND_ROLES.md` – Políticas de permisos y trazabilidad.
+- `docs/Seguridad/SECURITY_AND_ROLES.md` – Políticas de permisos y trazabilidad.

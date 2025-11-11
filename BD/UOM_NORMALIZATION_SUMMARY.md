@@ -116,7 +116,7 @@ Total conversiones: 26 (14 exactas, 12 aproximadas)
 ### 6. Documentación
 
 ✅ **Documentación completa** creada:
-- **`docs/UOM_STRATEGY_TERRENA.md`** (170+ líneas)
+- **`docs/Inventario/UOM_STRATEGY_TERRENA.md`** (170+ líneas)
   - Estrategia de normalización
   - Catálogo completo de UOM (29 unidades)
   - Política de conversiones (exactas vs aproximadas)
@@ -298,7 +298,7 @@ if ($service->canConvert('KG', 'G')) {
 
 ### Documentación
 
-6. **`docs/UOM_STRATEGY_TERRENA.md`** (documentación completa, ~170 páginas)
+6. **`docs/Inventario/UOM_STRATEGY_TERRENA.md`** (documentación completa, ~170 páginas)
    - Estrategia de normalización
    - Catálogo de UOM
    - Política de conversiones
@@ -373,7 +373,7 @@ SELECT COUNT(*) FROM selemti.unidades_medida;
 
 ✅ Consultas legacy funcionan vía vistas
 
-✅ Archivo `docs/UOM_STRATEGY_TERRENA.md` creado
+✅ Archivo `docs/Inventario/UOM_STRATEGY_TERRENA.md` creado
 
 ✅ Servicio `UomConversionService` creado con métodos completos
 
@@ -403,7 +403,7 @@ SELECT COUNT(*) FROM selemti.unidades_medida;
 ## 📞 Contacto y Soporte
 
 Para consultas o mejoras:
-- Ver documentación completa: `docs/UOM_STRATEGY_TERRENA.md`
+- Ver documentación completa: `docs/Inventario/UOM_STRATEGY_TERRENA.md`
 - Revisar asignaciones de trabajo: `.gemini/WORK_ASSIGNMENTS.md`
 - Coordinación multi-agente: `CLAUDE.md`
 

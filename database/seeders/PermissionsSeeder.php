@@ -61,6 +61,10 @@ class PermissionsSeeder extends Seeder
             'can_manage_purchasing',
             'can_modify_recipe',
             'kitchen.view_kds',
+            // Permisos para cortes de caja irregulares
+            'aprobar-cortes-irregulares',
+            'rechazar-cortes-irregulares',
+            'ver-alertas-cortes',
         ];
 
         foreach ($permissions as $name) {

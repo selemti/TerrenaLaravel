@@ -232,7 +232,7 @@
       - app/Livewire/People/UsersIndex.php (actualizado)
       - resources/views/livewire/people/users-index.blade.php (actualizado)
       - cualquier nueva vista parcial para la pestaña Plantillas
-  2. Nuevo/actualizado docs/roles_and_permissions.md con:
+  2. Nuevo/actualizado docs/Seguridad/roles_and_permissions.md con:
       - Explica el modelo híbrido:
           * Plantillas (roles acumulables tipo “Cajero”, “Encargado de Tienda”)
           * Permisos especiales (excepciones temporales)
@@ -430,7 +430,7 @@
      Al final de este paso: muéstrame `git diff HEAD resources/views/livewire/audit/index.blade.php`
 
   6. Actualizar la documentación de seguridad:
-     - Al final de docs/AUDIT_LOG_POLICY.md, agrega:
+     - Al final de docs/Seguridad/AUDIT_LOG_POLICY.md, agrega:
 
        ### Consideraciones de seguridad de acceso al dashboard
        - La ruta web `/audit/logs` sólo debe estar disponible para personal interno autenticado.
@@ -440,7 +440,7 @@
        - Está prohibido compartir capturas de pantalla de este dashboard fuera de la organización
          sin autorización expresa de Dirección de Operaciones.
 
-     Al final de este paso: muéstrame `git diff HEAD docs/AUDIT_LOG_POLICY.md`
+     Al final de este paso: muéstrame `git diff HEAD docs/Seguridad/AUDIT_LOG_POLICY.md`
 
   7. Finalmente:
      - Confirma que todo compila en términos de namespaces/imports/rutas.
@@ -678,7 +678,7 @@ feedback` to report the issue.
       - app/Livewire/People/UsersIndex.php (actualizado)
       - resources/views/livewire/people/users-index.blade.php (actualizado)
       - cualquier nueva vista parcial para la pestaña Plantillas
-  2. Nuevo/actualizado docs/roles_and_permissions.md con:
+  2. Nuevo/actualizado docs/Seguridad/roles_and_permissions.md con:
       - Explica el modelo híbrido:
           * Plantillas (roles acumulables tipo “Cajero”, “Encargado de Tienda”)
           * Permisos especiales (excepciones temporales)
@@ -1719,7 +1719,7 @@ feedback` to report the issue.
 • Explored
   └ Read roles_and_permissions.md
 
-• Edited docs/roles_and_permissions.md (+29 -30)
+• Edited docs/Seguridad/roles_and_permissions.md (+29 -30)
      2
      3 -## Modelo RBAC Híbrido
      4 -Terrena usa un control de acceso basado en roles (RBAC extendido):
@@ -1752,7 +1752,7 @@ feedback` to report the issue.
     18 -- Roles visibles para negocio → `display_name`
     19 -- Permisos agrupados por módulo (`config/permissions_map.php`)
     20 -- Permisos personales directos se sincronizan con `syncPermissions()`
-    21 -- Caching en sessionStorage (ver `docs/auth-caching.md`)
+    21 -- Caching en sessionStorage (ver `docs/Seguridad/auth-caching.md`)
     11 +## Cómo se refleja en la UI
     12 +- En la pestaña **Usuarios** se muestra primero el resumen del colaborador, seguido de “Planti
         llas asignadas (funciones/puestos)” y debajo “Permisos especiales (excepciones)”.
@@ -1803,14 +1803,14 @@ feedback` to report the issue.
   sure all props, method calls, and data mappings align with the new permission structure and
 
 • Ran git status --short config/permissions_map.php app/Livewire/People/UsersIndex.php resources/
-  │ views/livewire/people/users-index.blade.php docs/roles_and_permissions.md
+  │ views/livewire/people/users-index.blade.php docs/Seguridad/roles_and_permissions.md
   └  M app/Livewire/People/UsersIndex.php
      M resources/views/livewire/people/users-index.blade.php
     ?? config/permissions_map.php
-• Ran git add -N config/permissions_map.php docs/roles_and_permissions.md
-• Ran git status --short config/permissions_map.php docs/roles_and_permissions.md
+• Ran git add -N config/permissions_map.php docs/Seguridad/roles_and_permissions.md
+• Ran git status --short config/permissions_map.php docs/Seguridad/roles_and_permissions.md
   └  A config/permissions_map.php
-     A docs/roles_and_permissions.md
+     A docs/Seguridad/roles_and_permissions.md
 
 • Ran git diff -- config/permissions_map.php
     … +76 lines
@@ -1836,8 +1836,8 @@ feedback` to report the issue.
     +    </script>
   └ (no output)
 
-• Ran git diff -- docs/roles_and_permissions.md
-  └ diff --git a/docs/roles_and_permissions.md b/docs/roles_and_permissions.md
+• Ran git diff -- docs/Seguridad/roles_and_permissions.md
+  └ diff --git a/docs/Seguridad/roles_and_permissions.md b/docs/Seguridad/roles_and_permissions.md
     new file mode 100644
 
 • Ran git diff -- app/Livewire/People/UsersIndex.php > /tmp/users_index_component.diff
@@ -1859,7 +1859,7 @@ feedback` to report the issue.
     warning: in the working copy of '.claude/agents/inventory_manager.md', CRLF will be replaced by LF
     the next time Git touches it
     … +322 lines
-    warning: in the working copy of 'docs/PLAN_FINAL-20251017-0304.md', CRLF will be replaced by LF
+    warning: in the working copy of 'docs/Planeacion/PLAN_FINAL-20251017-0304.md', CRLF will be replaced by LF
     the next time Git touches it
     warning: in the working copy of 'docs/Purchasing/README.md', CRLF will be replaced by LF the next
     time Git touches it
@@ -1906,7 +1906,7 @@ feedback` to report the issue.
   - Actualicé la vista Livewire (resources/views/livewire/people/users-index.blade.php:206-448) con
     resumen del usuario, tarjetas de plantillas y excepciones basadas en permissions_map, más la
     pestaña “Plantillas” en formato de tarjetas; Super Admin queda solo-lectura.
-  - Documenté el modelo híbrido y el flujo UI en docs/roles_and_permissions.md:1-35, incluyendo nota
+  - Documenté el modelo híbrido y el flujo UI en docs/Seguridad/roles_and_permissions.md:1-35, incluyendo nota
     sobre limpiar el cache local tras cambios de permisos.
 
   No se ejecutaron pruebas (no requerido).
@@ -2797,12 +2797,12 @@ feedback` to report the issue.
   +    </script>
    </div>
 
-  # docs/roles_and_permissions.md
-  diff --git a/docs/roles_and_permissions.md b/docs/roles_and_permissions.md
+  # docs/Seguridad/roles_and_permissions.md
+  diff --git a/docs/Seguridad/roles_and_permissions.md b/docs/Seguridad/roles_and_permissions.md
   new file mode 100644
   index 0000000..2c9ce74
   --- /dev/null
-  +++ b/docs/roles_and_permissions.md
+  +++ b/docs/Seguridad/roles_and_permissions.md
   @@ -0,0 +1,35 @@
   +# Roles y Permisos en Terrena
   +
@@ -2833,7 +2833,7 @@ feedback` to report the issue.
   +- Los campos `display_name` y `description` del rol se muestran a negocio como nombre y explicación
   de la plantilla.
   +- El seeder mantiene al usuario `soporte` con el rol `Super Admin` como acceso raíz del sistema.
-  +- El caching de permisos/tokens de Sanctum permanece intacto (ver `docs/auth-caching.md`).
+  +- El caching de permisos/tokens de Sanctum permanece intacto (ver `docs/Seguridad/auth-caching.md`).
   +
   +## Escenarios ilustrativos
   +- **Cafetería pequeña:** un colaborador puede operar sólo con la plantilla “Cajero” y cero permisos

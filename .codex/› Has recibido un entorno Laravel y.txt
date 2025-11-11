@@ -100,7 +100,7 @@
 
   Actualiza (o crea si no existen):
 
-  🧭 docs/SECURITY_AND_ROLES.md
+  🧭 docs/Seguridad/SECURITY_AND_ROLES.md
 
   Debe reflejar:
 
@@ -130,7 +130,7 @@
 
   Ningún otro endpoint debe estar sin autenticación.
 
-  📜 docs/AUDIT_LOG_POLICY.md
+  📜 docs/Seguridad/AUDIT_LOG_POLICY.md
 
   Debe reflejar:
 
@@ -150,9 +150,9 @@
 
   database/seeders/PermissionsSeeder.php (si agregas alerts.view)
 
-  docs/SECURITY_AND_ROLES.md
+  docs/Seguridad/SECURITY_AND_ROLES.md
 
-  docs/AUDIT_LOG_POLICY.md
+  docs/Seguridad/AUDIT_LOG_POLICY.md
 
   Elimina cualquier referencia a:
 
@@ -164,7 +164,7 @@
 
   routes/api.php
 
-  docs/AUDIT_LOG_POLICY.md
+  docs/Seguridad/AUDIT_LOG_POLICY.md
 
   database/seeders/PermissionsSeeder.php (si cambió)
 
@@ -427,7 +427,7 @@
   removal of any auth.api references. Before finalizing docs, I’ll ensure route restructuring is clean
   and reflect these updates carefully by crafting patches for each affected section.
 
-• Edited docs/SECURITY_AND_ROLES.md (+12 -0)
+• Edited docs/Seguridad/SECURITY_AND_ROLES.md (+12 -0)
     159    - ajustar existencias iniciales.
     160 +- Cubre TODOS los endpoints bajo `/api/inventory/*`, `/api/purchasing/*`, `/api/unidades/*`,
          `/api/catalogs/*` (cuando afectan abastecimiento) y los reportes críticos de inventario (`/ap
@@ -452,14 +452,14 @@
          T /api/health`. Ningún otro endpoint puede exponerse sin `auth:sanctum`.
     200
 
-• Edited docs/SECURITY_AND_ROLES.md (+1 -0)
+• Edited docs/Seguridad/SECURITY_AND_ROLES.md (+1 -0)
     221  - Intervenciones POS nivel 1 (agotado / forzar KDS) requieren `can_manage_menu_availability`,
           motivo y registro en `selemti.menu_availability_log`. No alteran tickets históricos.
     222 +- Solo los endpoints `POST /api/auth/login`, `GET /api/ping` y `GET /api/health` pueden opera
          r sin autenticación. Todo el resto de la API exige `auth:sanctum`.
     223
 
-• Edited docs/SECURITY_AND_ROLES.md (+2 -2)
+• Edited docs/Seguridad/SECURITY_AND_ROLES.md (+2 -2)
     196  - Toda ruta que afecte inventario, costo, disponibilidad POS o reproceso debe incluir `auth:s
          anctum`.
     198 -- Está prohibido eliminar middleware de seguridad en rutas API simplemente porque el guard fi
@@ -478,7 +478,7 @@
   result details, ensuring the policy clearly outlines required logging for endpoints with certain
   permissions.
 
-• Edited docs/AUDIT_LOG_POLICY.md (+11 -1)
+• Edited docs/Seguridad/AUDIT_LOG_POLICY.md (+11 -1)
     16  ## Campos mínimos en bitácoras
     17 -- `user_id`
     17 +- `user_id` (obtenido del guard `auth:sanctum`)
@@ -530,27 +530,27 @@
 • Explored
   └ Read api.php
 
-• Ran git diff docs/SECURITY_AND_ROLES.md
+• Ran git diff docs/Seguridad/SECURITY_AND_ROLES.md
   └ (no output)
   └ (no output)
 
-• Ran git status --short docs/SECURITY_AND_ROLES.md
-  └ ?? docs/SECURITY_AND_ROLES.md
-
-• Ran git status -sb
-  └ (no output)
+• Ran git status --short docs/Seguridad/SECURITY_AND_ROLES.md
+  └ ?? docs/Seguridad/SECURITY_AND_ROLES.md
 
 • Ran git status -sb
   └ (no output)
 
-• Ran git status docs/SECURITY_AND_ROLES.md
+• Ran git status -sb
+  └ (no output)
+
+• Ran git status docs/Seguridad/SECURITY_AND_ROLES.md
   └ On branch integrate/web-prs-20251023-1922
     Your branch is ahead of 'origin/integrate/web-prs-20251023-1922' by 3 commits.
     … +5 lines
 
     nothing added to commit but untracked files present (use "git add" to track)
 
-• Ran git status docs/AUDIT_LOG_POLICY.md
+• Ran git status docs/Seguridad/AUDIT_LOG_POLICY.md
   └ On branch integrate/web-prs-20251023-1922
     Your branch is ahead of 'origin/integrate/web-prs-20251023-1922' by 3 commits.
     nothing added to commit but untracked files present (use "git add" to track)
@@ -568,15 +568,15 @@
     +
     +Toda nueva documentación técnica debe enlazar a este archivo.
 
-• Ran git diff --no-index -- /dev/null docs/AUDIT_LOG_POLICY.md
-  └ diff --git a/docs/AUDIT_LOG_POLICY.md b/docs/AUDIT_LOG_POLICY.md
+• Ran git diff --no-index -- /dev/null docs/Seguridad/AUDIT_LOG_POLICY.md
+  └ diff --git a/docs/Seguridad/AUDIT_LOG_POLICY.md b/docs/Seguridad/AUDIT_LOG_POLICY.md
     new file mode 100755
     … +45 lines
     +## Regla de cierre de sprint
     +Ningún sprint puede cerrar endpoints que mueven inventario o disponibilidad sin generar log con
     los campos mínimos definidos arriba.
 
-• I'll focus on gathering trimmed diffs for routes/api.php, docs/SECURITY_AND_ROLES.md, docs/
+• I'll focus on gathering trimmed diffs for routes/api.php, docs/Seguridad/SECURITY_AND_ROLES.md, docs/
   AUDIT_LOG_POLICY.md, and the seeder, highlighting key changes with line references. I'll include the
   route list output filtered for the API path, verify middleware updates, confirm no seeder changes,
   and prepare a concise summary for the final message.
@@ -624,7 +624,7 @@
     autenticación.
   - app/Http/Middleware/Kernel.php: alias permission registrado junto a perm, manteniendo
     compatibilidad con Spatie.
-  - Documentación (docs/SECURITY_AND_ROLES.md, docs/AUDIT_LOG_POLICY.md) reescrita para
+  - Documentación (docs/Seguridad/SECURITY_AND_ROLES.md, docs/Seguridad/AUDIT_LOG_POLICY.md) reescrita para
     declarar auth:sanctum como guard oficial, mapear permisos críticos (incluye alerts.view,
     can_manage_cash_register) y reforzar la política de bitácoras.
   - Seeders sin cambios; alerts.view ya existía.
@@ -768,13 +768,13 @@
   +        Route::post('/{recipeId}/recalculate', [PosRecipeCostController::class, 'recalculate']);
   +    });
 
-  docs/SECURITY_AND_ROLES.md (archivo nuevo completo)
+  docs/Seguridad/SECURITY_AND_ROLES.md (archivo nuevo completo)
 
-  diff --git a/docs/SECURITY_AND_ROLES.md b/docs/SECURITY_AND_ROLES.md
+  diff --git a/docs/Seguridad/SECURITY_AND_ROLES.md b/docs/Seguridad/SECURITY_AND_ROLES.md
   new file mode 100755
   index 0000000..80dca95
   --- /dev/null
-  +++ b/docs/SECURITY_AND_ROLES.md
+  +++ b/docs/Seguridad/SECURITY_AND_ROLES.md
   @@
   +# Seguridad Operativa, Roles y Permisos
   +...
@@ -794,13 +794,13 @@
   +...
   +- Solo esos tres endpoints pueden operar sin autenticación; todo lo demás exige `auth:sanctum`.
 
-  docs/AUDIT_LOG_POLICY.md (archivo nuevo completo)
+  docs/Seguridad/AUDIT_LOG_POLICY.md (archivo nuevo completo)
 
-  diff --git a/docs/AUDIT_LOG_POLICY.md b/docs/AUDIT_LOG_POLICY.md
+  diff --git a/docs/Seguridad/AUDIT_LOG_POLICY.md b/docs/Seguridad/AUDIT_LOG_POLICY.md
   new file mode 100755
   index 0000000..97317cb
   --- /dev/null
-  +++ b/docs/AUDIT_LOG_POLICY.md
+  +++ b/docs/Seguridad/AUDIT_LOG_POLICY.md
   @@
   +- `user_id` (obtenido del guard `auth:sanctum`)
   +- `resultado` (`success`, `error`, `reversed`, etc.)

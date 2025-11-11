@@ -57,7 +57,7 @@ Todas las conversiones ida-vuelta funcionan correctamente:
 
 | Archivo | Descripción | Páginas |
 |---------|-------------|---------|
-| `docs/UOM_STRATEGY_TERRENA.md` | Estrategia completa de normalización | ~170 |
+| `docs/Inventario/UOM_STRATEGY_TERRENA.md` | Estrategia completa de normalización | ~170 |
 | `BD/UOM_NORMALIZATION_SUMMARY.md` | Resumen ejecutivo | ~30 |
 | `BD/README_UOM_NORMALIZATION.md` | Este archivo | ~10 |
 
@@ -133,7 +133,7 @@ WHERE origen_id = (SELECT id FROM selemti.cat_unidades WHERE clave = 'KG')
 Para documentación detallada, consultar:
 
 ### Documentación Principal
-- **`docs/UOM_STRATEGY_TERRENA.md`** - Estrategia completa de normalización
+- **`docs/Inventario/UOM_STRATEGY_TERRENA.md`** - Estrategia completa de normalización
   - Arquitectura de tablas canónicas
   - Política de conversiones (exactas vs aproximadas)
   - Catálogo completo de UOM (29 unidades)
@@ -255,7 +255,7 @@ Medidas culinarias con aproximaciones basadas en estándares US customary.
 
 Para preguntas o mejoras:
 
-1. **Consultar documentación completa**: `docs/UOM_STRATEGY_TERRENA.md`
+1. **Consultar documentación completa**: `docs/Inventario/UOM_STRATEGY_TERRENA.md`
 2. **Revisar log de verificación**: `BD/VERIFICATION_LOG.txt`
 3. **Revisar asignaciones de trabajo**: `.gemini/WORK_ASSIGNMENTS.md`
 4. **Coordinación multi-agente**: `CLAUDE.md`
@@ -304,7 +304,7 @@ Verificar que todos estos puntos estén cumplidos:
 
 **¡Normalización UOM Completada con Éxito!** ✅
 
-Ver `docs/UOM_STRATEGY_TERRENA.md` para documentación completa.
+Ver `docs/Inventario/UOM_STRATEGY_TERRENA.md` para documentación completa.
 
 ---
 

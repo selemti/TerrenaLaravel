@@ -14,7 +14,7 @@
 - Rutas definidas en `routes/api.php` y duplicadas bajo `/api/legacy/*` para compatibilidad.
 
 **Dependencias SQL**
-- Requiere funciones `fn_precorte_after_insert`, `fn_precorte_efectivo_bi`, `fn_generar_postcorte` y vistas `vw_conciliacion_sesion`, `vw_precorte_*` incluidas en `BD/DEPLOY_CONSOLIDADO_FULL_PG95-v3-20251017-180148-safe.sql` y documentadas en `docs/DOC_WIZARD_CORTE_CAJA-20251017-0126.md`.
+- Requiere funciones `fn_precorte_after_insert`, `fn_precorte_efectivo_bi`, `fn_generar_postcorte` y vistas `vw_conciliacion_sesion`, `vw_precorte_*` incluidas en `BD/DEPLOY_CONSOLIDADO_FULL_PG95-v3-20251017-180148-safe.sql` y documentadas en `docs/CajaChica/DOC_WIZARD_CORTE_CAJA-20251017-0126.md`.
 - `public.ticket` se usa como fuente de verdad para bloquear precortes; validar que esté sincronizada con POS.
 
 **Riesgos y tareas**

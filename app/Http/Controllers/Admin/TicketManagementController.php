@@ -35,7 +35,7 @@ class TicketManagementController extends Controller
             ->select('total_price', 'total_discount', 'sub_total')
             ->first();
 
-        if (!$ticket) {
+        if (! $ticket) {
             return false;
         }
 
@@ -96,7 +96,7 @@ class TicketManagementController extends Controller
     public function closeFullDiscountTickets()
     {
         // Buscar tickets que están pagados pero sin fecha de cierre y tienen descuento del 100%
-        $sql = "
+        $sql = '
             SELECT t.id, t.total_price, t.total_discount, t.sub_total
             FROM public.ticket t
             WHERE t.paid = true 
@@ -104,7 +104,7 @@ class TicketManagementController extends Controller
               AND t.total_price = 0
               AND t.total_discount > 0
               AND t.voided = false
-        ";
+        ';
 
         $tickets = DB::connection('pgsql')->select($sql);
 
@@ -118,7 +118,7 @@ class TicketManagementController extends Controller
                     if ($this->hasFullDiscount($ticket->id)) {
                         // Obtener el nombre del descuento aplicado
                         $discountName = $this->getDiscountName($ticket->id);
-                        
+
                         // Cerrar el ticket y establecer la fecha de cierre
                         DB::connection('pgsql')
                             ->table('ticket')
@@ -134,7 +134,7 @@ class TicketManagementController extends Controller
 
                         $processed[] = [
                             'ticket_id' => $ticket->id,
-                            'message' => "Ticket con descuento 100% ({$discountName}) cerrado automáticamente"
+                            'message' => "Ticket con descuento 100% ({$discountName}) cerrado automáticamente",
                         ];
 
                         Log::info('Ticket con descuento 100% cerrado automáticamente', [
@@ -148,7 +148,7 @@ class TicketManagementController extends Controller
             } catch (\Exception $e) {
                 $errors[] = [
                     'ticket_id' => $ticket->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -159,8 +159,8 @@ class TicketManagementController extends Controller
             'errors' => count($errors),
             'details' => [
                 'processed' => $processed,
-                'errors' => $errors
-            ]
+                'errors' => $errors,
+            ],
         ]);
     }
 
@@ -603,10 +603,10 @@ class TicketManagementController extends Controller
         $minDaysOld = $request->input('min_days', 30);
 
         try {
-            DB::connection('pgsql')->transaction(function () use ($minDaysOld, $request) {
+            DB::connection('pgsql')->transaction(function () use ($minDaysOld) {
                 // Crear backup antes de modificar
-                DB::connection('pgsql')->statement("
-                    CREATE TABLE IF NOT EXISTS backup_tickets_cierre_masivo_".date('Ymd_His')." AS
+                DB::connection('pgsql')->statement('
+                    CREATE TABLE IF NOT EXISTS backup_tickets_cierre_masivo_'.date('Ymd_His')." AS
                     SELECT
                         t.*,
                         CURRENT_TIMESTAMP as backup_timestamp,

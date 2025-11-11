@@ -249,8 +249,8 @@ Después del deploy exitoso:
 
 **Archivos de referencia:**
 - `DEPLOY_v4_INSTRUCTIONS.md` - Instrucciones detalladas
-- `docs/GAP_ANALYSIS_COMPLETED-20251017.md` - Estado de implementación
-- `docs/WIZARD_CORTE_CAJA-20251017-0258.md` - Especificación del wizard
+- `docs/CajaChica/GAP_ANALYSIS_COMPLETED-20251017.md` - Estado de implementación
+- `docs/CajaChica/WIZARD_CORTE_CAJA-20251017-0258.md` - Especificación del wizard
 
 **Logs generados:**
 - `deploy_v4_YYYYMMDD_HHMMSS.log` - Log de ejecución

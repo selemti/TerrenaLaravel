@@ -247,7 +247,7 @@ Si encuentra errores no documentados:
 1. **Revisar el log generado** para encontrar el error exacto
 2. **Verificar versión de PostgreSQL:** Debe ser 9.5.x
 3. **Verificar permisos** del usuario de base de datos
-4. **Consultar documentación** en `docs/GAP_ANALYSIS_COMPLETED-20251017.md`
+4. **Consultar documentación** en `docs/CajaChica/GAP_ANALYSIS_COMPLETED-20251017.md`
 
 ---
 

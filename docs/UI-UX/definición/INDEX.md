@@ -188,7 +188,7 @@ Gestiona los movimientos internos de inventario entre almacenes y sucursales.
 ### Documentación Principal
 - `docs/UI-UX/MASTER/` - Documentación maestra del proyecto
 - `docs/BD/` - Normalización y esquema de base de datos
-- `docs/SECURITY_AND_ROLES.md` - Políticas de seguridad y roles
+- `docs/Seguridad/SECURITY_AND_ROLES.md` - Políticas de seguridad y roles
 
 ### Código Fuente
 - `app/Models/` - Modelos Eloquent

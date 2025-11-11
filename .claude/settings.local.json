@@ -34,7 +34,22 @@
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT t.id, t.create_date::date as fecha_creacion, t.closing_date::date as fecha_cierre, t.total_price, t.due_amount, t.terminal_id, t.branch_key, (SELECT COUNT(*) FROM transactions tx WHERE tx.ticket_id = t.id AND tx.voided = false) as num_trans, (SELECT SUM(tx.amount) FROM transactions tx WHERE tx.ticket_id = t.id AND tx.voided = false) as pagado FROM public.ticket t WHERE t.paid = false AND t.closing_date IS NOT NULL AND t.voided = false AND t.total_price > 0 ORDER BY t.total_price DESC;\")",
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -f \"C:/xampp3/htdocs/TerrenaLaravel/BD/Noviembre/fix_tickets/03_corregir_vw_ticket_base.sql\")",
       "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT viewname FROM pg_views WHERE schemaname = ''public'' AND viewname LIKE ''vw_report%'' ORDER BY viewname;\")",
-      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT COUNT(*) as test FROM vw_report_sales_detail LIMIT 1;\")"
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT COUNT(*) as test FROM vw_report_sales_detail LIMIT 1;\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT status, COUNT(*) FROM public.ticket WHERE closing_date IS NOT NULL AND voided = false GROUP BY status;\")",
+      "Bash(ssh:*)",
+      "Bash(sshpass:*)",
+      "Bash(curl:*)",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -f \"C:/xampp3/htdocs/TerrenaLaravel/BD/Noviembre/10_11_2025/CREATE_VW_SESION_DPR.sql\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT COUNT(*) as view_count FROM selemti.vw_sesion_dpr;\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\df+ fn_precorte_after_insert\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT pg_get_functiondef(''selemti.fn_precorte_after_insert''::regproc);\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -f \"C:/xampp3/htdocs/TerrenaLaravel/BD/Noviembre/10_11_2025/FIX_SESION_CAJON_ESTATUS_CHECK.sql\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT id, sesion_id, estatus, creado_en FROM selemti.precorte ORDER BY id DESC LIMIT 10;\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"\\d selemti.precorte\")",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -f \"C:/xampp3/htdocs/TerrenaLaravel/BD/Noviembre/10_11_2025/ADD_APROBACION_POSTCORTE.sql\")",
+      "Bash(pscp:*)",
+      "Bash(scp:*)",
+      "Bash(\"C:/Program Files (x86)/PostgreSQL/9.5/bin/psql.exe\" -h localhost -p 5433 -U postgres -d pos -c \"SELECT name FROM selemti.permissions WHERE name LIKE ''%cortes%'' ORDER BY name;\")"
     ],
     "deny": [],
     "ask": []

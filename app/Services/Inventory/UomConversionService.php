@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Log;
  * ```
  *
  * @package App\Services\Inventory
- * @see docs/UOM_STRATEGY_TERRENA.md
+ * @see docs/Inventario/UOM_STRATEGY_TERRENA.md
  */
 class UomConversionService
 {

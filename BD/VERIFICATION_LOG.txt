@@ -17,7 +17,7 @@ VERIFICACIÓN 1: Conteo de UOM y Conversiones
 VERIFICACIÓN 2: Catálogo Completo de UOM
 ====================================================================
 psql:C:/xampp3/htdocs/TerrenaLaravel/BD/UOM_Verification_Queries.sql:94: ERROR:  no existe la columna «categoria»
-L�NEA 19:         WHEN categoria = 'Masa' THEN 1
+LNEA 19:         WHEN categoria = 'Masa' THEN 1
                       ^
 
 ====================================================================
@@ -160,5 +160,5 @@ VERIFICACIÓN FINAL: Resumen de Estado
 VERIFICACIÓN COMPLETA
 ====================================================================
 Si todos los status muestran ✓, la normalización fue exitosa.
-Ver documentación completa en: docs/UOM_STRATEGY_TERRENA.md
+Ver documentación completa en: docs/Inventario/UOM_STRATEGY_TERRENA.md
 ====================================================================

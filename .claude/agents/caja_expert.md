@@ -16,7 +16,7 @@
 
 **Consideraciones con PostgreSQL legacy**
 - Asegura `DB_SCHEMA=selemti,public` y ejecuta parches de `BD/patches/selemti` (funciones, vistas, triggers). Sin `fn_precorte_efectivo_bi` los subtotales no se recalculan.
-- Validar que vistas `vw_drawer_resume`, `vw_precorte_*` existan; están documentadas en `docs/DOC_WIZARD_CORTE_CAJA-20251017-0126.md` y `docs/V2/03_Backend/routes_api.md`.
+- Validar que vistas `vw_drawer_resume`, `vw_precorte_*` existan; están documentadas en `docs/CajaChica/DOC_WIZARD_CORTE_CAJA-20251017-0126.md` y `docs/V2/03_Backend/routes_api.md`.
 
 **Buenas prácticas operativas**
 - Controla concurrencia: `createLegacy` y `updateLegacy` no bloquean doble submit; si se habilitan múltiples cajeros por terminal, envolver en locks o validar `estatus` antes de continuar.

@@ -2,7 +2,7 @@
 Versión: 2025-10-27  
 Estado: ACTIVO / OBLIGATORIO
 
-Este documento define cómo Terrena controla la disponibilidad en vivo de productos POS (Floreant) y las intervenciones operativas autorizadas. Se integra con `docs/Produccion/PRODUMIX.md`, `docs/Produccion/PRODUCTION_FLOW.md` y las políticas de seguridad en `docs/SECURITY_AND_ROLES.md`.
+Este documento define cómo Terrena controla la disponibilidad en vivo de productos POS (Floreant) y las intervenciones operativas autorizadas. Se integra con `docs/Produccion/PRODUMIX.md`, `docs/Produccion/PRODUCTION_FLOW.md` y las políticas de seguridad en `docs/Seguridad/SECURITY_AND_ROLES.md`.
 
 ---
 
@@ -24,7 +24,7 @@ Este documento define cómo Terrena controla la disponibilidad en vivo de produc
 ---
 
 ## 3. Intervenciones operativas nivel 1
-*(ver sección 5 de `docs/SECURITY_AND_ROLES.md`)*
+*(ver sección 5 de `docs/Seguridad/SECURITY_AND_ROLES.md`)*
 
 Estas acciones se disparan principalmente cuando:
 - no se pudo producir el batch planeado por Produmix,
@@ -74,7 +74,7 @@ Estas acciones se disparan principalmente cuando:
 | `can_manage_produmix` | Requerido para validar si la falta de stock fue por producción no ejecutada. | Gerente, Dirección |
 | `can_edit_production_order` | Permite a cocina declarar producción y mermas, alimentando disponibilidad. | Cocina líder, Chef Ejecutivo |
 
-> Ver `docs/SECURITY_AND_ROLES.md` para matriz completa de permisos.
+> Ver `docs/Seguridad/SECURITY_AND_ROLES.md` para matriz completa de permisos.
 
 ---
 
@@ -118,5 +118,5 @@ Estas acciones se disparan principalmente cuando:
 ## 10. Referencias cruzadas
 - `docs/Produccion/PRODUMIX.md` – Algoritmo de planificación y permisos `can_manage_produmix`.  
 - `docs/Produccion/PRODUCTION_FLOW.md` – Ejecución en cocina, merma y cierre de turno.  
-- `docs/SECURITY_AND_ROLES.md` – Políticas de intervención POS y permisos `can_manage_menu_availability`.  
+- `docs/Seguridad/SECURITY_AND_ROLES.md` – Políticas de intervención POS y permisos `can_manage_menu_availability`.  
 - `docs/Recetas/POS_CONSUMPTION_SERVICE.md` – Implosión y consumo POS.

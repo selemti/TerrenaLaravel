@@ -524,7 +524,7 @@
   7. Documentación interna
   ────────────────
 
-  Crea o actualiza docs/insumos_alta.md. Si ya existe algo similar, actualiza ese archivo en vez de
+  Crea o actualiza docs/Inventario/insumos_alta.md. Si ya existe algo similar, actualiza ese archivo en vez de
   crear uno nuevo.
 
   El contenido debe incluir:
@@ -586,7 +586,7 @@
 
   nuevo/actualizado componente Livewire y blades correspondientes,
 
-  nueva/actualizada doc docs/insumos_alta.md.
+  nueva/actualizada doc docs/Inventario/insumos_alta.md.
 
   Reglas generales (repetición porque es crítica):
 
@@ -1281,7 +1281,7 @@
   └ Read insumos_alta.md
     List docs
 
-• Added docs/insumos_alta.md (+41 -0)
+• Added docs/Inventario/insumos_alta.md (+41 -0)
      1 +# Alta de insumos (`selemti.insumo`)
      2 +
      3 +## ¿Qué es un insumo?
@@ -1439,7 +1439,7 @@
     … +93 lines
     +    @endif
     +</div>
-  └ diff --git a/docs/insumos_alta.md b/docs/insumos_alta.md
+  └ diff --git a/docs/Inventario/insumos_alta.md b/docs/Inventario/insumos_alta.md
     new file mode 100755
     … +43 lines
     +- `meta` permite adjuntar datos adicionales en JSON (ej. proveedor preferente, notas internas).
@@ -1558,7 +1558,7 @@
   - resources/views/livewire/inventory/insumo-create.blade.php
   - routes/web.php
   - routes/api.php
-  - docs/insumos_alta.md
+  - docs/Inventario/insumos_alta.md
 
   ———
 
@@ -2202,11 +2202,11 @@
    |--------------------------------------------------------------------------
    | MÓDULO: PURCHASING (COMPRAS)
 
-  diff --git a/docs/insumos_alta.md b/docs/insumos_alta.md
+  diff --git a/docs/Inventario/insumos_alta.md b/docs/Inventario/insumos_alta.md
   new file mode 100755
   index 0000000..ab6bb97
   --- /dev/null
-  +++ b/docs/insumos_alta.md
+  +++ b/docs/Inventario/insumos_alta.md
   @@ -0,0 +1,41 @@
   +# Alta de insumos (`selemti.insumo`)
   +
@@ -2362,10 +2362,10 @@ InsumoController.php,
       adjustments.
     ✔ Apply requested fixes to migration, service, controller, Livewire component, and views.
     □ Update documentation note for Super Admin and ensure routes match specification.
-• Ran git diff -- docs/insumos_alta.md
+• Ran git diff -- docs/Inventario/insumos_alta.md
   └ (no output)
 
-• Edited docs/insumos_alta.md (+1 -1)
+• Edited docs/Inventario/insumos_alta.md (+1 -1)
     27  - Sólo usuarios con `inventory.items.manage` o `can_manage_purchasing` pueden crear insumos.
     28 +- El usuario `soporte` con rol `Super Admin` **siempre** puede crear insumos aunque no tenga e
          mostrar el formulario.
@@ -2456,11 +2456,11 @@ InsumoController.php,
          |  Recetas (Livewire)
          |========================================================================= */
 
-• Ran git diff -- docs/insumos_alta.md
+• Ran git diff -- docs/Inventario/insumos_alta.md
   └ (no output)
 
-• Ran git diff --no-index /dev/null docs/insumos_alta.md
-  └ diff --git a/docs/insumos_alta.md b/docs/insumos_alta.md
+• Ran git diff --no-index /dev/null docs/Inventario/insumos_alta.md
+  └ diff --git a/docs/Inventario/insumos_alta.md b/docs/Inventario/insumos_alta.md
     new file mode 100755
     … +43 lines
     +- `meta` permite adjuntar datos adicionales en JSON (ej. proveedor preferente, notas internas).
@@ -2505,7 +2505,7 @@ InsumoController.php,
   app/Livewire/Inventory/InsumoCreate.php
   app/Services/Inventory/InsumoCodeService.php
   database/migrations/2025_10_30_120000_add_code_columns_to_insumo.php
-  docs/insumos_alta.md
+  docs/Inventario/insumos_alta.md
   resources/views/inventory/insumos/create.blade.php
   resources/views/livewire/inventory/insumo-create.blade.php
   routes/web.php
@@ -3045,11 +3045,11 @@ InsumoController.php,
        |  Recetas (Livewire)
        |========================================================================= */
 
-  diff --git a/docs/insumos_alta.md b/docs/insumos_alta.md
+  diff --git a/docs/Inventario/insumos_alta.md b/docs/Inventario/insumos_alta.md
   new file mode 100755
   index 0000000..0d071fe
   --- /dev/null
-  +++ b/docs/insumos_alta.md
+  +++ b/docs/Inventario/insumos_alta.md
   @@ -0,0 +1,41 @@
   +# Alta de insumos (`selemti.insumo`)
   +
@@ -3601,7 +3601,7 @@ InsumoController.php,
       ->post('/inventory/insumos/bulk-import', [InsumoController::class, 'bulkImport'])
       ->name('api.insumos.bulkImport');
 
-  H) docs/insumos_alta.md
+  H) docs/Inventario/insumos_alta.md
 
   # Alta de insumos (`selemti.insumo`)
 

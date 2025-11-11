@@ -17,7 +17,7 @@ Este documento describe el flujo integral de producción interna, desde la plani
    - Ajustes al POS (agotados/forzar KDS) requieren permisos específicos (`can_manage_menu_availability`) y quedan registrados en `selemti.menu_availability_log`.
 
 3. **Trazabilidad completa**  
-   - Cada lote producido, merma, reproceso o ajuste debe almacenar user_id, timestamp, motivo y referencias (Política C en `docs/SECURITY_AND_ROLES.md`).
+   - Cada lote producido, merma, reproceso o ajuste debe almacenar user_id, timestamp, motivo y referencias (Política C en `docs/Seguridad/SECURITY_AND_ROLES.md`).
 
 ---
 
@@ -82,7 +82,7 @@ Se registra en `selemti.production_shift_close` (por implementarse).
 ## 7. Referencias cruzadas
 - `docs/Produccion/PRODUMIX.md` – Detalle de planificación diaria.  
 - `docs/POS/LIVE_AVAILABILITY.md` – Ajustes en POS y menú en vivo.  
-- `docs/SECURITY_AND_ROLES.md` – Permisos `can_manage_produmix`, `can_edit_production_order`, `can_manage_menu_availability`.  
+- `docs/Seguridad/SECURITY_AND_ROLES.md` – Permisos `can_manage_produmix`, `can_edit_production_order`, `can_manage_menu_availability`.  
 - `docs/Recetas/POS_CONSUMPTION_SERVICE.md` – Implosión y reproceso POS.  
 
 ---

@@ -46,8 +46,8 @@ docs/
 |-------------------------------------------------------|--------|--------------------|------------------|
 | `docs/V2/01_General/vision.md`                        | ✅ Migrado | Revisar y ampliar con roadmap actual | `docs/V2/01_General/` |
 | `docs/V2/02_Database/schema_public.md` y `docs/V2/02_Database/schema_selemti.md` | ⚠ Parcial | Completar consolidación del data dictionary original (agregar tablas pendientes, referencias a scripts) | `docs/V2/02_Database/` |
-| `docs/DOC_ERD-FULL-20251017-081101.md`                | ✅ | Referenciar en `schema_public.md` | `docs/V2/02_Database/` |
-| `docs/DOC_GENERAL-20251017-0146.md`                   | ⚠ Obsoleto parcial | Extraer secciones útiles (auditoría) y amalgamar en `PROJECT_STATUS.md` | `legacy/` |
+| `docs/BD/DOC_ERD-FULL-20251017-081101.md`                | ✅ | Referenciar en `schema_public.md` | `docs/V2/02_Database/` |
+| `docs/Arquitectura/DOC_GENERAL-20251017-0146.md`                   | ⚠ Obsoleto parcial | Extraer secciones útiles (auditoría) y amalgamar en `PROJECT_STATUS.md` | `legacy/` |
 | `docs/DOC_RUTAS_Y_CASOS_DE_USO-*.md`                  | ⚠ Duplicados | Consolidar en `03_Backend/routes_web.md` y `routes_api.md` | `docs/V2/03_Backend/` |
 | `docs/WIZARD_CORTE_CAJA-*.md`                         | ✅ | Integrar resumen en `ui_caja_kds.md`; guardar detalle en `legacy/` si hay versiones duplicadas | `docs/V2/04_Frontend/` |
 | `docs/CRUD_*.md`, `AUDITORIA-*.md`, `GAP_ANALYSIS_*.md` | ⚠ Multiples versiones | Seleccionar versión más reciente, resumir hallazgos en `PROJECT_STATUS.md` y archivar resto | `legacy/` |

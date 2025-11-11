@@ -1,8 +1,0 @@
-
-Warning: pg_connect(): Unable to connect to PostgreSQL server: FATAL:  la autentificación password falló para el usuario «postgres» in C:\xampp3\htdocs\TerrenaLaravel\audit_db.php on line 8
-
-Fatal error: Uncaught Error: No PostgreSQL connection opened yet in C:\xampp3\htdocs\TerrenaLaravel\audit_db.php:11
-Stack trace:
-#0 C:\xampp3\htdocs\TerrenaLaravel\audit_db.php(11): pg_last_error()
-#1 {main}
-  thrown in C:\xampp3\htdocs\TerrenaLaravel\audit_db.php on line 11

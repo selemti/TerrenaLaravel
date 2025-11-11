@@ -563,7 +563,7 @@
     autenticación, permiso y razón documentada.
   - database/seeders/RecetasPermissionsSeeder.php: faltaban can_manage_purchasing y can_modify_recipe,
     dejando huecos en el modelo ACL. Riesgo: MEDIO. Política B.
-  - docs/SECURITY_AND_ROLES.md, docs/Recetas/POS_CONSUMPTION_SERVICE.md: las reglas estaban claras,
+  - docs/Seguridad/SECURITY_AND_ROLES.md, docs/Recetas/POS_CONSUMPTION_SERVICE.md: las reglas estaban claras,
     pero el código no las cumplía; se usaron como referencia para los ajustes.
   - app/Services/Production/ProductionService.php: continúa siendo un “stub” sin descarga/alta de
     inventario ni bitácora. Riesgo: MEDIO (Política F). Recomendación: definir consumo, merma, lotes y
