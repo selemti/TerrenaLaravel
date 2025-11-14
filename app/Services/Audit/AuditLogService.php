@@ -26,14 +26,14 @@ class AuditLogService
         DB::connection('pgsql')
             ->table('selemti.audit_log')
             ->insert([
-                'timestamp'     => now(),
-                'user_id'       => $userId,
-                'accion'        => $accion,
-                'entidad'       => $entidad,
-                'entidad_id'    => $entidadId,
-                'motivo'        => $motivo,
+                'timestamp' => now(),
+                'user_id' => $userId,
+                'accion' => $accion,
+                'entidad' => $entidad,
+                'entidad_id' => $entidadId,
+                'motivo' => $motivo,
                 'evidencia_url' => $evidenciaUrl,
-                'payload_json'  => json_encode($payload),
+                'payload_json' => json_encode($payload),
             ]);
     }
 }

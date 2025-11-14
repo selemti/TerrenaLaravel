@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Models\Rec\Receta;
-use App\Models\Rec\RecetaVersion;
 use App\Services\Costing\RecipeCostingService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -51,20 +50,18 @@ class RecipeCostController extends Controller
     /**
      * Implotar BOM (Bill of Materials) de una receta
      * Retorna solo ingredientes base (items de inventario), resolviendo sub-recetas recursivamente
-     * 
-     * @param Request $request
-     * @param string $id Recipe ID
-     * @return JsonResponse
+     *
+     * @param  string  $id  Recipe ID
      */
     public function implodeBom(Request $request, string $id): JsonResponse
     {
         try {
             $receta = Receta::findOrFail($id);
-            
+
             // Obtener versión publicada o la última versión
             $version = $receta->publishedVersion ?? $receta->latestVersion;
-            
-            if (!$version) {
+
+            if (! $version) {
                 return response()->json([
                     'ok' => false,
                     'message' => 'La receta no tiene versiones disponibles.',
@@ -74,9 +71,9 @@ class RecipeCostController extends Controller
 
             // Cargar detalles con relaciones
             $version->load(['detalles.item']);
-            
+
             $baseIngredients = $this->implodeRecursive(
-                $version->detalles, 
+                $version->detalles,
                 $multiplier = 1.0,
                 $depth = 0,
                 $visited = []
@@ -93,7 +90,7 @@ class RecipeCostController extends Controller
                 'aggregated' => true,
                 'timestamp' => now()->toIso8601String(),
             ]);
-            
+
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'ok' => false,
@@ -109,7 +106,7 @@ class RecipeCostController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Error al procesar BOM: ' . $e->getMessage(),
+                'message' => 'Error al procesar BOM: '.$e->getMessage(),
                 'recipe_id' => $id,
             ], 500);
         }
@@ -117,11 +114,11 @@ class RecipeCostController extends Controller
 
     /**
      * Método recursivo para implotar BOM
-     * 
-     * @param \Illuminate\Database\Eloquent\Collection $detalles
-     * @param float $multiplier Multiplicador de cantidad (para sub-recetas)
-     * @param int $depth Profundidad de recursión (protección contra loops)
-     * @param array $visited Items ya visitados (protección contra loops)
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $detalles
+     * @param  float  $multiplier  Multiplicador de cantidad (para sub-recetas)
+     * @param  int  $depth  Profundidad de recursión (protección contra loops)
+     * @param  array  $visited  Items ya visitados (protección contra loops)
      * @return array Ingredientes base agregados por item_id
      */
     private function implodeRecursive($detalles, float $multiplier = 1.0, int $depth = 0, array $visited = []): array
@@ -135,7 +132,7 @@ class RecipeCostController extends Controller
 
         foreach ($detalles as $detalle) {
             $itemId = $detalle->item_id;
-            
+
             // Protección contra loops infinitos
             if (in_array($itemId, $visited)) {
                 continue; // Skip si ya visitamos este item en esta rama
@@ -146,29 +143,29 @@ class RecipeCostController extends Controller
                 // Es una sub-receta, necesitamos implodirla
                 try {
                     $subReceta = Receta::find($itemId);
-                    
+
                     if ($subReceta) {
                         $subVersion = $subReceta->publishedVersion ?? $subReceta->latestVersion;
-                        
+
                         if ($subVersion) {
                             $subVersion->load(['detalles.item']);
-                            
+
                             // Calcular multiplicador: cantidad de sub-receta * multiplicador acumulado
                             $subMultiplier = $detalle->cantidad * $multiplier;
-                            
+
                             // Recursión: agregar itemId actual a visited
                             $newVisited = array_merge($visited, [$itemId]);
-                            
+
                             $subIngredients = $this->implodeRecursive(
                                 $subVersion->detalles,
                                 $subMultiplier,
                                 $depth + 1,
                                 $newVisited
                             );
-                            
+
                             // Agregar ingredientes de sub-receta a nuestro array
                             foreach ($subIngredients as $key => $subIng) {
-                                if (!isset($ingredients[$key])) {
+                                if (! isset($ingredients[$key])) {
                                     $ingredients[$key] = $subIng;
                                 } else {
                                     // Agregar cantidades
@@ -180,8 +177,8 @@ class RecipeCostController extends Controller
                 } catch (\Exception $e) {
                     // Si falla cargar sub-receta, tratarlo como ingrediente base
                     $key = $itemId;
-                    
-                    if (!isset($ingredients[$key])) {
+
+                    if (! isset($ingredients[$key])) {
                         $ingredients[$key] = [
                             'item_id' => $itemId,
                             'item_name' => $detalle->item->nombre ?? $itemId,
@@ -190,15 +187,15 @@ class RecipeCostController extends Controller
                             'is_base' => true,
                         ];
                     }
-                    
+
                     $qtyAdjusted = $detalle->cantidad * $multiplier;
                     $ingredients[$key]['total_qty'] += $qtyAdjusted;
                 }
             } else {
                 // Es un ingrediente base (item de inventario)
                 $key = $itemId;
-                
-                if (!isset($ingredients[$key])) {
+
+                if (! isset($ingredients[$key])) {
                     $ingredients[$key] = [
                         'item_id' => $itemId,
                         'item_name' => $detalle->item->nombre ?? 'Item desconocido',
@@ -207,7 +204,7 @@ class RecipeCostController extends Controller
                         'is_base' => true,
                     ];
                 }
-                
+
                 // Aplicar multiplicador y agregar
                 $qtyAdjusted = $detalle->cantidad * $multiplier;
                 $ingredients[$key]['total_qty'] += $qtyAdjusted;
@@ -230,7 +227,7 @@ class RecipeCostController extends Controller
 
         try {
             $receta = Receta::findOrFail($id);
-            
+
             $at = $request->input('at') ? Carbon::parse($request->input('at')) : now();
             $notes = $request->input('notes');
 
@@ -256,7 +253,7 @@ class RecipeCostController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Error al crear snapshot: ' . $e->getMessage(),
+                'message' => 'Error al crear snapshot: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -275,7 +272,7 @@ class RecipeCostController extends Controller
 
         try {
             $receta = Receta::findOrFail($id);
-            
+
             $from = $request->input('from') ? Carbon::parse($request->input('from')) : null;
             $to = $request->input('to') ? Carbon::parse($request->input('to')) : null;
             $limit = $request->input('limit', 100);
@@ -289,7 +286,7 @@ class RecipeCostController extends Controller
 
             return response()->json([
                 'ok' => true,
-                'data' => $history->map(fn($snapshot) => [
+                'data' => $history->map(fn ($snapshot) => [
                     'id' => $snapshot->id,
                     'snapshot_at' => $snapshot->snapshot_at,
                     'portion_cost' => $snapshot->portion_cost,
@@ -308,7 +305,7 @@ class RecipeCostController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Error al obtener historial: ' . $e->getMessage(),
+                'message' => 'Error al obtener historial: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -326,7 +323,7 @@ class RecipeCostController extends Controller
 
         try {
             $receta = Receta::findOrFail($id);
-            
+
             $current = \App\Models\Rec\RecipeCostSnapshot::findOrFail($request->input('current_id'));
             $previous = \App\Models\Rec\RecipeCostSnapshot::findOrFail($request->input('previous_id'));
 
@@ -347,7 +344,7 @@ class RecipeCostController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Error al comparar snapshots: ' . $e->getMessage(),
+                'message' => 'Error al comparar snapshots: '.$e->getMessage(),
             ], 500);
         }
     }

@@ -1,6 +1,7 @@
 <?php
 
-return new class extends \Illuminate\Database\Migrations\Migration {
+return new class extends \Illuminate\Database\Migrations\Migration
+{
     public function up(): void
     {
         // Columna item_code (compatible 9.5)
@@ -31,7 +32,7 @@ SQL);
 
     public function down(): void
     {
-        \Illuminate\Support\Facades\DB::unprepared("DROP INDEX IF EXISTS selemti.ux_items_item_code");
+        \Illuminate\Support\Facades\DB::unprepared('DROP INDEX IF EXISTS selemti.ux_items_item_code');
         \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 DO $$
 BEGIN

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Almacen extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.cat_almacenes';
 
     protected $fillable = [
@@ -25,4 +26,3 @@ class Almacen extends Model
         return $this->belongsTo(Sucursal::class, 'sucursal_id');
     }
 }
-

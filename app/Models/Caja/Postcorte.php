@@ -10,7 +10,9 @@ class Postcorte extends Model
     use HasFactory;
 
     protected $table = 'postcorte';
+
     protected $schema = 'selemti';
+
     public $timestamps = true;
 
     protected $fillable = [

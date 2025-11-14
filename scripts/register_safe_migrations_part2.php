@@ -2,14 +2,14 @@
 
 /**
  * Script para registrar migraciones seguras - PARTE 2
- * 
+ *
  * Registra migraciones cuyas tablas YA EXISTEN en la base de datos
  * (segunda tanda del 15 de noviembre)
  */
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__.'/../vendor/autoload.php';
 
-$app = require_once __DIR__ . '/../bootstrap/app.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use Illuminate\Support\Facades\DB;
@@ -26,7 +26,7 @@ $safeMigrations = [
     '2025_11_15_100000_create_reporting_tables',
 ];
 
-echo "Se registrarán " . count($safeMigrations) . " migraciones...\n\n";
+echo 'Se registrarán '.count($safeMigrations)." migraciones...\n\n";
 
 // Get next batch number
 $nextBatch = DB::table('migrations')->max('batch') + 1;
@@ -41,7 +41,7 @@ try {
     foreach ($safeMigrations as $migration) {
         // Check if already registered
         $exists = DB::table('migrations')->where('migration', $migration)->exists();
-        
+
         if ($exists) {
             echo "  ⊘ SKIP: $migration (ya registrada)\n";
             $skipped++;
@@ -54,17 +54,17 @@ try {
             $registered++;
         }
     }
-    
+
     echo "\n───────────────────────────────────────────────────────────────────────────────────\n";
     echo "Registradas: $registered\n";
     echo "Omitidas:    $skipped (ya existían)\n";
     echo "───────────────────────────────────────────────────────────────────────────────────\n\n";
-    
-    echo "¿Confirmar cambios? (y/n): ";
-    $handle = fopen("php://stdin", "r");
+
+    echo '¿Confirmar cambios? (y/n): ';
+    $handle = fopen('php://stdin', 'r');
     $line = fgets($handle);
     fclose($handle);
-    
+
     if (trim(strtolower($line)) === 'y') {
         DB::commit();
         echo "\n✓ Cambios confirmados y guardados.\n\n";
@@ -72,10 +72,10 @@ try {
         DB::rollBack();
         echo "\n✗ Cambios cancelados. No se registró nada.\n\n";
     }
-    
+
 } catch (Exception $e) {
     DB::rollBack();
-    echo "\n✗ ERROR: " . $e->getMessage() . "\n\n";
+    echo "\n✗ ERROR: ".$e->getMessage()."\n\n";
     exit(1);
 }
 

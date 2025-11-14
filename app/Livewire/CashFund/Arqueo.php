@@ -20,8 +20,11 @@ use Livewire\Component;
 class Arqueo extends Component
 {
     public string $fondoId;
+
     public ?CashFund $fondo = null;
+
     public bool $loading = false;
+
     public bool $showConfirmModal = false;
 
     public array $arqueoForm = [
@@ -35,11 +38,12 @@ class Arqueo extends Component
         $this->loadFondo();
 
         // Validar que el fondo esté abierto
-        if (!$this->fondo->canDoArqueo()) {
+        if (! $this->fondo->canDoArqueo()) {
             $this->dispatch('toast',
                 type: 'warning',
                 body: 'El fondo ya no está abierto para arqueo'
             );
+
             return redirect()->route('cashfund.movements', ['id' => $id]);
         }
     }
@@ -87,7 +91,7 @@ class Arqueo extends Component
 
                 $message = abs($diferencia) < 0.01
                     ? 'Arqueo registrado. El fondo cuadra perfectamente. Estado: EN REVISIÓN'
-                    : "Arqueo registrado con diferencia de $" . number_format(abs($diferencia), 2) . '. Estado: EN REVISIÓN';
+                    : 'Arqueo registrado con diferencia de $'.number_format(abs($diferencia), 2).'. Estado: EN REVISIÓN';
 
                 $this->dispatch('toast',
                     type: 'success',
@@ -100,7 +104,7 @@ class Arqueo extends Component
         } catch (\Exception $e) {
             $this->dispatch('toast',
                 type: 'error',
-                body: 'Error al guardar arqueo: ' . $e->getMessage()
+                body: 'Error al guardar arqueo: '.$e->getMessage()
             );
         } finally {
             $this->loading = false;
@@ -110,7 +114,7 @@ class Arqueo extends Component
 
     public function render()
     {
-        if (!$this->fondo) {
+        if (! $this->fondo) {
             abort(404, 'Fondo no encontrado');
         }
 
@@ -125,7 +129,7 @@ class Arqueo extends Component
             ->with('createdBy')
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(function($mov) {
+            ->map(function ($mov) {
                 return [
                     'id' => $mov->id,
                     'tipo' => $mov->tipo,
@@ -185,11 +189,11 @@ class Arqueo extends Component
                 'estado' => $this->fondo->estado,
             ],
         ])
-        ->layout('layouts.terrena', [
-            'active' => 'caja',
-            'title' => 'Arqueo · Caja Chica',
-            'pageTitle' => "Fondo #{$this->fondoId} - Arqueo y Cierre",
-        ]);
+            ->layout('layouts.terrena', [
+                'active' => 'caja',
+                'title' => 'Arqueo · Caja Chica',
+                'pageTitle' => "Fondo #{$this->fondoId} - Arqueo y Cierre",
+            ]);
     }
 
     protected function rules(): array
@@ -213,7 +217,7 @@ class Arqueo extends Component
     {
         $this->fondo = CashFund::with(['movements'])->find($this->fondoId);
 
-        if (!$this->fondo) {
+        if (! $this->fondo) {
             abort(404, 'Fondo no encontrado');
         }
     }
@@ -227,7 +231,7 @@ class Arqueo extends Component
                 ->first(['nombre', 'clave']);
 
             if ($sucursal) {
-                return trim(($sucursal->clave ? "{$sucursal->clave} - " : '') . $sucursal->nombre);
+                return trim(($sucursal->clave ? "{$sucursal->clave} - " : '').$sucursal->nombre);
             }
 
             return "Sucursal #{$sucursalId}";

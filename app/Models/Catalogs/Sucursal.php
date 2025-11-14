@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 class Sucursal extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.cat_sucursales';
 
     protected $fillable = [
@@ -34,7 +35,7 @@ class Sucursal extends Model
      */
     public function getTerminalesAttribute()
     {
-        if (!$this->pos_location) {
+        if (! $this->pos_location) {
             return collect([]);
         }
 
@@ -106,4 +107,3 @@ class Sucursal extends Model
         return collect($result);
     }
 }
-

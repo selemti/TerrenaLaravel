@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Reports;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use Illuminate\Http\Response;
 
 class SalesDetailController extends BaseReportController
 {
@@ -120,8 +120,8 @@ class SalesDetailController extends BaseReportController
             'reporte_detalle_ventas_%s_%s%s.pdf',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            !empty($branches)
-                ? '_' . str_replace(' ', '_', strtolower(implode('-', $branches)))
+            ! empty($branches)
+                ? '_'.str_replace(' ', '_', strtolower(implode('-', $branches)))
                 : ''
         );
 
@@ -165,7 +165,7 @@ class SalesDetailController extends BaseReportController
 
     protected function fetch(Carbon $start, Carbon $end, array $branches, array $terminals): Collection
     {
-        $sql = "
+        $sql = '
             SELECT
                 d.*,
                 ti.item_id AS menu_item_id,
@@ -180,20 +180,21 @@ class SalesDetailController extends BaseReportController
             LEFT JOIN public.ticket_item ti ON ti.id = d.ticket_item_id
             LEFT JOIN public.menu_item mi ON mi.id = ti.item_id
             WHERE d.folio_date BETWEEN ? AND ?
-        ";
+        ';
         $bindings = [$start->toDateString(), $end->toDateString()];
 
-        if (!empty($branches)) {
+        if (! empty($branches)) {
             $sql .= " AND UPPER(branch_key) IN (SELECT UNNEST(string_to_array(?, ',')))";
             $bindings[] = implode(',', $branches);
         }
 
-        if (!empty($terminals)) {
+        if (! empty($terminals)) {
             $sql .= " AND CAST(terminal_id AS text) IN (SELECT UNNEST(string_to_array(?, ',')))";
             $bindings[] = implode(',', $terminals);
         }
 
         $rows = DB::connection('pgsql')->select($sql, $bindings);
+
         return collect($rows);
     }
 
@@ -291,6 +292,7 @@ class SalesDetailController extends BaseReportController
         return $rows
             ->groupBy(function (array $row) {
                 $menuItemId = $row['menu_item_id'] ?? null;
+
                 return $row['branch_key'].'|'.($menuItemId !== null ? $menuItemId : 'NO_ITEM');
             })
             ->map(function (Collection $items, string $key) use ($modifiersMap) {
@@ -385,7 +387,7 @@ class SalesDetailController extends BaseReportController
         foreach ($ids->chunk(400) as $chunk) {
             $rows = DB::connection('pgsql')
                 ->table('public.ticket_item_modifier as tim')
-                ->selectRaw(<<<SQL
+                ->selectRaw(<<<'SQL'
                     tim.ticket_item_id,
                     COALESCE(mm.name, tim.modifier_name, '') AS modifier_name,
                     COALESCE(tim.item_count, 0) AS modifier_count,
@@ -442,7 +444,7 @@ class SalesDetailController extends BaseReportController
         return $items
             ->flatMap(function (array $item) use ($modifiersMap) {
                 $ticketItemId = $item['ticket_item_id'] ?? null;
-                if (!$ticketItemId || !isset($modifiersMap[$ticketItemId])) {
+                if (! $ticketItemId || ! isset($modifiersMap[$ticketItemId])) {
                     return [];
                 }
 
@@ -473,7 +475,7 @@ class SalesDetailController extends BaseReportController
                 return [
                     'name' => $name,
                     'group_name' => $groupName,
-                    'count' => $this->round($mods->sum('count')), 
+                    'count' => $this->round($mods->sum('count')),
                     'lines' => $lines,
                     'tickets' => $tickets,
                     'total' => $this->round($mods->sum('total')),
@@ -496,7 +498,7 @@ class SalesDetailController extends BaseReportController
         return $items
             ->flatMap(function (array $item) use ($modifiersMap) {
                 $ticketItemId = $item['ticket_item_id'] ?? null;
-                if (!$ticketItemId || !isset($modifiersMap[$ticketItemId])) {
+                if (! $ticketItemId || ! isset($modifiersMap[$ticketItemId])) {
                     return [];
                 }
 
@@ -586,6 +588,7 @@ class SalesDetailController extends BaseReportController
             ->groupBy('combo')
             ->map(function (Collection $group, string $combo) {
                 $tickets = $group->pluck('ticket_id')->filter()->unique()->count();
+
                 return [
                     'combo' => $combo,
                     'lines' => $group->count(),
@@ -708,7 +711,7 @@ class SalesDetailController extends BaseReportController
                 continue;
             }
 
-            if (!isset($colors[$upper])) {
+            if (! isset($colors[$upper])) {
                 $colors[$upper] = $palette[$index % count($palette)];
                 $index++;
             }

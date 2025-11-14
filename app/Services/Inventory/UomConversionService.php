@@ -26,7 +26,6 @@ use Illuminate\Support\Facades\Log;
  * // ['success' => true, 'result' => 2500.0, 'is_approx' => false, ...]
  * ```
  *
- * @package App\Services\Inventory
  * @see docs/Inventario/UOM_STRATEGY_TERRENA.md
  */
 class UomConversionService
@@ -39,10 +38,10 @@ class UomConversionService
     /**
      * Convert a value from one UOM to another
      *
-     * @param float $value Quantity to convert
-     * @param string $fromClave Origin UOM clave (e.g., 'KG')
-     * @param string $toClave Destination UOM clave (e.g., 'G')
-     * @param string $preferScope Preferred scope: 'global', 'house', or 'any'
+     * @param  float  $value  Quantity to convert
+     * @param  string  $fromClave  Origin UOM clave (e.g., 'KG')
+     * @param  string  $toClave  Destination UOM clave (e.g., 'G')
+     * @param  string  $preferScope  Preferred scope: 'global', 'house', or 'any'
      * @return array Result array with keys:
      *               - success: bool (true if conversion succeeded)
      *               - result: float (converted value)
@@ -76,7 +75,7 @@ class UomConversionService
         }
 
         // Validate scope parameter
-        if (!in_array($preferScope, ['global', 'house', 'any'])) {
+        if (! in_array($preferScope, ['global', 'house', 'any'])) {
             return $this->error("Invalid scope: {$preferScope}. Must be 'global', 'house', or 'any'.");
         }
 
@@ -98,7 +97,7 @@ class UomConversionService
             $conversion = null;
         }
 
-        if (!$conversion) {
+        if (! $conversion) {
             $fallback = $this->convertWithFallback($value, $fromClave, $toClave);
 
             return $fallback ?? $this->error("No conversion found from {$fromClave} to {$toClave}");
@@ -110,7 +109,7 @@ class UomConversionService
         return [
             'success' => true,
             'result' => $result,
-            'is_approx' => !$conversion->is_exact,
+            'is_approx' => ! $conversion->is_exact,
             'factor' => (float) $conversion->factor,
             'scope' => $conversion->scope,
             'notes' => $conversion->notes,
@@ -121,10 +120,9 @@ class UomConversionService
     /**
      * Find conversion record between two UOM claves
      *
-     * @param string $fromClave Origin UOM clave
-     * @param string $toClave Destination UOM clave
-     * @param string $preferScope Preferred scope
-     * @return UomConversion|null
+     * @param  string  $fromClave  Origin UOM clave
+     * @param  string  $toClave  Destination UOM clave
+     * @param  string  $preferScope  Preferred scope
      */
     protected function findConversion(string $fromClave, string $toClave, string $preferScope): ?UomConversion
     {
@@ -132,7 +130,7 @@ class UomConversionService
         $fromUom = Unidad::activas()->porClave($fromClave)->first();
         $toUom = Unidad::activas()->porClave($toClave)->first();
 
-        if (!$fromUom || !$toUom) {
+        if (! $fromUom || ! $toUom) {
             return null;
         }
 
@@ -156,8 +154,8 @@ class UomConversionService
     /**
      * Get all conversions for a given UOM clave
      *
-     * @param string $clave UOM clave (e.g., 'KG')
-     * @param string $direction 'from' (as origen) or 'to' (as destino) or 'both'
+     * @param  string  $clave  UOM clave (e.g., 'KG')
+     * @param  string  $direction  'from' (as origen) or 'to' (as destino) or 'both'
      * @return array Array of conversions with formatted data
      */
     public function getConversionsFor(string $clave, string $direction = 'both'): array
@@ -199,6 +197,7 @@ class UomConversionService
                     ->get()
                     ->map(function ($conv) use ($clave) {
                         $inverseFactor = 1.0 / (float) $conv->factor;
+
                         return [
                             'from' => $conv->origen->clave,
                             'to' => $clave,
@@ -221,7 +220,7 @@ class UomConversionService
             $indexed = [];
 
             foreach (array_merge($conversions, $fallbackConversions) as $conversion) {
-                $key = $conversion['from'] . '>' . $conversion['to'];
+                $key = $conversion['from'].'>'.$conversion['to'];
                 $indexed[$key] = $conversion;
             }
 
@@ -234,10 +233,9 @@ class UomConversionService
     /**
      * Validate if a conversion exists between two UOM claves
      *
-     * @param string $fromClave Origin UOM clave
-     * @param string $toClave Destination UOM clave
-     * @param string $preferScope Preferred scope
-     * @return bool
+     * @param  string  $fromClave  Origin UOM clave
+     * @param  string  $toClave  Destination UOM clave
+     * @param  string  $preferScope  Preferred scope
      */
     public function canConvert(string $fromClave, string $toClave, string $preferScope = 'any'): bool
     {
@@ -268,9 +266,9 @@ class UomConversionService
      *
      * This is used for kardex entries where all quantities must be in base units.
      *
-     * @param float $value Quantity to normalize
-     * @param string $fromClave Origin UOM clave
-     * @param string $tipo Type: 'PESO' (→ KG), 'VOLUMEN' (→ L), 'UNIDAD' (→ PZ)
+     * @param  float  $value  Quantity to normalize
+     * @param  string  $fromClave  Origin UOM clave
+     * @param  string  $tipo  Type: 'PESO' (→ KG), 'VOLUMEN' (→ L), 'UNIDAD' (→ PZ)
      * @return array Result with normalized value and base UOM
      */
     public function normalizeToBase(float $value, string $fromClave, string $tipo): array
@@ -286,7 +284,7 @@ class UomConversionService
         // Convert to base UOM
         $result = $this->convert($value, $fromClave, $baseUom, 'global');
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             // If direct conversion fails, try to identify if the UOM is already base
             if (strtoupper($fromClave) === $baseUom) {
                 return [
@@ -318,20 +316,17 @@ class UomConversionService
      * Clear conversion cache
      *
      * Call this after updating conversion factors.
-     *
-     * @return void
      */
     public function clearCache(): void
     {
         Cache::flush(); // or more specific cache key pattern
-        Log::info("UomConversionService: Cache cleared");
+        Log::info('UomConversionService: Cache cleared');
     }
 
     /**
      * Build error response array
      *
-     * @param string $message Error message
-     * @return array
+     * @param  string  $message  Error message
      */
     protected function error(string $message): array
     {
@@ -353,7 +348,7 @@ class UomConversionService
     {
         $map = $this->fallbackMap();
 
-        if (!isset($map[$fromClave][$toClave])) {
+        if (! isset($map[$fromClave][$toClave])) {
             return null;
         }
 
@@ -362,7 +357,7 @@ class UomConversionService
         return [
             'success' => true,
             'result' => $value * $definition['factor'],
-            'is_approx' => !$definition['is_exact'],
+            'is_approx' => ! $definition['is_exact'],
             'factor' => $definition['factor'],
             'scope' => $definition['scope'],
             'notes' => $definition['notes'],
@@ -403,7 +398,7 @@ class UomConversionService
 
         if ($direction === 'to' || $direction === 'both') {
             foreach ($map as $from => $targets) {
-                if (!isset($targets[$clave])) {
+                if (! isset($targets[$clave])) {
                     continue;
                 }
 

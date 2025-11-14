@@ -30,6 +30,7 @@ return new class extends Migration
                 $this->fixTableItemId($table);
             } catch (\Exception $e) {
                 echo "  ⚠️  {$table}: {$e->getMessage()}\n";
+
                 continue; // Continuar con la siguiente tabla
             }
         }
@@ -57,8 +58,9 @@ return new class extends Migration
             "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'selemti' AND table_name = '{$table}')"
         )[0]->exists;
 
-        if (!$exists) {
+        if (! $exists) {
             echo "  ⊘ {$table}: no existe\n";
+
             return;
         }
 
@@ -67,8 +69,9 @@ return new class extends Migration
             "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'selemti' AND table_name = '{$table}' AND column_name = 'item_id')"
         )[0]->exists;
 
-        if (!$hasColumn) {
+        if (! $hasColumn) {
             echo "  ⊘ {$table}: no tiene columna item_id\n";
+
             return;
         }
 
@@ -79,6 +82,7 @@ return new class extends Migration
 
         if ($columnInfo->data_type !== 'bigint' && $columnInfo->data_type !== 'integer') {
             echo "  ✓ {$table}.item_id: ya es {$columnInfo->data_type}\n";
+
             return;
         }
 
@@ -87,12 +91,14 @@ return new class extends Migration
 
         if ($count->cnt > 0) {
             echo "  ⚠️  {$table}: tiene {$count->cnt} registros - SALTADO (revisar manualmente)\n";
+
             return;
         }
 
         // Casos especiales: tablas con vistas dependientes
         if ($table === 'item_vendor_prices') {
             echo "  ⚠️  {$table}: tiene vistas dependientes - requiere intervención manual\n";
+
             return;
         }
 

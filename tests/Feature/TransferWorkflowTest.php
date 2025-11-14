@@ -14,8 +14,11 @@ class TransferWorkflowTest extends TestCase
     use RefreshDatabase;
 
     protected User $user;
+
     protected Almacen $almacenOrigen;
+
     protected Almacen $almacenDestino;
+
     protected Item $item;
 
     protected function setUp(): void

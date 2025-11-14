@@ -17,13 +17,13 @@ class VerifyCatalogTables extends Command
      * @var array<string, array<string>>
      */
     protected array $catalogTables = [
-        'cat_unidades'        => ['clave', 'nombre'],
-        'cat_uom_conversion'  => ['origen_id', 'destino_id', 'factor'],
-        'cat_proveedores'     => ['rfc', 'nombre'],
-        'cat_sucursales'      => ['clave', 'nombre'],
-        'cat_almacenes'       => ['clave', 'nombre'],
-        'inv_stock_policy'    => ['item_id', 'sucursal_id'],
-        'items'               => ['id', 'nombre'],
+        'cat_unidades' => ['clave', 'nombre'],
+        'cat_uom_conversion' => ['origen_id', 'destino_id', 'factor'],
+        'cat_proveedores' => ['rfc', 'nombre'],
+        'cat_sucursales' => ['clave', 'nombre'],
+        'cat_almacenes' => ['clave', 'nombre'],
+        'inv_stock_policy' => ['item_id', 'sucursal_id'],
+        'items' => ['id', 'nombre'],
     ];
 
     public function handle(): int
@@ -46,19 +46,20 @@ class VerifyCatalogTables extends Command
                 }
 
                 $rows[] = [
-                    'Tabla'    => $table,
-                    'Estado'   => $exists ? 'OK' : 'FALTA',
+                    'Tabla' => $table,
+                    'Estado' => $exists ? 'OK' : 'FALTA',
                     'Detalles' => $exists
                         ? ($this->option('details') && ! empty($missingColumns)
-                            ? 'Faltan columnas: ' . implode(', ', $missingColumns)
+                            ? 'Faltan columnas: '.implode(', ', $missingColumns)
                             : '')
                         : 'Ejecuta las migraciones correspondientes',
                 ];
             }
         } catch (\Throwable $e) {
-            $this->error('No se pudo conectar a la base de datos: ' . $e->getMessage());
+            $this->error('No se pudo conectar a la base de datos: '.$e->getMessage());
             $this->newLine();
             $this->warn('Verifica tus credenciales en el archivo .env o que el servidor de base de datos esté escuchando.');
+
             return self::FAILURE;
         }
 
@@ -68,11 +69,13 @@ class VerifyCatalogTables extends Command
         if (! empty($missing)) {
             $this->newLine();
             $this->error('Algunas tablas faltan. Ejecuta "php artisan migrate" y vuelve a correr la verificación.');
+
             return self::FAILURE;
         }
 
         $this->newLine();
         $this->info('Todas las tablas requeridas están presentes.');
+
         return self::SUCCESS;
     }
 }

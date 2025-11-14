@@ -679,6 +679,18 @@ async function renderPaso3(){
   if (!r?.ok){ toast('No fue posible cargar totales de precorte','err',9000,'Error'); return; }
   const d = r.data || {};
 
+  // Cargar notas del postcorte si existe
+  if (state.postcorteId) {
+    try {
+      const pcRes = await GET(`${BASE}/api/postcortes/${state.postcorteId}`);
+      if (pcRes?.ok && pcRes.data?.notas && notas) {
+        notas.value = pcRes.data.notas;
+      }
+    } catch(e) {
+      console.log('[renderPaso3] no se pudieron cargar notas:', e);
+    }
+  }
+
   const efD = Number(d?.efectivo?.declarado||0), efS = Number(d?.efectivo?.sistema||0);
   const crD = Number(d?.tarjeta_credito?.declarado||0), crS = Number(d?.tarjeta_credito?.sistema||0);
   const dbD = Number(d?.tarjeta_debito ?.declarado||0), dbS = Number(d?.tarjeta_debito ?.sistema||0);
@@ -824,7 +836,11 @@ async function guardarPostcorte(validar){
     toast(validar ? 'Postcorte validado y cerrado.' : 'Postcorte guardado.','ok',4000,'Listo');
 
     if (validar){
-      // limpiar “pendiente” de sesión y cerrar modal
+      // Limpiar el campo de notas al validar y cerrar
+      const notasField = document.querySelector('#pc3Notas, #postcorteNotas');
+      if (notasField) notasField.value = '';
+
+      // limpiar "pendiente" de sesión y cerrar modal
       if (state.sesionId) forgetPostcorte(state.sesionId);
       try { bootstrap.Modal.getInstance(els.modal)?.hide(); } catch(_){}
 
@@ -834,7 +850,7 @@ async function guardarPostcorte(validar){
         .querySelectorAll(`[data-caja-action="wizard"][data-sesion="${state.sesionId}"]`)
         .forEach(b => b.classList.add('d-none'));
     }else{
-      // re-habilitar si sólo fue borrador
+      // re-habilitar si sólo fue borrador (no limpiar campo)
       if (btnV) btnV.disabled = false;
       if (btnC) btnC.disabled = false;
     }

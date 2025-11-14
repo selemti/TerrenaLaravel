@@ -8,19 +8,28 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PurchaseDocument extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'purchase_documents';
+
     protected $guarded = [];
 
     /**
      * Tipos de documentos
      */
     const TIPO_COTIZACION = 'COTIZACION';
+
     const TIPO_ORDEN_COMPRA = 'ORDEN_COMPRA';
+
     const TIPO_FACTURA = 'FACTURA';
+
     const TIPO_REMISION = 'REMISION';
+
     const TIPO_CONTRATO = 'CONTRATO';
+
     const TIPO_ESPECIFICACION = 'ESPECIFICACION';
+
     const TIPO_CERTIFICADO = 'CERTIFICADO';
+
     const TIPO_OTRO = 'OTRO';
 
     // ==================== RELATIONSHIPS ====================
@@ -64,7 +73,7 @@ class PurchaseDocument extends Model
      */
     public function getTipoBadgeAttribute(): string
     {
-        return match($this->tipo) {
+        return match ($this->tipo) {
             self::TIPO_COTIZACION => '<span class="badge bg-info">Cotización</span>',
             self::TIPO_ORDEN_COMPRA => '<span class="badge bg-primary">Orden de Compra</span>',
             self::TIPO_FACTURA => '<span class="badge bg-success">Factura</span>',
@@ -73,7 +82,7 @@ class PurchaseDocument extends Model
             self::TIPO_ESPECIFICACION => '<span class="badge bg-info">Especificación</span>',
             self::TIPO_CERTIFICADO => '<span class="badge bg-success">Certificado</span>',
             self::TIPO_OTRO => '<span class="badge bg-light text-dark">Otro</span>',
-            default => '<span class="badge bg-secondary">' . $this->tipo . '</span>',
+            default => '<span class="badge bg-secondary">'.$this->tipo.'</span>',
         };
     }
 
@@ -114,7 +123,7 @@ class PurchaseDocument extends Model
      */
     public function getFileIconAttribute(): string
     {
-        return match($this->file_extension) {
+        return match ($this->file_extension) {
             'pdf' => 'fa-file-pdf text-danger',
             'doc', 'docx' => 'fa-file-word text-primary',
             'xls', 'xlsx' => 'fa-file-excel text-success',
@@ -138,7 +147,8 @@ class PurchaseDocument extends Model
         if ($this->order_id) {
             return "Orden #{$this->order_id}";
         }
-        return "Sin referencia";
+
+        return 'Sin referencia';
     }
 
     // ==================== SCOPES ====================
@@ -190,10 +200,10 @@ class PurchaseDocument extends Model
     {
         return $query->where(function ($q) {
             $q->where('file_url', 'like', '%.jpg')
-              ->orWhere('file_url', 'like', '%.jpeg')
-              ->orWhere('file_url', 'like', '%.png')
-              ->orWhere('file_url', 'like', '%.gif')
-              ->orWhere('file_url', 'like', '%.webp');
+                ->orWhere('file_url', 'like', '%.jpeg')
+                ->orWhere('file_url', 'like', '%.png')
+                ->orWhere('file_url', 'like', '%.gif')
+                ->orWhere('file_url', 'like', '%.webp');
         });
     }
 }

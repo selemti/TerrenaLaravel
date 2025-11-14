@@ -7,13 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class LoteInventario extends Model
 {
     protected $table = 'selemti.inventory_batch';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
 
     protected $fillable = [
-        'item_id', 'lote_proveedor', 'fecha_recepcion', 'fecha_caducidad', 
-        'temperatura_recepcion', 'documento_url', 'cantidad_original', 
-        'cantidad_actual', 'estado', 'ubicacion_id'
+        'item_id', 'lote_proveedor', 'fecha_recepcion', 'fecha_caducidad',
+        'temperatura_recepcion', 'documento_url', 'cantidad_original',
+        'cantidad_actual', 'estado', 'ubicacion_id',
     ];
 
     protected $casts = [

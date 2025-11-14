@@ -10,11 +10,14 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     protected $guard_name = 'web';
+
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.users';
+
     protected $primaryKey = 'id';
 
     // La tabla selemti.users usa 'username' y 'password_hash' en lugar de 'name' y 'password'

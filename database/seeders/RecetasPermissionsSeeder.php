@@ -4,12 +4,12 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Guard;
 
 /**
  * Seeder for Recetas module permissions.
  *
  * @version 2.1
+ *
  * @author Gemini
  */
 class RecetasPermissionsSeeder extends Seeder

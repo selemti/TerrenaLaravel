@@ -2,23 +2,28 @@
 
 namespace App\Livewire\Inventory;
 
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\DB;
 
 class PhysicalCounts extends Component
 {
     use WithPagination;
 
     public $search = '';
+
     public $branch = '';
+
     public $status = '';
+
     public $dateFrom = '';
+
     public $dateTo = '';
+
     public $perPage = 10;
 
     protected $queryString = [
-        'search', 'branch', 'status', 'dateFrom', 'dateTo', 'perPage'
+        'search', 'branch', 'status', 'dateFrom', 'dateTo', 'perPage',
     ];
 
     public function render()
@@ -38,9 +43,9 @@ class PhysicalCounts extends Component
 
         // Aplicar filtros
         if ($this->search) {
-            $query->where(function($q) {
-                $q->where('h.id', 'ilike', '%' . $this->search . '%')
-                  ->orWhere('h.sucursal_id', 'ilike', '%' . $this->search . '%');
+            $query->where(function ($q) {
+                $q->where('h.id', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('h.sucursal_id', 'ilike', '%'.$this->search.'%');
             });
         }
 
@@ -61,8 +66,8 @@ class PhysicalCounts extends Component
         }
 
         $counts = $query->orderBy('h.programado_para', 'desc')
-                        ->orderBy('h.id', 'desc')
-                        ->paginate($this->perPage);
+            ->orderBy('h.id', 'desc')
+            ->paginate($this->perPage);
 
         // Obtener valores únicos para filtros
         $branches = DB::connection('pgsql')
@@ -114,7 +119,7 @@ class PhysicalCounts extends Component
                 ORDER BY h.id
             ", [$date, $date, $id]);
 
-        if (!empty($validationResults)) {
+        if (! empty($validationResults)) {
             // Actualizar estado a cerrado
             DB::connection('pgsql')
                 ->table('selemti.inventory_counts')
@@ -124,17 +129,17 @@ class PhysicalCounts extends Component
                     'cerrado_en' => now(),
                     'updated_at' => now(),
                 ]);
-            
+
             $this->dispatch('notify', message: 'Conteo físico cerrado correctamente');
         } else {
             $this->dispatch('notify', message: 'No se pudo cerrar el conteo. Puede que ya esté cerrado.', type: 'error');
         }
     }
-    
+
     public function validatePhysicalCounts($date = null, $branch = '1')
     {
         $date = $date ?: now()->format('Y-m-d');
-        
+
         // Bloque 8 de verification_queries_psql_v6.sql: Conteos físicos abiertos en el día (por sucursal)
         $openCounts = DB::connection('pgsql')
             ->select("

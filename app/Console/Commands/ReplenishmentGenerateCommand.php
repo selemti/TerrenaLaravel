@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Services\Replenishment\ReplenishmentService;
+use Illuminate\Console\Command;
 
 class ReplenishmentGenerateCommand extends Command
 {
@@ -31,7 +31,7 @@ class ReplenishmentGenerateCommand extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->service = new ReplenishmentService();
+        $this->service = new ReplenishmentService;
     }
 
     /**
@@ -63,7 +63,7 @@ class ReplenishmentGenerateCommand extends Command
             $duration = now()->diffInSeconds($startTime);
 
             $this->newLine();
-            $this->info('✅ Proceso completado en ' . $duration . ' segundos');
+            $this->info('✅ Proceso completado en '.$duration.' segundos');
             $this->newLine();
 
             // Mostrar resumen
@@ -86,7 +86,7 @@ class ReplenishmentGenerateCommand extends Command
                 $this->newLine();
 
                 $urgentes = collect($resultado['sugerencias'])
-                    ->filter(fn($s) => ($s['prioridad'] ?? $s->prioridad) === 'URGENTE')
+                    ->filter(fn ($s) => ($s['prioridad'] ?? $s->prioridad) === 'URGENTE')
                     ->take(10);
 
                 $rows = [];
@@ -125,8 +125,9 @@ class ReplenishmentGenerateCommand extends Command
             return Command::SUCCESS;
 
         } catch (\Exception $e) {
-            $this->error('❌ Error fatal: ' . $e->getMessage());
+            $this->error('❌ Error fatal: '.$e->getMessage());
             $this->error($e->getTraceAsString());
+
             return Command::FAILURE;
         }
     }

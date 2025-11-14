@@ -49,7 +49,7 @@ return new class extends Migration
         }
 
         // Revertir item_id a BIGINT
-        $sql = <<<SQL
+        $sql = <<<'SQL'
             ALTER TABLE selemti.inventory_count_lines
             ALTER COLUMN item_id TYPE BIGINT USING item_id::BIGINT;
         SQL;
@@ -75,7 +75,7 @@ return new class extends Migration
             echo "   Verificando integridad antes de cambiar tipo...\n";
 
             // Verificar que todos los item_id existen en items
-            $invalid = DB::connection('pgsql')->select(<<<SQL
+            $invalid = DB::connection('pgsql')->select(<<<'SQL'
                 SELECT DISTINCT icl.item_id
                 FROM selemti.inventory_count_lines icl
                 LEFT JOIN selemti.items i ON icl.item_id::VARCHAR = i.id
@@ -84,7 +84,7 @@ return new class extends Migration
             SQL);
 
             if (count($invalid) > 0) {
-                echo "   ❌ Encontrados " . count($invalid) . " item_id inválidos:\n";
+                echo '   ❌ Encontrados '.count($invalid)." item_id inválidos:\n";
                 foreach ($invalid as $row) {
                     echo "      - {$row->item_id}\n";
                 }
@@ -93,7 +93,7 @@ return new class extends Migration
         }
 
         // Cambiar tipo de dato
-        $sql = <<<SQL
+        $sql = <<<'SQL'
             ALTER TABLE selemti.inventory_count_lines
             ALTER COLUMN item_id TYPE VARCHAR(20) USING item_id::VARCHAR;
         SQL;
@@ -106,7 +106,7 @@ return new class extends Migration
     protected function checkOtherTables(): void
     {
         // Listar otras tablas que podrían tener el mismo problema
-        $sql = <<<SQL
+        $sql = <<<'SQL'
             SELECT 
                 c.table_name,
                 c.column_name,
@@ -130,7 +130,7 @@ return new class extends Migration
             foreach ($tables as $table) {
                 $countSql = "SELECT COUNT(*) as cnt FROM selemti.{$table->table_name}";
                 $result = DB::connection('pgsql')->selectOne($countSql);
-                
+
                 echo "   • {$table->table_name}.item_id ({$table->data_type})";
                 echo " - {$result->cnt} registros\n";
             }
@@ -165,7 +165,7 @@ return new class extends Migration
     protected function columnDataType(string $table, string $column): ?string
     {
         $result = DB::connection('pgsql')->selectOne(
-            <<<SQL
+            <<<'SQL'
             SELECT data_type
             FROM information_schema.columns
             WHERE table_schema = 'selemti'

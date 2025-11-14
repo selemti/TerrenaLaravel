@@ -24,14 +24,21 @@ class Movements extends Component
     use WithFileUploads;
 
     public string $fondoId;
+
     public ?CashFund $fondo = null;
+
     public bool $showMovForm = false;
+
     public bool $showAttachmentModal = false;
+
     public bool $showAuditModal = false;
+
     public bool $loading = false;
 
     public ?int $editingMovementId = null;
+
     public ?int $attachmentMovementId = null;
+
     public ?int $auditMovementId = null;
 
     public array $movForm = [
@@ -44,6 +51,7 @@ class Movements extends Component
     ];
 
     public $adjunto = null;
+
     public array $proveedores = [];
 
     public function mount(string $id): void
@@ -57,11 +65,12 @@ class Movements extends Component
 
     public function openMovForm(): void
     {
-        if (!$this->fondo || !$this->fondo->canAddMovements()) {
+        if (! $this->fondo || ! $this->fondo->canAddMovements()) {
             $this->dispatch('toast',
                 type: 'warning',
                 body: 'El fondo no está disponible para agregar movimientos'
             );
+
             return;
         }
 
@@ -82,11 +91,12 @@ class Movements extends Component
         $this->validate($this->movRules(), $this->movMessages());
 
         $this->fondo->refresh();
-        if (!$this->fondo->canAddMovements()) {
+        if (! $this->fondo->canAddMovements()) {
             $this->dispatch('toast',
                 type: 'error',
                 body: 'El fondo ya no está abierto para movimientos'
             );
+
             return;
         }
 
@@ -105,7 +115,7 @@ class Movements extends Component
         } catch (\Exception $e) {
             $this->dispatch('toast',
                 type: 'error',
-                body: 'Error al guardar: ' . $e->getMessage()
+                body: 'Error al guardar: '.$e->getMessage()
             );
         } finally {
             $this->loading = false;
@@ -115,7 +125,7 @@ class Movements extends Component
     protected function createMovement(): void
     {
         $tieneComprobante = $this->adjunto !== null;
-        $requiereAprobacion = $this->movForm['requiere_comprobante'] && !$tieneComprobante;
+        $requiereAprobacion = $this->movForm['requiere_comprobante'] && ! $tieneComprobante;
 
         $movimiento = CashFundMovement::create([
             'cash_fund_id' => $this->fondo->id,
@@ -248,7 +258,7 @@ class Movements extends Component
 
         $this->dispatch('toast',
             type: 'success',
-            body: 'Movimiento actualizado. Cambios: ' . implode(', ', $cambios)
+            body: 'Movimiento actualizado. Cambios: '.implode(', ', $cambios)
         );
 
         $this->closeMovForm();
@@ -259,11 +269,12 @@ class Movements extends Component
 
     public function editMovement(int $movementId): void
     {
-        if (!$this->fondo->canAddMovements()) {
+        if (! $this->fondo->canAddMovements()) {
             $this->dispatch('toast',
                 type: 'warning',
                 body: 'No se pueden editar movimientos en fondos cerrados'
             );
+
             return;
         }
 
@@ -348,7 +359,7 @@ class Movements extends Component
         } catch (\Exception $e) {
             $this->dispatch('toast',
                 type: 'error',
-                body: 'Error al adjuntar: ' . $e->getMessage()
+                body: 'Error al adjuntar: '.$e->getMessage()
             );
         } finally {
             $this->loading = false;
@@ -359,16 +370,17 @@ class Movements extends Component
     {
         $movimiento = CashFundMovement::findOrFail($movementId);
 
-        if (!$movimiento->adjunto_path) {
+        if (! $movimiento->adjunto_path) {
             $this->dispatch('toast',
                 type: 'warning',
                 body: 'Este movimiento no tiene comprobante'
             );
+
             return;
         }
 
         return response()->download(
-            storage_path('app/public/' . $movimiento->adjunto_path)
+            storage_path('app/public/'.$movimiento->adjunto_path)
         );
     }
 
@@ -392,11 +404,12 @@ class Movements extends Component
     {
         $this->fondo->refresh();
 
-        if (!$this->fondo->canDoArqueo()) {
+        if (! $this->fondo->canDoArqueo()) {
             $this->dispatch('toast',
                 type: 'warning',
                 body: 'El fondo ya no está abierto'
             );
+
             return;
         }
 
@@ -405,7 +418,7 @@ class Movements extends Component
 
     public function render()
     {
-        if (!$this->fondo) {
+        if (! $this->fondo) {
             abort(404, 'Fondo no encontrado');
         }
 
@@ -421,7 +434,7 @@ class Movements extends Component
             ->with('createdBy')
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(function($mov) {
+            ->map(function ($mov) {
                 return [
                     'id' => $mov->id,
                     'tipo' => $mov->tipo,
@@ -444,7 +457,7 @@ class Movements extends Component
                 ->with('changedBy')
                 ->orderBy('created_at', 'desc')
                 ->get()
-                ->map(function($log) {
+                ->map(function ($log) {
                     return [
                         'action' => $log->action,
                         'field_changed' => $log->field_changed,
@@ -478,11 +491,11 @@ class Movements extends Component
                 'creado_por' => Auth::id(),
             ],
         ])
-        ->layout('layouts.terrena', [
-            'active' => 'caja',
-            'title' => 'Movimientos · Caja Chica',
-            'pageTitle' => "Fondo #{$this->fondoId} - Movimientos",
-        ]);
+            ->layout('layouts.terrena', [
+                'active' => 'caja',
+                'title' => 'Movimientos · Caja Chica',
+                'pageTitle' => "Fondo #{$this->fondoId} - Movimientos",
+            ]);
     }
 
     protected function movRules(): array
@@ -527,7 +540,7 @@ class Movements extends Component
     {
         $this->fondo = CashFund::with(['movements'])->find($this->fondoId);
 
-        if (!$this->fondo) {
+        if (! $this->fondo) {
             abort(404, 'Fondo no encontrado');
         }
     }
@@ -541,7 +554,7 @@ class Movements extends Component
                 ->orderBy('nombre')
                 ->limit(50)
                 ->get(['id', 'nombre'])
-                ->map(fn($row) => [
+                ->map(fn ($row) => [
                     'id' => (int) $row->id,
                     'nombre' => $row->nombre,
                 ])
@@ -560,7 +573,7 @@ class Movements extends Component
                 ->first(['nombre', 'clave']);
 
             if ($sucursal) {
-                return trim(($sucursal->clave ? "{$sucursal->clave} - " : '') . $sucursal->nombre);
+                return trim(($sucursal->clave ? "{$sucursal->clave} - " : '').$sucursal->nombre);
             }
 
             return "Sucursal #{$sucursalId}";

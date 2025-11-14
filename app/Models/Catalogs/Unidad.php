@@ -30,8 +30,11 @@ class Unidad extends Model
     protected $table = 'selemti.cat_unidades';
 
     protected $primaryKey = 'id';
+
     public $incrementing = true;
+
     protected $keyType = 'int';
+
     public $timestamps = true;
 
     protected $fillable = [
@@ -112,7 +115,7 @@ class Unidad extends Model
     {
         if (is_string($destinoClave)) {
             $destino = self::porClave($destinoClave)->first();
-            if (!$destino) {
+            if (! $destino) {
                 return null;
             }
             $destinoId = $destino->id;

@@ -4,16 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Item;
-use App\Models\Sucursal;
-use App\Models\Almacen;
-use App\Models\PurchaseRequest;
-use App\Models\ProductionOrder;
 
 class ReplenishmentSuggestion extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'replenishment_suggestions';
+
     protected $guarded = [];
 
     protected $casts = [
@@ -37,22 +34,33 @@ class ReplenishmentSuggestion extends Model
     // ==========================================
 
     const ESTADO_PENDIENTE = 'PENDIENTE';
+
     const ESTADO_REVISADA = 'REVISADA';
+
     const ESTADO_APROBADA = 'APROBADA';
+
     const ESTADO_RECHAZADA = 'RECHAZADA';
+
     const ESTADO_CONVERTIDA = 'CONVERTIDA';
+
     const ESTADO_CADUCADA = 'CADUCADA';
 
     const TIPO_COMPRA = 'COMPRA';
+
     const TIPO_PRODUCCION = 'PRODUCCION';
 
     const PRIORIDAD_URGENTE = 'URGENTE';
+
     const PRIORIDAD_ALTA = 'ALTA';
+
     const PRIORIDAD_NORMAL = 'NORMAL';
+
     const PRIORIDAD_BAJA = 'BAJA';
 
     const ORIGEN_AUTO = 'AUTO';
+
     const ORIGEN_MANUAL = 'MANUAL';
+
     const ORIGEN_EVENTO_ESPECIAL = 'EVENTO_ESPECIAL';
 
     // ==========================================
@@ -116,14 +124,14 @@ class ReplenishmentSuggestion extends Model
      */
     public function getEstadoBadgeAttribute(): string
     {
-        return match($this->estado) {
+        return match ($this->estado) {
             self::ESTADO_PENDIENTE => '<span class="badge bg-warning text-dark">Pendiente</span>',
             self::ESTADO_REVISADA => '<span class="badge bg-info">Revisada</span>',
             self::ESTADO_APROBADA => '<span class="badge bg-success">Aprobada</span>',
             self::ESTADO_RECHAZADA => '<span class="badge bg-danger">Rechazada</span>',
             self::ESTADO_CONVERTIDA => '<span class="badge bg-primary">Convertida</span>',
             self::ESTADO_CADUCADA => '<span class="badge bg-secondary">Caducada</span>',
-            default => '<span class="badge bg-secondary">' . $this->estado . '</span>',
+            default => '<span class="badge bg-secondary">'.$this->estado.'</span>',
         };
     }
 
@@ -132,10 +140,10 @@ class ReplenishmentSuggestion extends Model
      */
     public function getTipoBadgeAttribute(): string
     {
-        return match($this->tipo) {
+        return match ($this->tipo) {
             self::TIPO_COMPRA => '<span class="badge bg-info"><i class="fa-solid fa-shopping-cart me-1"></i>Compra</span>',
             self::TIPO_PRODUCCION => '<span class="badge bg-success"><i class="fa-solid fa-industry me-1"></i>Producción</span>',
-            default => '<span class="badge bg-secondary">' . $this->tipo . '</span>',
+            default => '<span class="badge bg-secondary">'.$this->tipo.'</span>',
         };
     }
 
@@ -144,12 +152,12 @@ class ReplenishmentSuggestion extends Model
      */
     public function getPrioridadBadgeAttribute(): string
     {
-        return match($this->prioridad) {
+        return match ($this->prioridad) {
             self::PRIORIDAD_URGENTE => '<span class="badge bg-danger"><i class="fa-solid fa-exclamation-triangle me-1"></i>Urgente</span>',
             self::PRIORIDAD_ALTA => '<span class="badge bg-warning text-dark">Alta</span>',
             self::PRIORIDAD_NORMAL => '<span class="badge bg-secondary">Normal</span>',
             self::PRIORIDAD_BAJA => '<span class="badge bg-light text-dark">Baja</span>',
-            default => '<span class="badge bg-secondary">' . $this->prioridad . '</span>',
+            default => '<span class="badge bg-secondary">'.$this->prioridad.'</span>',
         };
     }
 
@@ -158,15 +166,21 @@ class ReplenishmentSuggestion extends Model
      */
     public function getNivelUrgenciaAttribute(): string
     {
-        if (!$this->fecha_agotamiento_estimada) {
+        if (! $this->fecha_agotamiento_estimada) {
             return 'DESCONOCIDO';
         }
 
         $dias = now()->diffInDays($this->fecha_agotamiento_estimada, false);
 
-        if ($dias <= 0) return 'CRITICO';
-        if ($dias <= 3) return 'URGENTE';
-        if ($dias <= 7) return 'PROXIMO';
+        if ($dias <= 0) {
+            return 'CRITICO';
+        }
+        if ($dias <= 3) {
+            return 'URGENTE';
+        }
+        if ($dias <= 7) {
+            return 'PROXIMO';
+        }
 
         return 'NORMAL';
     }
@@ -176,7 +190,7 @@ class ReplenishmentSuggestion extends Model
      */
     public function getUrgenciaIconoAttribute(): string
     {
-        return match($this->nivel_urgencia) {
+        return match ($this->nivel_urgencia) {
             'CRITICO' => '<i class="fa-solid fa-circle-exclamation text-danger"></i>',
             'URGENTE' => '<i class="fa-solid fa-triangle-exclamation text-warning"></i>',
             'PROXIMO' => '<i class="fa-solid fa-info-circle text-info"></i>',
@@ -287,8 +301,8 @@ class ReplenishmentSuggestion extends Model
     {
         return $query->where(function ($q) {
             $q->where('prioridad', self::PRIORIDAD_URGENTE)
-              ->orWhere('dias_stock_restante', '<=', 3)
-              ->orWhere('fecha_agotamiento_estimada', '<=', now()->addDays(3));
+                ->orWhere('dias_stock_restante', '<=', 3)
+                ->orWhere('fecha_agotamiento_estimada', '<=', now()->addDays(3));
         });
     }
 
@@ -323,10 +337,10 @@ class ReplenishmentSuggestion extends Model
     {
         return $query->where(function ($q) {
             $q->where('estado', self::ESTADO_PENDIENTE)
-              ->where(function ($q2) {
-                  $q2->where('prioridad', self::PRIORIDAD_URGENTE)
-                     ->orWhere('dias_stock_restante', '<=', 2);
-              });
+                ->where(function ($q2) {
+                    $q2->where('prioridad', self::PRIORIDAD_URGENTE)
+                        ->orWhere('dias_stock_restante', '<=', 2);
+                });
         });
     }
 

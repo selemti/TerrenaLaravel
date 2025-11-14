@@ -2,7 +2,6 @@
 
 namespace App\Models\Catalogs;
 
-use App\Models\Catalogs\Sucursal;
 use App\Models\Inv\Item;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,10 +19,10 @@ class StockPolicy extends Model
     ];
 
     protected $casts = [
-        'min_qty'     => 'decimal:6',
-        'max_qty'     => 'decimal:6',
+        'min_qty' => 'decimal:6',
+        'max_qty' => 'decimal:6',
         'reorder_qty' => 'decimal:6',
-        'activo'      => 'boolean',
+        'activo' => 'boolean',
     ];
 
     public function item()

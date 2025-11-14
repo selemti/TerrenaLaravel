@@ -105,7 +105,7 @@ class SalesDiagController extends BaseReportController
     protected function fetchData(Carbon $start, Carbon $end): Collection
     {
         $rows = DB::connection('pgsql')->select(
-            <<<SQL
+            <<<'SQL'
             SELECT gs.day::date AS report_date, f.*
             FROM generate_series(?::date, ?::date, interval '1 day') AS gs(day)
             CROSS JOIN LATERAL public.f_daily_diagnostics_summary_on(gs.day::date) AS f

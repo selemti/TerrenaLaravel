@@ -11,9 +11,13 @@ use Livewire\Component;
 class DrillDown extends Component
 {
     public string $type;
+
     public ?string $identifier = null;
+
     public array $breadcrumbs = [];
+
     public array $rows = [];
+
     public array $filters = [];
 
     public function mount(string $type, ?string $id = null): void
@@ -99,60 +103,57 @@ class DrillDown extends Component
 
     protected function loadSalesDetail(string $from, string $to): array
     {
-        return $this->safeCollection(fn () =>
-            DB::connection('pgsql')
-                ->table('ticket_item')
-                ->selectRaw('item_name, SUM(qty) AS cantidad, SUM(total_price) AS total')
-                ->whereBetween('created_at', [$from, $to])
-                ->groupBy('item_name')
-                ->orderByDesc('total')
-                ->limit(50)
-                ->get()
-                ->map(fn ($row) => [
-                    'label' => $row->item_name,
-                    'cantidad' => (float) $row->cantidad,
-                    'total' => (float) $row->total,
-                ])
-                ->all()
+        return $this->safeCollection(fn () => DB::connection('pgsql')
+            ->table('ticket_item')
+            ->selectRaw('item_name, SUM(qty) AS cantidad, SUM(total_price) AS total')
+            ->whereBetween('created_at', [$from, $to])
+            ->groupBy('item_name')
+            ->orderByDesc('total')
+            ->limit(50)
+            ->get()
+            ->map(fn ($row) => [
+                'label' => $row->item_name,
+                'cantidad' => (float) $row->cantidad,
+                'total' => (float) $row->total,
+            ])
+            ->all()
         );
     }
 
     protected function loadInventoryDetail(string $from, string $to): array
     {
-        return $this->safeCollection(fn () =>
-            DB::connection('pgsql')
-                ->table('vw_stock_valorizado')
-                ->selectRaw('almacen_nombre, SUM(valor_total) AS valor_total, SUM(stock_total) AS stock_total')
-                ->groupBy('almacen_nombre')
-                ->orderByDesc('valor_total')
-                ->get()
-                ->map(fn ($row) => [
-                    'label' => $row->almacen_nombre ?? 'Sin nombre',
-                    'valor_total' => (float) $row->valor_total,
-                    'stock_total' => (float) ($row->stock_total ?? 0),
-                ])
-                ->all()
+        return $this->safeCollection(fn () => DB::connection('pgsql')
+            ->table('vw_stock_valorizado')
+            ->selectRaw('almacen_nombre, SUM(valor_total) AS valor_total, SUM(stock_total) AS stock_total')
+            ->groupBy('almacen_nombre')
+            ->orderByDesc('valor_total')
+            ->get()
+            ->map(fn ($row) => [
+                'label' => $row->almacen_nombre ?? 'Sin nombre',
+                'valor_total' => (float) $row->valor_total,
+                'stock_total' => (float) ($row->stock_total ?? 0),
+            ])
+            ->all()
         );
     }
 
     protected function loadProductionDetail(string $from, string $to): array
     {
-        return $this->safeCollection(fn () =>
-            DB::connection('pgsql')
-                ->table('production_orders')
-                ->selectRaw('COALESCE(folio, id::text) AS folio, qty_programada, qty_producida, qty_merma, estado')
-                ->whereBetween('programado_para', [$from, $to])
-                ->orderByDesc('programado_para')
-                ->limit(100)
-                ->get()
-                ->map(fn ($row) => [
-                    'label' => $row->folio,
-                    'programada' => (float) $row->qty_programada,
-                    'producida' => (float) $row->qty_producida,
-                    'merma' => (float) $row->qty_merma,
-                    'estado' => $row->estado,
-                ])
-                ->all()
+        return $this->safeCollection(fn () => DB::connection('pgsql')
+            ->table('production_orders')
+            ->selectRaw('COALESCE(folio, id::text) AS folio, qty_programada, qty_producida, qty_merma, estado')
+            ->whereBetween('programado_para', [$from, $to])
+            ->orderByDesc('programado_para')
+            ->limit(100)
+            ->get()
+            ->map(fn ($row) => [
+                'label' => $row->folio,
+                'programada' => (float) $row->qty_programada,
+                'producida' => (float) $row->qty_producida,
+                'merma' => (float) $row->qty_merma,
+                'estado' => $row->estado,
+            ])
+            ->all()
         );
     }
 
@@ -181,9 +182,11 @@ class DrillDown extends Component
     {
         try {
             $result = $callback();
+
             return is_array($result) ? $result : [];
         } catch (\Throwable $e) {
             report($e);
+
             return [];
         }
     }

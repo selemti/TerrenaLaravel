@@ -169,15 +169,15 @@ TOTAL:      $18,953.20
 
 ### SQL (3 archivos)
 ```
-✅ BD/Noviembre/VentasReport/v8/cleanup_views.sql
-✅ BD/Noviembre/VentasReport/v8/01_sales_mix.sql
+✅ docs/docs/BD/NoviembreDocsDocs/VentasReport/v8/cleanup_views.sql
+✅ docs/docs/BD/NoviembreDocsDocs/VentasReport/v8/01_sales_mix.sql
 ```
 
 ### Documentación (3 archivos)
 ```
 ✅ docs/Inventario/FLUJO_ALTA_ITEMS_V2.md
 ✅ docs/Inventario/ESTRUCTURA_ITEMS_PRESENTACIONES.md
-✅ BD/Noviembre/VentasReport/v8/README_QUICK_START.md
+✅ docs/docs/BD/NoviembreDocsDocs/VentasReport/v8/README_QUICK_START.md
 ```
 
 **Total:** 23 archivos

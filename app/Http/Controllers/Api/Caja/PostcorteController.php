@@ -5,12 +5,20 @@ namespace App\Http\Controllers\Api\Caja;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Caja\CreatePostcorteRequest;
 use App\Http\Requests\Caja\UpdatePostcorteRequest;
+use App\Services\Caja\AlertasService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\JsonResponse;
 
 class PostcorteController extends Controller
 {
+    protected $alertasService;
+
+    public function __construct(AlertasService $alertasService)
+    {
+        $this->alertasService = $alertasService;
+    }
+
     /**
      * Crear postcorte desde precorte
      *
@@ -27,8 +35,8 @@ class PostcorteController extends Controller
             }
 
             $ses = $this->getSesionByPrecorte($precorteId);
-            
-            if (!$ses) {
+
+            if (! $ses) {
                 return response()->json(['ok' => false, 'error' => 'precorte_not_found'], 404);
             }
 
@@ -46,16 +54,26 @@ class PostcorteController extends Controller
 
             $usr = auth()->user()->id ?? 1;
             $notas = trim($request->validated('notas') ?? '');
+            $motivoIrregular = trim($request->validated('motivo_irregular') ?? '');
 
-            $sql = "
+            // Check if session has skipped_precorte flag
+            $skippedPrecorte = DB::connection('pgsql')->selectOne('
+                SELECT skipped_precorte
+                FROM selemti.sesion_cajon
+                WHERE id = ?
+            ', [$sid]);
+
+            $requiereAprobacion = ($skippedPrecorte && $skippedPrecorte->skipped_precorte === true);
+
+            $sql = '
                 INSERT INTO selemti.postcorte (
                     sesion_id,
                     sistema_efectivo_esperado, declarado_efectivo, diferencia_efectivo, veredicto_efectivo,
                     sistema_tarjetas, declarado_tarjetas, diferencia_tarjetas, veredicto_tarjetas,
                     sistema_transferencias, declarado_transferencias, diferencia_transferencias, veredicto_transferencias,
-                    creado_en, creado_por, notas
+                    creado_en, creado_por, notas, requiere_aprobacion, motivo_irregular
                 ) VALUES (
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?
                 )
                 ON CONFLICT (sesion_id) DO UPDATE SET
                     sistema_efectivo_esperado = EXCLUDED.sistema_efectivo_esperado,
@@ -70,29 +88,41 @@ class PostcorteController extends Controller
                     declarado_transferencias = EXCLUDED.declarado_transferencias,
                     diferencia_transferencias = EXCLUDED.diferencia_transferencias,
                     veredicto_transferencias = EXCLUDED.veredicto_transferencias,
-                    notas = EXCLUDED.notas
+                    notas = EXCLUDED.notas,
+                    requiere_aprobacion = EXCLUDED.requiere_aprobacion,
+                    motivo_irregular = EXCLUDED.motivo_irregular
                 RETURNING id
-            ";
+            ';
 
             $result = DB::connection('pgsql')->selectOne($sql, [
                 $sid,
                 $sys['efectivo'], $dec['efectivo'], $difEf, $this->ver($difEf),
                 $sys['tarjetas'], $dec['tarjetas'], $difTj, $this->ver($difTj),
                 $sys['transfer'], $dec['transfer'], $difTr, $this->ver($difTr),
-                $usr, $notas
+                $usr, $notas, $requiereAprobacion, $motivoIrregular,
             ]);
 
             $id = (int) $result->id;
 
+            // If irregular postcorte, create alerts for supervisors
+            if ($requiereAprobacion) {
+                try {
+                    $this->alertasService->crearAlertaAprobacion($id, $sid);
+                } catch (\Exception $e) {
+                    \Log::error("Error creating approval alert for postcorte {$id}: ".$e->getMessage());
+                }
+            }
+
             return response()->json([
                 'ok' => true,
                 'postcorte_id' => $id,
-                'sesion_id' => $sid
+                'sesion_id' => $sid,
+                'requiere_aprobacion' => $requiereAprobacion,
             ]);
 
         } catch (\Exception $e) {
-            \Log::error("Error en create postcorte (precorte_id: $precorteId): " . $e->getMessage());
-            
+            \Log::error("Error en create postcorte (precorte_id: $precorteId): ".$e->getMessage());
+
             // Auditoría
             try {
                 DB::connection('pgsql')->insert("
@@ -100,14 +130,43 @@ class PostcorteController extends Controller
                     VALUES (1, 'postcorte.error', ?)
                 ", [json_encode([
                     'precorte_id' => $precorteId,
-                    'msg' => $e->getMessage()
+                    'msg' => $e->getMessage(),
                 ])]);
-            } catch (\Exception $e2) {}
+            } catch (\Exception $e2) {
+            }
 
             return response()->json([
                 'ok' => false,
                 'error' => 'server_error',
-                'detail' => config('app.debug') ? $e->getMessage() : 'Error al crear postcorte'
+                'detail' => config('app.debug') ? $e->getMessage() : 'Error al crear postcorte',
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener postcorte por ID
+     */
+    public function show($postId): JsonResponse
+    {
+        try {
+            $postcorte = DB::connection('pgsql')
+                ->table('selemti.postcorte')
+                ->where('id', $postId)
+                ->first();
+
+            if (! $postcorte) {
+                return response()->json(['ok' => false, 'error' => 'postcorte_not_found'], 404);
+            }
+
+            return response()->json([
+                'ok' => true,
+                'data' => $postcorte,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'server_error',
+                'detail' => config('app.debug') ? $e->getMessage() : 'Error al obtener postcorte',
             ], 500);
         }
     }
@@ -129,8 +188,8 @@ class PostcorteController extends Controller
             }
 
             $ses = $this->getSesionByPostId($postId);
-            
-            if (!$ses) {
+
+            if (! $ses) {
                 return response()->json(['ok' => false, 'error' => 'postcorte_not_found'], 404);
             }
 
@@ -140,8 +199,8 @@ class PostcorteController extends Controller
             $b = $ses['cierre_ts'];
 
             $pid = $this->getUltimoPrecorteDeSesion($sid);
-            
-            if (!$pid) {
+
+            if (! $pid) {
                 return response()->json(['ok' => false, 'error' => 'no_precorte_for_session'], 409);
             }
 
@@ -160,7 +219,7 @@ class PostcorteController extends Controller
             $sesionEstatus = $validated['sesion_estatus'] ?? null;
             $usr = auth()->user()->id ?? 1;
 
-            $sql = "
+            $sql = '
                 UPDATE selemti.postcorte SET
                     sistema_efectivo_esperado = ?,
                     declarado_efectivo = ?,
@@ -180,7 +239,7 @@ class PostcorteController extends Controller
                     validado_en = CASE WHEN COALESCE(?, false) = true THEN NOW() ELSE validado_en END
                 WHERE id = ?
                 RETURNING id, sesion_id
-            ";
+            ';
 
             $result = DB::connection('pgsql')->selectOne($sql, [
                 $sys['efectivo'], $dec['efectivo'], $difEf, $verE,
@@ -191,16 +250,16 @@ class PostcorteController extends Controller
                 $valid === null ? null : (bool) $valid,
                 $usr,
                 $valid === null ? null : (bool) $valid,
-                $postId
+                $postId,
             ]);
 
-            if (!$result) {
+            if (! $result) {
                 return response()->json(['ok' => false, 'error' => 'update_failed'], 500);
             }
 
             // Update session status if requested
             if ($sesionEstatus && in_array($sesionEstatus, ['CERRADA', 'CONCILIADA'])) {
-                DB::connection('pgsql')->update("UPDATE selemti.sesion_cajon SET estatus = ? WHERE id = ?", [$sesionEstatus, $sid]);
+                DB::connection('pgsql')->update('UPDATE selemti.sesion_cajon SET estatus = ? WHERE id = ?', [$sesionEstatus, $sid]);
             } elseif ($valid) {
                 // If validated but no explicit status provided, ensure it's at least CERRADA
                 DB::connection('pgsql')->update("UPDATE selemti.sesion_cajon SET estatus = 'CERRADA' WHERE id = ? AND estatus != 'CERRADA' AND estatus != 'CONCILIADA'", [$sid]);
@@ -209,11 +268,11 @@ class PostcorteController extends Controller
             return response()->json([
                 'ok' => true,
                 'postcorte_id' => (int) $result->id,
-                'sesion_id' => (int) $result->sesion_id
+                'sesion_id' => (int) $result->sesion_id,
             ]);
 
         } catch (\Exception $e) {
-            \Log::error("Error en update postcorte (id: $postId): " . $e->getMessage());
+            \Log::error("Error en update postcorte (id: $postId): ".$e->getMessage());
 
             // Auditoría
             try {
@@ -222,14 +281,15 @@ class PostcorteController extends Controller
                     VALUES (1, 'postcorte.error', ?)
                 ", [json_encode([
                     'id' => $postId,
-                    'msg' => $e->getMessage()
+                    'msg' => $e->getMessage(),
                 ])]);
-            } catch (\Exception $e2) {}
+            } catch (\Exception $e2) {
+            }
 
             return response()->json([
                 'ok' => false,
                 'error' => 'server_error',
-                'detail' => config('app.debug') ? $e->getMessage() : 'Error al actualizar postcorte'
+                'detail' => config('app.debug') ? $e->getMessage() : 'Error al actualizar postcorte',
             ], 500);
         }
     }
@@ -260,48 +320,48 @@ class PostcorteController extends Controller
 
     private function getSesionByPrecorte(int $precorteId): ?array
     {
-        $result = DB::connection('pgsql')->selectOne("
+        $result = DB::connection('pgsql')->selectOne('
             SELECT p.sesion_id, s.terminal_id, s.apertura_ts, s.cierre_ts, s.opening_float
             FROM selemti.precorte p
             JOIN selemti.sesion_cajon s ON s.id = p.sesion_id
             WHERE p.id = ?
-        ", [$precorteId]);
+        ', [$precorteId]);
 
         return $result ? (array) $result : null;
     }
 
     private function getSesionByPostId(int $postId): ?array
     {
-        $result = DB::connection('pgsql')->selectOne("
+        $result = DB::connection('pgsql')->selectOne('
             SELECT pc.sesion_id, s.terminal_id, s.apertura_ts, s.cierre_ts, s.opening_float
             FROM selemti.postcorte pc
             JOIN selemti.sesion_cajon s ON s.id = pc.sesion_id
             WHERE pc.id = ?
-        ", [$postId]);
+        ', [$postId]);
 
         return $result ? (array) $result : null;
     }
 
     private function getUltimoPrecorteDeSesion(int $sesionId): ?int
     {
-        $result = DB::connection('pgsql')->selectOne("
+        $result = DB::connection('pgsql')->selectOne('
             SELECT id
             FROM selemti.precorte
             WHERE sesion_id = ?
             ORDER BY id DESC
             LIMIT 1
-        ", [$sesionId]);
+        ', [$sesionId]);
 
         return $result ? (int) $result->id : null;
     }
 
     private function totalesDeclarados(int $precorteId): array
     {
-        $ef = (float) DB::connection('pgsql')->selectOne("
+        $ef = (float) DB::connection('pgsql')->selectOne('
             SELECT COALESCE(SUM(COALESCE(subtotal, denominacion * cantidad)), 0)
             FROM selemti.precorte_efectivo
             WHERE precorte_id = ?
-        ", [$precorteId])->coalesce ?? 0;
+        ', [$precorteId])->coalesce ?? 0;
 
         $cr = (float) DB::connection('pgsql')->selectOne("
             SELECT COALESCE(SUM(monto), 0)
@@ -329,7 +389,7 @@ class PostcorteController extends Controller
             'credito' => $cr,
             'debito' => $dbt,
             'tarjetas' => $cr + $dbt,
-            'transfer' => $tr
+            'transfer' => $tr,
         ];
     }
 
@@ -387,7 +447,182 @@ class PostcorteController extends Controller
             'credito' => $cr,
             'debito' => $dbt,
             'tarjetas' => $cr + $dbt,
-            'transfer' => $tr
+            'transfer' => $tr,
         ];
+    }
+
+    /**
+     * Get postcortes pending approval
+     */
+    public function pendientesAprobacion(Request $request): JsonResponse
+    {
+        try {
+            $postcortes = DB::connection('pgsql')
+                ->table('selemti.postcorte as p')
+                ->leftJoin('selemti.sesion_cajon as s', 'p.sesion_id', '=', 's.id')
+                ->leftJoin('selemti.users as u', 's.cajero_usuario_id', '=', 'u.id')
+                ->select([
+                    'p.id',
+                    'p.sesion_id',
+                    's.terminal_id',
+                    'u.nombre_completo as cajero_nombre',
+                    'p.declarado_efectivo as total_declarado_efectivo',
+                    'p.diferencia_efectivo',
+                    'p.motivo_irregular',
+                    'p.creado_en',
+                ])
+                ->where('p.requiere_aprobacion', true)
+                ->whereNull('p.aprobado_por')
+                ->where('p.rechazado', false)
+                ->orderBy('p.creado_en', 'desc')
+                ->get()
+                ->toArray();
+
+            return response()->json([
+                'ok' => true,
+                'data' => $postcortes,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error getting pending postcortes: '.$e->getMessage());
+
+            return response()->json([
+                'ok' => false,
+                'error' => 'server_error',
+                'detail' => config('app.debug') ? $e->getMessage() : 'Error al obtener postcortes pendientes',
+            ], 500);
+        }
+    }
+
+    /**
+     * Approve postcorte
+     */
+    public function aprobar(Request $request, $id): JsonResponse
+    {
+        try {
+            $postcorte = DB::connection('pgsql')
+                ->table('selemti.postcorte as p')
+                ->leftJoin('selemti.sesion_cajon as s', 'p.sesion_id', '=', 's.id')
+                ->select(['p.*', 's.cajero_usuario_id'])
+                ->where('p.id', $id)
+                ->first();
+
+            if (! $postcorte) {
+                return response()->json(['ok' => false, 'error' => 'postcorte_not_found'], 404);
+            }
+
+            if (! $postcorte->requiere_aprobacion) {
+                return response()->json(['ok' => false, 'error' => 'postcorte_no_requiere_aprobacion'], 400);
+            }
+
+            $usr = auth()->user()->id ?? 1;
+            $notas = $request->input('notas', '');
+
+            // Approve postcorte
+            DB::connection('pgsql')->table('selemti.postcorte')
+                ->where('id', $id)
+                ->update([
+                    'aprobado_por' => $usr,
+                    'aprobado_en' => now(),
+                    'notas' => DB::raw("COALESCE(notas, '') || '\n[Aprobado por supervisor] ' || ".DB::connection('pgsql')->getPdo()->quote($notas)),
+                ]);
+
+            // Close session
+            DB::connection('pgsql')->table('selemti.sesion_cajon')
+                ->where('id', $postcorte->sesion_id)
+                ->update(['estatus' => 'CERRADA']);
+
+            // Create alert for cashier
+            if ($postcorte->cajero_usuario_id) {
+                try {
+                    $this->alertasService->crearAlertaAprobado($id, $postcorte->sesion_id, $postcorte->cajero_usuario_id);
+                } catch (\Exception $e) {
+                    \Log::error('Error creating approval alert for cashier: '.$e->getMessage());
+                }
+            }
+
+            return response()->json([
+                'ok' => true,
+                'message' => 'Postcorte aprobado exitosamente',
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error("Error approving postcorte {$id}: ".$e->getMessage());
+
+            return response()->json([
+                'ok' => false,
+                'error' => 'server_error',
+                'detail' => config('app.debug') ? $e->getMessage() : 'Error al aprobar postcorte',
+            ], 500);
+        }
+    }
+
+    /**
+     * Reject postcorte
+     */
+    public function rechazar(Request $request, $id): JsonResponse
+    {
+        try {
+            $postcorte = DB::connection('pgsql')
+                ->table('selemti.postcorte as p')
+                ->leftJoin('selemti.sesion_cajon as s', 'p.sesion_id', '=', 's.id')
+                ->select(['p.*', 's.cajero_usuario_id'])
+                ->where('p.id', $id)
+                ->first();
+
+            if (! $postcorte) {
+                return response()->json(['ok' => false, 'error' => 'postcorte_not_found'], 404);
+            }
+
+            if (! $postcorte->requiere_aprobacion) {
+                return response()->json(['ok' => false, 'error' => 'postcorte_no_requiere_aprobacion'], 400);
+            }
+
+            $motivoRechazo = $request->input('motivo_rechazo', '');
+
+            if (empty($motivoRechazo)) {
+                return response()->json(['ok' => false, 'error' => 'motivo_rechazo_required'], 400);
+            }
+
+            $usr = auth()->user()->id ?? 1;
+
+            // Reject postcorte
+            DB::connection('pgsql')->table('selemti.postcorte')
+                ->where('id', $id)
+                ->update([
+                    'rechazado' => true,
+                    'rechazado_por' => $usr,
+                    'rechazado_en' => now(),
+                    'motivo_rechazo' => $motivoRechazo,
+                ]);
+
+            // Reopen session for correction
+            DB::connection('pgsql')->table('selemti.sesion_cajon')
+                ->where('id', $postcorte->sesion_id)
+                ->update(['estatus' => 'LISTO_PARA_CORTE']);
+
+            // Create alert for cashier
+            if ($postcorte->cajero_usuario_id) {
+                try {
+                    $this->alertasService->crearAlertaRechazado($id, $postcorte->sesion_id, $postcorte->cajero_usuario_id);
+                } catch (\Exception $e) {
+                    \Log::error('Error creating rejection alert for cashier: '.$e->getMessage());
+                }
+            }
+
+            return response()->json([
+                'ok' => true,
+                'message' => 'Postcorte rechazado. La sesión ha sido reabierta.',
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error("Error rejecting postcorte {$id}: ".$e->getMessage());
+
+            return response()->json([
+                'ok' => false,
+                'error' => 'server_error',
+                'detail' => config('app.debug') ? $e->getMessage() : 'Error al rechazar postcorte',
+            ], 500);
+        }
     }
 }

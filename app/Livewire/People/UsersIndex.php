@@ -25,43 +25,64 @@ class UsersIndex extends Component
      * a usuarios finales sin permiso explícito.
      */
     use AuthorizesRequests;
+
     use WithPagination;
 
     public string $activeTab = 'users';
+
     public string $userSearch = '';
 
     // Estados para formularios modales
     public bool $showUserModal = false;
+
     public bool $editingUser = false;
+
     public ?int $editingUserId = null;
 
     public array $userForm = [];
 
     public bool $showRoleModal = false;
+
     public bool $editingRole = false;
+
     public ?int $editingRoleId = null;
+
     public array $roleForm = [];
 
     public bool $showUserRolesModal = false;
+
     public bool $showUserPermissionsModal = false;
 
     // Gestión de permisos individuales
     public array $usersListData = [];
+
     public ?int $selectedUserId = null;
+
     public bool $selectedUserIsSuperAdmin = false;
+
     public array $roleList = [];
+
     public array $selectedUserRoles = [];
+
     public array $editRoles = [];
+
     public array $allPermissions = [];
+
     public array $inheritedPermissions = [];
+
     public array $directPermissions = [];
+
     public array $effectivePermissions = [];
+
     public array $editMatrix = [];
+
     public array $selectedUserSummary = [];
+
     public string $statusMessage = '';
 
     // Gestión de Plantillas (Roles) - Esta parte ya está cubierta con las variables anteriores
     public bool $showRoleForm = false;
+
     public array $permissionsByModule = [];
 
     protected $paginationTheme = 'bootstrap';
@@ -195,6 +216,7 @@ class UsersIndex extends Component
         if ($user->hasRole('Super Admin')) {
             // No permitir editar plantillas del Super Admin desde UI.
             $this->statusMessage = 'Super Admin no es editable desde esta pantalla.';
+
             return;
         }
 
@@ -248,6 +270,7 @@ class UsersIndex extends Component
         if ($user->hasRole('Super Admin')) {
             // No permitir ajustes directos al Super Admin.
             $this->statusMessage = 'Super Admin no es editable desde esta pantalla.';
+
             return;
         }
 
@@ -729,11 +752,12 @@ class UsersIndex extends Component
 
         if (($this->roleForm['is_super_admin'] ?? false) === true) {
             session()->flash('role-notice', 'La plantilla Super Admin no se puede editar.');
+
             return;
         }
 
         $this->validate([
-            'roleForm.name' => 'required|string|max:255|unique:roles,name,' . ($this->editingRole ? $this->editingRoleId : ''),
+            'roleForm.name' => 'required|string|max:255|unique:roles,name,'.($this->editingRole ? $this->editingRoleId : ''),
             'roleForm.display_name' => 'nullable|string|max:255',
             'roleForm.description' => 'nullable|string|max:1000',
         ]);
@@ -772,12 +796,14 @@ class UsersIndex extends Component
 
         if ($role->name === 'Super Admin') {
             session()->flash('role-notice', 'No se puede eliminar el rol Super Admin.');
+
             return;
         }
 
         // Check if role is assigned to users
         if ($role->users()->count() > 0) {
             session()->flash('role-notice', 'No se puede eliminar la plantilla porque está asignada a usuarios.');
+
             return;
         }
 
@@ -794,31 +820,32 @@ class UsersIndex extends Component
 
         if ($role->name === 'Super Admin') {
             session()->flash('role-notice', 'La plantilla Super Admin no se puede duplicar.');
+
             return;
         }
 
         // Generar nuevo nombre para evitar duplicados
         $counter = 1;
-        $newName = $role->name . '_copy';
-        $newDisplayName = ($role->display_name ?? $role->name) . ' (copia)';
-        
+        $newName = $role->name.'_copy';
+        $newDisplayName = ($role->display_name ?? $role->name).' (copia)';
+
         while (Role::where('name', $newName)->exists()) {
             $counter++;
-            $newName = $role->name . '_copy_' . $counter;
-            $newDisplayName = ($role->display_name ?? $role->name) . ' (copia ' . $counter . ')';
+            $newName = $role->name.'_copy_'.$counter;
+            $newDisplayName = ($role->display_name ?? $role->name).' (copia '.$counter.')';
         }
 
         // Crear nuevo rol con los mismos permisos
         $newRole = Role::create([
             'name' => $newName,
             'display_name' => $newDisplayName,
-            'description' => $role->description ? $role->description . ' (copia)' : null,
+            'description' => $role->description ? $role->description.' (copia)' : null,
         ]);
 
         // Copiar permisos
         $newRole->syncPermissions($role->permissions);
 
-        session()->flash('role-notice', 'Plantilla duplicada correctamente: ' . $newDisplayName);
+        session()->flash('role-notice', 'Plantilla duplicada correctamente: '.$newDisplayName);
         $this->loadRoleList(); // Actualizar lista
     }
 
@@ -829,7 +856,7 @@ class UsersIndex extends Component
         }
 
         $index = array_search($permissionName, $this->roleForm['permissions']);
-        
+
         if ($index !== false) {
             // Remove permission
             unset($this->roleForm['permissions'][$index]);
@@ -839,5 +866,4 @@ class UsersIndex extends Component
             $this->roleForm['permissions'][] = $permissionName;
         }
     }
-
 }

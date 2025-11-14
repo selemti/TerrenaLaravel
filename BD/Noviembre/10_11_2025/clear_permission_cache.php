@@ -1,13 +1,14 @@
 #!/usr/bin/env php
 <?php
+
 /**
  * Script para limpiar el caché de permisos de Spatie
  * Este script debe ejecutarse en el servidor después de modificar roles/permisos
  */
 
-require __DIR__ . '/../../../vendor/autoload.php';
+require __DIR__.'/../../../vendor/autoload.php';
 
-$app = require_once __DIR__ . '/../../../bootstrap/app.php';
+$app = require_once __DIR__.'/../../../bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 echo "=== LIMPIANDO CACHÉ DE PERMISOS ===\n\n";
@@ -31,7 +32,7 @@ echo "=== VERIFICANDO PERMISOS DEL USUARIO soporte@terrena.com ===\n\n";
 
 $user = \App\Models\User::where('email', 'soporte@terrena.com')->first();
 
-if (!$user) {
+if (! $user) {
     echo "ERROR: Usuario no encontrado\n";
     exit(1);
 }
@@ -41,7 +42,7 @@ echo "ID: {$user->id}\n\n";
 
 // Verificar roles
 $roles = $user->roles;
-echo "Roles asignados: " . $roles->count() . "\n";
+echo 'Roles asignados: '.$roles->count()."\n";
 foreach ($roles as $role) {
     echo "  - {$role->name}\n";
 }

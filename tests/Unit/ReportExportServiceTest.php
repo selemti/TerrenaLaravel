@@ -12,7 +12,7 @@ class ReportExportServiceTest extends TestCase
 {
     public function test_it_generates_csv_response(): void
     {
-        $service = new ReportExportService();
+        $service = new ReportExportService;
         $response = $service->export(
             type: 'csv',
             range: 'last_7_days',
@@ -28,7 +28,7 @@ class ReportExportServiceTest extends TestCase
 
     public function test_it_generates_pdf_response(): void
     {
-        $service = new ReportExportService();
+        $service = new ReportExportService;
         $response = $service->export(
             type: 'pdf',
             range: 'last_7_days',

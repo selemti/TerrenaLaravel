@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Inventory;
 
-use App\Livewire\Inventory\ItemPriceCreate;
 use App\Models\Inv\HistorialCostoItem;
 use App\Models\Inv\Item as InvItem;
 use App\Models\Inv\ItemVendor;
@@ -17,14 +16,23 @@ class ItemsManage extends Component
     use WithPagination;
 
     public string $q = '';
+
     public int $perPage = 15;
+
     public bool $showForm = false;
+
     public bool $isEditing = false;
+
     public ?string $editingId = null;
+
     public ?string $categoryFilter = null;
+
     public string $statusFilter = 'all';
+
     public string $preferredFilter = 'all';
+
     public string $sortField = 'name';
+
     public string $sortDirection = 'asc';
 
     public array $form = [
@@ -45,11 +53,15 @@ class ItemsManage extends Component
     ];
 
     public array $providers = [];
+
     public array $priceHistory = [];
 
     public array $units = [];
+
     public array $providerOptions = [];
+
     public array $categoryOptions = [];
+
     public array $tipoOptions = ['MATERIA_PRIMA', 'ELABORADO', 'ENVASADO'];
 
     protected $queryString = [
@@ -238,7 +250,7 @@ class ItemsManage extends Component
 
     public function removeProviderLine(int $index): void
     {
-        if (!isset($this->providers[$index])) {
+        if (! isset($this->providers[$index])) {
             return;
         }
 
@@ -254,7 +266,7 @@ class ItemsManage extends Component
 
     public function setPreferred(int $index): void
     {
-        if (!isset($this->providers[$index])) {
+        if (! isset($this->providers[$index])) {
             return;
         }
 
@@ -382,7 +394,7 @@ class ItemsManage extends Component
                 $join->on(DB::raw('prov.id::text'), '=', DB::raw('pv.vendor_id::text'));
             })
             ->when(trim($this->q) !== '', function ($query) {
-                $needle = '%' . str_replace(['%', '_'], ['\\%', '\\_'], trim($this->q)) . '%';
+                $needle = '%'.str_replace(['%', '_'], ['\\%', '\\_'], trim($this->q)).'%';
                 $query->where(function ($sub) use ($needle) {
                     $sub->where('i.id', 'ilike', $needle)
                         ->orWhere('i.item_code', 'ilike', $needle)
@@ -428,7 +440,7 @@ class ItemsManage extends Component
             ]);
 
         if ($this->sortField === 'effective_from') {
-            $itemsQuery->orderByRaw('lp.effective_from ' . ($this->sortDirection === 'asc' ? 'asc' : 'desc'))
+            $itemsQuery->orderByRaw('lp.effective_from '.($this->sortDirection === 'asc' ? 'asc' : 'desc'))
                 ->orderBy('i.nombre');
         } else {
             $itemsQuery->orderBy('i.nombre', $this->sortDirection === 'desc' ? 'desc' : 'asc');
@@ -468,7 +480,7 @@ class ItemsManage extends Component
             'form.perishable' => 'boolean',
             'form.temperatura_min' => 'nullable|integer',
             'form.temperatura_max' => 'nullable|integer|gte:form.temperatura_min',
-            'form.tipo' => 'nullable|in:' . implode(',', $this->tipoOptions),
+            'form.tipo' => 'nullable|in:'.implode(',', $this->tipoOptions),
             'form.activo' => 'boolean',
         ];
     }
@@ -517,7 +529,7 @@ class ItemsManage extends Component
             $validatedProviders[] = $data;
         }
 
-        if (!$preferredExists && $validatedProviders !== []) {
+        if (! $preferredExists && $validatedProviders !== []) {
             // marca primero como preferente si el usuario no lo hizo
             $validatedProviders[0]['preferente'] = true;
         }
@@ -595,15 +607,16 @@ class ItemsManage extends Component
     {
         $found = false;
         foreach ($this->providers as &$provider) {
-            if ($provider['preferente'] && !$found) {
+            if ($provider['preferente'] && ! $found) {
                 $found = true;
+
                 continue;
             }
             $provider['preferente'] = false;
         }
         unset($provider);
 
-        if (!$found && $this->providers !== []) {
+        if (! $found && $this->providers !== []) {
             $this->providers[0]['preferente'] = true;
         }
     }
@@ -650,11 +663,12 @@ class ItemsManage extends Component
 
     protected function unitCode(?int $unitId): ?string
     {
-        if (!$unitId) {
+        if (! $unitId) {
             return null;
         }
 
         $unit = collect($this->units)->firstWhere('id', $unitId);
+
         return $unit['codigo'] ?? null;
     }
 }

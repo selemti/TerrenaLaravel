@@ -1,6 +1,7 @@
 <?php
 
-return new class extends \Illuminate\Database\Migrations\Migration {
+return new class extends \Illuminate\Database\Migrations\Migration
+{
     public function up(): void
     {
         // === COLUMNS (compatibles con PG antiguo) ===
@@ -223,14 +224,14 @@ SQL);
     public function down(): void
     {
         // Indexes (con chequeo)
-        \Illuminate\Support\Facades\DB::unprepared("DROP INDEX IF EXISTS selemti.idx_prov_razon_social");
-        \Illuminate\Support\Facades\DB::unprepared("DROP INDEX IF EXISTS selemti.idx_prov_rfc");
+        \Illuminate\Support\Facades\DB::unprepared('DROP INDEX IF EXISTS selemti.idx_prov_razon_social');
+        \Illuminate\Support\Facades\DB::unprepared('DROP INDEX IF EXISTS selemti.idx_prov_rfc');
 
         // Columns (con chequeo por compatibilidad)
         foreach ([
-            'razon_social','rfc','tipo_comprobante','uso_cfdi','metodo_pago','forma_pago',
-            'regimen_fiscal','contacto_nombre','contacto_email','contacto_telefono',
-            'direccion','ciudad','estado','pais','cp','notas'
+            'razon_social', 'rfc', 'tipo_comprobante', 'uso_cfdi', 'metodo_pago', 'forma_pago',
+            'regimen_fiscal', 'contacto_nombre', 'contacto_email', 'contacto_telefono',
+            'direccion', 'ciudad', 'estado', 'pais', 'cp', 'notas',
         ] as $col) {
             \Illuminate\Support\Facades\DB::unprepared("
 DO $$

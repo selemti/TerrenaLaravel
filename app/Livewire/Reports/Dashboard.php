@@ -23,9 +23,13 @@ use Livewire\Component;
 class Dashboard extends Component
 {
     public string $dateRange = 'last_30_days';
+
     public Carbon $fechaDesde;
+
     public Carbon $fechaHasta;
+
     public string $fechaDesdePersonalizada = '';
+
     public string $fechaHastaPersonalizada = '';
 
     /** @var array<string, float> */
@@ -39,7 +43,7 @@ class Dashboard extends Component
 
     /** @var array<string, mixed> */
     public array $summary = [];
-    
+
     public array $dashboardLayout = [
         'summary' => true,
         'kpis' => true,
@@ -48,8 +52,9 @@ class Dashboard extends Component
         'mermas_por_categoria' => true,
         'stock_por_almacen' => true,
     ];
-    
+
     public bool $autoRefreshEnabled = false;
+
     public int $refreshInterval = 300; // 5 minutos por defecto
 
     public function mount(): void
@@ -131,12 +136,12 @@ class Dashboard extends Component
         if ($key === 'ventas_totales') {
             return $this->goToSalesReport();
         }
-        
+
         // Para otros tipos de reportes, simplemente actualizamos el rango de fechas
         $this->dateRange = 'custom';
         $this->fechaDesdePersonalizada = $this->fechaDesde->format('Y-m-d');
         $this->fechaHastaPersonalizada = $this->fechaHasta->format('Y-m-d');
-        
+
         // Desplazar hacia el KPI correspondiente
         $this->dispatch('scroll-to-kpi', $key);
     }
@@ -146,7 +151,7 @@ class Dashboard extends Component
         // Este método manejará los clics en los gráficos
         // Por ejemplo, al hacer clic en una barra del gráfico de productos,
         // podríamos navegar a un reporte detallado del producto
-        $this->dispatch('toast', type: 'info', body: "Clic en ${chartKey}: " . json_encode($data));
+        $this->dispatch('toast', type: 'info', body: "Clic en ${chartKey}: ".json_encode($data));
     }
 
     public function render()
@@ -165,7 +170,7 @@ class Dashboard extends Component
             'fecha_desde' => $this->fechaDesde->format('Y-m-d'),
             'fecha_hasta' => $this->fechaHasta->format('Y-m-d'),
         ];
-        
+
         return redirect()->route('reports.sales', $params);
     }
 
@@ -218,61 +223,53 @@ class Dashboard extends Component
 
         $connection = DB::connection('pgsql');
 
-        $ventas = $this->safeAggregate(fn () =>
-            (float) $connection->table('ticket')
-                ->whereBetween('create_date', [$from, $to])
-                ->where('voided', false)
-                ->sum('total_price')
+        $ventas = $this->safeAggregate(fn () => (float) $connection->table('ticket')
+            ->whereBetween('create_date', [$from, $to])
+            ->where('voided', false)
+            ->sum('total_price')
         );
 
-        $produccion = $this->safeAggregate(fn () =>
-            (float) $connection->table('production_orders')
-                ->whereBetween('cerrado_en', [$from, $to])
-                ->where('estado', 'COMPLETADO')
-                ->sum('qty_producida')
+        $produccion = $this->safeAggregate(fn () => (float) $connection->table('production_orders')
+            ->whereBetween('cerrado_en', [$from, $to])
+            ->where('estado', 'COMPLETADO')
+            ->sum('qty_producida')
         );
 
-        $compras = $this->safeAggregate(fn () =>
-            (float) $connection->table('recepcion_cab')
-                ->whereBetween('fecha_recepcion', [$from, $to])
-                ->sum('total')
+        $compras = $this->safeAggregate(fn () => (float) $connection->table('recepcion_cab')
+            ->whereBetween('fecha_recepcion', [$from, $to])
+            ->sum('total')
         );
 
-        $inventario = $this->safeAggregate(fn () =>
-            (float) $connection->table('vw_stock_valorizado')->sum('valor_total')
+        $inventario = $this->safeAggregate(fn () => (float) $connection->table('vw_stock_valorizado')->sum('valor_total')
         );
 
-        $merma = $this->safeAggregate(fn () =>
-            (float) $connection->table('production_orders')
-                ->whereBetween('cerrado_en', [$from, $to])
-                ->where('estado', 'COMPLETADO')
-                ->avg('qty_merma')
+        $merma = $this->safeAggregate(fn () => (float) $connection->table('production_orders')
+            ->whereBetween('cerrado_en', [$from, $to])
+            ->where('estado', 'COMPLETADO')
+            ->avg('qty_merma')
         );
 
-        $costoPromedio = $this->safeAggregate(fn () =>
-            (float) $connection->table('recipe_cost_snapshots')
-                ->whereBetween('snapshot_date', [$from, $to])
-                ->avg('cost_per_portion')
+        $costoPromedio = $this->safeAggregate(fn () => (float) $connection->table('recipe_cost_snapshots')
+            ->whereBetween('snapshot_date', [$from, $to])
+            ->avg('cost_per_portion')
         );
 
         $rotacion = $this->calculateInventoryTurnover($from, $to);
         $eficiencia = $this->calculateProductionEfficiency($from, $to);
-        
+
         // Métricas adicionales
-        $tickets = $this->safeAggregate(fn () =>
-            (int) $connection->table('ticket')
-                ->whereBetween('create_date', [$from, $to])
-                ->where('voided', false)
-                ->count()
+        $tickets = $this->safeAggregate(fn () => (int) $connection->table('ticket')
+            ->whereBetween('create_date', [$from, $to])
+            ->where('voided', false)
+            ->count()
         );
-        
-        $productosDistintosVendidos = $this->safeAggregate(fn () =>
-            (int) $connection->table('ticket_item')
-                ->join('ticket', 'ticket_item.ticket_id', '=', 'ticket.id')
-                ->whereBetween('ticket.create_date', [$from, $to])
-                ->where('ticket.voided', false)
-                ->distinct('ticket_item.item_name')
-                ->count('ticket_item.item_name')
+
+        $productosDistintosVendidos = $this->safeAggregate(fn () => (int) $connection->table('ticket_item')
+            ->join('ticket', 'ticket_item.ticket_id', '=', 'ticket.id')
+            ->whereBetween('ticket.create_date', [$from, $to])
+            ->where('ticket.voided', false)
+            ->distinct('ticket_item.item_name')
+            ->count('ticket_item.item_name')
         );
 
         return [
@@ -298,111 +295,106 @@ class Dashboard extends Component
         $to = $this->fechaHasta->toDateTimeString();
         $connection = DB::connection('pgsql');
 
-        $ventasPorDia = $this->safeCollection(fn () =>
-            $connection->table('ticket')
-                ->selectRaw('DATE(create_date) AS fecha, SUM(total_price) AS total')
-                ->whereBetween('create_date', [$from, $to])
-                ->where('voided', false)
-                ->groupBy('fecha')
-                ->orderBy('fecha')
-                ->get()
-                ->map(fn ($row) => [
-                    'fecha' => Carbon::parse($row->fecha)->format('d/m'),
-                    'total' => (float) $row->total,
-                ])
-                ->all()
+        $ventasPorDia = $this->safeCollection(fn () => $connection->table('ticket')
+            ->selectRaw('DATE(create_date) AS fecha, SUM(total_price) AS total')
+            ->whereBetween('create_date', [$from, $to])
+            ->where('voided', false)
+            ->groupBy('fecha')
+            ->orderBy('fecha')
+            ->get()
+            ->map(fn ($row) => [
+                'fecha' => Carbon::parse($row->fecha)->format('d/m'),
+                'total' => (float) $row->total,
+            ])
+            ->all()
         );
 
-        $topProductos = $this->safeCollection(fn () =>
-            $connection->table('ticket_item')
-                ->selectRaw('item_name, SUM(qty) AS total_qty')
-                ->whereBetween('created_at', [$from, $to])
-                ->groupBy('item_name')
-                ->orderByDesc('total_qty')
-                ->limit(10)
-                ->get()
-                ->map(fn ($row) => [
-                    'producto' => $row->item_name,
-                    'cantidad' => (float) $row->total_qty,
-                ])
-                ->all()
+        $topProductos = $this->safeCollection(fn () => $connection->table('ticket_item')
+            ->selectRaw('item_name, SUM(qty) AS total_qty')
+            ->whereBetween('created_at', [$from, $to])
+            ->groupBy('item_name')
+            ->orderByDesc('total_qty')
+            ->limit(10)
+            ->get()
+            ->map(fn ($row) => [
+                'producto' => $row->item_name,
+                'cantidad' => (float) $row->total_qty,
+            ])
+            ->all()
         );
 
-        $mermas = $this->safeCollection(fn () =>
-            $connection->table('inventory_wastes')
-                ->selectRaw('COALESCE(motivo, \"Sin motivo\") AS motivo, SUM(qty) AS total')
-                ->whereBetween('registrado_en', [$from, $to])
-                ->groupBy('motivo')
-                ->orderByDesc('total')
-                ->limit(6)
-                ->get()
-                ->map(fn ($row) => [
-                    'motivo' => $row->motivo,
-                    'total' => (float) $row->total,
-                ])
-                ->all()
+        $mermas = $this->safeCollection(fn () => $connection->table('inventory_wastes')
+            ->selectRaw('COALESCE(motivo, \"Sin motivo\") AS motivo, SUM(qty) AS total')
+            ->whereBetween('registrado_en', [$from, $to])
+            ->groupBy('motivo')
+            ->orderByDesc('total')
+            ->limit(6)
+            ->get()
+            ->map(fn ($row) => [
+                'motivo' => $row->motivo,
+                'total' => (float) $row->total,
+            ])
+            ->all()
         );
 
-        $stockPorAlmacen = $this->safeCollection(fn () =>
-            $connection->table('vw_stock_valorizado')
-                ->selectRaw('almacen_nombre, SUM(valor_total) AS total')
-                ->groupBy('almacen_nombre')
-                ->orderByDesc('total')
-                ->get()
-                ->map(fn ($row) => [
-                    'almacen' => $row->almacen_nombre ?? 'Sin nombre',
-                    'valor' => (float) $row->total,
-                ])
-                ->all()
+        $stockPorAlmacen = $this->safeCollection(fn () => $connection->table('vw_stock_valorizado')
+            ->selectRaw('almacen_nombre, SUM(valor_total) AS total')
+            ->groupBy('almacen_nombre')
+            ->orderByDesc('total')
+            ->get()
+            ->map(fn ($row) => [
+                'almacen' => $row->almacen_nombre ?? 'Sin nombre',
+                'valor' => (float) $row->total,
+            ])
+            ->all()
         );
 
-        $costosRecetas = $this->safeCollection(fn () =>
-            $connection->table('recipe_cost_snapshots')
-                ->selectRaw('recipe_id, snapshot_date, cost_per_portion')
-                ->whereBetween('snapshot_date', [$from, $to])
-                ->orderByDesc('snapshot_date')
-                ->limit(30)
-                ->get()
-                ->groupBy('recipe_id')
-                ->map(function (Collection $items, $recipeId) {
-                    return [
-                        'recipe_id' => (string) $recipeId,
-                        'data' => $items->sortBy('snapshot_date')->map(fn ($row) => [
-                            'fecha' => Carbon::parse($row->snapshot_date)->format('d/m'),
-                            'costo' => (float) $row->cost_per_portion,
-                        ])->values()->all(),
-                    ];
-                })
-                ->take(5)
-                ->values()
-                ->all()
+        $costosRecetas = $this->safeCollection(fn () => $connection->table('recipe_cost_snapshots')
+            ->selectRaw('recipe_id, snapshot_date, cost_per_portion')
+            ->whereBetween('snapshot_date', [$from, $to])
+            ->orderByDesc('snapshot_date')
+            ->limit(30)
+            ->get()
+            ->groupBy('recipe_id')
+            ->map(function (Collection $items, $recipeId) {
+                return [
+                    'recipe_id' => (string) $recipeId,
+                    'data' => $items->sortBy('snapshot_date')->map(fn ($row) => [
+                        'fecha' => Carbon::parse($row->snapshot_date)->format('d/m'),
+                        'costo' => (float) $row->cost_per_portion,
+                    ])->values()->all(),
+                ];
+            })
+            ->take(5)
+            ->values()
+            ->all()
         );
 
         return [
             'ventas_por_dia' => [
                 'data' => $ventasPorDia,
                 'empty' => empty($ventasPorDia),
-                'message' => empty($ventasPorDia) ? 'No hay datos de ventas en el rango de fechas seleccionado' : null
+                'message' => empty($ventasPorDia) ? 'No hay datos de ventas en el rango de fechas seleccionado' : null,
             ],
             'top_productos' => [
                 'data' => $topProductos,
                 'empty' => empty($topProductos),
-                'message' => empty($topProductos) ? 'No hay productos vendidos en el rango de fechas seleccionado' : null
+                'message' => empty($topProductos) ? 'No hay productos vendidos en el rango de fechas seleccionado' : null,
             ],
             'mermas_por_categoria' => [
                 'data' => $mermas,
                 'empty' => empty($mermas),
-                'message' => empty($mermas) ? 'No se han registrado mermas en el rango de fechas seleccionado' : null
+                'message' => empty($mermas) ? 'No se han registrado mermas en el rango de fechas seleccionado' : null,
             ],
             'stock_por_almacen' => [
                 'data' => $stockPorAlmacen,
                 'empty' => empty($stockPorAlmacen),
-                'message' => empty($stockPorAlmacen) ? 'No hay datos de inventario disponibles' : null
+                'message' => empty($stockPorAlmacen) ? 'No hay datos de inventario disponibles' : null,
             ],
             'costos_recetas' => [
                 'data' => $costosRecetas,
                 'empty' => empty($costosRecetas),
-                'message' => empty($costosRecetas) ? 'No hay datos históricos de costos de recetas' : null
+                'message' => empty($costosRecetas) ? 'No hay datos históricos de costos de recetas' : null,
             ],
         ];
     }
@@ -457,6 +449,7 @@ class Dashboard extends Component
             return (float) ($callback() ?? 0.0);
         } catch (\Throwable $e) {
             report($e);
+
             return 0.0;
         }
     }
@@ -469,9 +462,11 @@ class Dashboard extends Component
     {
         try {
             $result = $callback();
+
             return is_array($result) ? $result : [];
         } catch (\Throwable $e) {
             report($e);
+
             return [];
         }
     }
@@ -481,6 +476,7 @@ class Dashboard extends Component
         $user = Auth::user();
         if (! $user) {
             $this->favorites = [];
+
             return;
         }
 
@@ -561,8 +557,8 @@ class Dashboard extends Component
 
     public function toggleAutoRefresh(): void
     {
-        $this->autoRefreshEnabled = !$this->autoRefreshEnabled;
-        
+        $this->autoRefreshEnabled = ! $this->autoRefreshEnabled;
+
         if ($this->autoRefreshEnabled) {
             $this->dispatch('start-auto-refresh', interval: $this->refreshInterval * 1000);
         } else {

@@ -7,14 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class ItemProveedor extends Model
 {
     protected $table = 'selemti.item_vendor';
+
     public $timestamps = false;
+
     protected $primaryKey = ['item_id', 'vendor_id', 'presentacion'];
+
     public $incrementing = false;
 
     protected $fillable = [
-        'item_id', 'vendor_id', 'presentacion', 'unidad_presentacion_id', 
-        'factor_a_canonica', 'costo_ultimo', 'moneda', 'lead_time_dias', 
-        'codigo_proveedor', 'activo', 'created_at'
+        'item_id', 'vendor_id', 'presentacion', 'unidad_presentacion_id',
+        'factor_a_canonica', 'costo_ultimo', 'moneda', 'lead_time_dias',
+        'codigo_proveedor', 'activo', 'created_at',
     ];
 
     protected $casts = [

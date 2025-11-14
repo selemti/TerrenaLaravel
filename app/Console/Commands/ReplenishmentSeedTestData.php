@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Models\ReplenishmentSuggestion;
 use App\Models\Item;
+use App\Models\ReplenishmentSuggestion;
 use App\Models\Sucursal;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class ReplenishmentSeedTestData extends Command
@@ -28,11 +28,13 @@ class ReplenishmentSeedTestData extends Command
 
         if ($items->isEmpty()) {
             $this->error('❌ No hay items activos en la BD. Por favor crea items primero.');
+
             return Command::FAILURE;
         }
 
         if ($sucursales->isEmpty()) {
             $this->error('❌ No hay sucursales activas en la BD.');
+
             return Command::FAILURE;
         }
 
@@ -69,7 +71,7 @@ class ReplenishmentSeedTestData extends Command
                 $diasRestantes = $consumoPromedio > 0 ? floor($stockActual / $consumoPromedio) : 999;
 
                 $sugerencia = ReplenishmentSuggestion::create([
-                    'folio' => 'TEST-' . str_pad($i + 1, 6, '0', STR_PAD_LEFT),
+                    'folio' => 'TEST-'.str_pad($i + 1, 6, '0', STR_PAD_LEFT),
                     'item_id' => $item->id,
                     'sucursal_id' => $sucursal->id,
                     'almacen_id' => null,
@@ -90,7 +92,7 @@ class ReplenishmentSeedTestData extends Command
                     'caduca_en' => now()->addDays(rand(7, 30)),
                     'proveedor_sugerido_id' => null,
                     'costo_estimado' => rand(50, 500) + (rand(0, 99) / 100),
-                    'notas' => $i % 3 === 0 ? 'Sugerencia de prueba #' . ($i + 1) : null,
+                    'notas' => $i % 3 === 0 ? 'Sugerencia de prueba #'.($i + 1) : null,
                     'meta' => json_encode([
                         'test' => true,
                         'generated_at' => now()->toIso8601String(),

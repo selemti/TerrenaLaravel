@@ -2,16 +2,16 @@
 
 /**
  * Script para registrar migraciones seguras en la tabla migrations
- * 
+ *
  * Este script registra migraciones cuyas tablas/cambios YA EXISTEN
  * en la base de datos, evitando errores de "tabla ya existe".
- * 
+ *
  * IMPORTANTE: Ejecutar ANTES de correr php artisan migrate
  */
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__.'/../vendor/autoload.php';
 
-$app = require_once __DIR__ . '/../bootstrap/app.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use Illuminate\Support\Facades\DB;
@@ -40,7 +40,7 @@ $safeMigrations = [
     '2025_10_30_000000_add_remember_token_to_selemti_users',
 ];
 
-echo "Se registrarán " . count($safeMigrations) . " migraciones seguras...\n\n";
+echo 'Se registrarán '.count($safeMigrations)." migraciones seguras...\n\n";
 
 // Get next batch number
 $nextBatch = DB::table('migrations')->max('batch') + 1;
@@ -55,7 +55,7 @@ try {
     foreach ($safeMigrations as $migration) {
         // Check if already registered
         $exists = DB::table('migrations')->where('migration', $migration)->exists();
-        
+
         if ($exists) {
             echo "  ⊘ SKIP: $migration (ya registrada)\n";
             $skipped++;
@@ -68,17 +68,17 @@ try {
             $registered++;
         }
     }
-    
+
     echo "\n───────────────────────────────────────────────────────────────────────────────────\n";
     echo "Registradas: $registered\n";
     echo "Omitidas:    $skipped (ya existían)\n";
     echo "───────────────────────────────────────────────────────────────────────────────────\n\n";
-    
-    echo "¿Confirmar cambios? (y/n): ";
-    $handle = fopen("php://stdin", "r");
+
+    echo '¿Confirmar cambios? (y/n): ';
+    $handle = fopen('php://stdin', 'r');
     $line = fgets($handle);
     fclose($handle);
-    
+
     if (trim(strtolower($line)) === 'y') {
         DB::commit();
         echo "\n✓ Cambios confirmados y guardados.\n\n";
@@ -86,10 +86,10 @@ try {
         DB::rollBack();
         echo "\n✗ Cambios cancelados. No se registró nada.\n\n";
     }
-    
+
 } catch (Exception $e) {
     DB::rollBack();
-    echo "\n✗ ERROR: " . $e->getMessage() . "\n\n";
+    echo "\n✗ ERROR: ".$e->getMessage()."\n\n";
     exit(1);
 }
 

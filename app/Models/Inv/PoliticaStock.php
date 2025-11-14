@@ -7,12 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class PoliticaStock extends Model
 {
     protected $table = 'selemti.stock_policy';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
 
     protected $fillable = [
-        'item_id', 'sucursal_id', 'almacen_id', 'min_qty', 
-        'max_qty', 'reorder_lote', 'activo'
+        'item_id', 'sucursal_id', 'almacen_id', 'min_qty',
+        'max_qty', 'reorder_lote', 'activo',
     ];
 
     protected $casts = [

@@ -14,14 +14,15 @@ class UpdateUnidadRequest extends FormRequest
     public function rules(): array
     {
         $id = $this->route('unidad');
+
         return [
-            'codigo' => ['required','alpha_dash','max:10',"unique:selemti.unidades_medida,codigo,{$id},id"],
-            'nombre' => ['required','string','max:50'],
-            'tipo'   => ['required','in:PESO,VOLUMEN,UNIDAD,TIEMPO'],
-            'categoria' => ['nullable','in:METRICO,IMPERIAL,CULINARIO'],
-            'es_base' => ['nullable','boolean'],
-            'factor_conversion_base' => ['nullable','numeric','min:0'],
-            'decimales' => ['nullable','integer','between:0,6'],
+            'codigo' => ['required', 'alpha_dash', 'max:10', "unique:selemti.unidades_medida,codigo,{$id},id"],
+            'nombre' => ['required', 'string', 'max:50'],
+            'tipo' => ['required', 'in:PESO,VOLUMEN,UNIDAD,TIEMPO'],
+            'categoria' => ['nullable', 'in:METRICO,IMPERIAL,CULINARIO'],
+            'es_base' => ['nullable', 'boolean'],
+            'factor_conversion_base' => ['nullable', 'numeric', 'min:0'],
+            'decimales' => ['nullable', 'integer', 'between:0,6'],
         ];
     }
 

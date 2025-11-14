@@ -2,22 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class SessionApiTokenController extends Controller
 {
     /**
      * Create a new Sanctum token for the authenticated user.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function tokenForJs(Request $request): JsonResponse
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['error' => 'Unauthenticated'], 401);
         }
 

@@ -3,20 +3,24 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         $candidates = [
-            base_path('BD/Noviembre/VentasReport/v9/script_sql_reportes_adicionales.sql'),
+            base_path('docs/docs/BD/NoviembreDocsDocs/VentasReport/v9/script_sql_reportes_adicionales.sql'),
             base_path('database/sql/reportes/script_sql_reportes_adicionales.sql'),
         ];
 
         $path = null;
         foreach ($candidates as $p) {
-            if (file_exists($p)) { $path = $p; break; }
+            if (file_exists($p)) {
+                $path = $p;
+                break;
+            }
         }
 
-        if (!$path) {
+        if (! $path) {
             throw new RuntimeException('SQL script not found in expected locations.');
         }
 

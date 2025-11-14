@@ -17,8 +17,6 @@ use Tests\TestCase;
  * - Roundtrip calculations
  * - Error handling
  * - Scope preferences
- *
- * @package Tests\Unit\Inventory
  */
 class UomConversionServiceTest extends TestCase
 {
@@ -30,7 +28,7 @@ class UomConversionServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new UomConversionService();
+        $this->service = new UomConversionService;
     }
 
     /**

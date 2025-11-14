@@ -7,24 +7,33 @@ use Livewire\Component;
 class DesignSystemDemo extends Component
 {
     public $name = '';
+
     public $email = '';
+
     public $message = '';
+
     public $selectedOption = '';
+
     public $isSubscribed = false;
+
     public $date = '';
+
     public $searchTerm = '';
-    
+
     public $showToast = false;
+
     public $toastType = 'info';
+
     public $toastTitle = '';
+
     public $toastMessage = '';
-    
+
     protected $options = [
         ['value' => 'option1', 'label' => 'Opción 1'],
         ['value' => 'option2', 'label' => 'Opción 2'],
         ['value' => 'option3', 'label' => 'Opción 3'],
     ];
-    
+
     protected $headers = [
         ['label' => 'ID', 'class' => 'w-16'],
         ['label' => 'Nombre', 'class' => 'w-1/4'],
@@ -32,7 +41,7 @@ class DesignSystemDemo extends Component
         ['label' => 'Fecha', 'class' => 'w-1/4'],
         ['label' => 'Acciones', 'class' => 'w-1/6 text-right'],
     ];
-    
+
     protected $tableData = [
         ['id' => 1, 'name' => 'Juan Pérez', 'email' => 'juan@example.com', 'date' => '2023-01-15'],
         ['id' => 2, 'name' => 'María López', 'email' => 'maria@example.com', 'date' => '2023-01-16'],
@@ -43,22 +52,22 @@ class DesignSystemDemo extends Component
     {
         return view('livewire.examples.design-system-demo');
     }
-    
+
     public function showToast($type, $title, $message)
     {
         $this->toastType = $type;
         $this->toastTitle = $title;
         $this->toastMessage = $message;
         $this->showToast = true;
-        
+
         // Hide toast after 5 seconds
         $this->dispatch('show-toast', [
             'type' => $type,
             'title' => $title,
-            'message' => $message
+            'message' => $message,
         ]);
     }
-    
+
     public function submitForm()
     {
         $this->validate([
@@ -66,10 +75,10 @@ class DesignSystemDemo extends Component
             'email' => 'required|email',
             'message' => 'required|min:10',
         ]);
-        
+
         // Simulate form submission
         $this->showToast('success', 'Formulario enviado', 'Los datos se han guardado correctamente.');
-        
+
         // Reset form
         $this->reset(['name', 'email', 'message']);
     }

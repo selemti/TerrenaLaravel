@@ -18,16 +18,12 @@ class PosConsumptionController extends Controller
         protected TicketRepository $ticketRepo,
         protected ConsumoPosRepository $consumoRepo,
         private AuditLogService $auditLogService
-    ) {
-    }
+    ) {}
 
     /**
      * GET /api/pos/tickets/{ticketId}/diagnostics
      *
      * Diagnostica el estado de un ticket
-     *
-     * @param int $ticketId
-     * @return JsonResponse
      */
     public function diagnostics(int $ticketId): JsonResponse
     {
@@ -48,7 +44,7 @@ class PosConsumptionController extends Controller
             return response()->json([
                 'ok' => false,
                 'error' => 'DIAGNOSTICS_ERROR',
-                'message' => 'Error al diagnosticar ticket: ' . $e->getMessage(),
+                'message' => 'Error al diagnosticar ticket: '.$e->getMessage(),
                 'timestamp' => now()->toIso8601String(),
             ], 500);
         }
@@ -59,10 +55,6 @@ class PosConsumptionController extends Controller
      *
      * Reprocesa un ticket histórico
      * Requiere permiso: can_reprocess_sales
-     *
-     * @param Request $request
-     * @param int $ticketId
-     * @return JsonResponse
      */
     public function reprocess(Request $request, int $ticketId): JsonResponse
     {
@@ -119,7 +111,7 @@ class PosConsumptionController extends Controller
             return response()->json([
                 'ok' => false,
                 'error' => 'REPROCESS_ERROR',
-                'message' => 'Error al reprocesar ticket: ' . $e->getMessage(),
+                'message' => 'Error al reprocesar ticket: '.$e->getMessage(),
                 'timestamp' => now()->toIso8601String(),
             ], 500);
         }
@@ -130,10 +122,6 @@ class PosConsumptionController extends Controller
      *
      * Reversa el consumo de un ticket
      * Requiere permiso: can_reprocess_sales
-     *
-     * @param Request $request
-     * @param int $ticketId
-     * @return JsonResponse
      */
     public function reverse(Request $request, int $ticketId): JsonResponse
     {
@@ -180,7 +168,7 @@ class PosConsumptionController extends Controller
             return response()->json([
                 'ok' => false,
                 'error' => 'REVERSE_ERROR',
-                'message' => 'Error al reversar ticket: ' . $e->getMessage(),
+                'message' => 'Error al reversar ticket: '.$e->getMessage(),
                 'timestamp' => now()->toIso8601String(),
             ], 500);
         }
@@ -192,9 +180,6 @@ class PosConsumptionController extends Controller
      * Lista tickets con problemas de mapeo de recetas
      * Para UI tipo semáforo
      * Requiere permiso: can_view_recipe_dashboard
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function missingRecipes(Request $request): JsonResponse
     {
@@ -250,7 +235,7 @@ class PosConsumptionController extends Controller
             return response()->json([
                 'ok' => false,
                 'error' => 'MISSING_RECIPES_ERROR',
-                'message' => 'Error al obtener tickets problemáticos: ' . $e->getMessage(),
+                'message' => 'Error al obtener tickets problemáticos: '.$e->getMessage(),
                 'timestamp' => now()->toIso8601String(),
             ], 500);
         }
@@ -258,9 +243,6 @@ class PosConsumptionController extends Controller
 
     /**
      * Formatea el folio para display
-     *
-     * @param array $ticket
-     * @return string
      */
     protected function formatFolio(array $ticket): string
     {
@@ -269,6 +251,7 @@ class PosConsumptionController extends Controller
 
         if ($createDate) {
             $date = date('Y-m-d', strtotime($createDate));
+
             return "{$dailyFolio} ({$date})";
         }
 

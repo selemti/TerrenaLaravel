@@ -87,7 +87,7 @@ class PurchasingServiceTest extends TestCase
         ]);
 
         $this->assertSame('COTIZADA', $this->getRequestEstado($request['id']));
-        $this->assertEquals( (8 * 14) + (3 * 78), $quote['total']);
+        $this->assertEquals((8 * 14) + (3 * 78), $quote['total']);
 
         $approved = $service->approveQuote($quote['id'], userId: 9);
         $this->assertSame('APROBADA', $approved['estado']);

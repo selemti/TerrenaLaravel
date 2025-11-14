@@ -31,6 +31,7 @@ class SalesMixController extends BaseReportController
         '#ef4444',
         '#0f172a',
     ];
+
     public function index(Request $request): JsonResponse
     {
         [$start, $end, $branch] = $this->resolveFilters($request);
@@ -122,7 +123,7 @@ class SalesMixController extends BaseReportController
             'reporte_mix_ventas_%s_%s%s.xlsx',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            $branch ? '_' . str_replace(' ', '_', strtolower($branch)) : ''
+            $branch ? '_'.str_replace(' ', '_', strtolower($branch)) : ''
         );
 
         return Excel::download($export, $filename);
@@ -150,7 +151,7 @@ class SalesMixController extends BaseReportController
             'reporte_mix_ventas_%s_%s%s.pdf',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            $branch ? '_' . str_replace(' ', '_', strtolower($branch)) : ''
+            $branch ? '_'.str_replace(' ', '_', strtolower($branch)) : ''
         );
 
         return $this->renderPdf('reports.exports.sales.mix', [
@@ -180,13 +181,14 @@ class SalesMixController extends BaseReportController
         } else {
             $branch = $this->parseBranch($request);
         }
+
         return [$start, $end, $branch];
     }
 
     protected function fetchData(Carbon $start, Carbon $end): Collection
     {
         $rows = DB::connection('pgsql')->select(
-            <<<SQL
+            <<<'SQL'
             SELECT gs.day::date AS report_date, f.*
             FROM generate_series(?::date, ?::date, interval '1 day') AS gs(day)
             CROSS JOIN LATERAL public.f_sales_mix_payment_on(gs.day::date) AS f
@@ -199,13 +201,15 @@ class SalesMixController extends BaseReportController
 
     protected function applyBranchFilter(Collection $rows, ?string $branch): Collection
     {
-        if (!$branch) {
+        if (! $branch) {
             return $rows->values();
         }
         $normalized = array_map('trim', explode(',', strtoupper($branch)));
+
         return $rows
             ->filter(function (object $row) use ($normalized) {
                 $value = strtoupper((string) ($row->branch_key ?? $row->branch ?? $row->branch_name ?? ''));
+
                 return in_array($value, $normalized, true);
             })
             ->values();
@@ -301,7 +305,7 @@ class SalesMixController extends BaseReportController
 
     protected function fetchSalesAdjustments(Carbon $start, Carbon $end, ?string $branch): array
     {
-        $sql = <<<SQL
+        $sql = <<<'SQL'
             SELECT
                 COALESCE(SUM(bruto), 0) AS bruto,
                 COALESCE(SUM(descuento), 0) AS descuento,
@@ -318,14 +322,14 @@ class SalesMixController extends BaseReportController
             if (str_contains($branch, ',')) {
                 $sql .= " AND UPPER(branch_key) IN (SELECT UNNEST(string_to_array(?, ',')))";
             } else {
-                $sql .= " AND UPPER(branch_key) = ?";
+                $sql .= ' AND UPPER(branch_key) = ?';
             }
             $bindings[] = $branch;
         }
 
         $row = DB::connection('pgsql')->selectOne($sql, $bindings);
 
-        if (!$row) {
+        if (! $row) {
             return [
                 'gross' => 0.0,
                 'discount' => 0.0,
@@ -355,7 +359,7 @@ class SalesMixController extends BaseReportController
 
     protected function explodeBranchList(?string $branch): array
     {
-        if (!$branch) {
+        if (! $branch) {
             return [];
         }
 
@@ -386,7 +390,7 @@ class SalesMixController extends BaseReportController
                 continue;
             }
 
-            if (!isset($colors[$upper])) {
+            if (! isset($colors[$upper])) {
                 $colors[$upper] = $palette[$index % count($palette)];
                 $index++;
             }
@@ -454,6 +458,7 @@ class SalesMixController extends BaseReportController
         $grouped = $rows->groupBy(function (object $row) {
             $date = (string) ($row->report_date ?? '');
             $branch = strtoupper((string) ($row->branch_key ?? $row->branch ?? $row->branch_name ?? ''));
+
             return $date.'|'.$branch;
         });
 
@@ -461,15 +466,23 @@ class SalesMixController extends BaseReportController
         foreach ($grouped as $key => $items) {
             [$date, $branch] = explode('|', $key, 2);
 
-            $cash = 0.0; $credit = 0.0; $debit = 0.0; $other = 0.0; $net = 0.0;
+            $cash = 0.0;
+            $credit = 0.0;
+            $debit = 0.0;
+            $other = 0.0;
+            $net = 0.0;
             foreach ($items as $row) {
                 $amount = (float) ($row->total ?? 0);
                 $method = strtoupper((string) ($row->normalized_payment ?? $row->payment_method ?? $row->payment ?? $row->pay_norm ?? ''));
                 switch ($method) {
-                    case 'CASH': $cash += $amount; break;
-                    case 'CREDIT_CARD': $credit += $amount; break;
-                    case 'DEBIT_CARD': $debit += $amount; break;
-                    default: $other += $amount; break;
+                    case 'CASH': $cash += $amount;
+                        break;
+                    case 'CREDIT_CARD': $credit += $amount;
+                        break;
+                    case 'DEBIT_CARD': $debit += $amount;
+                        break;
+                    default: $other += $amount;
+                        break;
                 }
                 $net += $amount;
             }
@@ -496,13 +509,16 @@ class SalesMixController extends BaseReportController
     {
         $totals = ['cash' => 0.0, 'credit' => 0.0, 'debit' => 0.0, 'other' => 0.0, 'net' => 0.0];
         foreach ($pivot as $r) {
-            $totals['cash'] += (float)($r['cash'] ?? 0);
-            $totals['credit'] += (float)($r['credit'] ?? 0);
-            $totals['debit'] += (float)($r['debit'] ?? 0);
-            $totals['other'] += (float)($r['other'] ?? 0);
-            $totals['net'] += (float)($r['net'] ?? 0);
+            $totals['cash'] += (float) ($r['cash'] ?? 0);
+            $totals['credit'] += (float) ($r['credit'] ?? 0);
+            $totals['debit'] += (float) ($r['debit'] ?? 0);
+            $totals['other'] += (float) ($r['other'] ?? 0);
+            $totals['net'] += (float) ($r['net'] ?? 0);
         }
-        foreach ($totals as $k => $v) { $totals[$k] = $this->round($v); }
+        foreach ($totals as $k => $v) {
+            $totals[$k] = $this->round($v);
+        }
+
         return $totals;
     }
 
@@ -514,15 +530,23 @@ class SalesMixController extends BaseReportController
 
         $result = [];
         foreach ($grouped as $branch => $items) {
-            $cash = 0.0; $credit = 0.0; $debit = 0.0; $other = 0.0; $net = 0.0;
+            $cash = 0.0;
+            $credit = 0.0;
+            $debit = 0.0;
+            $other = 0.0;
+            $net = 0.0;
             foreach ($items as $row) {
                 $amount = (float) ($row->total ?? 0);
                 $method = strtoupper((string) ($row->normalized_payment ?? $row->payment_method ?? $row->payment ?? $row->pay_norm ?? ''));
                 switch ($method) {
-                    case 'CASH': $cash += $amount; break;
-                    case 'CREDIT_CARD': $credit += $amount; break;
-                    case 'DEBIT_CARD': $debit += $amount; break;
-                    default: $other += $amount; break;
+                    case 'CASH': $cash += $amount;
+                        break;
+                    case 'CREDIT_CARD': $credit += $amount;
+                        break;
+                    case 'DEBIT_CARD': $debit += $amount;
+                        break;
+                    default: $other += $amount;
+                        break;
                 }
                 $net += $amount;
             }
@@ -535,7 +559,8 @@ class SalesMixController extends BaseReportController
                 'net' => $this->round($net),
             ];
         }
-        usort($result, fn($a,$b) => strcmp($a['branch_key'] ?? '', $b['branch_key'] ?? ''));
+        usort($result, fn ($a, $b) => strcmp($a['branch_key'] ?? '', $b['branch_key'] ?? ''));
+
         return $result;
     }
 }

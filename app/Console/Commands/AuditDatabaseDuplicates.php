@@ -8,27 +8,28 @@ use Illuminate\Support\Facades\DB;
 class AuditDatabaseDuplicates extends Command
 {
     protected $signature = 'db:audit-duplicates';
+
     protected $description = 'Auditoría exhaustiva de tablas duplicadas y legacy en PostgreSQL';
 
     public function handle()
     {
         $this->info('=== AUDITORÍA DE BASE DE DATOS PostgreSQL ===');
-        $this->info('Fecha: ' . now()->format('Y-m-d H:i:s'));
+        $this->info('Fecha: '.now()->format('Y-m-d H:i:s'));
         $this->newLine();
 
         // Get all tables from both schemas
         $selemti_tables = $this->getTables('selemti');
         $public_tables = $this->getTables('public');
 
-        $this->info("=== RESUMEN ===");
-        $this->info("Tablas en selemti: " . count($selemti_tables));
-        $this->info("Tablas en public: " . count($public_tables));
-        $this->info("TOTAL: " . (count($selemti_tables) + count($public_tables)));
+        $this->info('=== RESUMEN ===');
+        $this->info('Tablas en selemti: '.count($selemti_tables));
+        $this->info('Tablas en public: '.count($public_tables));
+        $this->info('TOTAL: '.(count($selemti_tables) + count($public_tables)));
         $this->newLine();
 
         // Analyze all selemti tables
         $selemti_analysis = [];
-        $this->info("=== ANALIZANDO TABLAS SELEMTI ===");
+        $this->info('=== ANALIZANDO TABLAS SELEMTI ===');
         $progressBar = $this->output->createProgressBar(count($selemti_tables));
         $progressBar->start();
 
@@ -41,7 +42,7 @@ class AuditDatabaseDuplicates extends Command
 
         // Analyze public tables (lighter analysis)
         $public_analysis = [];
-        $this->info("=== ANALIZANDO TABLAS PUBLIC (Floreant POS) ===");
+        $this->info('=== ANALIZANDO TABLAS PUBLIC (Floreant POS) ===');
         $progressBar = $this->output->createProgressBar(count($public_tables));
         $progressBar->start();
 
@@ -56,21 +57,21 @@ class AuditDatabaseDuplicates extends Command
         $this->generateReport($selemti_analysis, $public_analysis, $selemti_tables, $public_tables);
 
         $this->info("\n=== AUDITORÍA COMPLETADA ===");
-        $this->info("Reporte generado en: docs/BD/REPORTE_AUDITORIA_DUPLICADOS.md");
+        $this->info('Reporte generado en: docs/BD/REPORTE_AUDITORIA_DUPLICADOS.md');
 
         return 0;
     }
 
     private function getTables(string $schema): array
     {
-        $tables = DB::select("
+        $tables = DB::select('
             SELECT tablename
             FROM pg_tables
             WHERE schemaname = ?
             ORDER BY tablename
-        ", [$schema]);
+        ', [$schema]);
 
-        return array_map(fn($t) => $t->tablename, $tables);
+        return array_map(fn ($t) => $t->tablename, $tables);
     }
 
     private function analyzeTable(string $schema, string $table, bool $detailed = true): array
@@ -83,12 +84,12 @@ class AuditDatabaseDuplicates extends Command
         }
 
         // Get columns
-        $columns = DB::select("
+        $columns = DB::select('
             SELECT column_name, data_type, character_maximum_length, is_nullable
             FROM information_schema.columns
             WHERE table_schema = ? AND table_name = ?
             ORDER BY ordinal_position
-        ", [$schema, $table]);
+        ', [$schema, $table]);
 
         $analysis = [
             'schema' => $schema,
@@ -129,18 +130,18 @@ class AuditDatabaseDuplicates extends Command
         $duplicate_groups = $this->identifyDuplicateGroups($selemti_analysis, $public_analysis, $selemti_tables, $public_tables);
 
         // Identify legacy tables
-        $legacy_tables = array_filter($selemti_tables, fn($t) => str_contains($t, '_legacy'));
+        $legacy_tables = array_filter($selemti_tables, fn ($t) => str_contains($t, '_legacy'));
 
         // Generate markdown report
         $report = $this->buildMarkdownReport($duplicate_groups, $legacy_tables, $selemti_analysis, $public_analysis);
 
         // Save report
         $dir = base_path('docs/BD');
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
 
-        file_put_contents($dir . '/REPORTE_AUDITORIA_DUPLICADOS.md', $report);
+        file_put_contents($dir.'/REPORTE_AUDITORIA_DUPLICADOS.md', $report);
     }
 
     private function identifyDuplicateGroups(array $selemti_analysis, array $public_analysis, array $selemti_tables, array $public_tables): array
@@ -232,7 +233,7 @@ class AuditDatabaseDuplicates extends Command
             $found_tables = [];
             foreach ($tables as $table_full => $exists) {
                 if ($exists) {
-                    list($schema, $table) = explode('.', $table_full);
+                    [$schema, $table] = explode('.', $table_full);
                     $analysis = $schema === 'public' ? $public_analysis[$table] : $selemti_analysis[$table];
                     $found_tables[$table_full] = $analysis;
                 }
@@ -249,17 +250,17 @@ class AuditDatabaseDuplicates extends Command
     private function buildMarkdownReport(array $duplicate_groups, array $legacy_tables, array $selemti_analysis, array $public_analysis): string
     {
         $report = "# AUDITORÍA DE TABLAS DUPLICADAS Y LEGACY\n\n";
-        $report .= "**Fecha**: " . now()->format('d F Y H:i:s') . "\n";
-        $report .= "**Total Tablas**: " . (count($selemti_analysis) + count($public_analysis)) . "\n";
-        $report .= "  - Selemti: " . count($selemti_analysis) . "\n";
-        $report .= "  - Public: " . count($public_analysis) . "\n\n";
+        $report .= '**Fecha**: '.now()->format('d F Y H:i:s')."\n";
+        $report .= '**Total Tablas**: '.(count($selemti_analysis) + count($public_analysis))."\n";
+        $report .= '  - Selemti: '.count($selemti_analysis)."\n";
+        $report .= '  - Public: '.count($public_analysis)."\n\n";
 
         $report .= "---\n\n";
 
         // Executive summary
         $report .= "## RESUMEN EJECUTIVO\n\n";
-        $report .= "- **Grupos de tablas duplicadas encontrados**: " . count($duplicate_groups) . "\n";
-        $report .= "- **Tablas legacy (con sufijo _legacy)**: " . count($legacy_tables) . "\n";
+        $report .= '- **Grupos de tablas duplicadas encontrados**: '.count($duplicate_groups)."\n";
+        $report .= '- **Tablas legacy (con sufijo _legacy)**: '.count($legacy_tables)."\n";
 
         // Count legacy tables with data
         $legacy_with_data = 0;
@@ -269,7 +270,7 @@ class AuditDatabaseDuplicates extends Command
             }
         }
         $report .= "- **Tablas legacy con datos**: $legacy_with_data\n";
-        $report .= "- **Impacto**: " . ($legacy_with_data > 0 ? "ALTO" : "MEDIO") . " - Requiere revisión y limpieza\n\n";
+        $report .= '- **Impacto**: '.($legacy_with_data > 0 ? 'ALTO' : 'MEDIO')." - Requiere revisión y limpieza\n\n";
 
         $report .= "---\n\n";
 
@@ -282,7 +283,7 @@ class AuditDatabaseDuplicates extends Command
             $report .= "|-------|-----------|----------|------|--------------------||\n";
 
             foreach ($tables as $table_full => $analysis) {
-                list($schema, $table) = explode('.', $table_full);
+                [$schema, $table] = explode('.', $table_full);
 
                 $count = $analysis['count'];
                 $col_count = count($analysis['columns']);
@@ -308,7 +309,7 @@ class AuditDatabaseDuplicates extends Command
             $report .= "\n**Análisis**:\n\n";
 
             foreach ($tables as $table_full => $analysis) {
-                list($schema, $table) = explode('.', $table_full);
+                [$schema, $table] = explode('.', $table_full);
                 $count = $analysis['count'];
 
                 $report .= "- **$table_full**: ";
@@ -340,7 +341,7 @@ class AuditDatabaseDuplicates extends Command
             foreach ($tables as $table_full => $analysis) {
                 if (isset($analysis['fks']) && count($analysis['fks']) > 0) {
                     $has_fks = true;
-                    list($schema, $table) = explode('.', $table_full);
+                    [$schema, $table] = explode('.', $table_full);
                     $report .= "- **$table_full**:\n";
                     foreach ($analysis['fks'] as $fk) {
                         $report .= "  - `{$fk->column_name}` → `{$fk->foreign_table_schema}.{$fk->foreign_table_name}({$fk->foreign_column_name})`\n";
@@ -348,15 +349,15 @@ class AuditDatabaseDuplicates extends Command
                 }
             }
 
-            if (!$has_fks) {
+            if (! $has_fks) {
                 $report .= "- Sin foreign keys detectadas.\n";
             }
 
             $report .= "\n**Estructura de columnas**:\n\n";
 
             foreach ($tables as $table_full => $analysis) {
-                list($schema, $table) = explode('.', $table_full);
-                $report .= "- **$table_full** (" . count($analysis['columns']) . " columnas):\n";
+                [$schema, $table] = explode('.', $table_full);
+                $report .= "- **$table_full** (".count($analysis['columns'])." columnas):\n";
                 $report .= "  ```\n";
                 foreach (array_slice($analysis['columns'], 0, 10) as $col) {
                     $type = $col->data_type;
@@ -367,7 +368,7 @@ class AuditDatabaseDuplicates extends Command
                     $report .= "  {$col->column_name} ({$type}) {$nullable}\n";
                 }
                 if (count($analysis['columns']) > 10) {
-                    $report .= "  ... y " . (count($analysis['columns']) - 10) . " columnas más\n";
+                    $report .= '  ... y '.(count($analysis['columns']) - 10)." columnas más\n";
                 }
                 $report .= "  ```\n";
             }
@@ -377,7 +378,7 @@ class AuditDatabaseDuplicates extends Command
         }
 
         // Legacy tables section
-        $report .= "## " . $group_num . ". TABLAS CON SUFIJO _legacy\n\n";
+        $report .= '## '.$group_num.". TABLAS CON SUFIJO _legacy\n\n";
         $report .= "Lista completa de tablas con sufijo `_legacy`:\n\n";
         $report .= "| Tabla | Registros | Acción |\n";
         $report .= "|-------|-----------|--------|\n";
@@ -392,7 +393,7 @@ class AuditDatabaseDuplicates extends Command
         $group_num++;
 
         // Cleanup plan
-        $report .= "## " . $group_num . ". PLAN DE LIMPIEZA\n\n";
+        $report .= '## '.$group_num.". PLAN DE LIMPIEZA\n\n";
 
         $report .= "### FASE 1: Eliminar tablas legacy VACÍAS (Sin datos)\n\n";
         $report .= "**Criterio**: Tablas con sufijo `_legacy` o duplicadas que tienen 0 registros.\n\n";
@@ -407,8 +408,8 @@ class AuditDatabaseDuplicates extends Command
         // Add empty duplicate tables
         foreach ($duplicate_groups as $group_name => $tables) {
             foreach ($tables as $table_full => $analysis) {
-                list($schema, $table) = explode('.', $table_full);
-                if ($schema === 'selemti' && $analysis['count'] == 0 && !str_contains($table, 'cat_') && $schema !== 'public') {
+                [$schema, $table] = explode('.', $table_full);
+                if ($schema === 'selemti' && $analysis['count'] == 0 && ! str_contains($table, 'cat_') && $schema !== 'public') {
                     $report .= "DROP TABLE IF EXISTS selemti.\"$table\" CASCADE;\n";
                 }
             }
@@ -446,7 +447,7 @@ class AuditDatabaseDuplicates extends Command
         $group_num++;
 
         // Risks
-        $report .= "## " . $group_num . ". RIESGOS Y VALIDACIONES\n\n";
+        $report .= '## '.$group_num.". RIESGOS Y VALIDACIONES\n\n";
         $report .= "### Riesgos:\n\n";
         $report .= "1. **Código legacy**: Modelos o queries pueden referenciar tablas antiguas.\n";
         $report .= "2. **Foreign Keys**: CASCADE drops pueden eliminar datos relacionados.\n";
@@ -465,7 +466,7 @@ class AuditDatabaseDuplicates extends Command
         $group_num++;
 
         // Tables to keep
-        $report .= "## " . $group_num . ". TABLAS A MANTENER (Post-Limpieza)\n\n";
+        $report .= '## '.$group_num.". TABLAS A MANTENER (Post-Limpieza)\n\n";
         $report .= "Lista de tablas correctas que deben permanecer:\n\n";
 
         $report .= "### Catálogos (cat_*):\n";
@@ -477,7 +478,7 @@ class AuditDatabaseDuplicates extends Command
 
         $report .= "\n### Operaciones actuales:\n";
         $current_tables = ['items', 'batches', 'mov_inv', 'recepciones', 'recipes', 'recipe_lines',
-                          'production_orders', 'cash_funds', 'cash_fund_movements', 'purchase_orders'];
+            'production_orders', 'cash_funds', 'cash_fund_movements', 'purchase_orders'];
         foreach ($current_tables as $table) {
             if (isset($selemti_analysis[$table])) {
                 $report .= "- ✅ selemti.$table ({$selemti_analysis[$table]['count']} registros)\n";
@@ -491,12 +492,12 @@ class AuditDatabaseDuplicates extends Command
 
         // Summary statistics
         $report .= "## ESTADÍSTICAS FINALES\n\n";
-        $report .= "- **Total tablas selemti**: " . count($selemti_analysis) . "\n";
-        $report .= "- **Total tablas public**: " . count($public_analysis) . "\n";
-        $report .= "- **Grupos duplicados**: " . count($duplicate_groups) . "\n";
-        $report .= "- **Tablas legacy**: " . count($legacy_tables) . "\n";
+        $report .= '- **Total tablas selemti**: '.count($selemti_analysis)."\n";
+        $report .= '- **Total tablas public**: '.count($public_analysis)."\n";
+        $report .= '- **Grupos duplicados**: '.count($duplicate_groups)."\n";
+        $report .= '- **Tablas legacy**: '.count($legacy_tables)."\n";
 
-        $empty_legacy = count(array_filter($legacy_tables, fn($t) => $selemti_analysis[$t]['count'] == 0));
+        $empty_legacy = count(array_filter($legacy_tables, fn ($t) => $selemti_analysis[$t]['count'] == 0));
         $report .= "- **Tablas legacy vacías**: $empty_legacy\n";
         $report .= "- **Tablas legacy con datos**: $legacy_with_data\n\n";
 

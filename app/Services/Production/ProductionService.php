@@ -14,11 +14,9 @@ class ProductionService
      * Planea un batch de producción basado en una receta.
      *
      * @route POST /api/production/batch/plan
-     * @param int $recipeId
-     * @param float $qtyTarget
-     * @param int $userId
-     * @return array
+     *
      * @throws InvalidArgumentException
+     *
      * @todo Persistir batch PLANIFICADA y asociar recipe_version vigente.
      */
     public function planBatch(int $recipeId, float $qtyTarget, int $userId): array
@@ -38,12 +36,10 @@ class ProductionService
      * Registra consumo de insumos y pasa a EN_PROCESO.
      *
      * @route POST /api/production/batch/{batch_id}/consume
-     * @param int $batchId
-     * @param array $consumedLines
-     * @param int $userId
-     * @return array
+     *
      * @throws InvalidArgumentException
      * @throws RuntimeException
+     *
      * @todo Validar disponibilidad en inventario y bloquear lotes agotados.
      */
     public function consumeIngredients(int $batchId, array $consumedLines, int $userId): array
@@ -67,12 +63,10 @@ class ProductionService
      * Registra las salidas de producto terminado y marca COMPLETADA.
      *
      * @route POST /api/production/batch/{batch_id}/complete
-     * @param int $batchId
-     * @param array $producedLines
-     * @param int $userId
-     * @return array
+     *
      * @throws InvalidArgumentException
      * @throws RuntimeException
+     *
      * @todo Asociar lotes creados, métricas de merma y firmas de control de calidad.
      */
     public function completeBatch(int $batchId, array $producedLines, int $userId): array
@@ -96,11 +90,10 @@ class ProductionService
      * Genera mov_inv para insumos y productos terminados y sella POSTEADA.
      *
      * @route POST /api/production/batch/{batch_id}/post
-     * @param int $batchId
-     * @param int $userId
-     * @return array
+     *
      * @throws InvalidArgumentException
      * @throws RuntimeException
+     *
      * @todo Insertar movimientos negativos/positivos y cerrar el batch transaccionalmente.
      */
     public function postBatchToInventory(int $batchId, int $userId): array
@@ -123,9 +116,6 @@ class ProductionService
     /**
      * Garantiza que el identificador sea positivo.
      *
-     * @param int $id
-     * @param string $label
-     * @return void
      * @throws InvalidArgumentException
      */
     protected function guardPositiveId(int $id, string $label): void
@@ -138,8 +128,6 @@ class ProductionService
     /**
      * Garantiza que la cantidad planeada sea mayor que cero.
      *
-     * @param float $qty
-     * @return void
      * @throws InvalidArgumentException
      */
     protected function guardPositiveQty(float $qty): void

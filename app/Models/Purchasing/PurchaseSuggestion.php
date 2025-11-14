@@ -3,12 +3,13 @@
 namespace App\Models\Purchasing;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PurchaseSuggestion extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.purchase_suggestions';
 
     protected $fillable = [

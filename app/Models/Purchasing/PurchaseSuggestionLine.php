@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PurchaseSuggestionLine extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.purchase_suggestion_lines';
 
     protected $fillable = [

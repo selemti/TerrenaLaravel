@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Inventory;
 
-use Livewire\Component;
 use Illuminate\Support\Facades\Http;
+use Livewire\Component;
 
 /**
  * Pantalla operativa para una transferencia entre almacenes/sucursales.
@@ -24,15 +24,21 @@ class TransferDetail extends Component
 
     // Datos visibles en encabezado / estado:
     public string $estado = 'DRAFT';
+
     public string $origen_nombre = '';
+
     public string $destino_nombre = '';
+
     public array $lineas = [];
 
     // Permisos / acciones disponibles en UI:
     public bool $canApprove = false; // inventory.transfers.approve
-    public bool $canShip    = false; // inventory.transfers.ship
+
+    public bool $canShip = false; // inventory.transfers.ship
+
     public bool $canReceive = false; // inventory.transfers.receive
-    public bool $canPost    = false; // inventory.transfers.post  (cerrar kardex)
+
+    public bool $canPost = false; // inventory.transfers.post  (cerrar kardex)
 
     /**
      * mount: inicializa el componente con el ID de la transferencia.
@@ -75,10 +81,10 @@ class TransferDetail extends Component
         $transferResp = Http::get("/api/inventory/transfers/{$this->transferId}");
         if ($transferResp->successful() && ($transferResp['ok'] ?? false)) {
             $data = $transferResp['data'] ?? [];
-            $this->estado         = $data['estado']         ?? $this->estado;
-            $this->origen_nombre  = $data['origen_nombre']  ?? $this->origen_nombre;
+            $this->estado = $data['estado'] ?? $this->estado;
+            $this->origen_nombre = $data['origen_nombre'] ?? $this->origen_nombre;
             $this->destino_nombre = $data['destino_nombre'] ?? $this->destino_nombre;
-            $this->lineas         = $data['lineas']         ?? [];
+            $this->lineas = $data['lineas'] ?? [];
         } else {
             // TODO: log / notificar error al usuario
         }
@@ -89,9 +95,9 @@ class TransferDetail extends Component
             $perms = $permResp['data']['permissions'] ?? [];
 
             $this->canApprove = in_array('inventory.transfers.approve', $perms, true);
-            $this->canShip    = in_array('inventory.transfers.ship', $perms, true);
+            $this->canShip = in_array('inventory.transfers.ship', $perms, true);
             $this->canReceive = in_array('inventory.transfers.receive', $perms, true);
-            $this->canPost    = in_array('inventory.transfers.post', $perms, true);
+            $this->canPost = in_array('inventory.transfers.post', $perms, true);
         } else {
             // TODO: log / notificar error permisos
         }
@@ -105,12 +111,11 @@ class TransferDetail extends Component
      *
      * IMPORTANTE: por ahora sólo stub. No manejar errores finos.
      */
-
     public function actionApprove(): void
     {
         // requires: inventory.transfers.approve
         $resp = Http::post("/api/inventory/transfers/{$this->transferId}/approve");
-        if (!($resp->successful() && ($resp['ok'] ?? false))) {
+        if (! ($resp->successful() && ($resp['ok'] ?? false))) {
             // TODO: manejar error
         }
         $this->refreshData();
@@ -120,7 +125,7 @@ class TransferDetail extends Component
     {
         // requires: inventory.transfers.ship
         $resp = Http::post("/api/inventory/transfers/{$this->transferId}/ship");
-        if (!($resp->successful() && ($resp['ok'] ?? false))) {
+        if (! ($resp->successful() && ($resp['ok'] ?? false))) {
             // TODO: manejar error
         }
         $this->refreshData();
@@ -130,7 +135,7 @@ class TransferDetail extends Component
     {
         // requires: inventory.transfers.receive
         $resp = Http::post("/api/inventory/transfers/{$this->transferId}/receive");
-        if (!($resp->successful() && ($resp['ok'] ?? false))) {
+        if (! ($resp->successful() && ($resp['ok'] ?? false))) {
             // TODO: manejar error
         }
         $this->refreshData();
@@ -140,7 +145,7 @@ class TransferDetail extends Component
     {
         // requires: inventory.transfers.post
         $resp = Http::post("/api/inventory/transfers/{$this->transferId}/post");
-        if (!($resp->successful() && ($resp['ok'] ?? false))) {
+        if (! ($resp->successful() && ($resp['ok'] ?? false))) {
             // TODO: manejar error
         }
         $this->refreshData();

@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class AnalyzarDiscrepanciasVentas extends Command
 {
@@ -23,21 +23,21 @@ class AnalyzarDiscrepanciasVentas extends Command
     {
         parent::__construct();
         $this->output_dir = storage_path('app/analisis_ventas');
-        if (!file_exists($this->output_dir)) {
+        if (! file_exists($this->output_dir)) {
             mkdir($this->output_dir, 0755, true);
         }
     }
 
     public function handle()
     {
-        $this->info("╔═══════════════════════════════════════════════════════════════════╗");
-        $this->info("║   🔬 ANÁLISIS DE DISCREPANCIAS EN VENTAS - DRAWER PULL vs BD    ║");
-        $this->info("╚═══════════════════════════════════════════════════════════════════╝");
+        $this->info('╔═══════════════════════════════════════════════════════════════════╗');
+        $this->info('║   🔬 ANÁLISIS DE DISCREPANCIAS EN VENTAS - DRAWER PULL vs BD    ║');
+        $this->info('╚═══════════════════════════════════════════════════════════════════╝');
         $this->newLine();
 
         // Determinar período a analizar
         [$fecha_inicio, $fecha_fin] = $this->determinarPeriodo();
-        
+
         $this->info("📅 Período de análisis: {$fecha_inicio} a {$fecha_fin}");
         $this->newLine();
 
@@ -53,7 +53,7 @@ class AnalyzarDiscrepanciasVentas extends Command
         }
 
         $this->newLine();
-        $this->info("✅ Análisis completado");
+        $this->info('✅ Análisis completado');
 
         return Command::SUCCESS;
     }
@@ -65,12 +65,14 @@ class AnalyzarDiscrepanciasVentas extends Command
         }
 
         if ($this->option('mes')) {
-            $mes = Carbon::parse($this->option('mes') . '-01');
+            $mes = Carbon::parse($this->option('mes').'-01');
+
             return [$mes->startOfMonth()->format('Y-m-d'), $mes->endOfMonth()->format('Y-m-d')];
         }
 
         // Por defecto: mes anterior
         $mes_anterior = Carbon::now()->subMonth();
+
         return [$mes_anterior->startOfMonth()->format('Y-m-d'), $mes_anterior->endOfMonth()->format('Y-m-d')];
     }
 
@@ -103,7 +105,7 @@ class AnalyzarDiscrepanciasVentas extends Command
 
     private function analizarDescuento100($fecha_inicio, $fecha_fin)
     {
-        $query = "
+        $query = '
             SELECT 
                 t.id,
                 t.create_date,
@@ -120,11 +122,11 @@ class AnalyzarDiscrepanciasVentas extends Command
               AND t.paid = FALSE
               AND t.voided = FALSE
             ORDER BY t.total_discount DESC
-        ";
+        ';
 
         $tickets = DB::select($query, [
             'fecha_inicio' => $fecha_inicio,
-            'fecha_fin' => $fecha_fin
+            'fecha_fin' => $fecha_fin,
         ]);
 
         $total_descuentos = array_sum(array_column($tickets, 'total_discount'));
@@ -132,7 +134,7 @@ class AnalyzarDiscrepanciasVentas extends Command
         return [
             'total_tickets' => count($tickets),
             'total_descuentos' => $total_descuentos,
-            'tickets' => $tickets
+            'tickets' => $tickets,
         ];
     }
 
@@ -174,7 +176,7 @@ class AnalyzarDiscrepanciasVentas extends Command
 
         $tickets = DB::select($query, [
             'fecha_inicio' => $fecha_inicio,
-            'fecha_fin' => $fecha_fin
+            'fecha_fin' => $fecha_fin,
         ]);
 
         $total_diferencia = array_sum(array_column($tickets, 'diferencia'));
@@ -182,13 +184,13 @@ class AnalyzarDiscrepanciasVentas extends Command
         return [
             'total_tickets' => count($tickets),
             'total_diferencia' => $total_diferencia,
-            'tickets' => $tickets
+            'tickets' => $tickets,
         ];
     }
 
     private function analizarTicketsAbiertos($fecha_inicio, $fecha_fin)
     {
-        $query = "
+        $query = '
             SELECT 
                 t.id,
                 DATE(t.create_date) as fecha_creacion,
@@ -204,11 +206,11 @@ class AnalyzarDiscrepanciasVentas extends Command
               AND t.voided = FALSE
               AND (t.total_price > 0 OR t.total_discount > 0)
             ORDER BY t.total_discount DESC
-        ";
+        ';
 
         $tickets = DB::select($query, [
             'fecha_inicio' => $fecha_inicio,
-            'fecha_fin' => $fecha_fin
+            'fecha_fin' => $fecha_fin,
         ]);
 
         $total_price = array_sum(array_column($tickets, 'total_price'));
@@ -219,7 +221,7 @@ class AnalyzarDiscrepanciasVentas extends Command
             'total_price' => $total_price,
             'total_discount' => $total_discount,
             'neto' => $total_price - $total_discount,
-            'tickets' => $tickets
+            'tickets' => $tickets,
         ];
     }
 
@@ -233,75 +235,75 @@ class AnalyzarDiscrepanciasVentas extends Command
     private function mostrarResultados($resultados)
     {
         $this->newLine();
-        $this->info("╔═══════════════════════════════════════════════════════════════════╗");
-        $this->info("║                        📊 RESULTADOS                              ║");
-        $this->info("╚═══════════════════════════════════════════════════════════════════╝");
+        $this->info('╔═══════════════════════════════════════════════════════════════════╗');
+        $this->info('║                        📊 RESULTADOS                              ║');
+        $this->info('╚═══════════════════════════════════════════════════════════════════╝');
         $this->newLine();
 
         // 1. Descuentos 100%
-        $this->warn("🚨 PROBLEMA #1: Tickets con Descuento 100% Mal Registrados");
-        $this->line("   Total tickets afectados: " . $resultados['descuento_100']['total_tickets']);
-        $this->line("   Total descuentos fantasma: $" . number_format($resultados['descuento_100']['total_descuentos'], 2));
-        
+        $this->warn('🚨 PROBLEMA #1: Tickets con Descuento 100% Mal Registrados');
+        $this->line('   Total tickets afectados: '.$resultados['descuento_100']['total_tickets']);
+        $this->line('   Total descuentos fantasma: $'.number_format($resultados['descuento_100']['total_descuentos'], 2));
+
         if ($this->option('detalle') && count($resultados['descuento_100']['tickets']) > 0) {
             $this->newLine();
             $headers = ['ID', 'Fecha', 'Total Price', 'Descuento', 'Pagado', 'Anulado'];
-            $rows = array_map(fn($t) => [
+            $rows = array_map(fn ($t) => [
                 $t->id,
                 $t->create_date,
-                '$' . $t->total_price,
-                '$' . $t->total_discount,
+                '$'.$t->total_price,
+                '$'.$t->total_discount,
                 $t->paid ? 'Sí' : 'No',
-                $t->voided ? 'Sí' : 'No'
+                $t->voided ? 'Sí' : 'No',
             ], array_slice($resultados['descuento_100']['tickets'], 0, 10));
             $this->table($headers, $rows);
             if (count($resultados['descuento_100']['tickets']) > 10) {
-                $this->line("   ... y " . (count($resultados['descuento_100']['tickets']) - 10) . " más");
+                $this->line('   ... y '.(count($resultados['descuento_100']['tickets']) - 10).' más');
             }
         }
         $this->newLine();
 
         // 2. Pago vs Neto
-        $this->warn("⚠️  PROBLEMA #2: Descuentos NO Aplicados en Pagos");
-        $this->line("   Total tickets afectados: " . $resultados['pago_vs_neto']['total_tickets']);
-        $this->line("   Total sobrecobros: $" . number_format($resultados['pago_vs_neto']['total_diferencia'], 2));
-        
+        $this->warn('⚠️  PROBLEMA #2: Descuentos NO Aplicados en Pagos');
+        $this->line('   Total tickets afectados: '.$resultados['pago_vs_neto']['total_tickets']);
+        $this->line('   Total sobrecobros: $'.number_format($resultados['pago_vs_neto']['total_diferencia'], 2));
+
         if ($this->option('detalle') && count($resultados['pago_vs_neto']['tickets']) > 0) {
             $this->newLine();
             $headers = ['ID', 'Fecha', 'Neto Esperado', 'Total Pagado', 'Diferencia'];
-            $rows = array_map(fn($t) => [
+            $rows = array_map(fn ($t) => [
                 $t->id,
                 $t->fecha,
-                '$' . number_format($t->neto_esperado, 2),
-                '$' . number_format($t->total_pagado, 2),
-                '$' . number_format($t->diferencia, 2)
+                '$'.number_format($t->neto_esperado, 2),
+                '$'.number_format($t->total_pagado, 2),
+                '$'.number_format($t->diferencia, 2),
             ], array_slice($resultados['pago_vs_neto']['tickets'], 0, 10));
             $this->table($headers, $rows);
             if (count($resultados['pago_vs_neto']['tickets']) > 10) {
-                $this->line("   ... y " . (count($resultados['pago_vs_neto']['tickets']) - 10) . " más");
+                $this->line('   ... y '.(count($resultados['pago_vs_neto']['tickets']) - 10).' más');
             }
         }
         $this->newLine();
 
         // 3. Tickets abiertos
-        $this->warn("📋 PROBLEMA #3: Tickets Abiertos sin Pagar");
-        $this->line("   Total tickets abiertos: " . $resultados['tickets_abiertos']['total_tickets']);
-        $this->line("   Total price acumulado: $" . number_format($resultados['tickets_abiertos']['total_price'], 2));
-        $this->line("   Total descuentos: $" . number_format($resultados['tickets_abiertos']['total_discount'], 2));
-        $this->line("   Neto pendiente: $" . number_format($resultados['tickets_abiertos']['neto'], 2));
+        $this->warn('📋 PROBLEMA #3: Tickets Abiertos sin Pagar');
+        $this->line('   Total tickets abiertos: '.$resultados['tickets_abiertos']['total_tickets']);
+        $this->line('   Total price acumulado: $'.number_format($resultados['tickets_abiertos']['total_price'], 2));
+        $this->line('   Total descuentos: $'.number_format($resultados['tickets_abiertos']['total_discount'], 2));
+        $this->line('   Neto pendiente: $'.number_format($resultados['tickets_abiertos']['neto'], 2));
         $this->newLine();
 
         // 4. Resumen financiero
-        $this->info("💰 IMPACTO FINANCIERO TOTAL:");
+        $this->info('💰 IMPACTO FINANCIERO TOTAL:');
         $total_descuentos_fantasma = $resultados['descuento_100']['total_descuentos'];
         $total_sobrecobros = $resultados['pago_vs_neto']['total_diferencia'];
         $total_sin_cobrar = $resultados['tickets_abiertos']['neto'];
-        
-        $this->line("   Descuentos fantasma (reportados incorrectamente): $" . number_format($total_descuentos_fantasma, 2));
-        $this->line("   Sobrecobros (descuentos no aplicados): $" . number_format($total_sobrecobros, 2));
-        $this->line("   Tickets sin cobrar: $" . number_format($total_sin_cobrar, 2));
-        $this->line("   ─────────────────────────────────────────────");
-        $this->line("   TOTAL DISCREPANCIAS: $" . number_format($total_descuentos_fantasma + abs($total_sobrecobros) + abs($total_sin_cobrar), 2));
+
+        $this->line('   Descuentos fantasma (reportados incorrectamente): $'.number_format($total_descuentos_fantasma, 2));
+        $this->line('   Sobrecobros (descuentos no aplicados): $'.number_format($total_sobrecobros, 2));
+        $this->line('   Tickets sin cobrar: $'.number_format($total_sin_cobrar, 2));
+        $this->line('   ─────────────────────────────────────────────');
+        $this->line('   TOTAL DISCREPANCIAS: $'.number_format($total_descuentos_fantasma + abs($total_sobrecobros) + abs($total_sin_cobrar), 2));
         $this->newLine();
     }
 
@@ -309,7 +311,7 @@ class AnalyzarDiscrepanciasVentas extends Command
     {
         $timestamp = Carbon::now()->format('Y-m-d_His');
         $filename = "analisis_ventas_{$fecha_inicio}_a_{$fecha_fin}_{$timestamp}.json";
-        $filepath = $this->output_dir . '/' . $filename;
+        $filepath = $this->output_dir.'/'.$filename;
 
         $export = [
             'periodo' => [
@@ -322,11 +324,10 @@ class AnalyzarDiscrepanciasVentas extends Command
                 'descuentos_fantasma' => $resultados['descuento_100']['total_descuentos'],
                 'sobrecobros' => $resultados['pago_vs_neto']['total_diferencia'],
                 'tickets_sin_cobrar' => $resultados['tickets_abiertos']['neto'],
-                'total_discrepancias' => 
-                    $resultados['descuento_100']['total_descuentos'] + 
-                    abs($resultados['pago_vs_neto']['total_diferencia']) + 
-                    abs($resultados['tickets_abiertos']['neto'])
-            ]
+                'total_discrepancias' => $resultados['descuento_100']['total_descuentos'] +
+                    abs($resultados['pago_vs_neto']['total_diferencia']) +
+                    abs($resultados['tickets_abiertos']['neto']),
+            ],
         ];
 
         file_put_contents($filepath, json_encode($export, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));

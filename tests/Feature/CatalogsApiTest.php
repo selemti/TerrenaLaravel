@@ -31,9 +31,9 @@ class CatalogsApiTest extends TestCase
             ->assertJsonStructure([
                 'ok',
                 'data' => [
-                    '*' => ['id', 'name', 'visible']
+                    '*' => ['id', 'name', 'visible'],
                 ],
-                'timestamp'
+                'timestamp',
             ])
             ->assertJsonPath('ok', true);
     }
@@ -45,7 +45,7 @@ class CatalogsApiTest extends TestCase
             ->getJson('/api/catalogs/categories');
 
         $response->assertStatus(200);
-        
+
         $categories = $response->json('data');
         if (count($categories) > 0) {
             foreach ($categories as $category) {
@@ -80,9 +80,9 @@ class CatalogsApiTest extends TestCase
             ->assertJsonStructure([
                 'ok',
                 'data' => [
-                    '*' => ['id', 'nombre', 'clave', 'activo']
+                    '*' => ['id', 'nombre', 'clave', 'activo'],
                 ],
-                'timestamp'
+                'timestamp',
             ])
             ->assertJsonPath('ok', true);
 
@@ -94,7 +94,7 @@ class CatalogsApiTest extends TestCase
     public function test_can_filter_almacenes_by_sucursal()
     {
         $sucursal = Sucursal::factory()->create();
-        
+
         Almacen::factory()->create([
             'sucursal_id' => $sucursal->id,
             'nombre' => 'Almacén Sucursal 1',
@@ -123,7 +123,7 @@ class CatalogsApiTest extends TestCase
             ->getJson('/api/catalogs/almacenes');
 
         $response->assertStatus(200);
-        
+
         $almacenes = $response->json('data');
         foreach ($almacenes as $almacen) {
             $this->assertTrue($almacen['activo']);
@@ -142,9 +142,9 @@ class CatalogsApiTest extends TestCase
             ->assertJsonStructure([
                 'ok',
                 'data' => [
-                    '*' => ['id', 'nombre', 'activo']
+                    '*' => ['id', 'nombre', 'activo'],
                 ],
-                'timestamp'
+                'timestamp',
             ])
             ->assertJsonPath('ok', true);
 
@@ -162,7 +162,7 @@ class CatalogsApiTest extends TestCase
             ->getJson('/api/catalogs/sucursales');
 
         $response->assertStatus(200);
-        
+
         $sucursales = $response->json('data');
         foreach ($sucursales as $sucursal) {
             $this->assertTrue($sucursal['activo']);
@@ -179,14 +179,14 @@ class CatalogsApiTest extends TestCase
             ->assertJsonStructure([
                 'ok',
                 'data' => [
-                    '*' => ['value', 'label', 'description', 'affects_stock', 'sign']
+                    '*' => ['value', 'label', 'description', 'affects_stock', 'sign'],
                 ],
-                'timestamp'
+                'timestamp',
             ])
             ->assertJsonPath('ok', true);
 
         $types = $response->json('data');
-        
+
         // Verificar que existen los tipos principales
         $values = array_column($types, 'value');
         $this->assertContains('ENTRADA', $values);
@@ -205,7 +205,7 @@ class CatalogsApiTest extends TestCase
         $response->assertStatus(200);
 
         $types = collect($response->json('data'));
-        
+
         // Entradas deben tener signo +
         $entrada = $types->firstWhere('value', 'ENTRADA');
         $this->assertEquals('+', $entrada['sign']);
@@ -235,9 +235,9 @@ class CatalogsApiTest extends TestCase
                 'ok',
                 'count',
                 'data' => [
-                    '*' => ['id', 'codigo', 'nombre', 'tipo']
+                    '*' => ['id', 'codigo', 'nombre', 'tipo'],
                 ],
-                'timestamp'
+                'timestamp',
             ])
             ->assertJsonPath('ok', true);
     }

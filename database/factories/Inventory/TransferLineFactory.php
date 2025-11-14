@@ -3,8 +3,8 @@
 namespace Database\Factories\Inventory;
 
 use App\Models\Inv\Item;
-use App\Models\Inventory\TransferLine;
 use App\Models\Inventory\TransferHeader;
+use App\Models\Inventory\TransferLine;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class TransferLineFactory extends Factory
@@ -38,6 +38,7 @@ class TransferLineFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $solicitada = $attributes['cantidad_solicitada'];
+
             return [
                 'cantidad_despachada' => $solicitada,
                 'cantidad_recibida' => $solicitada,
@@ -51,7 +52,7 @@ class TransferLineFactory extends Factory
             $solicitada = $attributes['cantidad_solicitada'];
             $despachada = $solicitada;
             $recibida = $despachada * 0.9;
-            
+
             return [
                 'cantidad_despachada' => $despachada,
                 'cantidad_recibida' => $recibida,

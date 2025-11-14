@@ -1,10 +1,11 @@
 <?php
+
 namespace App\Http\Controllers\Api\Caja;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\JsonResponse;
 
 class CajasController extends Controller
 {
@@ -81,7 +82,8 @@ class CajasController extends Controller
 
             return response()->json(['ok' => true, 'date' => $date, 'terminals' => $terminals]);
         } catch (\Exception $e) {
-            \Log::error("Error en cajas (fecha: {$date}): " . $e->getMessage());
+            \Log::error("Error en cajas (fecha: {$date}): ".$e->getMessage());
+
             return response()->json(['ok' => false, 'error' => 'server_error'], 500);
         }
     }
@@ -102,7 +104,7 @@ class CajasController extends Controller
         }
 
         // 3. Cerrada en POS pero falta precorte
-        if (!$activa && $asignada && !$precorteListo) {
+        if (! $activa && $asignada && ! $precorteListo) {
             return 'PRECORTE_PENDIENTE';
         }
 
@@ -112,12 +114,12 @@ class CajasController extends Controller
         }
 
         // 5. Postcorte creado pero no validado
-        if ($precorteListo && !$sinPostcorte && $postcortePendiente) {
+        if ($precorteListo && ! $sinPostcorte && $postcortePendiente) {
             return 'EN_REVISION';
         }
 
         // 6. Todo completo
-        if ($precorteListo && !$sinPostcorte && !$postcortePendiente) {
+        if ($precorteListo && ! $sinPostcorte && ! $postcortePendiente) {
             return 'CONCILIADA';
         }
 

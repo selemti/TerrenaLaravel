@@ -1,9 +1,10 @@
 <?php
 
-return new class extends \Illuminate\Database\Migrations\Migration {
-  public function up(): void
-  {
-    \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
+return new class extends \Illuminate\Database\Migrations\Migration
+{
+    public function up(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 CREATE TABLE IF NOT EXISTS selemti.item_vendor_prices (
   id             BIGSERIAL PRIMARY KEY,
   item_id        BIGINT NOT NULL,
@@ -44,12 +45,12 @@ BEGIN
   END IF;
 END$$;
 SQL);
-  }
+    }
 
-  public function down(): void
-  {
-    \Illuminate\Support\Facades\DB::unprepared("DROP TRIGGER IF EXISTS trg_ivp_close_prev ON selemti.item_vendor_prices");
-    \Illuminate\Support\Facades\DB::unprepared("DROP FUNCTION IF EXISTS selemti.fn_ivp_upsert_close_prev()");
-    \Illuminate\Support\Facades\DB::unprepared("DROP TABLE IF EXISTS selemti.item_vendor_prices");
-  }
+    public function down(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared('DROP TRIGGER IF EXISTS trg_ivp_close_prev ON selemti.item_vendor_prices');
+        \Illuminate\Support\Facades\DB::unprepared('DROP FUNCTION IF EXISTS selemti.fn_ivp_upsert_close_prev()');
+        \Illuminate\Support\Facades\DB::unprepared('DROP TABLE IF EXISTS selemti.item_vendor_prices');
+    }
 };

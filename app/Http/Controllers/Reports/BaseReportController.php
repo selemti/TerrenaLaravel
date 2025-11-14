@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
 use App\Traits\Reports\ConfiguresReportConnection;
+use Carbon\Carbon;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
-use Dompdf\Dompdf;
-use Dompdf\Options;
 
 /**
  * Controlador base para todos los reportes
@@ -46,8 +46,8 @@ abstract class BaseReportController extends Controller
     protected function parseDate(Request $request, string $param = 'date'): Carbon
     {
         $dateStr = $request->input($param);
-        
-        if (!$dateStr) {
+
+        if (! $dateStr) {
             return now()->timezone('America/Mexico_City');
         }
 
@@ -66,7 +66,7 @@ abstract class BaseReportController extends Controller
         $startInput = $request->input('start_date');
         $endInput = $request->input('end_date');
 
-        if (!$startInput && !$endInput) {
+        if (! $startInput && ! $endInput) {
             $single = $this->parseDate($request);
             $singleDay = $single->copy()->startOfDay();
 
@@ -94,6 +94,7 @@ abstract class BaseReportController extends Controller
     protected function parseBranch(Request $request, string $param = 'branch'): ?string
     {
         $branch = trim((string) $request->input($param, ''));
+
         return $branch !== '' ? strtoupper($branch) : null;
     }
 
@@ -103,6 +104,7 @@ abstract class BaseReportController extends Controller
     protected function parseEnum(Request $request, string $param): ?string
     {
         $value = trim((string) $request->input($param, ''));
+
         return $value !== '' ? strtoupper($value) : null;
     }
 
@@ -112,11 +114,11 @@ abstract class BaseReportController extends Controller
     protected function executeWithTimeout(string $sql, array $bindings = []): array
     {
         DB::connection('pgsql')->statement("SET statement_timeout = '{$this->queryTimeout}s'");
-        
+
         try {
             return DB::connection('pgsql')->select($sql, $bindings);
         } finally {
-            DB::connection('pgsql')->statement("SET statement_timeout = 0");
+            DB::connection('pgsql')->statement('SET statement_timeout = 0');
         }
     }
 
@@ -141,8 +143,8 @@ abstract class BaseReportController extends Controller
     protected function flushCache(?array $additionalTags = null): void
     {
         $tags = array_merge($this->getCacheTags(), $additionalTags ?? []);
-        
-        if (!empty($tags)) {
+
+        if (! empty($tags)) {
             Cache::tags($tags)->flush();
         }
     }
@@ -169,7 +171,7 @@ abstract class BaseReportController extends Controller
      */
     protected function formatMoney(float $value): string
     {
-        return '$' . number_format($this->round($value), 2);
+        return '$'.number_format($this->round($value), 2);
     }
 
     /**
@@ -179,7 +181,7 @@ abstract class BaseReportController extends Controller
     {
         $html = view($view, $data)->render();
 
-        $options = new Options();
+        $options = new Options;
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isRemoteEnabled', true);
         $options->setChroot(public_path());
@@ -239,7 +241,7 @@ abstract class BaseReportController extends Controller
                 continue;
             }
 
-            if (!isset($colors[$upper])) {
+            if (! isset($colors[$upper])) {
                 $colors[$upper] = $palette[$index % count($palette)];
                 $index++;
             }

@@ -23,7 +23,7 @@ class ReportServiceTest extends TestCase
         DB::shouldReceive('where')->once()->with('slug', 'inexistent')->andReturnSelf();
         DB::shouldReceive('first')->once()->andReturn(null);
 
-        $service = new ReportService();
+        $service = new ReportService;
 
         $this->expectException(InvalidArgumentException::class);
         $service->run('inexistent');

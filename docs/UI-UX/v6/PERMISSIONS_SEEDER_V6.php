@@ -46,7 +46,7 @@ class PermissionsSeederV6 extends Seeder
 
         foreach ($perms as $clave) {
             $exists = DB::table('selemti.permissions')->where('clave', $clave)->exists();
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('selemti.permissions')->insert(['clave' => $clave]);
             }
         }
@@ -100,7 +100,7 @@ class PermissionsSeederV6 extends Seeder
 
         foreach ($plantillas as $nombre => $permsPlantilla) {
             $tpl = DB::table('selemti.plantillas')->where('nombre', $nombre)->first();
-            if (!$tpl) {
+            if (! $tpl) {
                 DB::table('selemti.plantillas')->insert(['nombre' => $nombre]);
                 $tpl = DB::table('selemti.plantillas')->where('nombre', $nombre)->first();
             }
@@ -116,7 +116,7 @@ class PermissionsSeederV6 extends Seeder
                     ->where('plantilla_id', $tpl->id)
                     ->where('permiso_id', $pid)
                     ->exists();
-                if (!$exists) {
+                if (! $exists) {
                     DB::table('selemti.plantilla_permission')->insert([
                         'plantilla_id' => $tpl->id,
                         'permiso_id' => $pid,

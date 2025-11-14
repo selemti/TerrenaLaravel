@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Almacen extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'cat_almacenes';
+
     protected $guarded = [];
 
     protected $casts = [

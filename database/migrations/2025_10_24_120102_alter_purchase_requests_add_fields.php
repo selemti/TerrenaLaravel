@@ -132,7 +132,7 @@ return new class extends Migration
     protected function columnExists(string $column): bool
     {
         $result = DB::connection('pgsql')->selectOne(
-            <<<SQL
+            <<<'SQL'
             SELECT 1
             FROM information_schema.columns
             WHERE table_schema = 'selemti'
@@ -159,7 +159,7 @@ return new class extends Migration
     protected function foreignExists(string $constraint): bool
     {
         $result = DB::connection('pgsql')->selectOne(
-            "SELECT 1 FROM pg_constraint WHERE conname = ? LIMIT 1",
+            'SELECT 1 FROM pg_constraint WHERE conname = ? LIMIT 1',
             [$constraint]
         );
 

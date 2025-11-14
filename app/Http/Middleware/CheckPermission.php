@@ -27,7 +27,6 @@ class CheckPermission
     /**
      * Maneja la autorización basada en permisos declarativos.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      * @param  string  $requiredPermission  Ej: "inventory.receptions.post"
      */
@@ -41,7 +40,7 @@ class CheckPermission
         $user = $request->user();
         $userIdFromRequest = $request->input('user_id');
 
-        if (!$user && !$userIdFromRequest) {
+        if (! $user && ! $userIdFromRequest) {
             return response()->json([
                 'ok' => false,
                 'error' => 'UNAUTHENTICATED',

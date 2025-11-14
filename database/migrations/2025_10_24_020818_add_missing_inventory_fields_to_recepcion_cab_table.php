@@ -60,7 +60,7 @@ return new class extends Migration
     protected function columnExists(string $column): bool
     {
         $result = DB::connection('pgsql')->selectOne(
-            <<<SQL
+            <<<'SQL'
             SELECT 1
             FROM information_schema.columns
             WHERE table_schema IN ('selemti', 'public')

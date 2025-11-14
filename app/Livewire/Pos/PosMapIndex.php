@@ -3,17 +3,30 @@
 namespace App\Livewire\Pos;
 
 use App\Models\PosMap;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\DB;
 
 class PosMapIndex extends Component
 {
     use WithPagination;
 
-    public $plu, $receta_id, $tipo = 'MENU', $valid_from, $valid_to, $vigente_desde;
+    public $plu;
+
+    public $receta_id;
+
+    public $tipo = 'MENU';
+
+    public $valid_from;
+
+    public $valid_to;
+
+    public $vigente_desde;
+
     public $selected_id;
+
     public $updateMode = false;
+
     public $unmappedSales = [];
 
     protected $rules = [
@@ -28,6 +41,7 @@ class PosMapIndex extends Component
     public function render()
     {
         $mappings = PosMap::with('recipe')->paginate(10);
+
         return view('livewire.pos.pos-map-index', compact('mappings'));
     }
 

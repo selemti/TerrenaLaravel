@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class PurchaseRequestLine extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'purchase_request_lines';
+
     protected $guarded = [];
 
     protected $casts = [
@@ -25,9 +27,13 @@ class PurchaseRequestLine extends Model
      * Estados posibles de la línea
      */
     const ESTADO_PENDIENTE = 'PENDIENTE';
+
     const ESTADO_COTIZADA = 'COTIZADA';
+
     const ESTADO_ORDENADA = 'ORDENADA';
+
     const ESTADO_RECIBIDA = 'RECIBIDA';
+
     const ESTADO_CANCELADA = 'CANCELADA';
 
     // ==================== RELATIONSHIPS ====================
@@ -79,13 +85,13 @@ class PurchaseRequestLine extends Model
      */
     public function getEstadoBadgeAttribute(): string
     {
-        return match($this->estado) {
+        return match ($this->estado) {
             self::ESTADO_PENDIENTE => '<span class="badge bg-warning">Pendiente</span>',
             self::ESTADO_COTIZADA => '<span class="badge bg-info">Cotizada</span>',
             self::ESTADO_ORDENADA => '<span class="badge bg-primary">Ordenada</span>',
             self::ESTADO_RECIBIDA => '<span class="badge bg-success">Recibida</span>',
             self::ESTADO_CANCELADA => '<span class="badge bg-danger">Cancelada</span>',
-            default => '<span class="badge bg-secondary">' . $this->estado . '</span>',
+            default => '<span class="badge bg-secondary">'.$this->estado.'</span>',
         };
     }
 
@@ -177,7 +183,7 @@ class PurchaseRequestLine extends Model
     public function scopeProximasVencer($query, int $dias = 7)
     {
         return $query->where('fecha_requerida', '<=', now()->addDays($dias))
-                     ->where('fecha_requerida', '>=', now())
-                     ->where('estado', '!=', self::ESTADO_RECIBIDA);
+            ->where('fecha_requerida', '>=', now())
+            ->where('estado', '!=', self::ESTADO_RECIBIDA);
     }
 }

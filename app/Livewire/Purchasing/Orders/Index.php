@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Purchasing\Orders;
 
-use App\Models\PurchaseOrder;
 use App\Models\Catalogs\Proveedor;
+use App\Models\PurchaseOrder;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -14,7 +14,9 @@ class Index extends Component
     protected $paginationTheme = 'bootstrap';
 
     public string $search = '';
+
     public string $estadoFilter = 'all';
+
     public string $vendorFilter = 'all';
 
     public function updatingSearch()
@@ -34,7 +36,7 @@ class Index extends Component
             ->orderBy('created_at', 'desc');
 
         if ($this->search) {
-            $query->where('folio', 'ilike', '%' . $this->search . '%');
+            $query->where('folio', 'ilike', '%'.$this->search.'%');
         }
 
         if ($this->estadoFilter !== 'all') {

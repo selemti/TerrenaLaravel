@@ -29,7 +29,8 @@ class RecipeCostingServiceTest extends TestCase
             'items' => [],
         ];
 
-        $service = new class($material, $labor, $overhead) extends RecipeCostingService {
+        $service = new class($material, $labor, $overhead) extends RecipeCostingService
+        {
             public function __construct(private array $material, private array $labor, private array $overhead)
             {
                 parent::__construct('pgsql');
@@ -63,7 +64,8 @@ class RecipeCostingServiceTest extends TestCase
 
     public function test_calculate_handles_zero_yield(): void
     {
-        $service = new class extends RecipeCostingService {
+        $service = new class extends RecipeCostingService
+        {
             protected function resolveMaterialCost(int $recipeId, string $at): array
             {
                 return [

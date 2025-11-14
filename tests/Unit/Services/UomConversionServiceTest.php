@@ -17,7 +17,7 @@ class UomConversionServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->uomConversionService = new UomConversionService();
+        $this->uomConversionService = new UomConversionService;
     }
 
     public function test_convert_successfully(): void
@@ -75,14 +75,14 @@ class UomConversionServiceTest extends TestCase
         $this->assertIsFloat($result);
         $this->assertEquals(1.0, $result); // 1 KG = 1 KG
     }
-    
+
     public function test_validate_circular_conversion(): void
     {
         // This should pass without throwing an exception
         $result = $this->uomConversionService->validateCircularConversion('KG', 'G', 1000);
         $this->assertTrue($result);
     }
-    
+
     public function test_validate_circular_conversion_invalid(): void
     {
         $result = $this->uomConversionService->validateCircularConversion('KG', 'G', 999);

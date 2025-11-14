@@ -3,7 +3,6 @@
 namespace App\Services\Caja;
 
 use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Models\Role;
 
 /**
  * Service for managing alerts in the Caja system
@@ -14,10 +13,6 @@ class AlertasService
 {
     /**
      * Create alert when postcorte requires approval
-     *
-     * @param int $postcorteId
-     * @param int $sesionId
-     * @return void
      */
     public function crearAlertaAprobacion(int $postcorteId, int $sesionId): void
     {
@@ -39,11 +34,6 @@ class AlertasService
 
     /**
      * Create alert when postcorte is approved
-     *
-     * @param int $postcorteId
-     * @param int $sesionId
-     * @param int $cajeroUsuarioId
-     * @return void
      */
     public function crearAlertaAprobado(int $postcorteId, int $sesionId, int $cajeroUsuarioId): void
     {
@@ -59,11 +49,6 @@ class AlertasService
 
     /**
      * Create alert when postcorte is rejected
-     *
-     * @param int $postcorteId
-     * @param int $sesionId
-     * @param int $cajeroUsuarioId
-     * @return void
      */
     public function crearAlertaRechazado(int $postcorteId, int $sesionId, int $cajeroUsuarioId): void
     {
@@ -79,9 +64,6 @@ class AlertasService
 
     /**
      * Get pending alerts for a specific user
-     *
-     * @param int $userId
-     * @return array
      */
     public function obtenerAlertasPendientes(int $userId): array
     {
@@ -98,8 +80,8 @@ class AlertasService
                 's.cajero_usuario_id',
                 'a.creada_en',
                 'a.leida',
-                'p.total_declarado_efectivo',
-                'p.diferencia_efectivo'
+                'p.declarado_efectivo',
+                'p.diferencia_efectivo',
             ])
             ->where('a.destinatario_id', $userId)
             ->where('a.leida', false)
@@ -112,9 +94,6 @@ class AlertasService
 
     /**
      * Get count of pending alerts for a user
-     *
-     * @param int $userId
-     * @return int
      */
     public function contarAlertasPendientes(int $userId): int
     {
@@ -127,9 +106,6 @@ class AlertasService
 
     /**
      * Mark an alert as read
-     *
-     * @param int $alertaId
-     * @return bool
      */
     public function marcarLeida(int $alertaId): bool
     {
@@ -146,10 +122,6 @@ class AlertasService
 
     /**
      * Mark all alerts for a postcorte as read
-     *
-     * @param int $postcorteId
-     * @param int $userId
-     * @return void
      */
     public function marcarLeidasPorPostcorte(int $postcorteId, int $userId): void
     {
@@ -166,9 +138,6 @@ class AlertasService
 
     /**
      * Get all users with a specific permission
-     *
-     * @param string $permissionName
-     * @return array
      */
     private function getUsersWithPermission(string $permissionName): array
     {
@@ -178,7 +147,7 @@ class AlertasService
             ->where('name', $permissionName)
             ->first();
 
-        if (!$permission) {
+        if (! $permission) {
             return [];
         }
 

@@ -208,7 +208,7 @@ resources/views/reports/sales/
 
 ### SQL:
 ```
-BD/Noviembre/VentasReport/v8/
+docs/docs/BD/NoviembreDocsDocs/VentasReport/v8/
 ├── erp_reports_v9.sql (✅ Ejecutado)
 ├── cleanup_views.sql
 └── 01_sales_mix.sql

@@ -7,7 +7,6 @@ use App\Services\Pos\PosConsumptionService;
 use App\Services\Pos\Repositories\CostosRepository;
 use App\Services\Pos\Repositories\RecetaRepository;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class RecipeCostController extends Controller
@@ -16,24 +15,20 @@ class RecipeCostController extends Controller
         protected PosConsumptionService $service,
         protected CostosRepository $costosRepo,
         protected RecetaRepository $recetaRepo
-    ) {
-    }
+    ) {}
 
     /**
      * GET /api/recipes/{recipeId}/cost
      *
      * Obtiene el costo estándar actual de una receta
      * Requiere permiso: can_view_recipe_dashboard
-     *
-     * @param int $recipeId
-     * @return JsonResponse
      */
     public function showCost(int $recipeId): JsonResponse
     {
         try {
             // 1. Verificar que la receta existe
             $recipeInfo = $this->recetaRepo->getRecipeInfo($recipeId);
-            if (!$recipeInfo) {
+            if (! $recipeInfo) {
                 return response()->json([
                     'ok' => false,
                     'error' => 'RECIPE_NOT_FOUND',
@@ -98,7 +93,7 @@ class RecipeCostController extends Controller
             return response()->json([
                 'ok' => false,
                 'error' => 'COST_CALCULATION_ERROR',
-                'message' => 'Error al calcular costo de receta: ' . $e->getMessage(),
+                'message' => 'Error al calcular costo de receta: '.$e->getMessage(),
                 'timestamp' => now()->toIso8601String(),
             ], 500);
         }
@@ -109,16 +104,13 @@ class RecipeCostController extends Controller
      *
      * Fuerza el recálculo del costo de una receta
      * Requiere permiso: can_view_recipe_dashboard
-     *
-     * @param int $recipeId
-     * @return JsonResponse
      */
     public function recalculate(int $recipeId): JsonResponse
     {
         try {
             // Verificar que la receta existe
             $recipeInfo = $this->recetaRepo->getRecipeInfo($recipeId);
-            if (!$recipeInfo) {
+            if (! $recipeInfo) {
                 return response()->json([
                     'ok' => false,
                     'error' => 'RECIPE_NOT_FOUND',
@@ -153,7 +145,7 @@ class RecipeCostController extends Controller
             return response()->json([
                 'ok' => false,
                 'error' => 'RECALCULATE_ERROR',
-                'message' => 'Error al recalcular costo: ' . $e->getMessage(),
+                'message' => 'Error al recalcular costo: '.$e->getMessage(),
                 'timestamp' => now()->toIso8601String(),
             ], 500);
         }

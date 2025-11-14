@@ -1,9 +1,10 @@
 <?php
+
 // Script para asignar rol Super Admin al usuario soporte
 
-require __DIR__ . '/../../../vendor/autoload.php';
+require __DIR__.'/../../../vendor/autoload.php';
 
-$app = require_once __DIR__ . '/../../../bootstrap/app.php';
+$app = require_once __DIR__.'/../../../bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use App\Models\User;
@@ -14,7 +15,7 @@ echo "Asignando rol Super Admin al usuario soporte...\n\n";
 // Buscar usuario soporte
 $user = User::where('email', 'soporte@terrena.com')->first();
 
-if (!$user) {
+if (! $user) {
     echo "ERROR: Usuario soporte@terrena.com NO ENCONTRADO\n";
     echo "Buscando todos los usuarios...\n";
     $allUsers = User::all();
@@ -32,7 +33,7 @@ echo "  Name: {$user->name}\n\n";
 // Buscar rol Super Admin
 $role = Role::where('name', 'Super Admin')->first();
 
-if (!$role) {
+if (! $role) {
     echo "ERROR: Rol 'Super Admin' NO ENCONTRADO\n";
     echo "Roles disponibles:\n";
     $allRoles = Role::all();
@@ -58,7 +59,7 @@ if ($user->hasRole('Super Admin')) {
 // Verificar permisos
 echo "\nVerificando permisos del usuario...\n";
 $permissions = $user->getAllPermissions();
-echo "Total permisos: " . $permissions->count() . "\n";
+echo 'Total permisos: '.$permissions->count()."\n";
 
 if ($user->hasRole('Super Admin')) {
     echo "\n✓ Usuario tiene rol 'Super Admin' correctamente asignado\n";

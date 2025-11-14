@@ -1,6 +1,7 @@
 <?php
 
-return new class extends \Illuminate\Database\Migrations\Migration {
+return new class extends \Illuminate\Database\Migrations\Migration
+{
     public function up(): void
     {
         \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
@@ -50,8 +51,8 @@ SQL);
 
     public function down(): void
     {
-        \Illuminate\Support\Facades\DB::unprepared("DROP TRIGGER IF EXISTS trg_items_assign_code ON selemti.items");
-        \Illuminate\Support\Facades\DB::unprepared("DROP FUNCTION IF EXISTS selemti.fn_assign_item_code()");
-        \Illuminate\Support\Facades\DB::unprepared("DROP TABLE IF EXISTS selemti.item_category_counters");
+        \Illuminate\Support\Facades\DB::unprepared('DROP TRIGGER IF EXISTS trg_items_assign_code ON selemti.items');
+        \Illuminate\Support\Facades\DB::unprepared('DROP FUNCTION IF EXISTS selemti.fn_assign_item_code()');
+        \Illuminate\Support\Facades\DB::unprepared('DROP TABLE IF EXISTS selemti.item_category_counters');
     }
 };

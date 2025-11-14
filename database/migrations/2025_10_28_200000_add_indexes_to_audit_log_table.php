@@ -31,6 +31,7 @@ return new class extends Migration
                 $table->index(['entidad_id'], 'idx_audit_log_entidad_id');
                 $table->foreign('user_id')->references('id')->on('selemti.users')->onDelete('set null');
             });
+
             return;
         }
 
@@ -129,7 +130,7 @@ return new class extends Migration
     protected function foreignExists(string $constraint): bool
     {
         $result = DB::connection('pgsql')->selectOne(
-            "SELECT 1 FROM pg_constraint WHERE conname = ? LIMIT 1",
+            'SELECT 1 FROM pg_constraint WHERE conname = ? LIMIT 1',
             [$constraint]
         );
 

@@ -12,7 +12,7 @@ class ProductionServiceTest extends TestCase
 {
     public function test_normalize_input_requires_item(): void
     {
-        $service = new ProductionService();
+        $service = new ProductionService;
 
         $this->expectException(InvalidArgumentException::class);
         $this->invokeNormalizeInput($service, ['qty' => 1, 'uom' => 'KG']);
@@ -20,13 +20,13 @@ class ProductionServiceTest extends TestCase
 
     public function test_normalize_input_maps_fields(): void
     {
-        $service = new ProductionService();
+        $service = new ProductionService;
 
         $result = $this->invokeNormalizeInput($service, [
             'item_id' => 10,
-            'qty'     => 2.5,
-            'uom'     => 'KG',
-            'meta'    => ['source' => 'receta'],
+            'qty' => 2.5,
+            'uom' => 'KG',
+            'meta' => ['source' => 'receta'],
         ]);
 
         $this->assertSame(10, $result['item_id']);
@@ -37,7 +37,7 @@ class ProductionServiceTest extends TestCase
 
     public function test_normalize_output_requires_positive_quantity(): void
     {
-        $service = new ProductionService();
+        $service = new ProductionService;
 
         $this->expectException(InvalidArgumentException::class);
         $this->invokeNormalizeOutput($service, ['item_id' => 1, 'uom' => 'PZA', 'qty' => 0], []);
@@ -45,7 +45,7 @@ class ProductionServiceTest extends TestCase
 
     public function test_normalize_waste_requires_uom(): void
     {
-        $service = new ProductionService();
+        $service = new ProductionService;
 
         $this->expectException(InvalidArgumentException::class);
         $this->invokeNormalizeWaste($service, ['item_id' => 1, 'qty' => 1], []);

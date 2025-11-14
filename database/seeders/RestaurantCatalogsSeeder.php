@@ -42,7 +42,7 @@ class RestaurantCatalogsSeeder extends Seeder
                 'updated_at' => now(),
             ]));
         }
-        echo "   ✓ " . count($sucursales) . " sucursales creadas\n\n";
+        echo '   ✓ '.count($sucursales)." sucursales creadas\n\n";
 
         // Get sucursal IDs for almacenes
         $sucursalesMap = $conn->table('selemti.cat_sucursales')
@@ -90,7 +90,7 @@ class RestaurantCatalogsSeeder extends Seeder
                 'updated_at' => now(),
             ]));
         }
-        echo "   ✓ " . count($almacenes) . " almacenes creados\n\n";
+        echo '   ✓ '.count($almacenes)." almacenes creados\n\n";
 
         // ===================================================================
         // 3. UNIDADES DE MEDIDA
@@ -140,7 +140,7 @@ class RestaurantCatalogsSeeder extends Seeder
                 'created_at' => now(),
             ]));
         }
-        echo "   ✓ " . count($unidades) . " unidades de medida creadas\n\n";
+        echo '   ✓ '.count($unidades)." unidades de medida creadas\n\n";
 
         // ===================================================================
         // 4. PROVEEDORES (si existe la tabla)
@@ -213,7 +213,7 @@ class RestaurantCatalogsSeeder extends Seeder
                     'updated_at' => now(),
                 ]));
             }
-            echo "   ✓ " . count($proveedores) . " proveedores creados\n\n";
+            echo '   ✓ '.count($proveedores)." proveedores creados\n\n";
         }
 
         // ===================================================================
@@ -224,11 +224,11 @@ class RestaurantCatalogsSeeder extends Seeder
         echo "✅ Catálogos de restaurante creados exitosamente!\n";
         echo "═══════════════════════════════════════════════════════════════\n";
         echo "📊 Resumen:\n";
-        echo "   • Sucursales: " . count($sucursales) . "\n";
-        echo "   • Almacenes: " . count($almacenes) . "\n";
-        echo "   • Unidades de medida: " . count($unidades) . "\n";
+        echo '   • Sucursales: '.count($sucursales)."\n";
+        echo '   • Almacenes: '.count($almacenes)."\n";
+        echo '   • Unidades de medida: '.count($unidades)."\n";
         if (isset($proveedores)) {
-            echo "   • Proveedores: " . count($proveedores) . "\n";
+            echo '   • Proveedores: '.count($proveedores)."\n";
         }
         echo "═══════════════════════════════════════════════════════════════\n\n";
 

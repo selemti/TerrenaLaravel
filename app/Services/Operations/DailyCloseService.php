@@ -2,18 +2,22 @@
 
 namespace App\Services\Operations;
 
-use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class DailyCloseService
 {
     protected string $traceId;
+
     protected Carbon $date;
+
     protected string $branchId;
+
     protected string $connection = 'pgsql'; // Conexión a PostgreSQL
+
     protected PosConsumptionService $posConsumptionService;
 
     public function __construct(PosConsumptionService $posConsumptionService)
@@ -32,15 +36,17 @@ class DailyCloseService
 
         $this->log('info', 'start', ['branch' => $this->branchId, 'date' => $this->date->toDateString()]);
 
-        if (!$this->acquireLock()) {
+        if (! $this->acquireLock()) {
             $this->log('info', 'already_done', ['message' => 'Process already running or completed for this date and branch.']);
+
             return ['status' => 'already_done'];
         }
 
         try {
             $posOk = $this->checkPosSync();
-            if (!$posOk) {
+            if (! $posOk) {
                 $this->log('warning', 'pending_pos', ['message' => 'POS sync not complete. Aborting.']);
+
                 return $this->buildStatus(pos_ok: false);
             }
 
@@ -67,6 +73,7 @@ class DailyCloseService
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
+
             // Devuelve un estado de fallo general
             return $this->buildStatus();
         }
@@ -75,6 +82,7 @@ class DailyCloseService
     protected function acquireLock(): bool
     {
         $key = "close:lock:{$this->branchId}:{$this->date->toDateString()}";
+
         // Intenta obtener un lock por 23 horas. Si no está disponible, retorna false.
         return Cache::lock($key, 82800)->get();
     }
@@ -91,10 +99,9 @@ class DailyCloseService
             ->exists();
 
         $this->log('info', 'step_check_pos_sync', ['status' => 'completed', 'result' => $isComplete]);
+
         return $isComplete;
     }
-
-
 
     protected function checkOperationalMoves(): bool
     {
@@ -108,7 +115,7 @@ class DailyCloseService
             ->where('status', '!=', 'POSTED')->count();
 
         $pendingTransfers = DB::connection($this->connection)->table('selemti.transferencias')
-            ->where(fn($q) => $q->where('origen_id', $this->branchId)->orWhere('destino_id', $this->branchId))
+            ->where(fn ($q) => $q->where('origen_id', $this->branchId)->orWhere('destino_id', $this->branchId))
             ->whereDate('fecha_transferencia', $this->date->toDateString())
             ->where('status', '!=', 'APPLIED')->count();
 
@@ -139,7 +146,7 @@ class DailyCloseService
         if ($openCounts > 0) {
             $this->log('warning', 'step_check_inventory_counts', [
                 'status' => 'completed_with_warnings',
-                'open_counts' => $openCounts
+                'open_counts' => $openCounts,
             ]);
         } else {
             $this->log('info', 'step_check_inventory_counts', ['status' => 'completed', 'open_counts' => 0]);
@@ -193,7 +200,7 @@ class DailyCloseService
             ];
         }
 
-        if (!empty($snapshotData)) {
+        if (! empty($snapshotData)) {
             // 5. Usar upsert para insertar o actualizar.
             DB::connection($this->connection)->table('selemti.inventory_snapshot')->upsert(
                 $snapshotData,
@@ -203,6 +210,7 @@ class DailyCloseService
         }
 
         $this->log('info', 'step_generate_snapshot', ['status' => 'completed', 'items_snapshotted' => count($snapshotData)]);
+
         return true;
     }
 
@@ -214,6 +222,7 @@ class DailyCloseService
         bool $snapshot_ok = false
     ): array {
         $closed = $pos_ok && $consumo_ok && $snapshot_ok; // movs y conteos no bloquean
+
         return [
             'closed' => $closed,
             'semaphore' => [
@@ -222,7 +231,7 @@ class DailyCloseService
                 'movs_ok' => $movs_ok,
                 'conteos_ok' => $conteos_ok,
                 'snapshot_ok' => $snapshot_ok,
-            ]
+            ],
         ];
     }
 

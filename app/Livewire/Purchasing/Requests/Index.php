@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Purchasing\Requests;
 
-use App\Models\PurchaseRequest;
 use App\Models\Catalogs\Sucursal;
+use App\Models\PurchaseRequest;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -14,9 +14,13 @@ class Index extends Component
     protected $paginationTheme = 'bootstrap';
 
     public string $search = '';
+
     public string $estadoFilter = 'all';
+
     public string $sucursalFilter = 'all';
+
     public string $fechaDesde = '';
+
     public string $fechaHasta = '';
 
     protected $queryString = [
@@ -54,8 +58,8 @@ class Index extends Component
         // Filtro de búsqueda (folio o notas)
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('folio', 'ilike', '%' . $this->search . '%')
-                  ->orWhere('notas', 'ilike', '%' . $this->search . '%');
+                $q->where('folio', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('notas', 'ilike', '%'.$this->search.'%');
             });
         }
 

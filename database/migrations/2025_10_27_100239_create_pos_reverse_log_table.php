@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::connection('pgsql')->statement("
+        DB::connection('pgsql')->statement('
             CREATE TABLE IF NOT EXISTS selemti.pos_reverse_log (
                 id BIGSERIAL PRIMARY KEY,
                 ticket_id BIGINT NOT NULL,
@@ -23,23 +23,23 @@ return new class extends Migration
                 created_at TIMESTAMP DEFAULT NOW(),
                 updated_at TIMESTAMP DEFAULT NOW()
             );
-        ");
+        ');
 
         // Índices
-        DB::connection('pgsql')->statement("
+        DB::connection('pgsql')->statement('
             CREATE INDEX IF NOT EXISTS idx_pos_reverse_log_ticket_id
             ON selemti.pos_reverse_log(ticket_id);
-        ");
+        ');
 
-        DB::connection('pgsql')->statement("
+        DB::connection('pgsql')->statement('
             CREATE INDEX IF NOT EXISTS idx_pos_reverse_log_user_id
             ON selemti.pos_reverse_log(user_id);
-        ");
+        ');
 
-        DB::connection('pgsql')->statement("
+        DB::connection('pgsql')->statement('
             CREATE INDEX IF NOT EXISTS idx_pos_reverse_log_reversed_at
             ON selemti.pos_reverse_log(reversed_at);
-        ");
+        ');
 
         // Comentarios
         DB::connection('pgsql')->statement("

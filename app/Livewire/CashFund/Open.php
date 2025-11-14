@@ -25,7 +25,9 @@ class Open extends Component
     ];
 
     public array $sucursales = [];
+
     public array $usuarios = [];
+
     public bool $loading = false;
 
     public function mount(): void
@@ -74,7 +76,7 @@ class Open extends Component
         } catch (\Exception $e) {
             $this->dispatch('toast',
                 type: 'error',
-                body: 'Error al crear el fondo: ' . $e->getMessage()
+                body: 'Error al crear el fondo: '.$e->getMessage()
             );
         } finally {
             $this->loading = false;
@@ -127,9 +129,9 @@ class Open extends Component
                 ->where('activo', true)
                 ->orderBy('nombre')
                 ->get(['id', 'nombre', 'clave'])
-                ->map(fn($row) => [
+                ->map(fn ($row) => [
                     'id' => (int) $row->id,
-                    'nombre' => trim(($row->clave ? "{$row->clave} - " : '') . $row->nombre),
+                    'nombre' => trim(($row->clave ? "{$row->clave} - " : '').$row->nombre),
                 ])
                 ->toArray();
         } catch (\Exception $e) {
@@ -144,7 +146,7 @@ class Open extends Component
     {
         $this->usuarios = User::orderBy('nombre_completo')
             ->get(['id', 'nombre_completo', 'email'])
-            ->map(fn($user) => [
+            ->map(fn ($user) => [
                 'id' => $user->id,
                 'nombre' => $user->nombre_completo,
             ])

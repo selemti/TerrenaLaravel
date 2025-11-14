@@ -9,7 +9,6 @@
  *
  * Uso: php scripts/sync_menu_recipes.php
  */
-
 $dsn = 'pgsql:host=172.24.240.1;port=5433;dbname=pos';
 $user = 'postgres';
 $password = 'T3rr3n4#p0s';
@@ -58,12 +57,12 @@ $insertVersionStmt = $pdo->prepare(<<<'SQL'
 SQL);
 
 foreach ($items as $item) {
-    $recetaId = sprintf('REC-%05d', (int)$item['id']);
+    $recetaId = sprintf('REC-%05d', (int) $item['id']);
 
     $insertRecipeStmt->execute([
         'id' => $recetaId,
         'nombre_plato' => $item['name'],
-        'codigo_plato_pos' => (string)$item['id'],
+        'codigo_plato_pos' => (string) $item['id'],
         'categoria_plato' => mb_substr($item['group_name'], 0, 50),
         'porciones_standard' => 1,
         'costo_standard_porcion' => 0,
@@ -75,7 +74,7 @@ foreach ($items as $item) {
     }
 
     $versionExistsStmt->execute(['receta_id' => $recetaId]);
-    if (!$versionExistsStmt->fetchColumn()) {
+    if (! $versionExistsStmt->fetchColumn()) {
         $insertVersionStmt->execute([
             'receta_id' => $recetaId,
             'descripcion_cambios' => 'Versión generada automáticamente desde Floreant POS',

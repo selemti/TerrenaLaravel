@@ -1,9 +1,10 @@
 <?php
 
-return new class extends \Illuminate\Database\Migrations\Migration {
-  public function up(): void
-  {
-    \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
+return new class extends \Illuminate\Database\Migrations\Migration
+{
+    public function up(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 CREATE OR REPLACE FUNCTION selemti.fn_recipes_using_item(p_item_id bigint, p_at timestamp)
 RETURNS TABLE(recipe_id bigint) AS $$
 BEGIN
@@ -63,12 +64,12 @@ BEGIN
   END IF;
 END$$;
 SQL);
-  }
+    }
 
-  public function down(): void
-  {
-    \Illuminate\Support\Facades\DB::unprepared("DROP TRIGGER IF EXISTS trg_ivp_after_insert ON selemti.item_vendor_prices");
-    \Illuminate\Support\Facades\DB::unprepared("DROP FUNCTION IF EXISTS selemti.fn_after_price_insert_alert()");
-    \Illuminate\Support\Facades\DB::unprepared("DROP FUNCTION IF EXISTS selemti.fn_recipes_using_item(bigint,timestamp)");
-  }
+    public function down(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared('DROP TRIGGER IF EXISTS trg_ivp_after_insert ON selemti.item_vendor_prices');
+        \Illuminate\Support\Facades\DB::unprepared('DROP FUNCTION IF EXISTS selemti.fn_after_price_insert_alert()');
+        \Illuminate\Support\Facades\DB::unprepared('DROP FUNCTION IF EXISTS selemti.fn_recipes_using_item(bigint,timestamp)');
+    }
 };

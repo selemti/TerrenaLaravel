@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Reports;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use Illuminate\Http\Response;
 
 class MenuUsageController extends BaseReportController
 {
@@ -82,8 +82,8 @@ class MenuUsageController extends BaseReportController
             'reporte_uso_menu_%s_%s%s.pdf',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            !empty($branches)
-                ? '_' . str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
+            ! empty($branches)
+                ? '_'.str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
                 : ''
         );
 
@@ -130,17 +130,18 @@ class MenuUsageController extends BaseReportController
         $branchList = $this->stringifyFilter($branches);
         $terminalList = $this->stringifyFilter($terminals);
 
-        if (!$terminalList) {
-            $sql = "SELECT * FROM public.vw_report_menu_usage WHERE folio_date BETWEEN ? AND ?";
+        if (! $terminalList) {
+            $sql = 'SELECT * FROM public.vw_report_menu_usage WHERE folio_date BETWEEN ? AND ?';
             $bindings = [$start->toDateString(), $end->toDateString()];
             if ($branchList) {
                 $sql .= " AND UPPER(branch_key) IN (SELECT UNNEST(string_to_array(?, ',')))";
                 $bindings[] = $branchList;
             }
+
             return collect(DB::connection('pgsql')->select($sql, $bindings));
         }
 
-        $sql = <<<SQL
+        $sql = <<<'SQL'
             SELECT b.folio_date, b.branch_key, ti.item_name::text AS item_name,
                    SUM(COALESCE(ti.item_quantity,0))::numeric(12,2) AS qty,
                    ROUND(SUM(COALESCE(ti.total_price,0)-COALESCE(ti.discount_amount,0)),2) AS neto
@@ -154,7 +155,8 @@ class MenuUsageController extends BaseReportController
             $sql .= " AND UPPER(b.branch_key) IN (SELECT UNNEST(string_to_array(?, ',')))";
             $bindings[] = $branchList;
         }
-        $sql .= " GROUP BY 1,2,3";
+        $sql .= ' GROUP BY 1,2,3';
+
         return collect(DB::connection('pgsql')->select($sql, $bindings));
     }
 }

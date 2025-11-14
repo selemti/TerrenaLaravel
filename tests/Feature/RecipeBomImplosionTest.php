@@ -2,13 +2,12 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\Rec\Receta;
-use App\Models\Rec\RecetaVersion;
-use App\Models\Rec\RecetaDetalle;
 use App\Models\Inv\Item;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\Rec\Receta;
+use App\Models\Rec\RecetaDetalle;
+use App\Models\Rec\RecetaVersion;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
+use Tests\TestCase;
 
 class RecipeBomImplosionTest extends TestCase
 {
@@ -16,8 +15,6 @@ class RecipeBomImplosionTest extends TestCase
 
     /**
      * Test Case 1: Receta simple (solo ingredientes base)
-     * 
-     * @return void
      */
     public function test_simple_recipe_returns_base_ingredients(): void
     {
@@ -54,17 +51,17 @@ class RecipeBomImplosionTest extends TestCase
 
         // Assert
         $response->assertStatus(200)
-                 ->assertJson([
-                     'ok' => true,
-                     'recipe_id' => 'REC-TEST-001',
-                     'total_ingredients' => 2,
-                     'aggregated' => true,
-                 ]);
+            ->assertJson([
+                'ok' => true,
+                'recipe_id' => 'REC-TEST-001',
+                'total_ingredients' => 2,
+                'aggregated' => true,
+            ]);
 
         $baseIngredients = $response->json('base_ingredients');
-        
+
         $this->assertCount(2, $baseIngredients);
-        
+
         // Verificar que contiene los ingredientes esperados
         $itemIds = collect($baseIngredients)->pluck('item_id')->toArray();
         $this->assertContains('ITEM-001', $itemIds);
@@ -73,13 +70,11 @@ class RecipeBomImplosionTest extends TestCase
 
     /**
      * Test Case 2: Receta compuesta (con sub-recetas)
-     * 
-     * @return void
      */
     public function test_complex_recipe_implodes_subrecipes_recursively(): void
     {
         // Arrange: Crear receta compuesta
-        
+
         // Sub-receta: Salsa (REC-SUB-001)
         $subReceta = Receta::factory()->create([
             'id' => 'REC-SUB-001',
@@ -140,17 +135,17 @@ class RecipeBomImplosionTest extends TestCase
 
         // Assert
         $response->assertStatus(200)
-                 ->assertJson([
-                     'ok' => true,
-                     'recipe_id' => 'REC-MAIN-001',
-                     'total_ingredients' => 3, // Pasta + Tomate + Cebolla (salsa implodida)
-                     'aggregated' => true,
-                 ]);
+            ->assertJson([
+                'ok' => true,
+                'recipe_id' => 'REC-MAIN-001',
+                'total_ingredients' => 3, // Pasta + Tomate + Cebolla (salsa implodida)
+                'aggregated' => true,
+            ]);
 
         $baseIngredients = $response->json('base_ingredients');
-        
+
         $this->assertCount(3, $baseIngredients);
-        
+
         // Verificar que NO contiene la sub-receta, solo ingredientes base
         $itemIds = collect($baseIngredients)->pluck('item_id')->toArray();
         $this->assertContains('ITEM-PASTA', $itemIds);
@@ -161,13 +156,11 @@ class RecipeBomImplosionTest extends TestCase
 
     /**
      * Test Case 3: Ingredientes duplicados deben agregarse
-     * 
-     * @return void
      */
     public function test_duplicate_ingredients_are_aggregated(): void
     {
         // Arrange: Crear receta con mismo ingrediente en 2 sub-recetas
-        
+
         // Sub-receta 1: Salsa Roja
         $subReceta1 = Receta::factory()->create([
             'id' => 'REC-SALSA-ROJA',
@@ -239,26 +232,24 @@ class RecipeBomImplosionTest extends TestCase
         $response->assertStatus(200);
 
         $baseIngredients = $response->json('base_ingredients');
-        
+
         // Solo debe haber 1 item (tomate), pero con cantidad agregada
         $this->assertCount(1, $baseIngredients);
-        
+
         $tomate = collect($baseIngredients)->firstWhere('item_id', 'ITEM-TOMATE');
         $this->assertNotNull($tomate);
-        
+
         // Cantidad total debe ser 100 + 50 = 150
         $this->assertEquals(150, $tomate['total_qty']);
     }
 
     /**
      * Test Case 4: Protección contra loops infinitos
-     * 
-     * @return void
      */
     public function test_infinite_loop_protection(): void
     {
         // Arrange: Crear recetas con referencia circular (A -> B -> A)
-        
+
         $recetaA = Receta::factory()->create(['id' => 'REC-LOOP-A']);
         $versionA = RecetaVersion::factory()->create([
             'receta_id' => 'REC-LOOP-A',
@@ -286,7 +277,7 @@ class RecipeBomImplosionTest extends TestCase
         ]);
 
         // Act & Assert
-        $response = $this->getJson("/api/recipes/REC-LOOP-A/bom/implode");
+        $response = $this->getJson('/api/recipes/REC-LOOP-A/bom/implode');
 
         // Debe detectar el loop y no crashear
         // Puede retornar error 400 o manejar gracefully

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class PurchaseRequest extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.purchase_requests';
 
     protected $fillable = [

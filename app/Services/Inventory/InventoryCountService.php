@@ -17,17 +17,17 @@ class InventoryCountService
             $folio = $this->nextFolio($header['branch_id'] ?? null);
 
             $countId = (int) DB::table('inventory_counts')->insertGetId([
-                'folio'          => $folio,
-                'sucursal_id'    => $header['branch_id'] ?? null,
-                'almacen_id'     => $header['warehouse_id'] ?? null,
-                'programado_para'=> $header['scheduled_for'] ?? null,
-                'iniciado_en'    => $now,
-                'estado'         => 'EN_PROCESO',
-                'creado_por'     => $header['user_id'] ?? null,
-                'total_items'    => 0,
-                'total_variacion'=> 0,
-                'created_at'     => $now,
-                'updated_at'     => $now,
+                'folio' => $folio,
+                'sucursal_id' => $header['branch_id'] ?? null,
+                'almacen_id' => $header['warehouse_id'] ?? null,
+                'programado_para' => $header['scheduled_for'] ?? null,
+                'iniciado_en' => $now,
+                'estado' => 'EN_PROCESO',
+                'creado_por' => $header['user_id'] ?? null,
+                'total_items' => 0,
+                'total_variacion' => 0,
+                'created_at' => $now,
+                'updated_at' => $now,
             ]);
 
             $totals = ['items' => 0.0, 'variance' => 0.0];
@@ -47,7 +47,7 @@ class InventoryCountService
                 ->where('id', $countId)
                 ->update([
                     'total_items' => $totals['items'],
-                    'updated_at'  => $now,
+                    'updated_at' => $now,
                 ]);
 
             return $countId;
@@ -83,11 +83,11 @@ class InventoryCountService
                     DB::table('inventory_count_lines')
                         ->where('id', $existing->id)
                         ->update([
-                            'qty_contada'   => $payload['qty_contada'],
+                            'qty_contada' => $payload['qty_contada'],
                             'qty_variacion' => $payload['qty_contada'] - $payload['qty_teorica'],
-                            'motivo'        => $payload['motivo'],
-                            'meta'          => $payload['meta'],
-                            'updated_at'    => $now,
+                            'motivo' => $payload['motivo'],
+                            'meta' => $payload['meta'],
+                            'updated_at' => $now,
                         ]);
 
                     $variance = ($payload['qty_contada'] - $payload['qty_teorica']);
@@ -130,12 +130,12 @@ class InventoryCountService
             DB::table('inventory_counts')
                 ->where('id', $countId)
                 ->update([
-                    'estado'          => 'AJUSTADO',
-                    'cerrado_en'      => $now,
-                    'cerrado_por'     => $userId,
-                    'notas'           => $notes,
-                    'total_variacion' => DB::raw('COALESCE(total_variacion,0) + ' . $varianceTotal),
-                    'updated_at'      => $now,
+                    'estado' => 'AJUSTADO',
+                    'cerrado_en' => $now,
+                    'cerrado_por' => $userId,
+                    'notas' => $notes,
+                    'total_variacion' => DB::raw('COALESCE(total_variacion,0) + '.$varianceTotal),
+                    'updated_at' => $now,
                 ]);
         });
     }
@@ -150,14 +150,14 @@ class InventoryCountService
         }
 
         return [
-            'item_id'            => Arr::get($line, 'item_id'),
+            'item_id' => Arr::get($line, 'item_id'),
             'inventory_batch_id' => Arr::get($line, 'inventory_batch_id'),
-            'qty_teorica'        => $expected,
-            'qty_contada'        => $counted,
-            'qty_variacion'      => $counted - $expected,
-            'uom'                => Arr::get($line, 'uom', 'UND'),
-            'motivo'             => Arr::get($line, 'reason'),
-            'meta'               => $this->buildMeta($line),
+            'qty_teorica' => $expected,
+            'qty_contada' => $counted,
+            'qty_variacion' => $counted - $expected,
+            'uom' => Arr::get($line, 'uom', 'UND'),
+            'motivo' => Arr::get($line, 'reason'),
+            'meta' => $this->buildMeta($line),
         ];
     }
 
@@ -194,28 +194,27 @@ class InventoryCountService
         $timestamp,
         $branchId = null,
         $warehouseId = null
-    ): void
-    {
+    ): void {
         if (abs($variance) < 0.000001) {
             return;
         }
 
         DB::table('mov_inv')->insert([
-            'item_id'            => $itemId,
+            'item_id' => $itemId,
             'inventory_batch_id' => $batchId,
-            'tipo'               => 'AJUSTE',
-            'qty'                => $variance,
-            'uom'                => $uom,
-            'sucursal_id'        => $branchId,
-            'almacen_id'         => $warehouseId,
-            'ref_tipo'           => 'inventory_count',
-            'ref_id'             => $countId,
-            'user_id'            => $userId,
-            'ts'                 => $timestamp,
-            'meta'               => json_encode(['origen' => 'conteo']),
-            'notas'              => 'Ajuste por conteo',
-            'created_at'         => $timestamp,
-            'updated_at'         => $timestamp,
+            'tipo' => 'AJUSTE',
+            'qty' => $variance,
+            'uom' => $uom,
+            'sucursal_id' => $branchId,
+            'almacen_id' => $warehouseId,
+            'ref_tipo' => 'inventory_count',
+            'ref_id' => $countId,
+            'user_id' => $userId,
+            'ts' => $timestamp,
+            'meta' => json_encode(['origen' => 'conteo']),
+            'notas' => 'Ajuste por conteo',
+            'created_at' => $timestamp,
+            'updated_at' => $timestamp,
         ]);
     }
 }

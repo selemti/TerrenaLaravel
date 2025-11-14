@@ -73,7 +73,7 @@ class LogController extends Controller
                 'entity_id' => $log->entidad_id,
                 'reason' => $log->motivo,
                 'evidence_url' => $log->evidencia_url,
-                'has_payload' => !empty($log->payload_json),
+                'has_payload' => ! empty($log->payload_json),
             ];
         });
 

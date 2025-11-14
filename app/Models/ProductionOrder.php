@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProductionOrder extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'production_orders';
+
     protected $guarded = [];
 
     protected $casts = [
@@ -24,10 +25,15 @@ class ProductionOrder extends Model
 
     // Estados
     const ESTADO_BORRADOR = 'BORRADOR';
+
     const ESTADO_PLANIFICADA = 'PLANIFICADA';
+
     const ESTADO_EN_PROCESO = 'EN_PROCESO';
+
     const ESTADO_COMPLETADO = 'COMPLETADO';
+
     const ESTADO_PAUSADA = 'PAUSADA';
+
     const ESTADO_CANCELADA = 'CANCELADA';
 
     /**
@@ -83,14 +89,14 @@ class ProductionOrder extends Model
      */
     public function getEstadoBadgeAttribute(): string
     {
-        return match($this->estado) {
+        return match ($this->estado) {
             self::ESTADO_BORRADOR => '<span class="badge bg-secondary">Borrador</span>',
             self::ESTADO_PLANIFICADA => '<span class="badge bg-warning text-dark">Planificada</span>',
             self::ESTADO_EN_PROCESO => '<span class="badge bg-info">En Proceso</span>',
             self::ESTADO_COMPLETADO => '<span class="badge bg-success">Completado</span>',
             self::ESTADO_PAUSADA => '<span class="badge bg-warning">Pausada</span>',
             self::ESTADO_CANCELADA => '<span class="badge bg-danger">Cancelada</span>',
-            default => '<span class="badge bg-secondary">' . $this->estado . '</span>',
+            default => '<span class="badge bg-secondary">'.$this->estado.'</span>',
         };
     }
 

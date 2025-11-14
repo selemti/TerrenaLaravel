@@ -1,4 +1,5 @@
 <?php
+
 require __DIR__.'/vendor/autoload.php';
 $app = require_once __DIR__.'/bootstrap/app.php';
 $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
@@ -11,5 +12,5 @@ $tables = DB::connection('pgsql')->select("
 ");
 
 foreach ($tables as $t) {
-    echo $t->table_name . "\n";
+    echo $t->table_name."\n";
 }

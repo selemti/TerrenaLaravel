@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Reports;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use Illuminate\Http\Response;
 
 class SalesExceptionsController extends BaseReportController
 {
@@ -153,8 +153,8 @@ class SalesExceptionsController extends BaseReportController
             'reporte_excepciones_%s_%s%s.pdf',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            !empty($branches)
-                ? '_' . str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
+            ! empty($branches)
+                ? '_'.str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
             : ''
         );
 
@@ -205,7 +205,7 @@ class SalesExceptionsController extends BaseReportController
             $end->toDateString(),
         ];
 
-        $sql = <<<SQL
+        $sql = <<<'SQL'
 WITH raw AS (
     SELECT
         t.id AS ticket_id,
@@ -266,109 +266,109 @@ SQL;
         }
 
         $sql .= "\n), base AS (\n"
-            . "    SELECT raw.*,\n"
-            . "        COALESCE(raw.net_total_raw, (raw.gross_total - raw.discount_total)::numeric(14,2)) AS net_total\n"
-            . "    FROM raw\n"
-            . ")\n"
-            . ", payments AS (\n"
-            . "    SELECT\n"
-            . "        tx.ticket_id,\n"
-            . "        SUM(CASE\n"
-            . "            WHEN COALESCE(tx.voided, FALSE) = FALSE\n"
-            . "             AND UPPER(COALESCE(tx.transaction_type, '')) IN ('CREDIT','DEBIT')\n"
-            . "             AND UPPER(COALESCE(tx.payment_type, '')) NOT IN ('REFUND','VOID_TRANS','REFUND_CARD')\n"
-            . "             AND COALESCE(tx.amount, 0) > 0\n"
-            . "            THEN COALESCE(tx.amount, 0)\n"
-            . "            ELSE 0\n"
-            . "        END)::numeric(14,2) AS payment_total,\n"
-            . "        SUM(CASE\n"
-            . "            WHEN COALESCE(tx.voided, FALSE) = FALSE\n"
-            . "             AND UPPER(COALESCE(tx.transaction_type, '')) IN ('CREDIT','DEBIT')\n"
-            . "             AND UPPER(COALESCE(tx.payment_type, '')) NOT IN ('REFUND','VOID_TRANS','REFUND_CARD')\n"
-            . "             AND COALESCE(tx.amount, 0) < 0\n"
-            . "            THEN COALESCE(tx.amount, 0)\n"
-            . "            ELSE 0\n"
-            . "        END)::numeric(14,2) AS payment_adjustment_total,\n"
-            . "        SUM(CASE\n"
-            . "            WHEN COALESCE(tx.voided, FALSE) = FALSE\n"
-            . "             AND UPPER(COALESCE(tx.payment_type, '')) IN ('REFUND','REFUND_CARD')\n"
-            . "            THEN COALESCE(tx.amount, 0)\n"
-            . "            ELSE 0\n"
-            . "        END)::numeric(14,2) AS refund_total,\n"
-            . "        SUM(CASE\n"
-            . "            WHEN COALESCE(tx.voided, FALSE) = FALSE\n"
-            . "             AND UPPER(COALESCE(tx.payment_type, '')) = 'VOID_TRANS'\n"
-            . "            THEN COALESCE(tx.amount, 0)\n"
-            . "            ELSE 0\n"
-            . "        END)::numeric(14,2) AS void_total,\n"
-            . "        SUM(CASE\n"
-            . "            WHEN COALESCE(tx.voided, FALSE) = FALSE\n"
-            . "            THEN COALESCE(tx.amount, 0)\n"
-            . "            ELSE 0\n"
-            . "        END)::numeric(14,2) AS recorded_total,\n"
-            . "        SUM(CASE WHEN COALESCE(tx.voided, FALSE) = FALSE THEN 1 ELSE 0 END) AS tx_count,\n"
-            . "        SUM(CASE\n"
-            . "            WHEN COALESCE(tx.voided, FALSE) = FALSE\n"
-            . "             AND UPPER(COALESCE(tx.transaction_type, '')) IN ('CREDIT','DEBIT')\n"
-            . "             AND UPPER(COALESCE(tx.payment_type, '')) NOT IN ('REFUND','VOID_TRANS','REFUND_CARD')\n"
-            . "             AND COALESCE(tx.amount, 0) > 0\n"
-            . "            THEN 1\n"
-            . "            ELSE 0\n"
-            . "        END) AS payment_positive_count,\n"
-            . "        SUM(CASE\n"
-            . "            WHEN COALESCE(tx.voided, FALSE) = FALSE\n"
-            . "             AND UPPER(COALESCE(tx.transaction_type, '')) IN ('CREDIT','DEBIT')\n"
-            . "             AND UPPER(COALESCE(tx.payment_type, '')) NOT IN ('REFUND','VOID_TRANS','REFUND_CARD')\n"
-            . "             AND COALESCE(tx.amount, 0) < 0\n"
-            . "            THEN 1\n"
-            . "            ELSE 0\n"
-            . "        END) AS payment_adjustment_count,\n"
-            . "        jsonb_agg(\n"
-            . "            jsonb_build_object(\n"
-            . "                'payment_type', COALESCE(tx.payment_type, ''),\n"
-            . "                'transaction_type', COALESCE(tx.transaction_type, ''),\n"
-            . "                'amount', ROUND(COALESCE(tx.amount, 0)::numeric, 2),\n"
-            . "                'voided', COALESCE(tx.voided, FALSE)\n"
-            . "            ) ORDER BY tx.id\n"
-            . "        ) AS tx_detail\n"
-            . "    FROM public.transactions tx\n"
-            . "    JOIN base b ON b.ticket_id = tx.ticket_id\n"
-            . "    GROUP BY tx.ticket_id\n"
-            . ")\n"
-            . "SELECT\n"
-            . "    b.ticket_id,\n"
-            . "    b.folio_date,\n"
-            . "    b.branch_key,\n"
-            . "    b.terminal_id,\n"
-            . "    b.paid_flag,\n"
-            . "    b.voided_flag,\n"
-            . "    b.settled_flag,\n"
-            . "    b.wasted_flag,\n"
-            . "    b.refunded_flag,\n"
-            . "    b.reopened_flag,\n"
-            . "    b.ticket_status,\n"
-            . "    b.ticket_type,\n"
-            . "    b.daily_folio,\n"
-            . "    b.gross_total,\n"
-            . "    b.sub_total,\n"
-            . "    b.total_tax,\n"
-            . "    b.service_charge,\n"
-            . "    b.delivery_charge,\n"
-            . "    b.paid_amount_flag,\n"
-            . "    b.discount_total,\n"
-            . "    b.net_total,\n"
-            . "    COALESCE(p.payment_total, 0)::numeric(14,2) AS payment_total,\n"
-            . "    COALESCE(p.payment_adjustment_total, 0)::numeric(14,2) AS payment_adjustment_total,\n"
-            . "    COALESCE(p.refund_total, 0)::numeric(14,2) AS refund_total,\n"
-            . "    COALESCE(p.void_total, 0)::numeric(14,2) AS void_total,\n"
-            . "    COALESCE(p.recorded_total, 0)::numeric(14,2) AS recorded_total,\n"
-            . "    COALESCE(p.tx_count, 0) AS tx_count,\n"
-            . "    COALESCE(p.payment_positive_count, 0) AS payment_positive_count,\n"
-            . "    COALESCE(p.payment_adjustment_count, 0) AS payment_adjustment_count,\n"
-            . "    p.tx_detail\n"
-            . "FROM base b\n"
-            . "LEFT JOIN payments p ON p.ticket_id = b.ticket_id\n"
-            . "ORDER BY b.folio_date, b.ticket_id";
+            ."    SELECT raw.*,\n"
+            ."        COALESCE(raw.net_total_raw, (raw.gross_total - raw.discount_total)::numeric(14,2)) AS net_total\n"
+            ."    FROM raw\n"
+            .")\n"
+            .", payments AS (\n"
+            ."    SELECT\n"
+            ."        tx.ticket_id,\n"
+            ."        SUM(CASE\n"
+            ."            WHEN COALESCE(tx.voided, FALSE) = FALSE\n"
+            ."             AND UPPER(COALESCE(tx.transaction_type, '')) IN ('CREDIT','DEBIT')\n"
+            ."             AND UPPER(COALESCE(tx.payment_type, '')) NOT IN ('REFUND','VOID_TRANS','REFUND_CARD')\n"
+            ."             AND COALESCE(tx.amount, 0) > 0\n"
+            ."            THEN COALESCE(tx.amount, 0)\n"
+            ."            ELSE 0\n"
+            ."        END)::numeric(14,2) AS payment_total,\n"
+            ."        SUM(CASE\n"
+            ."            WHEN COALESCE(tx.voided, FALSE) = FALSE\n"
+            ."             AND UPPER(COALESCE(tx.transaction_type, '')) IN ('CREDIT','DEBIT')\n"
+            ."             AND UPPER(COALESCE(tx.payment_type, '')) NOT IN ('REFUND','VOID_TRANS','REFUND_CARD')\n"
+            ."             AND COALESCE(tx.amount, 0) < 0\n"
+            ."            THEN COALESCE(tx.amount, 0)\n"
+            ."            ELSE 0\n"
+            ."        END)::numeric(14,2) AS payment_adjustment_total,\n"
+            ."        SUM(CASE\n"
+            ."            WHEN COALESCE(tx.voided, FALSE) = FALSE\n"
+            ."             AND UPPER(COALESCE(tx.payment_type, '')) IN ('REFUND','REFUND_CARD')\n"
+            ."            THEN COALESCE(tx.amount, 0)\n"
+            ."            ELSE 0\n"
+            ."        END)::numeric(14,2) AS refund_total,\n"
+            ."        SUM(CASE\n"
+            ."            WHEN COALESCE(tx.voided, FALSE) = FALSE\n"
+            ."             AND UPPER(COALESCE(tx.payment_type, '')) = 'VOID_TRANS'\n"
+            ."            THEN COALESCE(tx.amount, 0)\n"
+            ."            ELSE 0\n"
+            ."        END)::numeric(14,2) AS void_total,\n"
+            ."        SUM(CASE\n"
+            ."            WHEN COALESCE(tx.voided, FALSE) = FALSE\n"
+            ."            THEN COALESCE(tx.amount, 0)\n"
+            ."            ELSE 0\n"
+            ."        END)::numeric(14,2) AS recorded_total,\n"
+            ."        SUM(CASE WHEN COALESCE(tx.voided, FALSE) = FALSE THEN 1 ELSE 0 END) AS tx_count,\n"
+            ."        SUM(CASE\n"
+            ."            WHEN COALESCE(tx.voided, FALSE) = FALSE\n"
+            ."             AND UPPER(COALESCE(tx.transaction_type, '')) IN ('CREDIT','DEBIT')\n"
+            ."             AND UPPER(COALESCE(tx.payment_type, '')) NOT IN ('REFUND','VOID_TRANS','REFUND_CARD')\n"
+            ."             AND COALESCE(tx.amount, 0) > 0\n"
+            ."            THEN 1\n"
+            ."            ELSE 0\n"
+            ."        END) AS payment_positive_count,\n"
+            ."        SUM(CASE\n"
+            ."            WHEN COALESCE(tx.voided, FALSE) = FALSE\n"
+            ."             AND UPPER(COALESCE(tx.transaction_type, '')) IN ('CREDIT','DEBIT')\n"
+            ."             AND UPPER(COALESCE(tx.payment_type, '')) NOT IN ('REFUND','VOID_TRANS','REFUND_CARD')\n"
+            ."             AND COALESCE(tx.amount, 0) < 0\n"
+            ."            THEN 1\n"
+            ."            ELSE 0\n"
+            ."        END) AS payment_adjustment_count,\n"
+            ."        jsonb_agg(\n"
+            ."            jsonb_build_object(\n"
+            ."                'payment_type', COALESCE(tx.payment_type, ''),\n"
+            ."                'transaction_type', COALESCE(tx.transaction_type, ''),\n"
+            ."                'amount', ROUND(COALESCE(tx.amount, 0)::numeric, 2),\n"
+            ."                'voided', COALESCE(tx.voided, FALSE)\n"
+            ."            ) ORDER BY tx.id\n"
+            ."        ) AS tx_detail\n"
+            ."    FROM public.transactions tx\n"
+            ."    JOIN base b ON b.ticket_id = tx.ticket_id\n"
+            ."    GROUP BY tx.ticket_id\n"
+            .")\n"
+            ."SELECT\n"
+            ."    b.ticket_id,\n"
+            ."    b.folio_date,\n"
+            ."    b.branch_key,\n"
+            ."    b.terminal_id,\n"
+            ."    b.paid_flag,\n"
+            ."    b.voided_flag,\n"
+            ."    b.settled_flag,\n"
+            ."    b.wasted_flag,\n"
+            ."    b.refunded_flag,\n"
+            ."    b.reopened_flag,\n"
+            ."    b.ticket_status,\n"
+            ."    b.ticket_type,\n"
+            ."    b.daily_folio,\n"
+            ."    b.gross_total,\n"
+            ."    b.sub_total,\n"
+            ."    b.total_tax,\n"
+            ."    b.service_charge,\n"
+            ."    b.delivery_charge,\n"
+            ."    b.paid_amount_flag,\n"
+            ."    b.discount_total,\n"
+            ."    b.net_total,\n"
+            ."    COALESCE(p.payment_total, 0)::numeric(14,2) AS payment_total,\n"
+            ."    COALESCE(p.payment_adjustment_total, 0)::numeric(14,2) AS payment_adjustment_total,\n"
+            ."    COALESCE(p.refund_total, 0)::numeric(14,2) AS refund_total,\n"
+            ."    COALESCE(p.void_total, 0)::numeric(14,2) AS void_total,\n"
+            ."    COALESCE(p.recorded_total, 0)::numeric(14,2) AS recorded_total,\n"
+            ."    COALESCE(p.tx_count, 0) AS tx_count,\n"
+            ."    COALESCE(p.payment_positive_count, 0) AS payment_positive_count,\n"
+            ."    COALESCE(p.payment_adjustment_count, 0) AS payment_adjustment_count,\n"
+            ."    p.tx_detail\n"
+            ."FROM base b\n"
+            ."LEFT JOIN payments p ON p.ticket_id = b.ticket_id\n"
+            .'ORDER BY b.folio_date, b.ticket_id';
 
         $rows = DB::connection('pgsql')->select($sql, $bindings);
 
@@ -547,7 +547,7 @@ SQL;
                 ->groupBy('ticket_id')
                 ->map(function (Collection $items) {
                     return $items
-                        ->groupBy(fn (array $row) => $row['name'] . '|' . ($row['scope'] ?? 'ticket'))
+                        ->groupBy(fn (array $row) => $row['name'].'|'.($row['scope'] ?? 'ticket'))
                         ->map(function (Collection $group) {
                             $first = $group->first();
 
@@ -590,6 +590,7 @@ SQL;
         if ($itemsByTicket->isNotEmpty()) {
             $tickets = $tickets->map(function (array $ticket) use ($itemsByTicket) {
                 $ticket['items'] = $itemsByTicket->get($ticket['ticket_id'], collect())->toArray();
+
                 return $ticket;
             });
         }
@@ -612,7 +613,7 @@ SQL;
             $notes = [];
 
             $ticketDiscounts = $discountsByTicket->get($ticket['ticket_id'], collect());
-            if (!$ticketDiscounts instanceof Collection) {
+            if (! $ticketDiscounts instanceof Collection) {
                 $ticketDiscounts = collect($ticketDiscounts);
             }
 
@@ -641,12 +642,12 @@ SQL;
                     $discountRatio * 100
                 );
 
-                if (!$ticket['paid_flag']) {
+                if (! $ticket['paid_flag']) {
                     $notes[] = 'Ticket marcado como pagado: No';
                 }
 
                 if ($discountNames !== '') {
-                    $notes[] = 'Descuentos: ' . $discountNames;
+                    $notes[] = 'Descuentos: '.$discountNames;
                 }
 
                 $records->push($this->buildRecord($ticket, 'discount_100', [
@@ -663,7 +664,7 @@ SQL;
                 );
 
                 if ($discountNames !== '') {
-                    $notes[] = 'Descuentos: ' . $discountNames;
+                    $notes[] = 'Descuentos: '.$discountNames;
                 }
 
                 $records->push($this->buildRecord($ticket, 'discount_high', [
@@ -675,7 +676,7 @@ SQL;
             }
 
             // Cerrados sin pago
-            if (!$ticket['voided_flag'] && $net > 0.01 && abs($effectivePayments) <= 0.01) {
+            if (! $ticket['voided_flag'] && $net > 0.01 && abs($effectivePayments) <= 0.01) {
                 $notes = [
                     sprintf('Importe neto: %s', $this->formatMoney($net)),
                     'Pagos registrados: $0.00',
@@ -686,7 +687,7 @@ SQL;
                 }
 
                 if ($discountNames !== '') {
-                    $notes[] = 'Descuentos: ' . $discountNames;
+                    $notes[] = 'Descuentos: '.$discountNames;
                 }
                 if ($paymentAdjustments < -0.01) {
                     $notes[] = sprintf('Ajustes fuera de pago: %s', $this->formatMoney($paymentAdjustments));
@@ -721,7 +722,7 @@ SQL;
                 $notes[] = sprintf('Movimientos activos: %d', $ticket['tx_count']);
 
                 if ($discountNames !== '') {
-                    $notes[] = 'Descuentos: ' . $discountNames;
+                    $notes[] = 'Descuentos: '.$discountNames;
                 }
 
                 $voidImpact = max($effectivePayments - $refunds, 0);
@@ -736,7 +737,7 @@ SQL;
 
             // Diferencia entre pagos y neto (solo aplica si hubo pagos)
             if (
-                !$ticket['voided_flag']
+                ! $ticket['voided_flag']
                 && $net > 0.01
                 && $effectivePayments > 0.01
                 && abs($difference) > 0.5
@@ -751,7 +752,7 @@ SQL;
                 }
 
                 if ($discountNames !== '') {
-                    $notes[] = 'Descuentos: ' . $discountNames;
+                    $notes[] = 'Descuentos: '.$discountNames;
                 }
 
                 $records->push($this->buildRecord($ticket, 'payment_mismatch', [
@@ -875,7 +876,7 @@ SQL;
                 $voided = (bool) ($tx['voided'] ?? false);
                 $isRefund = in_array($paymentType, ['REFUND', 'REFUND_CARD'], true);
                 $isVoidTrans = $paymentType === 'VOID_TRANS';
-                $isAdjustment = $amount < 0 && !$isRefund && !$isVoidTrans;
+                $isAdjustment = $amount < 0 && ! $isRefund && ! $isVoidTrans;
 
                 return [
                     'payment_type' => $paymentType,

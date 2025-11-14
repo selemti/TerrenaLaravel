@@ -16,13 +16,11 @@ class MeController extends Controller
      * Returns the list of effective permissions for the current user.
      *
      * @route GET /api/me/permissions
-     * @param Request $request
-     * @return JsonResponse
      */
     public function permissions(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json(['error' => 'Unauthenticated'], 401);
         }
 

@@ -19,6 +19,7 @@ class Create extends Component
 
     // Items seleccionados para el conteo
     public array $selectedItems = [];
+
     public string $itemSearch = '';
 
     public function mount()
@@ -35,9 +36,9 @@ class Create extends Component
             ->orderBy('nombre');
 
         if ($this->itemSearch) {
-            $itemsQuery->where(function($q) {
-                $q->where('codigo', 'ILIKE', '%' . $this->itemSearch . '%')
-                  ->orWhere('nombre', 'ILIKE', '%' . $this->itemSearch . '%');
+            $itemsQuery->where(function ($q) {
+                $q->where('codigo', 'ILIKE', '%'.$this->itemSearch.'%')
+                    ->orWhere('nombre', 'ILIKE', '%'.$this->itemSearch.'%');
             });
         }
 
@@ -76,7 +77,7 @@ class Create extends Component
                 $stockActual = DB::connection('pgsql')
                     ->table('mov_inv')
                     ->where('item_id', $itemId)
-                    ->when($this->form['almacen_id'], function($q, $almacen) {
+                    ->when($this->form['almacen_id'], function ($q, $almacen) {
                         $q->where('almacen_id', $almacen);
                     })
                     ->sum('qty');
@@ -97,14 +98,14 @@ class Create extends Component
         $items = Item::where('activo', true)->limit(100)->get();
 
         foreach ($items as $item) {
-            if (!isset($this->selectedItems[$item->id])) {
+            if (! isset($this->selectedItems[$item->id])) {
                 $this->toggleItem($item->id);
             }
         }
 
         $this->dispatch('toast',
             type: 'success',
-            body: count($items) . ' items agregados al conteo'
+            body: count($items).' items agregados al conteo'
         );
     }
 
@@ -134,11 +135,12 @@ class Create extends Component
                 type: 'error',
                 body: 'Debe seleccionar al menos un item para contar'
             );
+
             return;
         }
 
         try {
-            $service = new InventoryCountService();
+            $service = new InventoryCountService;
 
             $header = [
                 'branch_id' => $this->form['sucursal_id'] ?: null,
@@ -161,7 +163,7 @@ class Create extends Component
         } catch (\Exception $e) {
             $this->dispatch('toast',
                 type: 'error',
-                body: 'Error al crear conteo: ' . $e->getMessage()
+                body: 'Error al crear conteo: '.$e->getMessage()
             );
         }
     }

@@ -11,9 +11,13 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 class SalesDiagnosticsExport implements FromArray, ShouldAutoSize, WithTitle
 {
     protected Carbon $start;
+
     protected Carbon $end;
+
     protected Collection $rows;
+
     protected array $summary;
+
     protected ?string $severity;
 
     public function __construct(

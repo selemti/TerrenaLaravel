@@ -17,7 +17,7 @@ class Detail extends Component
             'quotes.vendor',
             'createdBy',
             'requestedBy',
-            'sucursal'
+            'sucursal',
         ])->findOrFail($id);
     }
 

@@ -1,7 +1,7 @@
 <?php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
-return new class extends \Illuminate\Database\Migrations\Migration {
+
+return new class extends \Illuminate\Database\Migrations\Migration
+{
     public function up(): void
     {
         \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
@@ -30,6 +30,6 @@ SQL);
 
     public function down(): void
     {
-        \Illuminate\Support\Facades\DB::unprepared("UPDATE selemti.items SET category_id = NULL");
+        \Illuminate\Support\Facades\DB::unprepared('UPDATE selemti.items SET category_id = NULL');
     }
 };

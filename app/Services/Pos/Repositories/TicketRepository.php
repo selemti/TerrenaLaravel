@@ -8,9 +8,6 @@ class TicketRepository
 {
     /**
      * Obtiene el header del ticket desde public.ticket
-     *
-     * @param int $ticketId
-     * @return array|null
      */
     public function getTicketHeader(int $ticketId): ?array
     {
@@ -24,9 +21,6 @@ class TicketRepository
 
     /**
      * Obtiene los items del ticket desde public.ticket_item
-     *
-     * @param int $ticketId
-     * @return array
      */
     public function getTicketItems(int $ticketId): array
     {
@@ -41,15 +35,12 @@ class TicketRepository
     /**
      * Obtiene los modificadores de los items del ticket
      * desde public.ticket_item_modifier y selemti.ticket_item_modifiers
-     *
-     * @param int $ticketId
-     * @return array
      */
     public function getTicketItemModifiers(int $ticketId): array
     {
         // Primero intentamos desde la tabla pública
         $publicModifiers = DB::connection('pgsql')
-            ->select("
+            ->select('
                 SELECT
                     tim.ticket_item_id,
                     tim.modifier_type,
@@ -61,13 +52,13 @@ class TicketRepository
                 INNER JOIN public.ticket_item ti ON ti.id = tim.ticket_item_id
                 WHERE ti.ticket_id = ?
                 ORDER BY tim.ticket_item_id, tim.id
-            ", [$ticketId]);
+            ', [$ticketId]);
 
         // Luego intentamos desde selemti si existe
         $selemtiModifiers = [];
         try {
             $selemtiModifiers = DB::connection('pgsql')
-                ->select("
+                ->select('
                     SELECT
                         stim.ticket_item_id,
                         stim.modifier_type,
@@ -79,7 +70,7 @@ class TicketRepository
                     INNER JOIN public.ticket_item ti ON ti.id = stim.ticket_item_id
                     WHERE ti.ticket_id = ?
                     ORDER BY stim.ticket_item_id, stim.id
-                ", [$ticketId]);
+                ', [$ticketId]);
         } catch (\Exception $e) {
             // Si la tabla no existe, continuamos solo con public
         }
@@ -95,14 +86,11 @@ class TicketRepository
 
     /**
      * Obtiene información completa del ticket con items y modificadores
-     *
-     * @param int $ticketId
-     * @return array
      */
     public function getTicketComplete(int $ticketId): array
     {
         $header = $this->getTicketHeader($ticketId);
-        if (!$header) {
+        if (! $header) {
             return [];
         }
 
@@ -113,7 +101,7 @@ class TicketRepository
         $modifiersByItem = [];
         foreach ($modifiers as $modifier) {
             $itemId = $modifier['ticket_item_id'];
-            if (!isset($modifiersByItem[$itemId])) {
+            if (! isset($modifiersByItem[$itemId])) {
                 $modifiersByItem[$itemId] = [];
             }
             $modifiersByItem[$itemId][] = $modifier;
@@ -132,34 +120,26 @@ class TicketRepository
 
     /**
      * Verifica si el ticket está pagado
-     *
-     * @param int $ticketId
-     * @return bool
      */
     public function isTicketPaid(int $ticketId): bool
     {
         $ticket = $this->getTicketHeader($ticketId);
+
         return $ticket && ($ticket['paid'] ?? false);
     }
 
     /**
      * Verifica si el ticket está anulado/voided
-     *
-     * @param int $ticketId
-     * @return bool
      */
     public function isTicketVoided(int $ticketId): bool
     {
         $ticket = $this->getTicketHeader($ticketId);
+
         return $ticket && ($ticket['voided'] ?? false);
     }
 
     /**
      * Obtiene tickets pagados de las últimas N horas
-     *
-     * @param int $hours
-     * @param int $limit
-     * @return array
      */
     public function getTicketsPaidLastHours(int $hours = 24, int $limit = 50): array
     {

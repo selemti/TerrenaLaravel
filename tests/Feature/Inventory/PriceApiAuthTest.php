@@ -40,10 +40,9 @@ class PriceApiAuthTest extends TestCase
 
     protected function fakeUser(bool $authorized): Authenticatable
     {
-        return new class($authorized) implements Authenticatable, \Illuminate\Contracts\Auth\Access\Authorizable {
-            public function __construct(private bool $authorized)
-            {
-            }
+        return new class($authorized) implements \Illuminate\Contracts\Auth\Access\Authorizable, Authenticatable
+        {
+            public function __construct(private bool $authorized) {}
 
             public function getAuthIdentifierName()
             {
@@ -70,9 +69,7 @@ class PriceApiAuthTest extends TestCase
                 return null;
             }
 
-            public function setRememberToken($value): void
-            {
-            }
+            public function setRememberToken($value): void {}
 
             public function getRememberTokenName()
             {

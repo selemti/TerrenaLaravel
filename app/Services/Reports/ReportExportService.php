@@ -33,26 +33,26 @@ class ReportExportService
             $output = fopen('php://output', 'w');
             // Añadir BOM para que se muestre correctamente en Excel
             fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-            
+
             fputcsv($output, ['Dashboard Terrena ERP']);
             fputcsv($output, ['Rango', $range]);
             fputcsv($output, ['Desde', $from->toDateTimeString()]);
             fputcsv($output, ['Hasta', $to->toDateTimeString()]);
             fputcsv($output, []);
-            
+
             fputcsv($output, ['KPIs']);
             fputcsv($output, ['Nombre', 'Valor']);
-            
+
             foreach ($kpis as $key => $value) {
                 $formattedValue = $this->formatValue($key, $value);
                 fputcsv($output, [Str::headline(str_replace('_', ' ', $key)), $formattedValue]);
             }
 
             fputcsv($output, []);
-            
+
             foreach ($charts as $key => $dataset) {
                 fputcsv($output, [Str::headline(str_replace('_', ' ', $key))]);
-                
+
                 if (is_array($dataset) && count($dataset) > 0) {
                     $firstRow = reset($dataset);
                     if (is_array($firstRow)) {
@@ -65,13 +65,13 @@ class ReportExportService
                         // Si los datos son simples, usar una columna
                         fputcsv($output, ['Valor']);
                         foreach ($dataset as $row) {
-                            fputcsv($output, [(string)$row]);
+                            fputcsv($output, [(string) $row]);
                         }
                     }
                 } else {
                     fputcsv($output, ['No hay datos disponibles']);
                 }
-                
+
                 fputcsv($output, []);
             }
 
@@ -92,6 +92,7 @@ class ReportExportService
         if (class_exists('Barryvdh\DomPDF\ServiceProvider')) {
             $pdf = app('dompdf.wrapper');
             $pdf->loadHTML($html);
+
             return $pdf->download($filename);
         } else {
             // Si no está instalada la librería, generamos un PDF básico
@@ -128,9 +129,9 @@ class ReportExportService
         $html .= '</head>';
         $html .= '<body>';
         $html .= '<div class="header"><h1>Dashboard Terrena ERP</h1></div>';
-        $html .= '<p><strong>Rango:</strong> ' . htmlspecialchars($range) . '</p>';
-        $html .= '<p><strong>Desde:</strong> ' . htmlspecialchars($from->toDateTimeString()) . '</p>';
-        $html .= '<p><strong>Hasta:</strong> ' . htmlspecialchars($to->toDateTimeString()) . '</p>';
+        $html .= '<p><strong>Rango:</strong> '.htmlspecialchars($range).'</p>';
+        $html .= '<p><strong>Desde:</strong> '.htmlspecialchars($from->toDateTimeString()).'</p>';
+        $html .= '<p><strong>Hasta:</strong> '.htmlspecialchars($to->toDateTimeString()).'</p>';
         $html .= '<h2>KPIs</h2>';
         $html .= '<table>';
         $html .= '<thead><tr><th>Nombre</th><th>Valor</th></tr></thead>';
@@ -139,42 +140,42 @@ class ReportExportService
         foreach ($kpis as $key => $value) {
             $formattedKey = Str::headline(str_replace('_', ' ', $key));
             $formattedValue = $this->formatValue($key, $value);
-            $html .= '<tr><td>' . htmlspecialchars($formattedKey) . '</td><td>' . htmlspecialchars($formattedValue) . '</td></tr>';
+            $html .= '<tr><td>'.htmlspecialchars($formattedKey).'</td><td>'.htmlspecialchars($formattedValue).'</td></tr>';
         }
 
         $html .= '</tbody></table>';
 
         foreach ($charts as $key => $rows) {
-            $html .= '<h2>' . htmlspecialchars(Str::headline(str_replace('_', ' ', $key))) . '</h2>';
+            $html .= '<h2>'.htmlspecialchars(Str::headline(str_replace('_', ' ', $key))).'</h2>';
             if (is_array($rows) && count($rows) > 0) {
                 $html .= '<table>';
                 $html .= '<thead><tr>';
-                
+
                 // Crear encabezados basados en las claves del primer elemento
                 $firstRow = reset($rows);
                 if (is_array($firstRow)) {
                     foreach (array_keys($firstRow) as $header) {
-                        $html .= '<th>' . htmlspecialchars(Str::headline(str_replace('_', ' ', $header))) . '</th>';
+                        $html .= '<th>'.htmlspecialchars(Str::headline(str_replace('_', ' ', $header))).'</th>';
                     }
                 } else {
                     $html .= '<th>Valor</th>';
                 }
-                
+
                 $html .= '</tr></thead>';
                 $html .= '<tbody>';
-                
+
                 foreach ($rows as $row) {
                     $html .= '<tr>';
                     if (is_array($row)) {
                         foreach ($row as $cell) {
-                            $html .= '<td>' . htmlspecialchars((string)$cell) . '</td>';
+                            $html .= '<td>'.htmlspecialchars((string) $cell).'</td>';
                         }
                     } else {
-                        $html .= '<td>' . htmlspecialchars((string)$row) . '</td>';
+                        $html .= '<td>'.htmlspecialchars((string) $row).'</td>';
                     }
                     $html .= '</tr>';
                 }
-                
+
                 $html .= '</tbody></table>';
             } else {
                 $html .= '<p>No hay datos disponibles</p>';
@@ -193,9 +194,9 @@ class ReportExportService
     protected function formatValue(string $key, float $value): string
     {
         if (Str::contains($key, ['ventas', 'compras', 'inventario', 'costo'])) {
-            return '$' . number_format($value, 2);
+            return '$'.number_format($value, 2);
         } elseif (Str::contains($key, ['merma', 'eficiencia'])) {
-            return number_format($value, 1) . '%';
+            return number_format($value, 1).'%';
         } else {
             return number_format($value, 1);
         }
@@ -227,7 +228,7 @@ class ReportExportService
             $lines[] = Str::headline(str_replace('_', ' ', $key));
             foreach ($rows as $row) {
                 $values = implode(' | ', array_map(fn ($value) => is_numeric($value) ? number_format((float) $value, 2) : (string) $value, (array) $row));
-                $lines[] = '  • ' . $values;
+                $lines[] = '  • '.$values;
             }
             $lines[] = '';
         }
@@ -272,9 +273,9 @@ class ReportExportService
             $xref .= sprintf("%010d 00000 n \n", $offsets[$i]);
         }
 
-        $trailer = "trailer << /Size " . count($offsets) . " /Root 1 0 R >>\n";
+        $trailer = 'trailer << /Size '.count($offsets)." /Root 1 0 R >>\n";
         $trailer .= "startxref\n{$xrefOffset}\n%%EOF";
 
-        return $buffer . $xref . $trailer;
+        return $buffer.$xref.$trailer;
     }
 }

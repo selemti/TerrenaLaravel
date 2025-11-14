@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Controlador HTTP para lectura del log de auditoría
- * 
+ *
  * Este controlador proporciona un endpoint API protegido para consultar
  * registros de auditoría con filtros y permisos adecuados.
  */
@@ -26,9 +26,11 @@ class AuditLogController extends Controller
 
     /**
      * Mostrar la vista principal de auditoría operacional
-     * 
+     *
      * @route GET /audit/logs
+     *
      * @middleware auth, permission:alerts.view
+     *
      * @return \Illuminate\Contracts\View\View
      */
     public function index()
@@ -66,17 +68,16 @@ class AuditLogController extends Controller
 
     /**
      * Buscar y retornar logs de auditoría
-     * 
+     *
      * @route GET /api/audit/logs
+     *
      * @middleware auth:sanctum, permission:alerts.view
-     * @param Request $request
-     * @return JsonResponse
      */
     public function list(Request $request): JsonResponse
     {
         // Validaciones mínimas
         $filters = [];
-        
+
         // user_id debe ser numérico si se proporciona
         if ($request->has('user_id') && $request->user_id !== '') {
             if (! is_numeric($request->user_id)) {
@@ -154,6 +155,7 @@ class AuditLogController extends Controller
     private function validateDateFormat(string $date): bool
     {
         $date = trim($date);
+
         return preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) === 1;
     }
 

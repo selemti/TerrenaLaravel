@@ -7,12 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class MenuModifier extends Model
 {
     protected $table = 'public.menu_modifier';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
 
     protected $fillable = [
-        'name', 'translated_name', 'price', 'extra_price', 'group_id', 
-        'enable', 'fixed_price', 'print_to_kitchen'
+        'name', 'translated_name', 'price', 'extra_price', 'group_id',
+        'enable', 'fixed_price', 'print_to_kitchen',
     ];
 
     protected $casts = [

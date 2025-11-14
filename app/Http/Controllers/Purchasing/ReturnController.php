@@ -21,9 +21,7 @@ class ReturnController extends Controller
      * Crea una devolución en borrador a partir de una PO.
      *
      * @route POST /api/purchasing/returns/create-from-po/{purchase_order_id}
-     * @param int $purchase_order_id
-     * @param Request $request
-     * @return JsonResponse
+     *
      * @todo Validar la PO antes de crear la devolución.
      */
     public function createFromPO(int $purchase_order_id, Request $request): JsonResponse
@@ -50,9 +48,7 @@ class ReturnController extends Controller
      * Aprueba una devolución y bloquea cambios de cabecera.
      *
      * @route POST /api/purchasing/returns/{return_id}/approve
-     * @param int $return_id
-     * @param Request $request
-     * @return JsonResponse
+     *
      * @todo Registrar auditoría completa de la aprobación.
      */
     public function approve(int $return_id, Request $request): JsonResponse
@@ -79,9 +75,7 @@ class ReturnController extends Controller
      * Marca la devolución como enviada y almacena tracking.
      *
      * @route POST /api/purchasing/returns/{return_id}/ship
-     * @param int $return_id
-     * @param Request $request
-     * @return JsonResponse
+     *
      * @todo Validar estructura del array tracking y soportar adjuntos.
      */
     public function ship(int $return_id, Request $request): JsonResponse
@@ -111,9 +105,7 @@ class ReturnController extends Controller
      * Confirma que el proveedor recibió el material devuelto.
      *
      * @route POST /api/purchasing/returns/{return_id}/confirm
-     * @param int $return_id
-     * @param Request $request
-     * @return JsonResponse
+     *
      * @todo Adjuntar evidencia (PDF/Fotos) de la recepción del proveedor.
      */
     public function confirm(int $return_id, Request $request): JsonResponse
@@ -140,9 +132,7 @@ class ReturnController extends Controller
      * Genera los movimientos negativos y avanza a nota de crédito.
      *
      * @route POST /api/purchasing/returns/{return_id}/post
-     * @param int $return_id
-     * @param Request $request
-     * @return JsonResponse
+     *
      * @todo Manejar rollback transaccional si fallan los movimientos.
      */
     public function post(int $return_id, Request $request): JsonResponse
@@ -169,9 +159,7 @@ class ReturnController extends Controller
      * Registra la nota de crédito del proveedor y cierra la devolución.
      *
      * @route POST /api/purchasing/returns/{return_id}/credit-note
-     * @param int $return_id
-     * @param Request $request
-     * @return JsonResponse
+     *
      * @todo Validar formato de folio y fechas antes de guardar.
      */
     public function creditNote(int $return_id, Request $request): JsonResponse

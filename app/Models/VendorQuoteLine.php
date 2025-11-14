@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class VendorQuoteLine extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'purchase_vendor_quote_lines';
+
     protected $guarded = [];
 
     protected $casts = [
@@ -56,6 +58,7 @@ class VendorQuoteLine extends Model
         if ($this->pack_size > 0) {
             return $this->precio_unitario / $this->pack_size;
         }
+
         return $this->precio_unitario;
     }
 
@@ -73,7 +76,9 @@ class VendorQuoteLine extends Model
     public function getIsBestPriceAttribute(): bool
     {
         $lastPrice = $this->requestLine->last_price ?? 0;
-        if ($lastPrice == 0) return null;
+        if ($lastPrice == 0) {
+            return null;
+        }
 
         return $this->precio_unitario < $lastPrice;
     }
@@ -84,7 +89,9 @@ class VendorQuoteLine extends Model
     public function getDifVsLastPriceAttribute(): ?float
     {
         $lastPrice = $this->requestLine->last_price ?? 0;
-        if ($lastPrice == 0) return null;
+        if ($lastPrice == 0) {
+            return null;
+        }
 
         return (($this->precio_unitario - $lastPrice) / $lastPrice) * 100;
     }
@@ -94,11 +101,11 @@ class VendorQuoteLine extends Model
      */
     public function getPackFormatAttribute(): ?string
     {
-        if (!$this->pack_uom || $this->pack_size <= 1) {
+        if (! $this->pack_uom || $this->pack_size <= 1) {
             return null;
         }
 
-        return ucfirst($this->pack_uom) . ' ' . number_format($this->pack_size, 0) . ' ' . $this->uom_oferta;
+        return ucfirst($this->pack_uom).' '.number_format($this->pack_size, 0).' '.$this->uom_oferta;
     }
 
     // ==================== SCOPES ====================

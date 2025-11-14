@@ -161,8 +161,8 @@
 4. ✅ `scripts/verify_missing_columns.sql`
 
 ### Archivos SQL
-1. ✅ `BD/Noviembre/VentasReport/v9/script_sql_reportes_adicionales.sql` (corregido)
-2. ✅ `BD/Noviembre/VentasReport/v9/script_sql_reportes_adicionales_BACKUP.sql` (backup)
+1. ✅ `docs/docs/BD/NoviembreDocsDocs/VentasReport/v9/script_sql_reportes_adicionales.sql` (corregido)
+2. ✅ `docs/docs/BD/NoviembreDocsDocs/VentasReport/v9/script_sql_reportes_adicionales_BACKUP.sql` (backup)
 
 ### Documentación
 1. ✅ `MIGRACIONES_SINCRONIZADAS_2025_11_05.md` - Primera fase

@@ -7,15 +7,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Modelo Eloquent para la tabla de auditoría operacional
- * 
+ *
  * Registra todas las acciones sensibles del sistema para trazabilidad completa
  */
 class AuditLog extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.audit_log';
+
     protected $primaryKey = 'id';
-    
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -70,7 +72,7 @@ class AuditLog extends Model
         $entityType = $this->entidad;
         $entityId = $this->entidad_id;
 
-        if (!$entityType || !$entityId) {
+        if (! $entityType || ! $entityId) {
             return '—';
         }
 
@@ -88,6 +90,7 @@ class AuditLog extends Model
         ];
 
         $displayName = $displayNameMap[$entityType] ?? $entityType;
+
         return "{$displayName} #{$entityId}";
     }
 }

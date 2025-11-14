@@ -7,12 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Transaccion extends Model
 {
     protected $table = 'public.transactions';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
 
     protected $fillable = [
-        'payment_type', 'transaction_time', 'amount', 'tips_amount', 
-        'transaction_type', 'voided', 'terminal_id', 'ticket_id', 'user_id'
+        'payment_type', 'transaction_time', 'amount', 'tips_amount',
+        'transaction_type', 'voided', 'terminal_id', 'ticket_id', 'user_id',
     ];
 
     protected $casts = [

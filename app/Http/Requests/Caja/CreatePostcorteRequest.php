@@ -54,7 +54,7 @@ class CreatePostcorteRequest extends FormRequest
                     ->where('id', $this->precorte_id)
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     $validator->errors()->add('precorte_id', 'El precorte especificado no existe.');
                 }
             }

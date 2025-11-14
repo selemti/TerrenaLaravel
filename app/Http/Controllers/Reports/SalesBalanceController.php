@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Reports;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use Illuminate\Http\Response;
 
 class SalesBalanceController extends BaseReportController
 {
@@ -86,8 +86,8 @@ class SalesBalanceController extends BaseReportController
             'reporte_balance_formas_%s_%s%s.pdf',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            !empty($branches)
-                ? '_' . str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
+            ! empty($branches)
+                ? '_'.str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
                 : ''
         );
 
@@ -132,17 +132,18 @@ class SalesBalanceController extends BaseReportController
         $branchList = $this->stringifyFilter($branches);
         $terminalList = $this->stringifyFilter($terminals);
 
-        if (!$terminalList) {
-            $sql = "SELECT * FROM public.vw_report_balance_detail WHERE folio_date BETWEEN ? AND ?";
+        if (! $terminalList) {
+            $sql = 'SELECT * FROM public.vw_report_balance_detail WHERE folio_date BETWEEN ? AND ?';
             $bindings = [$start->toDateString(), $end->toDateString()];
             if ($branchList) {
                 $sql .= " AND UPPER(branch_key) IN (SELECT UNNEST(string_to_array(?, ',')))";
                 $bindings[] = $branchList;
             }
+
             return collect(DB::connection('pgsql')->select($sql, $bindings));
         }
 
-        $sql = <<<SQL
+        $sql = <<<'SQL'
             WITH paid AS (
               SELECT
                 t.id AS ticket_id,
@@ -166,30 +167,40 @@ class SalesBalanceController extends BaseReportController
             $sql .= " AND UPPER(b.branch_key) IN (SELECT UNNEST(string_to_array(?, ',')))";
             $bindings[] = $branchList;
         }
-        $sql .= " GROUP BY 1,2,3 ORDER BY 1,2,4 DESC";
+        $sql .= ' GROUP BY 1,2,3 ORDER BY 1,2,4 DESC';
+
         return collect(DB::connection('pgsql')->select($sql, $bindings));
     }
 
     protected function buildPivot(Collection $rows): array
     {
         $grouped = $rows->groupBy(function ($r) {
-            $date = (string)($r->folio_date ?? '');
-            $branch = strtoupper((string)($r->branch_key ?? ''));
+            $date = (string) ($r->folio_date ?? '');
+            $branch = strtoupper((string) ($r->branch_key ?? ''));
+
             return $date.'|'.$branch;
         });
 
         $result = [];
         foreach ($grouped as $key => $items) {
             [$date, $branch] = explode('|', $key, 2);
-            $cash=0.0; $credit=0.0; $debit=0.0; $other=0.0; $net=0.0;
+            $cash = 0.0;
+            $credit = 0.0;
+            $debit = 0.0;
+            $other = 0.0;
+            $net = 0.0;
             foreach ($items as $r) {
-                $amount = (float)($r->monto ?? 0);
-                $method = strtoupper((string)($r->payment ?? ''));
+                $amount = (float) ($r->monto ?? 0);
+                $method = strtoupper((string) ($r->payment ?? ''));
                 switch ($method) {
-                    case 'CASH': $cash += $amount; break;
-                    case 'CREDIT_CARD': $credit += $amount; break;
-                    case 'DEBIT_CARD': $debit += $amount; break;
-                    default: $other += $amount; break;
+                    case 'CASH': $cash += $amount;
+                        break;
+                    case 'CREDIT_CARD': $credit += $amount;
+                        break;
+                    case 'DEBIT_CARD': $debit += $amount;
+                        break;
+                    default: $other += $amount;
+                        break;
                 }
                 $net += $amount;
             }
@@ -203,7 +214,8 @@ class SalesBalanceController extends BaseReportController
                 'net' => $this->round($net),
             ];
         }
-        usort($result, fn($a,$b) => strcmp($a['folio_date'] ?? '', $b['folio_date'] ?? '') ?: strcmp($a['branch_key'] ?? '', $b['branch_key'] ?? ''));
+        usort($result, fn ($a, $b) => strcmp($a['folio_date'] ?? '', $b['folio_date'] ?? '') ?: strcmp($a['branch_key'] ?? '', $b['branch_key'] ?? ''));
+
         return $result;
     }
 }

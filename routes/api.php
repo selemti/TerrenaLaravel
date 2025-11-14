@@ -1,69 +1,66 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-
+use App\Http\Controllers\Api\AlertsController;
+use App\Http\Controllers\Api\Caja\AlertasController;
 // Controllers
+use App\Http\Controllers\Api\Caja\AuthController;
 use App\Http\Controllers\Api\Caja\CajasController;
-use App\Http\Controllers\Api\Caja\PrecorteController;
-use App\Http\Controllers\Api\Caja\PostcorteController;
-use App\Http\Controllers\Api\Caja\SesionesController;
 use App\Http\Controllers\Api\Caja\ConciliacionController;
 use App\Http\Controllers\Api\Caja\FormasPagoController;
-use App\Http\Controllers\Api\Caja\AuthController;
 use App\Http\Controllers\Api\Caja\HealthController;
-
-use App\Http\Controllers\Api\Unidades\UnidadController;
-use App\Http\Controllers\Api\Unidades\ConversionController;
-
-use App\Http\Controllers\Api\AlertsController;
+use App\Http\Controllers\Api\Caja\PostcorteController;
+use App\Http\Controllers\Api\Caja\PrecorteController;
+use App\Http\Controllers\Api\Caja\SesionesController;
+use App\Http\Controllers\Api\CatalogsController;
 use App\Http\Controllers\Api\Inventory\ItemController;
 use App\Http\Controllers\Api\Inventory\PriceController;
 use App\Http\Controllers\Api\Inventory\RecipeCostController;
-use App\Http\Controllers\Api\Inventory\TransferApiController;
 use App\Http\Controllers\Api\Inventory\StockController;
-use App\Http\Controllers\Api\MeController;
+use App\Http\Controllers\Api\Inventory\TransferApiController;
 use App\Http\Controllers\Api\Inventory\VendorController;
-use App\Http\Controllers\Inventory\InsumoController;
+use App\Http\Controllers\Api\MeController;
+use App\Http\Controllers\Api\ReportsController;
+use App\Http\Controllers\Api\Unidades\ConversionController;
+use App\Http\Controllers\Api\Unidades\UnidadController;
 use App\Http\Controllers\Inventory\TransferController;
-use App\Http\Controllers\Api\CatalogsController;
 use App\Http\Controllers\Production\ProductionController;
-use App\Http\Controllers\Reports\SalesDiagController;
-use App\Http\Controllers\Reports\SalesDrawerController;
-use App\Http\Controllers\Reports\SalesMixController;
-use App\Http\Controllers\Reports\SalesModsController;
-use App\Http\Controllers\Reports\SalesDetailController;
-use App\Http\Controllers\Reports\SalesSummaryController;
-use App\Http\Controllers\Reports\SalesBalanceController;
-use App\Http\Controllers\Reports\SalesExceptionsController;
-use App\Http\Controllers\Reports\MenuUsageController;
-use App\Http\Controllers\Reports\SalesJournalController;
 use App\Http\Controllers\Purchasing\PurchaseSuggestionController;
 use App\Http\Controllers\Purchasing\ReceivingController;
 use App\Http\Controllers\Purchasing\ReturnController;
-
+use App\Http\Controllers\Reports\MenuUsageController;
+use App\Http\Controllers\Reports\SalesBalanceController;
+use App\Http\Controllers\Reports\SalesDetailController;
+use App\Http\Controllers\Reports\SalesDiagController;
+use App\Http\Controllers\Reports\SalesDrawerController;
+use App\Http\Controllers\Reports\SalesExceptionsController;
+use App\Http\Controllers\Reports\SalesJournalController;
+use App\Http\Controllers\Reports\SalesMixController;
+use App\Http\Controllers\Reports\SalesModsController;
+use App\Http\Controllers\Reports\SalesSummaryController;
+use Illuminate\Http\Request;
 /*
 |--------------------------------------------------------------------------
 | MÓDULO: REPORTES (Dashboards)
 |--------------------------------------------------------------------------
 */
-use App\Http\Controllers\Api\ReportsController;
+use Illuminate\Support\Facades\Route;
+
 Route::prefix('reports')->group(function () {
-    Route::get('/kpis/sucursal',        [ReportsController::class, 'kpisSucursalDia']);
-    Route::get('/kpis/terminal',        [ReportsController::class, 'kpisTerminalDia']);
-    Route::get('/ventas/familia',       [ReportsController::class, 'ventasFamilia']);
-    Route::get('/ventas/hora',          [ReportsController::class, 'ventasPorHora']);
-    Route::get('/ventas/top',           [ReportsController::class, 'ventasTopProductos']);
-    Route::get('/ventas/dia',           [ReportsController::class, 'ventasDiarias']);
+    Route::get('/kpis/sucursal', [ReportsController::class, 'kpisSucursalDia']);
+    Route::get('/kpis/terminal', [ReportsController::class, 'kpisTerminalDia']);
+    Route::get('/ventas/familia', [ReportsController::class, 'ventasFamilia']);
+    Route::get('/ventas/hora', [ReportsController::class, 'ventasPorHora']);
+    Route::get('/ventas/top', [ReportsController::class, 'ventasTopProductos']);
+    Route::get('/ventas/dia', [ReportsController::class, 'ventasDiarias']);
     Route::get('/ventas/items_resumen', [ReportsController::class, 'ventasItemsResumen']);
-    Route::get('/ventas/categorias',    [ReportsController::class, 'ventasCategorias']);
-    Route::get('/ventas/sucursales',    [ReportsController::class, 'ventasPorSucursal']);
+    Route::get('/ventas/categorias', [ReportsController::class, 'ventasCategorias']);
+    Route::get('/ventas/sucursales', [ReportsController::class, 'ventasPorSucursal']);
     Route::get('/ventas/ordenes_recientes', [ReportsController::class, 'ordenesRecientes']);
-    Route::get('/ventas/formas',        [ReportsController::class, 'formasPago']);
-    Route::get('/ticket/promedio',      [ReportsController::class, 'ticketPromedio']);
-    Route::get('/stock/val',            [ReportsController::class, 'stockValorizado']);
-    Route::get('/consumo/vr',           [ReportsController::class, 'consumoVsMovimientos']);
-    Route::get('/anomalias',            [ReportsController::class, 'anomalos']);
+    Route::get('/ventas/formas', [ReportsController::class, 'formasPago']);
+    Route::get('/ticket/promedio', [ReportsController::class, 'ticketPromedio']);
+    Route::get('/stock/val', [ReportsController::class, 'stockValorizado']);
+    Route::get('/consumo/vr', [ReportsController::class, 'consumoVsMovimientos']);
+    Route::get('/anomalias', [ReportsController::class, 'anomalos']);
     Route::get('/purchasing/late-po', [\App\Http\Controllers\Reports\ReportsController::class, 'purchasingLatePO']);
     Route::get('/inventory/over-tolerance', [\App\Http\Controllers\Reports\ReportsController::class, 'inventoryOverTolerance']);
     Route::get('/inventory/top-urgent', [\App\Http\Controllers\Reports\ReportsController::class, 'inventoryTopUrgent']);
@@ -111,10 +108,10 @@ Route::prefix('caja')->group(function () {
 
     // === Tickets ===
     Route::get('/ticket/{id}', [App\Http\Controllers\Api\Caja\CajaController::class, 'getTicketDetail']);
-    
+
     // === Sesiones ===
     Route::get('/sesiones/activa', [SesionesController::class, 'getActiva']);
-    
+
     // === Precortes ===
     Route::prefix('precortes')->group(function () {
         // Preflight - verificar tickets abiertos
@@ -133,18 +130,34 @@ Route::prefix('caja')->group(function () {
         // Totales por sesión
         Route::get('/sesion/{sesion_id}/totales', [PrecorteController::class, 'totalesPorSesion']);
     });
-    
+
     // === Postcortes ===
     Route::prefix('postcortes')->group(function () {
+        // Approval workflow (specific routes BEFORE parameterized routes)
+        // NOTE: Middleware temporarily disabled for development
+        Route::get('/pendientes-aprobacion', [PostcorteController::class, 'pendientesAprobacion']);
+
+        // CRUD operations
         Route::post('/', [PostcorteController::class, 'create']);
         Route::get('/{id}', [PostcorteController::class, 'show']);
         Route::post('/{id}', [PostcorteController::class, 'update']);
         Route::get('/{id}/detalle', [PostcorteController::class, 'detalle']);
+        Route::post('/{id}/aprobar', [PostcorteController::class, 'aprobar']);
+        Route::post('/{id}/rechazar', [PostcorteController::class, 'rechazar']);
     });
-    
+
+    // === Alertas ===
+    Route::prefix('alertas')->group(function () {
+        // NOTE: Middleware temporarily disabled for development
+        Route::get('/', [AlertasController::class, 'index']);
+        Route::get('/count', [AlertasController::class, 'count']);
+        Route::put('/{id}/marcar-leida', [AlertasController::class, 'marcarLeida']);
+        Route::put('/marcar-todas-leidas', [AlertasController::class, 'marcarTodasLeidas']);
+    });
+
     // === Conciliación ===
     Route::get('/conciliacion/{sesion_id}', [ConciliacionController::class, 'getBySesion']);
-    
+
     // === Formas de Pago ===
     Route::get('/formas-pago', [FormasPagoController::class, 'index']);
 });
@@ -160,7 +173,7 @@ Route::prefix('unidades')->group(function () {
     Route::post('/', [UnidadController::class, 'store']);
     Route::put('/{id}', [UnidadController::class, 'update']);
     Route::delete('/{id}', [UnidadController::class, 'destroy']);
-    
+
     // Conversiones
     Route::prefix('conversiones')->group(function () {
         Route::get('/', [ConversionController::class, 'index']);
@@ -211,40 +224,40 @@ Route::prefix('inventory')->group(function () {
 
     // Precios de proveedores
     Route::post('/prices', [PriceController::class, 'store'])->middleware('throttle:30,1');
-    
+
     // Orquestador de Inventario
     Route::post('/orquestador/daily-close', function (Request $request, \App\Services\Operations\DailyCloseService $dailyCloseService) {
         $date = $request->input('date', now()->subDay()->format('Y-m-d'));
         $branch = $request->input('branch', '1');
-        
+
         $status = $dailyCloseService->run($branch, $date);
-        
+
         return response()->json($status);
     });
-    
+
     Route::post('/orquestador/recalcular-costos', function (Request $request, \App\Services\Recetas\RecalcularCostosRecetasService $recalcularCostosService) {
         $date = $request->input('date', now()->subDay()->format('Y-m-d'));
         $branch = $request->input('branch');
-        
+
         $result = $recalcularCostosService->recalcularCostos($branch ? (int) $branch : null, $date);
-        
+
         return response()->json($result);
     });
-    
+
     Route::post('/orquestador/generar-snapshot', function (Request $request, \App\Services\Operations\DailyCloseService $dailyCloseService) {
         $date = $request->input('date', now()->subDay()->format('Y-m-d'));
         $branch = $request->input('branch', '1');
-        
+
         // Para generar solo el snapshot, ejecutamos el servicio con el método específico
         // Simulamos la ejecución del proceso de cierre, pero solo retornamos el estado del snapshot
         $status = $dailyCloseService->run($branch, $date);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Snapshot generado exitosamente',
             'date' => $date,
             'branch' => $branch,
-            'snapshot_ok' => $status['semaphore']['snapshot_ok'] ?? false
+            'snapshot_ok' => $status['semaphore']['snapshot_ok'] ?? false,
         ]);
     });
 });
@@ -254,7 +267,7 @@ Route::prefix('recipes')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/{id}/cost', [RecipeCostController::class, 'show']);
     // BOM Implosion endpoint
     Route::get('/{id}/bom/implode', [RecipeCostController::class, 'implodeBom']);
-    
+
     // Cost Snapshots endpoints
     Route::post('/{id}/cost/snapshot', [RecipeCostController::class, 'createSnapshot']);
     Route::get('/{id}/cost/history', [RecipeCostController::class, 'getHistory']);
@@ -301,14 +314,6 @@ Route::prefix('catalogs')->group(function () {
     Route::get('/movement-types', [CatalogsController::class, 'movementTypes']);
 });
 
-Route::middleware(['auth:sanctum', 'permission:inventory.items.manage'])
-    ->post('/inventory/insumos', [InsumoController::class, 'store'])
-    ->name('api.insumos.store');
-
-Route::middleware(['auth:sanctum', 'permission:inventory.items.manage'])
-    ->post('/inventory/insumos/bulk-import', [InsumoController::class, 'bulkImport'])
-    ->name('api.insumos.bulkImport');
-
 Route::middleware('auth:sanctum')
     ->get('/me/permissions', [MeController::class, 'permissions'])
     ->name('api.me.permissions');
@@ -349,7 +354,7 @@ Route::prefix('purchasing')->group(function () {
 | Deberían ser removidos una vez que el frontend se actualice
 */
 Route::prefix('legacy')->group(function () {
-    
+
     // Rutas estilo Slim PHP original (.php en URL)
     Route::get('/caja/cajas.php', [CajasController::class, 'index']);
     Route::post('/caja/precorte_create.php', [PrecorteController::class, 'createLegacy']);
@@ -357,7 +362,7 @@ Route::prefix('legacy')->group(function () {
     Route::get('/caja/precorte_totales.php', [PrecorteController::class, 'resumenLegacy']);
     Route::get('/caja/precorte_status.php', [PrecorteController::class, 'statusLegacy']);
     Route::get('/caja/formas_pago', [FormasPagoController::class, 'listar']);
-    
+
     // Rutas sprecorte (compatibilidad con wizard)
     Route::prefix('sprecorte')->group(function () {
         Route::match(['get', 'post'], '/preflight/{sesion_id?}', [PrecorteController::class, 'preflight']);
@@ -366,7 +371,7 @@ Route::prefix('legacy')->group(function () {
         Route::match(['get', 'post'], '/create/{id?}', [PrecorteController::class, 'createLegacy']);
         Route::match(['get', 'post'], '/update/{id?}', [PrecorteController::class, 'updateLegacy']);
     });
-    
+
     // Rutas flexibles con parámetros opcionales
     Route::post('/precortes[/{id}]', [PrecorteController::class, 'createOrUpdateLegacy'])
         ->where('id', '[0-9]+');
@@ -385,7 +390,7 @@ Route::prefix('close')->group(function () {
         $date = $request->query('date');
         $branch = $request->query('branch');
 
-        if (!$date || !$branch) {
+        if (! $date || ! $branch) {
             return response()->json(['error' => 'date and branch parameters are required'], 400);
         }
 
@@ -435,6 +440,6 @@ Route::fallback(function () {
         'ok' => false,
         'error' => 'endpoint_not_found',
         'message' => 'El endpoint solicitado no existe',
-        'timestamp' => now()->toIso8601String()
+        'timestamp' => now()->toIso8601String(),
     ], 404);
 });

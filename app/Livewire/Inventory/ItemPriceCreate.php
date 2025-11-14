@@ -16,20 +16,31 @@ class ItemPriceCreate extends Component
     use AuthorizesRequests;
 
     public bool $open = false;
+
     public bool $authorized = false;
+
     public ?string $itemId = null;
+
     public ?string $vendorId = null;
+
     public ?string $price = null;
+
     public ?string $packQty = null;
+
     public ?string $packUom = null;
+
     public ?string $effectiveFrom = null;
+
     public ?string $notes = null;
+
     public ?string $source = null;
 
     public string $itemSearch = '';
+
     public string $vendorSearch = '';
 
     public array $itemOptions = [];
+
     public array $vendorOptions = [];
 
     protected $listeners = [
@@ -79,6 +90,7 @@ class ItemPriceCreate extends Component
     {
         if ($itemId === null) {
             $this->itemId = null;
+
             return;
         }
 
@@ -198,7 +210,7 @@ class ItemPriceCreate extends Component
             ->orderBy('i.nombre');
 
         if ($term !== '') {
-            $needle = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $term) . '%';
+            $needle = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $term).'%';
             $query->where(function ($sub) use ($needle) {
                 $sub->where('i.id', 'ilike', $needle)
                     ->orWhere('i.item_code', 'ilike', $needle)
@@ -220,6 +232,7 @@ class ItemPriceCreate extends Component
     {
         if ($this->itemId === null || $this->itemId === '') {
             $this->vendorOptions = [];
+
             return;
         }
 
@@ -241,7 +254,7 @@ class ItemPriceCreate extends Component
             ->limit(20);
 
         if ($term !== '') {
-            $needle = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $term) . '%';
+            $needle = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $term).'%';
             $query->where(function ($sub) use ($needle) {
                 $sub->whereRaw('iv.vendor_id::text ilike ?', [$needle])
                     ->orWhereRaw('cp.nombre ilike ?', [$needle]);

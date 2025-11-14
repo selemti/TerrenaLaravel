@@ -5,8 +5,6 @@ namespace Tests\Unit\Services;
 use App\Models\Catalogs\Almacen;
 use App\Models\Inv\Item;
 use App\Models\Inventory\TransferHeader;
-use App\Models\Inventory\TransferLine;
-use App\Models\Inv\Movement;
 use App\Models\User;
 use App\Services\Inventory\TransferService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -20,17 +18,21 @@ class TransferServiceTest extends TestCase
     use RefreshDatabase;
 
     protected TransferService $transferService;
+
     protected User $user;
+
     protected Almacen $almacenOrigen;
+
     protected Almacen $almacenDestino;
+
     protected Item $item;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->transferService = new TransferService();
-        
+        $this->transferService = new TransferService;
+
         // Crear usuario de prueba
         $this->user = User::factory()->create();
 
@@ -419,7 +421,7 @@ class TransferServiceTest extends TestCase
         $method = $reflection->getMethod('guardPositiveId');
         $method->setAccessible(true);
 
-        $service = new TransferService();
+        $service = new TransferService;
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The test id must be greater than zero.');

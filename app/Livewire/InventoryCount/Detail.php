@@ -8,6 +8,7 @@ use Livewire\Component;
 class Detail extends Component
 {
     public $countId;
+
     public $count;
 
     public string $filterVariacion = 'all';
@@ -56,7 +57,7 @@ class Detail extends Component
         $valorVariacion = $this->count->lines()
             ->whereRaw('ABS(qty_variacion) >= 0.000001')
             ->get()
-            ->sum(function($line) {
+            ->sum(function ($line) {
                 // Calcular valor aproximado: variación * costo promedio
                 return $line->qty_variacion * ($line->item->costo_promedio ?? 0);
             });

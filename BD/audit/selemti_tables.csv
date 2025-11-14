@@ -1,0 +1,186 @@
+table_name|table_type
+alert_events|"BASE TABLE"
+alert_rules|"BASE TABLE"
+alertas_cortes|"BASE TABLE"
+almacen|"BASE TABLE"
+audit_log|"BASE TABLE"
+audit_log_global|"BASE TABLE"
+auditoria|"BASE TABLE"
+backup_tickets_cierre_masivo_20251112_112653|"BASE TABLE"
+backup_tickets_cierre_masivo_20251112_121131|"BASE TABLE"
+backup_tickets_cierre_masivo_20251112_121211|"BASE TABLE"
+bodega|"BASE TABLE"
+cache|"BASE TABLE"
+cache_locks|"BASE TABLE"
+caja_fondo|"BASE TABLE"
+caja_fondo_adj|"BASE TABLE"
+caja_fondo_arqueo|"BASE TABLE"
+caja_fondo_mov|"BASE TABLE"
+caja_fondo_usuario|"BASE TABLE"
+cash_fund_arqueos|"BASE TABLE"
+cash_fund_movement_audit_log|"BASE TABLE"
+cash_fund_movements|"BASE TABLE"
+cash_funds|"BASE TABLE"
+cat_almacenes|"BASE TABLE"
+cat_proveedores|"BASE TABLE"
+cat_sucursales|"BASE TABLE"
+cat_unidades|"BASE TABLE"
+cat_uom_conversion|"BASE TABLE"
+conciliacion|"BASE TABLE"
+conversiones_unidad|VIEW
+conversiones_unidad_legacy|"BASE TABLE"
+cost_layer|"BASE TABLE"
+failed_jobs|"BASE TABLE"
+formas_pago|"BASE TABLE"
+hist_cost_insumo|"BASE TABLE"
+hist_cost_receta|"BASE TABLE"
+historial_costos_item|"BASE TABLE"
+historial_costos_receta|"BASE TABLE"
+insumo|"BASE TABLE"
+insumo_presentacion|"BASE TABLE"
+insumo_proveedor_presentacion|"BASE TABLE"
+inv_consumo_pos|"BASE TABLE"
+inv_consumo_pos_det|"BASE TABLE"
+inv_consumo_pos_log|"BASE TABLE"
+inv_stock_policy|"BASE TABLE"
+inventory_batch|"BASE TABLE"
+inventory_count_lines|"BASE TABLE"
+inventory_counts|"BASE TABLE"
+inventory_snapshot|"BASE TABLE"
+inventory_wastes|"BASE TABLE"
+item_categories|"BASE TABLE"
+item_category_counters|"BASE TABLE"
+item_vendor|"BASE TABLE"
+item_vendor_prices|"BASE TABLE"
+items|"BASE TABLE"
+job_batches|"BASE TABLE"
+job_recalc_queue|"BASE TABLE"
+jobs|"BASE TABLE"
+labor_roles|"BASE TABLE"
+lote|"BASE TABLE"
+menu_engineering_snapshots|"BASE TABLE"
+menu_item_sync_map|"BASE TABLE"
+menu_items|"BASE TABLE"
+merma|"BASE TABLE"
+migrations|"BASE TABLE"
+model_has_permissions|"BASE TABLE"
+model_has_roles|"BASE TABLE"
+modificadores_pos|"BASE TABLE"
+mov_inv|"BASE TABLE"
+op_cab|"BASE TABLE"
+op_insumo|"BASE TABLE"
+op_produccion_cab|"BASE TABLE"
+op_yield|"BASE TABLE"
+overhead_definitions|"BASE TABLE"
+param_sucursal|"BASE TABLE"
+password_reset_tokens|"BASE TABLE"
+perdida_log|"BASE TABLE"
+permissions|"BASE TABLE"
+personal_access_tokens|"BASE TABLE"
+pos_map|"BASE TABLE"
+pos_modifiers_map|"BASE TABLE"
+pos_reprocess_log|"BASE TABLE"
+pos_reverse_log|"BASE TABLE"
+pos_sync_batches|"BASE TABLE"
+pos_sync_logs|"BASE TABLE"
+postcorte|"BASE TABLE"
+precorte|"BASE TABLE"
+precorte_efectivo|"BASE TABLE"
+precorte_otros|"BASE TABLE"
+prod_cab|"BASE TABLE"
+prod_det|"BASE TABLE"
+production_order_inputs|"BASE TABLE"
+production_order_outputs|"BASE TABLE"
+production_orders|"BASE TABLE"
+proveedor|"BASE TABLE"
+purchase_documents|"BASE TABLE"
+purchase_order_lines|"BASE TABLE"
+purchase_orders|"BASE TABLE"
+purchase_request_lines|"BASE TABLE"
+purchase_requests|"BASE TABLE"
+purchase_suggestion_lines|"BASE TABLE"
+purchase_suggestions|"BASE TABLE"
+purchase_vendor_quote_lines|"BASE TABLE"
+purchase_vendor_quotes|"BASE TABLE"
+recalc_log|"BASE TABLE"
+recepcion_adjuntos|"BASE TABLE"
+recepcion_cab|"BASE TABLE"
+recepcion_det|"BASE TABLE"
+receta|"BASE TABLE"
+receta_cab|"BASE TABLE"
+receta_det|"BASE TABLE"
+receta_insumo|"BASE TABLE"
+receta_shadow|"BASE TABLE"
+receta_version|"BASE TABLE"
+recipe_cost_history|"BASE TABLE"
+recipe_cost_snapshots|"BASE TABLE"
+recipe_extended_cost_history|"BASE TABLE"
+recipe_labor_steps|"BASE TABLE"
+recipe_overhead_allocations|"BASE TABLE"
+recipe_version_items|"BASE TABLE"
+recipe_versions|"BASE TABLE"
+replenishment_suggestions|"BASE TABLE"
+report_definitions|"BASE TABLE"
+report_favorites|"BASE TABLE"
+report_runs|"BASE TABLE"
+rol|"BASE TABLE"
+role_has_permissions|"BASE TABLE"
+roles|"BASE TABLE"
+sesion_cajon|"BASE TABLE"
+sessions|"BASE TABLE"
+sol_prod_cab|"BASE TABLE"
+sol_prod_det|"BASE TABLE"
+stock_policy|"BASE TABLE"
+sucursal|"BASE TABLE"
+sucursal_almacen_terminal|"BASE TABLE"
+ticket_det_consumo|"BASE TABLE"
+ticket_item_modifiers|"BASE TABLE"
+ticket_venta_cab|"BASE TABLE"
+ticket_venta_det|"BASE TABLE"
+transfer_cab|"BASE TABLE"
+transfer_det|"BASE TABLE"
+traspaso_cab|"BASE TABLE"
+traspaso_det|"BASE TABLE"
+unidad_medida|VIEW
+unidad_medida_legacy|"BASE TABLE"
+unidades_medida|VIEW
+unidades_medida_legacy|"BASE TABLE"
+uom_conversion|VIEW
+uom_conversion_legacy|"BASE TABLE"
+user_roles|"BASE TABLE"
+users|"BASE TABLE"
+usuario|"BASE TABLE"
+v_almacen|VIEW
+v_bodega|VIEW
+v_cat_unidades_compat|VIEW
+v_ingenieria_menu_completa|VIEW
+v_insumo|VIEW
+v_items_con_uom|VIEW
+v_lote|VIEW
+v_merma_por_item|VIEW
+v_receta|VIEW
+v_receta_insumo|VIEW
+v_rol|VIEW
+v_stock_actual|VIEW
+v_stock_brechas|VIEW
+v_sucursal|VIEW
+v_unidad_medida_singular_compat|VIEW
+v_usuario|VIEW
+vw_dashboard_formas_pago|VIEW
+vw_dashboard_ordenes|VIEW
+vw_dashboard_resumen_sucursal|VIEW
+vw_dashboard_resumen_terminal|VIEW
+vw_dashboard_ticket_base|VIEW
+vw_dashboard_ventas_categorias|VIEW
+vw_dashboard_ventas_hora|VIEW
+vw_dashboard_ventas_productos|VIEW
+vw_item_last_price|VIEW
+vw_item_last_price_pref|VIEW
+vw_kardex|VIEW
+vw_movimientos_anomalos|VIEW
+vw_pos_map_resuelto|VIEW
+vw_replenishment_dashboard|VIEW
+vw_sesion_dpr|VIEW
+vw_stock_por_lote_fefo|VIEW
+vw_ticket_promedio_sucursal_dia|VIEW
+vw_ventas_por_hora|VIEW

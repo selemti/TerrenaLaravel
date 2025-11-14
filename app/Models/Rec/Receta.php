@@ -8,16 +8,20 @@ use Illuminate\Database\Eloquent\Model;
 class Receta extends Model
 {
     use HasFactory;
-    
+
     protected $table = 'receta_cab'; // Asume DB_SCHEMA=selemti
+
     protected $primaryKey = 'id';
+
     public $incrementing = false; // El ID es VARCHAR(20)
+
     protected $keyType = 'string';
+
     public $timestamps = true; // Tiene created_at y updated_at
 
     protected $fillable = [
-        'id', 'nombre_plato', 'codigo_plato_pos', 'categoria_plato', 
-        'porciones_standard', 'instrucciones_preparacion', 'tiempo_preparacion_min', 
+        'id', 'nombre_plato', 'codigo_plato_pos', 'categoria_plato',
+        'porciones_standard', 'instrucciones_preparacion', 'tiempo_preparacion_min',
         'costo_standard_porcion', 'precio_venta_sugerido', 'activo',
     ];
 

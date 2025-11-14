@@ -8,42 +8,32 @@ class CostosRepository
 {
     /**
      * Obtiene el costo unitario de un item en una UOM específica
-     *
-     * @param int $itemId
-     * @param string $targetUom
-     * @return float
      */
     public function getItemUnitCostNow(int $itemId, string $targetUom): float
     {
         $result = DB::connection('pgsql')
-            ->select("
+            ->select('
                 SELECT selemti.fn_item_unit_cost_at(?, NOW(), ?) as costo
-            ", [$itemId, $targetUom]);
+            ', [$itemId, $targetUom]);
 
         return (float) ($result[0]->costo ?? 0.0);
     }
 
     /**
      * Obtiene el costo de una receta
-     *
-     * @param int $recipeId
-     * @return float
      */
     public function getRecipeCostNow(int $recipeId): float
     {
         $result = DB::connection('pgsql')
-            ->select("
+            ->select('
                 SELECT selemti.fn_recipe_cost_at(?, NOW()) as costo
-            ", [$recipeId]);
+            ', [$recipeId]);
 
         return (float) ($result[0]->costo ?? 0.0);
     }
 
     /**
      * Obtiene el costo de un item en su UOM base
-     *
-     * @param int $itemId
-     * @return float
      */
     public function getItemBaseCost(int $itemId): float
     {
@@ -57,11 +47,6 @@ class CostosRepository
 
     /**
      * Obtiene el histórico de costos de un item
-     *
-     * @param int $itemId
-     * @param string|null $fromDate
-     * @param string|null $toDate
-     * @return array
      */
     public function getItemCostHistory(int $itemId, ?string $fromDate = null, ?string $toDate = null): array
     {
@@ -87,8 +72,7 @@ class CostosRepository
     /**
      * Calcula el costo total de un consumo
      *
-     * @param array $consumoDetalles Array de detalles con item_id, qty, uom
-     * @return float
+     * @param  array  $consumoDetalles  Array de detalles con item_id, qty, uom
      */
     public function calcularCostoTotalConsumo(array $consumoDetalles): float
     {
@@ -99,7 +83,7 @@ class CostosRepository
             $qty = (float) ($detalle['qty'] ?? 0);
             $uom = $detalle['uom'] ?? 'UNI';
 
-            if (!$itemId || $qty <= 0) {
+            if (! $itemId || $qty <= 0) {
                 continue;
             }
 

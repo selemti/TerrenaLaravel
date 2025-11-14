@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ReportFavorite extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'report_favorites';
 
     protected $fillable = [

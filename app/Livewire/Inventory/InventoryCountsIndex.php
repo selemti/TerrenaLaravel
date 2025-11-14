@@ -3,7 +3,6 @@
 namespace App\Livewire\Inventory;
 
 use App\Models\InventoryCount;
-use App\Models\Item;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -12,10 +11,15 @@ class InventoryCountsIndex extends Component
     use WithPagination;
 
     public $search = '';
+
     public $sucursal = '';
+
     public $estado = '';
+
     public $fecha_desde = '';
+
     public $fecha_hasta = '';
+
     public $perPage = 10;
 
     protected $queryString = ['search', 'sucursal', 'estado', 'fecha_desde', 'fecha_hasta', 'perPage'];
@@ -25,10 +29,10 @@ class InventoryCountsIndex extends Component
         $query = InventoryCount::query();
 
         if ($this->search) {
-            $query->where(function($q) {
-                $q->where('id', 'like', '%' . $this->search . '%')
-                  ->orWhere('sucursal_id', 'like', '%' . $this->search . '%')
-                  ->orWhere('estado', 'like', '%' . $this->search . '%');
+            $query->where(function ($q) {
+                $q->where('id', 'like', '%'.$this->search.'%')
+                    ->orWhere('sucursal_id', 'like', '%'.$this->search.'%')
+                    ->orWhere('estado', 'like', '%'.$this->search.'%');
             });
         }
 
@@ -49,8 +53,8 @@ class InventoryCountsIndex extends Component
         }
 
         $counts = $query->orderBy('programado_para', 'desc')
-                        ->orderBy('id', 'desc')
-                        ->paginate($this->perPage);
+            ->orderBy('id', 'desc')
+            ->paginate($this->perPage);
 
         // Obtener valores únicos para filtros
         $sucursales = InventoryCount::distinct('sucursal_id')->pluck('sucursal_id');
@@ -73,7 +77,7 @@ class InventoryCountsIndex extends Component
             $this->dispatch('notify', 'Conteo cerrado correctamente');
         }
     }
-    
+
     public function openCount($id)
     {
         $count = InventoryCount::find($id);

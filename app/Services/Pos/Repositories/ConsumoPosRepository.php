@@ -8,9 +8,6 @@ class ConsumoPosRepository
 {
     /**
      * Obtiene el consumo por ticket con sus detalles
-     *
-     * @param int $ticketId
-     * @return array
      */
     public function getConsumoByTicket(int $ticketId): array
     {
@@ -19,7 +16,7 @@ class ConsumoPosRepository
             ->where('icp.ticket_id', $ticketId)
             ->first();
 
-        if (!$consumo) {
+        if (! $consumo) {
             return [];
         }
 
@@ -44,7 +41,6 @@ class ConsumoPosRepository
     /**
      * Obtiene el estado del consumo para un ticket
      *
-     * @param int $ticketId
      * @return string|null "PENDIENTE" | "CONFIRMADO" | "ANULADO" | null
      */
     public function getEstadoConsumo(int $ticketId): ?string
@@ -59,9 +55,6 @@ class ConsumoPosRepository
 
     /**
      * Verifica si existe un consumo para el ticket
-     *
-     * @param int $ticketId
-     * @return bool
      */
     public function existeConsumo(int $ticketId): bool
     {
@@ -73,9 +66,6 @@ class ConsumoPosRepository
 
     /**
      * Verifica si existen movimientos de inventario para el ticket
-     *
-     * @param int $ticketId
-     * @return bool
      */
     public function hasMovInvForTicket(int $ticketId): bool
     {
@@ -88,9 +78,6 @@ class ConsumoPosRepository
 
     /**
      * Obtiene el conteo de movimientos de inventario por tipo
-     *
-     * @param int $ticketId
-     * @return array
      */
     public function getMovInvCountByType(int $ticketId): array
     {
@@ -120,9 +107,6 @@ class ConsumoPosRepository
 
     /**
      * Verifica si faltan empaques to-go en el consumo
-     *
-     * @param int $ticketId
-     * @return bool
      */
     public function faltanEmpaquesToGo(int $ticketId): bool
     {
@@ -140,9 +124,6 @@ class ConsumoPosRepository
 
     /**
      * Verifica si faltan consumibles operativos en el consumo
-     *
-     * @param int $ticketId
-     * @return bool
      */
     public function faltanConsumiblesOperativos(int $ticketId): bool
     {

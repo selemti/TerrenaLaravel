@@ -8,7 +8,6 @@ use App\Services\Inventory\TransferService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 
 /**
  * API REST Controller para transferencias internas entre almacenes.
@@ -25,8 +24,6 @@ class TransferApiController extends Controller
      * Lista transferencias con filtros opcionales.
      *
      * @route GET /api/inventory/transfers
-     * @param Request $request
-     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
@@ -35,7 +32,7 @@ class TransferApiController extends Controller
                 'origenAlmacen',
                 'destinoAlmacen',
                 'creadaPor',
-                'lineas.item'
+                'lineas.item',
             ]);
 
             // Filtros opcionales
@@ -91,8 +88,6 @@ class TransferApiController extends Controller
      * Crea una nueva transferencia en estado SOLICITADA.
      *
      * @route POST /api/inventory/transfers
-     * @param Request $request
-     * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
@@ -127,7 +122,7 @@ class TransferApiController extends Controller
             $transfer = TransferHeader::with([
                 'origenAlmacen',
                 'destinoAlmacen',
-                'lineas.item'
+                'lineas.item',
             ])->find($result['transfer_id']);
 
             return response()->json([
@@ -158,8 +153,6 @@ class TransferApiController extends Controller
      * Obtiene el detalle de una transferencia específica.
      *
      * @route GET /api/inventory/transfers/{id}
-     * @param int $id
-     * @return JsonResponse
      */
     public function show(int $id): JsonResponse
     {
@@ -172,7 +165,7 @@ class TransferApiController extends Controller
                 'despachadaPor',
                 'recibidaPor',
                 'posteadaPor',
-                'lineas.item'
+                'lineas.item',
             ])->findOrFail($id);
 
             return response()->json([
@@ -202,9 +195,6 @@ class TransferApiController extends Controller
      * Aprueba una transferencia (valida stock disponible).
      *
      * @route POST /api/inventory/transfers/{id}/approve
-     * @param int $id
-     * @param Request $request
-     * @return JsonResponse
      */
     public function approve(int $id, Request $request): JsonResponse
     {
@@ -218,7 +208,7 @@ class TransferApiController extends Controller
                 'origenAlmacen',
                 'destinoAlmacen',
                 'aprobadaPor',
-                'lineas.item'
+                'lineas.item',
             ])->find($id);
 
             return response()->json([
@@ -249,9 +239,6 @@ class TransferApiController extends Controller
      * Marca la transferencia como EN_TRANSITO (despacho).
      *
      * @route POST /api/inventory/transfers/{id}/ship
-     * @param int $id
-     * @param Request $request
-     * @return JsonResponse
      */
     public function ship(int $id, Request $request): JsonResponse
     {
@@ -279,7 +266,7 @@ class TransferApiController extends Controller
                 'origenAlmacen',
                 'destinoAlmacen',
                 'despachadaPor',
-                'lineas.item'
+                'lineas.item',
             ])->find($id);
 
             return response()->json([
@@ -310,9 +297,6 @@ class TransferApiController extends Controller
      * Registra la recepción de la transferencia.
      *
      * @route POST /api/inventory/transfers/{id}/receive
-     * @param int $id
-     * @param Request $request
-     * @return JsonResponse
      */
     public function receive(int $id, Request $request): JsonResponse
     {
@@ -344,7 +328,7 @@ class TransferApiController extends Controller
                 'origenAlmacen',
                 'destinoAlmacen',
                 'recibidaPor',
-                'lineas.item'
+                'lineas.item',
             ])->find($id);
 
             return response()->json([
@@ -376,9 +360,6 @@ class TransferApiController extends Controller
      * Postea la transferencia al inventario (crea mov_inv).
      *
      * @route POST /api/inventory/transfers/{id}/post
-     * @param int $id
-     * @param Request $request
-     * @return JsonResponse
      */
     public function post(int $id, Request $request): JsonResponse
     {
@@ -392,7 +373,7 @@ class TransferApiController extends Controller
                 'origenAlmacen',
                 'destinoAlmacen',
                 'posteadaPor',
-                'lineas.item'
+                'lineas.item',
             ])->find($id);
 
             return response()->json([

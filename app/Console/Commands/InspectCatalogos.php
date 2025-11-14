@@ -41,7 +41,7 @@ class InspectCatalogos extends Command
                 ->get();
             $output['sucursales'] = $sucursales->toArray();
         } catch (\Exception $e) {
-            $this->warn("Tabla selemti.cat_sucursales no encontrada o error: " . $e->getMessage());
+            $this->warn('Tabla selemti.cat_sucursales no encontrada o error: '.$e->getMessage());
         }
 
         // Catálogo de Proveedores
@@ -53,7 +53,7 @@ class InspectCatalogos extends Command
                 ->get();
             $output['proveedores'] = $proveedores->toArray();
         } catch (\Exception $e) {
-            $this->warn("Tabla selemti.cat_proveedores no encontrada o error: " . $e->getMessage());
+            $this->warn('Tabla selemti.cat_proveedores no encontrada o error: '.$e->getMessage());
         }
 
         // Catálogo de Almacenes
@@ -65,7 +65,7 @@ class InspectCatalogos extends Command
                 ->get();
             $output['almacenes'] = $almacenes->toArray();
         } catch (\Exception $e) {
-            $this->warn("Tabla selemti.cat_almacenes no encontrada o error: " . $e->getMessage());
+            $this->warn('Tabla selemti.cat_almacenes no encontrada o error: '.$e->getMessage());
         }
 
         $this->info(json_encode($output, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));

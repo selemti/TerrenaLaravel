@@ -4,13 +4,15 @@ namespace App\Models;
 
 use App\Models\Catalogs\Sucursal;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PurchaseRequest extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'purchase_requests';
+
     protected $guarded = [];
 
     protected $casts = [
@@ -23,9 +25,13 @@ class PurchaseRequest extends Model
      * Estados posibles de la solicitud
      */
     const ESTADO_BORRADOR = 'BORRADOR';
+
     const ESTADO_COTIZADA = 'COTIZADA';
+
     const ESTADO_APROBADA = 'APROBADA';
+
     const ESTADO_ORDENADA = 'ORDENADA';
+
     const ESTADO_CANCELADA = 'CANCELADA';
 
     // ==================== RELATIONSHIPS ====================
@@ -77,13 +83,13 @@ class PurchaseRequest extends Model
      */
     public function getEstadoBadgeAttribute(): string
     {
-        return match($this->estado) {
+        return match ($this->estado) {
             self::ESTADO_BORRADOR => '<span class="badge bg-secondary">Borrador</span>',
             self::ESTADO_COTIZADA => '<span class="badge bg-info">Cotizada</span>',
             self::ESTADO_APROBADA => '<span class="badge bg-success">Aprobada</span>',
             self::ESTADO_ORDENADA => '<span class="badge bg-primary">Ordenada</span>',
             self::ESTADO_CANCELADA => '<span class="badge bg-danger">Cancelada</span>',
-            default => '<span class="badge bg-secondary">' . $this->estado . '</span>',
+            default => '<span class="badge bg-secondary">'.$this->estado.'</span>',
         };
     }
 
@@ -140,7 +146,7 @@ class PurchaseRequest extends Model
      */
     public function getCanCancelAttribute(): bool
     {
-        return !in_array($this->estado, [self::ESTADO_ORDENADA, self::ESTADO_CANCELADA]);
+        return ! in_array($this->estado, [self::ESTADO_ORDENADA, self::ESTADO_CANCELADA]);
     }
 
     // ==================== SCOPES ====================

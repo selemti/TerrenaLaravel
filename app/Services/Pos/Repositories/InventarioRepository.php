@@ -8,9 +8,6 @@ class InventarioRepository
 {
     /**
      * Obtiene los movimientos de inventario por ticket
-     *
-     * @param int $ticketId
-     * @return array
      */
     public function getMovimientosByTicket(int $ticketId): array
     {
@@ -32,9 +29,6 @@ class InventarioRepository
 
     /**
      * Obtiene los movimientos agrupados por item
-     *
-     * @param int $ticketId
-     * @return array
      */
     public function getMovimientosAgrupadosByTicket(int $ticketId): array
     {
@@ -61,9 +55,6 @@ class InventarioRepository
 
     /**
      * Verifica si un item existe en el inventario
-     *
-     * @param int $itemId
-     * @return bool
      */
     public function itemExists(int $itemId): bool
     {
@@ -75,9 +66,6 @@ class InventarioRepository
 
     /**
      * Obtiene información de un item
-     *
-     * @param int $itemId
-     * @return array|null
      */
     public function getItemInfo(int $itemId): ?array
     {
@@ -91,20 +79,16 @@ class InventarioRepository
 
     /**
      * Obtiene el stock actual de un item en un almacén
-     *
-     * @param int $itemId
-     * @param int $almacenId
-     * @return float
      */
     public function getStockActual(int $itemId, int $almacenId): float
     {
         $result = DB::connection('pgsql')
-            ->select("
+            ->select('
                 SELECT COALESCE(SUM(qty), 0) as stock
                 FROM selemti.mov_inv
                 WHERE item_id = ?
                     AND almacen_id = ?
-            ", [$itemId, $almacenId]);
+            ', [$itemId, $almacenId]);
 
         return $result[0]->stock ?? 0.0;
     }

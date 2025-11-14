@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class VendorQuote extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'purchase_vendor_quotes';
+
     protected $guarded = [];
 
     protected $casts = [
@@ -29,8 +31,11 @@ class VendorQuote extends Model
      * Estados posibles de la cotización
      */
     const ESTADO_RECIBIDA = 'RECIBIDA';
+
     const ESTADO_APROBADA = 'APROBADA';
+
     const ESTADO_RECHAZADA = 'RECHAZADA';
+
     const ESTADO_VENCIDA = 'VENCIDA';
 
     // ==================== RELATIONSHIPS ====================
@@ -90,12 +95,12 @@ class VendorQuote extends Model
      */
     public function getEstadoBadgeAttribute(): string
     {
-        return match($this->estado) {
+        return match ($this->estado) {
             self::ESTADO_RECIBIDA => '<span class="badge bg-info">Recibida</span>',
             self::ESTADO_APROBADA => '<span class="badge bg-success">Aprobada</span>',
             self::ESTADO_RECHAZADA => '<span class="badge bg-danger">Rechazada</span>',
             self::ESTADO_VENCIDA => '<span class="badge bg-secondary">Vencida</span>',
-            default => '<span class="badge bg-secondary">' . $this->estado . '</span>',
+            default => '<span class="badge bg-secondary">'.$this->estado.'</span>',
         };
     }
 
@@ -152,7 +157,10 @@ class VendorQuote extends Model
      */
     public function getPorcentajeDescuentoAttribute(): float
     {
-        if ($this->subtotal == 0) return 0;
+        if ($this->subtotal == 0) {
+            return 0;
+        }
+
         return ($this->descuento / $this->subtotal) * 100;
     }
 
@@ -161,7 +169,10 @@ class VendorQuote extends Model
      */
     public function getPorcentajeImpuestosAttribute(): float
     {
-        if ($this->subtotal == 0) return 0;
+        if ($this->subtotal == 0) {
+            return 0;
+        }
+
         return ($this->impuestos / $this->subtotal) * 100;
     }
 
@@ -221,6 +232,6 @@ class VendorQuote extends Model
     public function scopePendientesAprobar($query)
     {
         return $query->where('estado', self::ESTADO_RECIBIDA)
-                     ->whereNull('aprobada_en');
+            ->whereNull('aprobada_en');
     }
 }

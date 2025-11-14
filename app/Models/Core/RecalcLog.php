@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class RecalcLog extends Model
 {
     protected $table = 'recalc_log';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
 
     protected $fillable = [
-        'job_id', 'step', 'started_ts', 'ended_ts', 'ok', 'details'
+        'job_id', 'step', 'started_ts', 'ended_ts', 'ok', 'details',
     ];
 
     protected $casts = [

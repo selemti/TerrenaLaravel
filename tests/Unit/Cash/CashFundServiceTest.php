@@ -10,7 +10,7 @@ class CashFundServiceTest extends TestCase
 {
     public function test_normalize_opening_requires_sucursal_and_creator(): void
     {
-        $service = new CashFundService();
+        $service = new CashFundService;
 
         $this->expectException(InvalidArgumentException::class);
         $this->invokeMethod($service, 'normalizeOpening', [[]]);
@@ -18,7 +18,7 @@ class CashFundServiceTest extends TestCase
 
     public function test_normalize_movement_requires_positive_amount(): void
     {
-        $service = new CashFundService();
+        $service = new CashFundService;
 
         $this->expectException(InvalidArgumentException::class);
         $this->invokeMethod($service, 'normalizeMovement', [[

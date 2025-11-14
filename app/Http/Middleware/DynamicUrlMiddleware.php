@@ -23,7 +23,7 @@ class DynamicUrlMiddleware
         // Solo aplicar en producción (no en desarrollo local)
         if (app()->environment('production')) {
             // Detectar host y scheme desde el request actual
-            $url = $request->getSchemeAndHttpHost() . '/terrena2';
+            $url = $request->getSchemeAndHttpHost().'/terrena2';
             URL::forceRootUrl($url);
         }
 

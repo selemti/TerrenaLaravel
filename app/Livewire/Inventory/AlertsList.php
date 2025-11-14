@@ -18,10 +18,15 @@ class AlertsList extends Component
     protected $paginationTheme = 'bootstrap';
 
     public string $handled = 'pending';
+
     public ?string $dateFrom = null;
+
     public ?string $dateTo = null;
+
     public ?string $recipeId = null;
+
     public int $perPage = 15;
+
     public bool $canManage = false;
 
     protected $queryString = [

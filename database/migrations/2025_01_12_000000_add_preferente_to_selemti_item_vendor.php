@@ -13,7 +13,7 @@ return new class extends Migration
             ->where('table_name', 'item_vendor')
             ->exists();
 
-        if (!$tableExists) {
+        if (! $tableExists) {
             return;
         }
 
@@ -24,8 +24,8 @@ return new class extends Migration
             ->where('column_name', 'preferente')
             ->exists();
 
-        if (!$columnExists) {
-            DB::statement("ALTER TABLE selemti.item_vendor ADD COLUMN preferente boolean DEFAULT false");
+        if (! $columnExists) {
+            DB::statement('ALTER TABLE selemti.item_vendor ADD COLUMN preferente boolean DEFAULT false');
         }
     }
 
@@ -37,7 +37,7 @@ return new class extends Migration
             ->where('table_name', 'item_vendor')
             ->exists();
 
-        if (!$tableExists) {
+        if (! $tableExists) {
             return;
         }
 
@@ -49,7 +49,7 @@ return new class extends Migration
             ->exists();
 
         if ($columnExists) {
-            DB::statement("ALTER TABLE selemti.item_vendor DROP COLUMN preferente");
+            DB::statement('ALTER TABLE selemti.item_vendor DROP COLUMN preferente');
         }
     }
 };

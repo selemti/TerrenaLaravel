@@ -2,35 +2,35 @@
 
 namespace App\Services\Replenishment;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use InvalidArgumentException;
-use App\Models\ReplenishmentSuggestion;
 use App\Models\Item;
+use App\Models\ReplenishmentSuggestion;
 use App\Models\StockPolicy;
-use App\Services\Purchasing\PurchasingService;
 use App\Services\Inventory\ProductionService;
+use App\Services\Purchasing\PurchasingService;
+use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class ReplenishmentService
 {
     protected PurchasingService $purchasingService;
+
     protected ProductionService $productionService;
 
     public function __construct()
     {
-        $this->purchasingService = new PurchasingService();
-        $this->productionService = new ProductionService();
+        $this->purchasingService = new PurchasingService;
+        $this->productionService = new ProductionService;
     }
 
     /**
      * Genera sugerencias diarias de reposición basadas en stock_policy
      *
-     * @param array $options Opciones de generación
-     *   - sucursal_id: Filtrar por sucursal específica
-     *   - almacen_id: Filtrar por almacén específico
-     *   - dias_analisis: Días hacia atrás para calcular consumo promedio (default: 7)
-     *   - auto_aprobar: Auto-aprobar sugerencias urgentes (default: false)
-     *   - dry_run: Simular sin guardar (default: false)
+     * @param  array  $options  Opciones de generación
+     *                          - sucursal_id: Filtrar por sucursal específica
+     *                          - almacen_id: Filtrar por almacén específico
+     *                          - dias_analisis: Días hacia atrás para calcular consumo promedio (default: 7)
+     *                          - auto_aprobar: Auto-aprobar sugerencias urgentes (default: false)
+     *                          - dry_run: Simular sin guardar (default: false)
      * @return array Resumen de sugerencias generadas
      */
     public function generateDailySuggestions(array $options = []): array
@@ -133,7 +133,7 @@ class ReplenishmentService
                         ]),
                     ];
 
-                    if (!$dryRun) {
+                    if (! $dryRun) {
                         $sugerencia = ReplenishmentSuggestion::create($sugerenciaData);
                         $sugerenciasGeneradas[] = $sugerencia;
                     } else {
@@ -176,7 +176,7 @@ class ReplenishmentService
     {
         $suggestion = ReplenishmentSuggestion::findOrFail($suggestionId);
 
-        if (!$suggestion->puede_aprobarse) {
+        if (! $suggestion->puede_aprobarse) {
             throw new InvalidArgumentException('Esta sugerencia no puede ser convertida.');
         }
 
@@ -219,7 +219,7 @@ class ReplenishmentService
     {
         $suggestion = ReplenishmentSuggestion::findOrFail($suggestionId);
 
-        if (!$suggestion->puede_aprobarse) {
+        if (! $suggestion->puede_aprobarse) {
             throw new InvalidArgumentException('Esta sugerencia no puede ser convertida.');
         }
 
@@ -232,7 +232,7 @@ class ReplenishmentService
         // Obtener receta (simplificado, necesitará modelo Recipe completo)
         $recipeId = $overrides['recipe_id'] ?? $item->recipe_id ?? null;
 
-        if (!$recipeId) {
+        if (! $recipeId) {
             throw new InvalidArgumentException('El item no tiene receta asociada.');
         }
 
@@ -350,7 +350,7 @@ class ReplenishmentService
             ->table('mov_inv')
             ->where('item_id', $itemId)
             ->where('tipo', 'VENTA') // O tipos negativos: PROD_OUT, MERMA, etc.
-            ->when($sucursalId, fn($q) => $q->where('sucursal_id', $sucursalId))
+            ->when($sucursalId, fn ($q) => $q->where('sucursal_id', $sucursalId))
             ->whereDate('ts', '>=', $fechaInicio)
             ->sum('qty');
 
@@ -416,17 +416,17 @@ class ReplenishmentService
         $motivo = "Stock actual: {$stockActual} ({$porcentaje}% del mínimo). ";
 
         if ($stockActual <= 0) {
-            $motivo .= "⚠️ SIN STOCK. ";
+            $motivo .= '⚠️ SIN STOCK. ';
         } elseif ($diasRestantes <= 1) {
-            $motivo .= "⚠️ Stock se agotará en menos de 24 horas. ";
+            $motivo .= '⚠️ Stock se agotará en menos de 24 horas. ';
         } elseif ($diasRestantes <= 3) {
             $motivo .= "Stock se agotará en {$diasRestantes} días. ";
         } else {
-            $motivo .= "Stock bajo mínimo requerido. ";
+            $motivo .= 'Stock bajo mínimo requerido. ';
         }
 
         if ($consumoPromedio > 0) {
-            $motivo .= "Consumo promedio: " . number_format($consumoPromedio, 2) . " unidades/día.";
+            $motivo .= 'Consumo promedio: '.number_format($consumoPromedio, 2).' unidades/día.';
         }
 
         return $motivo;

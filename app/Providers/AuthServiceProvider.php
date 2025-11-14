@@ -77,7 +77,7 @@ class AuthServiceProvider extends ServiceProvider
                 return false;
             }
 
-            if ($safe(fn () => method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['Super Admin', 'Ops Manager', 'inventario.manager']))){
+            if ($safe(fn () => method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['Super Admin', 'Ops Manager', 'inventario.manager']))) {
                 return true;
             }
 
@@ -89,7 +89,7 @@ class AuthServiceProvider extends ServiceProvider
                 return false;
             }
 
-            if ($safe(fn () => method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['Super Admin', 'Ops Manager', 'inventario.manager', 'viewer', 'purchasing', 'kitchen']))){
+            if ($safe(fn () => method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['Super Admin', 'Ops Manager', 'inventario.manager', 'viewer', 'purchasing', 'kitchen']))) {
                 return true;
             }
 
@@ -101,7 +101,7 @@ class AuthServiceProvider extends ServiceProvider
                 return false;
             }
 
-            if ($safe(fn () => method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['Super Admin', 'Ops Manager', 'inventario.manager']))){
+            if ($safe(fn () => method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['Super Admin', 'Ops Manager', 'inventario.manager']))) {
                 return true;
             }
 

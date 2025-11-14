@@ -32,7 +32,9 @@ class UomConversion extends Model
     protected $table = 'selemti.cat_uom_conversion';
 
     protected $primaryKey = 'id';
+
     public $incrementing = true;
+
     public $timestamps = true;
 
     protected $fillable = [

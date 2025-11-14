@@ -35,7 +35,7 @@ return new class extends Migration
 
     protected function backfillUnidadMedidaId(): void
     {
-        $sql = <<<SQL
+        $sql = <<<'SQL'
             UPDATE selemti.items i
             SET unidad_medida_id = u.id
             FROM selemti.cat_unidades u
@@ -55,7 +55,7 @@ return new class extends Migration
 
     protected function backfillTipo(): void
     {
-        $sql = <<<SQL
+        $sql = <<<'SQL'
             UPDATE selemti.items
             SET tipo = 'MATERIA_PRIMA'
             WHERE tipo IS NULL
@@ -64,7 +64,7 @@ return new class extends Migration
 
         DB::connection('pgsql')->statement($sql);
 
-        $sql2 = <<<SQL
+        $sql2 = <<<'SQL'
             UPDATE selemti.items
             SET tipo = 'ELABORADO'
             WHERE tipo IS NULL
@@ -74,7 +74,7 @@ return new class extends Migration
         DB::connection('pgsql')->statement($sql2);
 
         // Para items sin categoría clara
-        $sql3 = <<<SQL
+        $sql3 = <<<'SQL'
             UPDATE selemti.items
             SET tipo = 'MATERIA_PRIMA'
             WHERE tipo IS NULL;
@@ -102,8 +102,8 @@ return new class extends Migration
         foreach ($mappings as $catId => $nombre) {
             if (isset($categories[$nombre])) {
                 $numId = $categories[$nombre]->id;
-                
-                $sql = <<<SQL
+
+                $sql = <<<'SQL'
                     UPDATE selemti.items
                     SET category_id = ?
                     WHERE categoria_id = ?
@@ -123,7 +123,7 @@ return new class extends Migration
             ->first();
 
         if ($firstCat) {
-            $sql = <<<SQL
+            $sql = <<<'SQL'
                 UPDATE selemti.items
                 SET category_id = ?
                 WHERE category_id IS NULL;
@@ -146,7 +146,7 @@ return new class extends Migration
         echo "✓ Constraint eliminado temporalmente\n";
 
         // Actualizar los datos LT → L
-        $sqlUpdate = <<<SQL
+        $sqlUpdate = <<<'SQL'
             UPDATE selemti.items
             SET unidad_medida = 'L'
             WHERE unidad_medida = 'LT';
@@ -156,7 +156,7 @@ return new class extends Migration
         echo "✓ Actualizado {$affected} registros: unidad_medida LT → L\n";
 
         // Recrear el constraint con los valores correctos
-        DB::connection('pgsql')->statement(<<<SQL
+        DB::connection('pgsql')->statement(<<<'SQL'
             ALTER TABLE selemti.items
             ADD CONSTRAINT items_unidad_medida_check
             CHECK (unidad_medida IN ('KG', 'L', 'PZ', 'BULTO', 'CAJA'))

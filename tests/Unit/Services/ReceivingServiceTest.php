@@ -17,7 +17,7 @@ class ReceivingServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->receivingService = new ReceivingService();
+        $this->receivingService = new ReceivingService;
     }
 
     public function test_guard_positive_id_throws_exception_for_invalid_id(): void
@@ -26,7 +26,7 @@ class ReceivingServiceTest extends TestCase
         $method = $reflection->getMethod('guardPositiveId');
         $method->setAccessible(true);
 
-        $service = new ReceivingService();
+        $service = new ReceivingService;
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The test id must be greater than zero.');

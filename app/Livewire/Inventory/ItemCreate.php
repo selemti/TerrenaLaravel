@@ -6,34 +6,43 @@ use App\Models\Catalogs\Unidad;
 use App\Services\Inventory\InsumoCodeService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class ItemCreate extends Component
 {
     // Identificación
     public string $nombre = '';
+
     public string $descripcion = '';
+
     public ?string $item_code = null; // SKU personalizado (opcional)
 
     // Categorización
     public string $tipo = 'MATERIA_PRIMA'; // MATERIA_PRIMA | ELABORADO | ENVASADO
+
     public ?int $category_id = null;
 
     // Unidades de Medida (Sistema Completo)
     public ?int $unidad_medida_id = null;  // Unidad BASE (KG, L, PZ)
+
     public ?int $unidad_compra_id = null;  // Unidad de COMPRA (CAJA, PAQUETE, etc)
+
     public ?float $factor_compra = 1.0;    // Factor: 1 unidad_compra = X unidades_base
+
     public ?int $unidad_salida_id = null;  // Unidad de SALIDA/RECETA (ML, TAZA, etc)
 
     // Presentación (descripción legible)
     public string $presentacion_texto = ''; // Ej: "12 pzas de 1.5 L"
+
     public ?int $cant_piezas = null;        // Para calcular automáticamente
+
     public ?float $contenido_pieza = null;  // Para calcular automáticamente
 
     // Propiedades físicas
     public bool $perishable = false;
+
     public ?int $temperatura_min = null;
+
     public ?int $temperatura_max = null;
 
     // Costo
@@ -47,9 +56,13 @@ class ItemCreate extends Component
 
     // Datos precargados
     public array $unidadesBase = [];      // KG, L, PZ
+
     public array $unidadesCompra = [];    // CAJA, PAQUETE, COSTAL, etc
+
     public array $unidadesSalida = [];    // ML, TAZA, GRAMO, etc
+
     public array $categorias = [];
+
     public array $tipos = [
         'MATERIA_PRIMA' => 'Materia Prima',
         'ELABORADO' => 'Elaborado',

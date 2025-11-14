@@ -25,34 +25,34 @@ class PurchasingService
             $requestId = DB::connection('pgsql')
                 ->table('selemti.purchase_requests')
                 ->insertGetId([
-                    'folio'              => $folio,
-                    'sucursal_id'        => $data['sucursal_id'] ?? null,
-                    'created_by'         => $data['created_by'],
-                    'requested_by'       => $data['requested_by'] ?? null,
-                    'requested_at'       => $data['requested_at'] ?? CarbonImmutable::now(),
-                    'estado'             => $data['estado'] ?? 'BORRADOR',
-                    'importe_estimado'   => $this->calculateEstimatedAmount($data['lineas']),
-                    'notas'              => $data['notas'] ?? null,
-                    'meta'               => $this->encodeMeta($data['meta'] ?? null),
-                    'created_at'         => CarbonImmutable::now(),
-                    'updated_at'         => CarbonImmutable::now(),
+                    'folio' => $folio,
+                    'sucursal_id' => $data['sucursal_id'] ?? null,
+                    'created_by' => $data['created_by'],
+                    'requested_by' => $data['requested_by'] ?? null,
+                    'requested_at' => $data['requested_at'] ?? CarbonImmutable::now(),
+                    'estado' => $data['estado'] ?? 'BORRADOR',
+                    'importe_estimado' => $this->calculateEstimatedAmount($data['lineas']),
+                    'notas' => $data['notas'] ?? null,
+                    'meta' => $this->encodeMeta($data['meta'] ?? null),
+                    'created_at' => CarbonImmutable::now(),
+                    'updated_at' => CarbonImmutable::now(),
                 ]);
 
             foreach ($data['lineas'] as $line) {
                 DB::connection('pgsql')
                     ->table('selemti.purchase_request_lines')
                     ->insert([
-                        'request_id'           => $requestId,
-                        'item_id'              => $line['item_id'],
-                        'qty'                  => $line['qty'],
-                        'uom'                  => $line['uom'],
-                        'fecha_requerida'      => $line['fecha_requerida'] ?? null,
-                        'preferred_vendor_id'  => $line['preferred_vendor_id'] ?? null,
-                        'last_price'           => $line['last_price'] ?? null,
-                        'estado'               => $line['estado'] ?? 'PENDIENTE',
-                        'meta'                 => $this->encodeMeta($line['meta'] ?? null),
-                        'created_at'           => CarbonImmutable::now(),
-                        'updated_at'           => CarbonImmutable::now(),
+                        'request_id' => $requestId,
+                        'item_id' => $line['item_id'],
+                        'qty' => $line['qty'],
+                        'uom' => $line['uom'],
+                        'fecha_requerida' => $line['fecha_requerida'] ?? null,
+                        'preferred_vendor_id' => $line['preferred_vendor_id'] ?? null,
+                        'last_price' => $line['last_price'] ?? null,
+                        'estado' => $line['estado'] ?? 'PENDIENTE',
+                        'meta' => $this->encodeMeta($line['meta'] ?? null),
+                        'created_at' => CarbonImmutable::now(),
+                        'updated_at' => CarbonImmutable::now(),
                     ]);
             }
 
@@ -68,7 +68,7 @@ class PurchasingService
     {
         $request = $this->findRequestById($requestId);
 
-        if (!$request) {
+        if (! $request) {
             throw new RuntimeException('Solicitud de compra no encontrada');
         }
 
@@ -78,41 +78,41 @@ class PurchasingService
             $quoteId = DB::connection('pgsql')
                 ->table('selemti.purchase_vendor_quotes')
                 ->insertGetId([
-                    'request_id'      => $requestId,
-                    'vendor_id'       => $data['vendor_id'],
+                    'request_id' => $requestId,
+                    'vendor_id' => $data['vendor_id'],
                     'folio_proveedor' => $data['folio_proveedor'] ?? null,
-                    'estado'          => $data['estado'] ?? 'RECIBIDA',
-                    'enviada_en'      => $data['enviada_en'] ?? CarbonImmutable::now(),
-                    'recibida_en'     => $data['recibida_en'] ?? CarbonImmutable::now(),
-                    'subtotal'        => $data['subtotal'],
-                    'descuento'       => $data['descuento'],
-                    'impuestos'       => $data['impuestos'],
-                    'total'           => $data['total'],
-                    'capturada_por'   => $data['capturada_por'] ?? null,
-                    'aprobada_por'    => null,
-                    'aprobada_en'     => null,
-                    'notas'           => $data['notas'] ?? null,
-                    'meta'            => $this->encodeMeta($data['meta'] ?? null),
-                    'created_at'      => CarbonImmutable::now(),
-                    'updated_at'      => CarbonImmutable::now(),
+                    'estado' => $data['estado'] ?? 'RECIBIDA',
+                    'enviada_en' => $data['enviada_en'] ?? CarbonImmutable::now(),
+                    'recibida_en' => $data['recibida_en'] ?? CarbonImmutable::now(),
+                    'subtotal' => $data['subtotal'],
+                    'descuento' => $data['descuento'],
+                    'impuestos' => $data['impuestos'],
+                    'total' => $data['total'],
+                    'capturada_por' => $data['capturada_por'] ?? null,
+                    'aprobada_por' => null,
+                    'aprobada_en' => null,
+                    'notas' => $data['notas'] ?? null,
+                    'meta' => $this->encodeMeta($data['meta'] ?? null),
+                    'created_at' => CarbonImmutable::now(),
+                    'updated_at' => CarbonImmutable::now(),
                 ]);
 
             foreach ($data['lineas'] as $line) {
                 DB::connection('pgsql')
                     ->table('selemti.purchase_vendor_quote_lines')
                     ->insert([
-                        'quote_id'         => $quoteId,
-                        'request_line_id'  => $line['request_line_id'],
-                        'item_id'          => $line['item_id'],
-                        'qty_oferta'       => $line['qty_oferta'],
-                        'uom_oferta'       => $line['uom_oferta'],
-                        'precio_unitario'  => $line['precio_unitario'],
-                        'pack_size'        => $line['pack_size'] ?? 1,
-                        'pack_uom'         => $line['pack_uom'] ?? null,
-                        'monto_total'      => $line['monto_total'],
-                        'meta'             => $this->encodeMeta($line['meta'] ?? null),
-                        'created_at'       => CarbonImmutable::now(),
-                        'updated_at'       => CarbonImmutable::now(),
+                        'quote_id' => $quoteId,
+                        'request_line_id' => $line['request_line_id'],
+                        'item_id' => $line['item_id'],
+                        'qty_oferta' => $line['qty_oferta'],
+                        'uom_oferta' => $line['uom_oferta'],
+                        'precio_unitario' => $line['precio_unitario'],
+                        'pack_size' => $line['pack_size'] ?? 1,
+                        'pack_uom' => $line['pack_uom'] ?? null,
+                        'monto_total' => $line['monto_total'],
+                        'meta' => $this->encodeMeta($line['meta'] ?? null),
+                        'created_at' => CarbonImmutable::now(),
+                        'updated_at' => CarbonImmutable::now(),
                     ]);
             }
 
@@ -120,7 +120,7 @@ class PurchasingService
                 ->table('selemti.purchase_requests')
                 ->where('id', $requestId)
                 ->update([
-                    'estado'     => 'COTIZADA',
+                    'estado' => 'COTIZADA',
                     'updated_at' => CarbonImmutable::now(),
                 ]);
 
@@ -135,7 +135,7 @@ class PurchasingService
     {
         $quote = $this->findQuoteById($quoteId);
 
-        if (!$quote) {
+        if (! $quote) {
             throw new RuntimeException('Cotización no encontrada');
         }
 
@@ -148,17 +148,17 @@ class PurchasingService
                 ->table('selemti.purchase_vendor_quotes')
                 ->where('id', $quoteId)
                 ->update([
-                    'estado'       => 'APROBADA',
+                    'estado' => 'APROBADA',
                     'aprobada_por' => $userId,
-                    'aprobada_en'  => CarbonImmutable::now(),
-                    'updated_at'   => CarbonImmutable::now(),
+                    'aprobada_en' => CarbonImmutable::now(),
+                    'updated_at' => CarbonImmutable::now(),
                 ]);
 
             DB::connection('pgsql')
                 ->table('selemti.purchase_requests')
                 ->where('id', $quote['request_id'])
                 ->update([
-                    'estado'     => 'APROBADA',
+                    'estado' => 'APROBADA',
                     'updated_at' => CarbonImmutable::now(),
                 ]);
         });
@@ -174,7 +174,7 @@ class PurchasingService
     {
         $quote = $this->findQuoteById($quoteId);
 
-        if (!$quote) {
+        if (! $quote) {
             throw new RuntimeException('Cotización no encontrada');
         }
 
@@ -190,41 +190,41 @@ class PurchasingService
             $orderId = DB::connection('pgsql')
                 ->table('selemti.purchase_orders')
                 ->insertGetId([
-                    'folio'         => $folio,
-                    'quote_id'      => $quote['id'],
-                    'vendor_id'     => $quote['vendor_id'],
-                    'sucursal_id'   => $data['sucursal_id'] ?? null,
-                    'estado'        => $data['estado'] ?? 'BORRADOR',
+                    'folio' => $folio,
+                    'quote_id' => $quote['id'],
+                    'vendor_id' => $quote['vendor_id'],
+                    'sucursal_id' => $data['sucursal_id'] ?? null,
+                    'estado' => $data['estado'] ?? 'BORRADOR',
                     'fecha_promesa' => $data['fecha_promesa'] ?? null,
-                    'subtotal'      => $data['subtotal'],
-                    'descuento'     => $data['descuento'],
-                    'impuestos'     => $data['impuestos'],
-                    'total'         => $data['total'],
-                    'creado_por'    => $data['creado_por'],
-                    'aprobado_por'  => $data['aprobado_por'] ?? null,
-                    'aprobado_en'   => $data['aprobado_por'] ? CarbonImmutable::now() : null,
-                    'notas'         => $data['notas'] ?? null,
-                    'meta'          => $this->encodeMeta($data['meta'] ?? null),
-                    'created_at'    => CarbonImmutable::now(),
-                    'updated_at'    => CarbonImmutable::now(),
+                    'subtotal' => $data['subtotal'],
+                    'descuento' => $data['descuento'],
+                    'impuestos' => $data['impuestos'],
+                    'total' => $data['total'],
+                    'creado_por' => $data['creado_por'],
+                    'aprobado_por' => $data['aprobado_por'] ?? null,
+                    'aprobado_en' => $data['aprobado_por'] ? CarbonImmutable::now() : null,
+                    'notas' => $data['notas'] ?? null,
+                    'meta' => $this->encodeMeta($data['meta'] ?? null),
+                    'created_at' => CarbonImmutable::now(),
+                    'updated_at' => CarbonImmutable::now(),
                 ]);
 
             foreach ($data['lineas'] as $line) {
                 DB::connection('pgsql')
                     ->table('selemti.purchase_order_lines')
                     ->insert([
-                        'order_id'         => $orderId,
-                        'request_line_id'  => $line['request_line_id'] ?? null,
-                        'item_id'          => $line['item_id'],
-                        'qty'              => $line['qty'],
-                        'uom'              => $line['uom'],
-                        'precio_unitario'  => $line['precio_unitario'],
-                        'descuento'        => $line['descuento'] ?? 0,
-                        'impuestos'        => $line['impuestos'] ?? 0,
-                        'total'            => $line['total'],
-                        'meta'             => $this->encodeMeta($line['meta'] ?? null),
-                        'created_at'       => CarbonImmutable::now(),
-                        'updated_at'       => CarbonImmutable::now(),
+                        'order_id' => $orderId,
+                        'request_line_id' => $line['request_line_id'] ?? null,
+                        'item_id' => $line['item_id'],
+                        'qty' => $line['qty'],
+                        'uom' => $line['uom'],
+                        'precio_unitario' => $line['precio_unitario'],
+                        'descuento' => $line['descuento'] ?? 0,
+                        'impuestos' => $line['impuestos'] ?? 0,
+                        'total' => $line['total'],
+                        'meta' => $this->encodeMeta($line['meta'] ?? null),
+                        'created_at' => CarbonImmutable::now(),
+                        'updated_at' => CarbonImmutable::now(),
                     ]);
             }
 
@@ -232,7 +232,7 @@ class PurchasingService
                 ->table('selemti.purchase_requests')
                 ->where('id', $quote['request_id'])
                 ->update([
-                    'estado'     => 'ORDENADA',
+                    'estado' => 'ORDENADA',
                     'updated_at' => CarbonImmutable::now(),
                 ]);
 
@@ -255,15 +255,15 @@ class PurchasingService
             ->leftJoin('selemti.cat_sucursales as s', 's.id', '=', 'ps.sucursal_id')
             ->leftJoin('selemti.cat_almacenes as a', 'a.id', '=', 'ps.almacen_id');
 
-        if (!empty($filters['estado'])) {
+        if (! empty($filters['estado'])) {
             $query->where('ps.estado', $filters['estado']);
         }
 
-        if (!empty($filters['prioridad'])) {
+        if (! empty($filters['prioridad'])) {
             $query->where('ps.prioridad', $filters['prioridad']);
         }
 
-        if (!empty($filters['sucursal_id'])) {
+        if (! empty($filters['sucursal_id'])) {
             $query->where('ps.sucursal_id', $filters['sucursal_id']);
         }
 
@@ -302,10 +302,10 @@ class PurchasingService
                 ->table('selemti.purchase_suggestions')
                 ->where('id', $suggestionId)
                 ->update([
-                    'estado'                => 'APROBADA',
-                    'revisado_por_user_id'  => $userId,
-                    'revisado_en'           => CarbonImmutable::now(),
-                    'updated_at'            => CarbonImmutable::now(),
+                    'estado' => 'APROBADA',
+                    'revisado_por_user_id' => $userId,
+                    'revisado_en' => CarbonImmutable::now(),
+                    'updated_at' => CarbonImmutable::now(),
                 ]);
 
             $suggestion = DB::connection('pgsql')
@@ -329,7 +329,7 @@ class PurchasingService
                 ->where('id', $suggestionId)
                 ->first();
 
-            if (!$suggestion) {
+            if (! $suggestion) {
                 throw new RuntimeException('Sugerencia no encontrada');
             }
 
@@ -345,22 +345,22 @@ class PurchasingService
             $requestId = DB::connection('pgsql')
                 ->table('selemti.purchase_requests')
                 ->insertGetId([
-                    'folio'                 => $folio,
-                    'sucursal_id'           => $suggestion->sucursal_id,
-                    'created_by'            => $userId,
-                    'requested_by'          => $userId,
-                    'requested_at'          => CarbonImmutable::now(),
-                    'estado'                => 'PENDIENTE',
-                    'importe_estimado'      => $suggestion->total_estimado ?? 0,
-                    'notas'                 => $suggestion->notas,
-                    'meta'                  => $suggestion->meta,
-                    'fecha_requerida'       => null,
-                    'almacen_destino_id'    => $suggestion->almacen_id,
-                    'justificacion'         => "Generada automáticamente desde sugerencia {$suggestion->folio}",
-                    'urgente'               => $suggestion->prioridad === 'URGENTE',
-                    'origen_suggestion_id'  => $suggestionId,
-                    'created_at'            => CarbonImmutable::now(),
-                    'updated_at'            => CarbonImmutable::now(),
+                    'folio' => $folio,
+                    'sucursal_id' => $suggestion->sucursal_id,
+                    'created_by' => $userId,
+                    'requested_by' => $userId,
+                    'requested_at' => CarbonImmutable::now(),
+                    'estado' => 'PENDIENTE',
+                    'importe_estimado' => $suggestion->total_estimado ?? 0,
+                    'notas' => $suggestion->notas,
+                    'meta' => $suggestion->meta,
+                    'fecha_requerida' => null,
+                    'almacen_destino_id' => $suggestion->almacen_id,
+                    'justificacion' => "Generada automáticamente desde sugerencia {$suggestion->folio}",
+                    'urgente' => $suggestion->prioridad === 'URGENTE',
+                    'origen_suggestion_id' => $suggestionId,
+                    'created_at' => CarbonImmutable::now(),
+                    'updated_at' => CarbonImmutable::now(),
                 ]);
 
             // 4. Por cada línea sugerida -> línea en purchase_request_lines
@@ -370,17 +370,17 @@ class PurchasingService
                 DB::connection('pgsql')
                     ->table('selemti.purchase_request_lines')
                     ->insert([
-                        'request_id'           => $requestId,
-                        'item_id'              => $line->item_id,
-                        'qty'                  => $qtyToRequest,
-                        'uom'                  => $line->uom,
-                        'fecha_requerida'      => null,
-                        'preferred_vendor_id'  => $line->proveedor_sugerido_id,
-                        'last_price'           => $line->costo_unitario_estimado,
-                        'estado'               => 'PENDIENTE',
-                        'meta'                 => null,
-                        'created_at'           => CarbonImmutable::now(),
-                        'updated_at'           => CarbonImmutable::now(),
+                        'request_id' => $requestId,
+                        'item_id' => $line->item_id,
+                        'qty' => $qtyToRequest,
+                        'uom' => $line->uom,
+                        'fecha_requerida' => null,
+                        'preferred_vendor_id' => $line->proveedor_sugerido_id,
+                        'last_price' => $line->costo_unitario_estimado,
+                        'estado' => 'PENDIENTE',
+                        'meta' => null,
+                        'created_at' => CarbonImmutable::now(),
+                        'updated_at' => CarbonImmutable::now(),
                     ]);
             }
 
@@ -389,14 +389,14 @@ class PurchasingService
                 ->table('selemti.purchase_suggestions')
                 ->where('id', $suggestionId)
                 ->update([
-                    'estado'                     => 'CONVERTIDA',
-                    'convertido_a_request_id'    => $requestId,
-                    'convertido_en'              => CarbonImmutable::now(),
-                    'updated_at'                 => CarbonImmutable::now(),
+                    'estado' => 'CONVERTIDA',
+                    'convertido_a_request_id' => $requestId,
+                    'convertido_en' => CarbonImmutable::now(),
+                    'updated_at' => CarbonImmutable::now(),
                 ]);
 
             return [
-                'request_id'    => $requestId,
+                'request_id' => $requestId,
                 'suggestion_id' => $suggestionId,
             ];
         });
@@ -407,23 +407,23 @@ class PurchasingService
     protected function validateRequestPayload(array $payload): array
     {
         $validator = Validator::make($payload, [
-            'folio'                 => ['nullable', 'string', 'max:40'],
-            'sucursal_id'           => ['nullable', 'string', 'max:36'],
-            'created_by'            => ['required', 'integer'],
-            'requested_by'          => ['nullable', 'integer'],
-            'requested_at'          => ['nullable', 'date'],
-            'estado'                => ['nullable', Rule::in(['BORRADOR', 'COTIZADA', 'APROBADA', 'ORDENADA'])],
-            'notas'                 => ['nullable', 'string'],
-            'meta'                  => ['nullable'],
-            'lineas'                => ['required', 'array', 'min:1'],
-            'lineas.*.item_id'      => ['required', 'integer'],
-            'lineas.*.qty'          => ['required', 'numeric'],
-            'lineas.*.uom'          => ['required', 'string', 'max:20'],
-            'lineas.*.fecha_requerida'     => ['nullable', 'date'],
+            'folio' => ['nullable', 'string', 'max:40'],
+            'sucursal_id' => ['nullable', 'string', 'max:36'],
+            'created_by' => ['required', 'integer'],
+            'requested_by' => ['nullable', 'integer'],
+            'requested_at' => ['nullable', 'date'],
+            'estado' => ['nullable', Rule::in(['BORRADOR', 'COTIZADA', 'APROBADA', 'ORDENADA'])],
+            'notas' => ['nullable', 'string'],
+            'meta' => ['nullable'],
+            'lineas' => ['required', 'array', 'min:1'],
+            'lineas.*.item_id' => ['required', 'integer'],
+            'lineas.*.qty' => ['required', 'numeric'],
+            'lineas.*.uom' => ['required', 'string', 'max:20'],
+            'lineas.*.fecha_requerida' => ['nullable', 'date'],
             'lineas.*.preferred_vendor_id' => ['nullable', 'integer'],
-            'lineas.*.last_price'          => ['nullable', 'numeric'],
-            'lineas.*.estado'              => ['nullable', 'string', 'max:24'],
-            'lineas.*.meta'                => ['nullable'],
+            'lineas.*.last_price' => ['nullable', 'numeric'],
+            'lineas.*.estado' => ['nullable', 'string', 'max:24'],
+            'lineas.*.meta' => ['nullable'],
         ]);
 
         return $validator->validate();
@@ -432,24 +432,24 @@ class PurchasingService
     protected function validateQuotePayload(int $requestId, array $payload): array
     {
         $validator = Validator::make($payload, [
-            'vendor_id'           => ['required', 'integer'],
-            'folio_proveedor'     => ['nullable', 'string', 'max:60'],
-            'estado'              => ['nullable', Rule::in(['RECIBIDA', 'APROBADA', 'RECHAZADA'])],
-            'enviada_en'          => ['nullable', 'date'],
-            'recibida_en'         => ['nullable', 'date'],
-            'capturada_por'       => ['nullable', 'integer'],
-            'notas'               => ['nullable', 'string'],
-            'meta'                => ['nullable'],
-            'lineas'              => ['required', 'array', 'min:1'],
+            'vendor_id' => ['required', 'integer'],
+            'folio_proveedor' => ['nullable', 'string', 'max:60'],
+            'estado' => ['nullable', Rule::in(['RECIBIDA', 'APROBADA', 'RECHAZADA'])],
+            'enviada_en' => ['nullable', 'date'],
+            'recibida_en' => ['nullable', 'date'],
+            'capturada_por' => ['nullable', 'integer'],
+            'notas' => ['nullable', 'string'],
+            'meta' => ['nullable'],
+            'lineas' => ['required', 'array', 'min:1'],
             'lineas.*.request_line_id' => ['required', 'integer'],
-            'lineas.*.item_id'         => ['required', 'integer'],
-            'lineas.*.qty_oferta'      => ['required', 'numeric'],
-            'lineas.*.uom_oferta'      => ['required', 'string', 'max:20'],
+            'lineas.*.item_id' => ['required', 'integer'],
+            'lineas.*.qty_oferta' => ['required', 'numeric'],
+            'lineas.*.uom_oferta' => ['required', 'string', 'max:20'],
             'lineas.*.precio_unitario' => ['required', 'numeric'],
-            'lineas.*.pack_size'       => ['nullable', 'numeric'],
-            'lineas.*.pack_uom'        => ['nullable', 'string', 'max:20'],
-            'lineas.*.monto_total'     => ['nullable', 'numeric'],
-            'lineas.*.meta'            => ['nullable'],
+            'lineas.*.pack_size' => ['nullable', 'numeric'],
+            'lineas.*.pack_uom' => ['nullable', 'string', 'max:20'],
+            'lineas.*.monto_total' => ['nullable', 'numeric'],
+            'lineas.*.meta' => ['nullable'],
         ]);
 
         $data = $validator->validate();
@@ -466,11 +466,11 @@ class PurchasingService
             return $line;
         });
 
-        $data['lineas']   = $lineCollection->all();
+        $data['lineas'] = $lineCollection->all();
         $data['subtotal'] = $lineCollection->sum('monto_total');
         $data['descuento'] = Arr::get($payload, 'descuento', 0) ?? 0;
         $data['impuestos'] = Arr::get($payload, 'impuestos', 0) ?? 0;
-        $data['total']     = $data['subtotal'] - $data['descuento'] + $data['impuestos'];
+        $data['total'] = $data['subtotal'] - $data['descuento'] + $data['impuestos'];
 
         return $data;
     }
@@ -478,24 +478,24 @@ class PurchasingService
     protected function validateOrderPayload(array $quote, array $payload): array
     {
         $validator = Validator::make($payload, [
-            'folio'         => ['nullable', 'string', 'max:40'],
-            'sucursal_id'   => ['nullable', 'string', 'max:36'],
-            'estado'        => ['nullable', Rule::in(['BORRADOR', 'APROBADA', 'ENVIADA', 'RECIBIDA', 'CERRADA'])],
+            'folio' => ['nullable', 'string', 'max:40'],
+            'sucursal_id' => ['nullable', 'string', 'max:36'],
+            'estado' => ['nullable', Rule::in(['BORRADOR', 'APROBADA', 'ENVIADA', 'RECIBIDA', 'CERRADA'])],
             'fecha_promesa' => ['nullable', 'date'],
-            'creado_por'    => ['required', 'integer'],
-            'aprobado_por'  => ['nullable', 'integer'],
-            'notas'         => ['nullable', 'string'],
-            'meta'          => ['nullable'],
-            'lineas'        => ['nullable', 'array'],
+            'creado_por' => ['required', 'integer'],
+            'aprobado_por' => ['nullable', 'integer'],
+            'notas' => ['nullable', 'string'],
+            'meta' => ['nullable'],
+            'lineas' => ['nullable', 'array'],
             'lineas.*.request_line_id' => ['nullable', 'integer'],
-            'lineas.*.item_id'         => ['required', 'integer'],
-            'lineas.*.qty'             => ['required', 'numeric'],
-            'lineas.*.uom'             => ['required', 'string', 'max:20'],
+            'lineas.*.item_id' => ['required', 'integer'],
+            'lineas.*.qty' => ['required', 'numeric'],
+            'lineas.*.uom' => ['required', 'string', 'max:20'],
             'lineas.*.precio_unitario' => ['required', 'numeric'],
-            'lineas.*.descuento'       => ['nullable', 'numeric'],
-            'lineas.*.impuestos'       => ['nullable', 'numeric'],
-            'lineas.*.total'           => ['nullable', 'numeric'],
-            'lineas.*.meta'            => ['nullable'],
+            'lineas.*.descuento' => ['nullable', 'numeric'],
+            'lineas.*.impuestos' => ['nullable', 'numeric'],
+            'lineas.*.total' => ['nullable', 'numeric'],
+            'lineas.*.meta' => ['nullable'],
         ]);
 
         $data = $validator->validate();
@@ -510,13 +510,13 @@ class PurchasingService
                 return $line;
             });
 
-        $data['lineas']   = $lines->all();
+        $data['lineas'] = $lines->all();
         $data['subtotal'] = $lines->sum(function ($line) {
-            return ($line['qty'] * $line['precio_unitario']);
+            return $line['qty'] * $line['precio_unitario'];
         });
         $data['descuento'] = Arr::get($payload, 'descuento', $lines->sum('descuento')) ?? 0;
         $data['impuestos'] = Arr::get($payload, 'impuestos', $lines->sum('impuestos')) ?? 0;
-        $data['total']     = $lines->sum('total');
+        $data['total'] = $lines->sum('total');
 
         return $data;
     }
@@ -537,9 +537,10 @@ class PurchasingService
             ->get();
 
         return $lines->map(function ($line) {
-            $line          = (array) $line;
+            $line = (array) $line;
             $line['descuento'] = 0;
             $line['impuestos'] = 0;
+
             return $line;
         })->all();
     }
@@ -547,8 +548,9 @@ class PurchasingService
     protected function calculateEstimatedAmount(array $lines): float
     {
         return collect($lines)->sum(function ($line) {
-            $qty   = (float) $line['qty'];
+            $qty = (float) $line['qty'];
             $price = (float) ($line['last_price'] ?? 0);
+
             return $qty * $price;
         });
     }
@@ -583,7 +585,7 @@ class PurchasingService
             ->where('id', $requestId)
             ->first();
 
-        if (!$request) {
+        if (! $request) {
             return null;
         }
 
@@ -594,7 +596,7 @@ class PurchasingService
             ->map(fn ($row) => (array) $row)
             ->all();
 
-        $payload           = (array) $request;
+        $payload = (array) $request;
         $payload['lineas'] = $lines;
 
         return $payload;
@@ -607,7 +609,7 @@ class PurchasingService
             ->where('id', $quoteId)
             ->first();
 
-        if (!$quote) {
+        if (! $quote) {
             return null;
         }
 
@@ -618,7 +620,7 @@ class PurchasingService
             ->map(fn ($row) => (array) $row)
             ->all();
 
-        $payload           = (array) $quote;
+        $payload = (array) $quote;
         $payload['lineas'] = $lines;
 
         return $payload;
@@ -638,7 +640,7 @@ class PurchasingService
             ->map(fn ($row) => (array) $row)
             ->all();
 
-        $payload           = (array) $order;
+        $payload = (array) $order;
         $payload['lineas'] = $lines;
 
         return $payload;
@@ -655,7 +657,7 @@ class PurchasingService
             ->where('request_id', $requestId)
             ->exists();
 
-        if (!$belongs) {
+        if (! $belongs) {
             throw new RuntimeException('La línea indicada no pertenece a la solicitud.');
         }
 

@@ -1,9 +1,10 @@
 <?php
+
 // Script temporal para verificar roles de usuario en producción
 
-require __DIR__ . '/../../../vendor/autoload.php';
+require __DIR__.'/../../../vendor/autoload.php';
 
-$app = require_once __DIR__ . '/../../../bootstrap/app.php';
+$app = require_once __DIR__.'/../../../bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 echo "=== VERIFICACIÓN DE ROLES Y USUARIOS ===\n\n";
@@ -58,7 +59,7 @@ if ($eloquentUser) {
 
     // Verificar roles usando Spatie
     $userRoles = $eloquentUser->roles;
-    echo "  Roles asignados: " . $userRoles->count() . "\n";
+    echo '  Roles asignados: '.$userRoles->count()."\n";
     foreach ($userRoles as $role) {
         echo "    - {$role->name}\n";
     }

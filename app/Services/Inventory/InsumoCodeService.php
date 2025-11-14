@@ -29,7 +29,7 @@ class InsumoCodeService
         $sub = strtoupper(trim($sub));
 
         // Consultar el consecutivo máximo en selemti.items analizando el patrón del id
-        $pattern = $cat . '-' . $sub . '-%';
+        $pattern = $cat.'-'.$sub.'-%';
         $maxId = DB::connection('pgsql')->table('selemti.items')
             ->where('id', 'like', $pattern)
             ->orderByRaw('id DESC')
@@ -47,9 +47,9 @@ class InsumoCodeService
         $codigo = sprintf('%s-%s-%05d', $cat, $sub, $next);
 
         return [
-            'codigo'       => $codigo,
-            'consecutivo'  => $next,
-            'categoria'    => $cat,
+            'codigo' => $codigo,
+            'consecutivo' => $next,
+            'categoria' => $cat,
             'subcategoria' => $sub,
         ];
     }

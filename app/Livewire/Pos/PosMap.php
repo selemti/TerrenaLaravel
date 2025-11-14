@@ -2,22 +2,28 @@
 
 namespace App\Livewire\Pos;
 
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\DB;
 
 class PosMap extends Component
 {
     use WithPagination;
 
     public $search = '';
+
     public $system = '';
+
     public $tipo = '';
+
     public $status = 'all';
+
     public $perPage = 10;
 
     public $showForm = false;
+
     public $isEditing = false;
+
     public $editingId = null;
 
     public $form = [
@@ -35,7 +41,7 @@ class PosMap extends Component
     public $tipoOptions = ['MENU', 'MODIFICADOR', 'COMBO'];
 
     protected $queryString = [
-        'search', 'system', 'tipo', 'status', 'perPage'
+        'search', 'system', 'tipo', 'status', 'perPage',
     ];
 
     public function mount()
@@ -51,9 +57,9 @@ class PosMap extends Component
 
         // Aplicar filtros
         if ($this->search) {
-            $query->where(function($q) {
-                $q->where('plu', 'ilike', '%' . $this->search . '%')
-                  ->orWhere('receta_id', 'ilike', '%' . $this->search . '%');
+            $query->where(function ($q) {
+                $q->where('plu', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('receta_id', 'ilike', '%'.$this->search.'%');
             });
         }
 
@@ -67,25 +73,25 @@ class PosMap extends Component
 
         if ($this->status !== 'all') {
             if ($this->status === 'activo') {
-                $query->where(function($q) {
+                $query->where(function ($q) {
                     $q->whereNull('valid_to')
-                      ->orWhere('valid_to', '>=', now()->format('Y-m-d'));
+                        ->orWhere('valid_to', '>=', now()->format('Y-m-d'));
                 })
-                ->where(function($q) {
-                    $q->whereNull('vigente_desde')
-                      ->orWhere('vigente_desde', '<=', now()->format('Y-m-d'));
-                });
+                    ->where(function ($q) {
+                        $q->whereNull('vigente_desde')
+                            ->orWhere('vigente_desde', '<=', now()->format('Y-m-d'));
+                    });
             } elseif ($this->status === 'inactivo') {
-                $query->where(function($q) {
+                $query->where(function ($q) {
                     $q->whereNotNull('valid_to')
-                      ->where('valid_to', '<', now()->format('Y-m-d'));
+                        ->where('valid_to', '<', now()->format('Y-m-d'));
                 });
             }
         }
 
         $mappings = $query->orderBy('valid_from', 'desc')
-                         ->orderBy('plu')
-                         ->paginate($this->perPage);
+            ->orderBy('plu')
+            ->paginate($this->perPage);
 
         // Obtener valores únicos para filtros
         $systems = DB::connection('pgsql')
@@ -173,7 +179,7 @@ class PosMap extends Component
                 ->where('valid_from', $this->editingId[2])
                 ->where('sys_to', null) // Asumiendo sistema de versionado
                 ->update(array_merge($data, ['sys_to' => now()]));
-                
+
             // Insertar nueva versión
             DB::connection('pgsql')
                 ->table('selemti.pos_map')
@@ -229,7 +235,7 @@ class PosMap extends Component
     public function checkUnmappedSales($date = null)
     {
         $date = $date ?: now()->format('Y-m-d');
-        
+
         // Consulta 1 de verification_queries_psql_v6: Ventas del día sin mapeo POS→Receta
         $unmappedSales = DB::connection('pgsql')
             ->select("
@@ -268,7 +274,7 @@ class PosMap extends Component
     public function checkUnmappedModifiers($date = null)
     {
         $date = $date ?: now()->format('Y-m-d');
-        
+
         // Consulta 1.b de verification_queries_psql_v6: Modificadores del día sin mapeo
         $unmappedModifiers = DB::connection('pgsql')
             ->select("
@@ -301,11 +307,11 @@ class PosMap extends Component
 
         return $unmappedModifiers;
     }
-    
+
     public function checkPendingConsumptionLines($date = null)
     {
         $date = $date ?: now()->format('Y-m-d');
-        
+
         // Consulta 2 de verification_queries_psql_v6: Líneas inv_consumo_pos/_det pendientes
         $pendingLines = DB::connection('pgsql')
             ->select("

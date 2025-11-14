@@ -84,7 +84,7 @@ return new class extends Migration
                 $this->columnExists('inv_consumo_pos', 'revertido') ? 'revertido' : null,
             ]);
 
-            if (!empty($columns)) {
+            if (! empty($columns)) {
                 $table->dropColumn($columns);
             }
         });
@@ -107,7 +107,7 @@ return new class extends Migration
                 $this->columnExists('inv_consumo_pos_det', 'revertido') ? 'revertido' : null,
             ]);
 
-            if (!empty($columns)) {
+            if (! empty($columns)) {
                 $table->dropColumn($columns);
             }
         });
@@ -116,7 +116,7 @@ return new class extends Migration
     protected function columnExists(string $table, string $column): bool
     {
         $result = DB::connection('pgsql')->selectOne(
-            <<<SQL
+            <<<'SQL'
             SELECT 1
             FROM information_schema.columns
             WHERE table_schema = 'selemti'

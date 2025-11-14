@@ -27,7 +27,7 @@ class AlertEngineTest extends TestCase
         DB::shouldReceive('where')->once()->with('enabled', true)->andReturnSelf();
         DB::shouldReceive('get')->once()->andReturn(collect());
 
-        $engine = new AlertEngine();
+        $engine = new AlertEngine;
         $engine->run();
 
         $this->addToAssertionCount(1);

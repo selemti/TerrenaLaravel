@@ -2,13 +2,13 @@
 
 /**
  * ANÁLISIS DE PATRONES - MÚLTIPLES FECHAS
- * 
+ *
  * Este script analiza todo el mes de octubre 2025 para identificar patrones
  * en las discrepancias entre Drawer Pull Reports y datos reales
  */
 
-require __DIR__ . '/../vendor/autoload.php';
-$app = require_once __DIR__ . '/../bootstrap/app.php';
+require __DIR__.'/../vendor/autoload.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use Illuminate\Support\Facades\DB;
@@ -25,9 +25,9 @@ $fechaFin = '2025-10-31';
 // 1. OBTENER TODAS LAS FECHAS CON DRAWER PULL REPORTS
 // ═══════════════════════════════════════════════════════════════════════════════
 echo "📋 1. DRAWER PULL REPORTS DISPONIBLES\n";
-echo str_repeat("─", 90) . "\n";
+echo str_repeat('─', 90)."\n";
 
-$reports = DB::select("
+$reports = DB::select('
     SELECT 
         report_time::date as fecha,
         terminal_id,
@@ -39,20 +39,20 @@ $reports = DB::select("
     WHERE report_time::date BETWEEN ? AND ?
     GROUP BY report_time::date, terminal_id
     ORDER BY report_time::date, terminal_id
-", [$fechaInicio, $fechaFin]);
+', [$fechaInicio, $fechaFin]);
 
 if (empty($reports)) {
     echo "❌ NO HAY DRAWER PULL REPORTS en el rango de fechas\n\n";
     exit(1);
 }
 
-printf("%-12s %-10s %-10s %-12s %-15s %-15s\n", 
-    "Fecha", "Terminal", "#Reportes", "Tickets", "Ventas", "Descuentos");
-echo str_repeat("─", 90) . "\n";
+printf("%-12s %-10s %-10s %-12s %-15s %-15s\n",
+    'Fecha', 'Terminal', '#Reportes', 'Tickets', 'Ventas', 'Descuentos');
+echo str_repeat('─', 90)."\n";
 
 foreach ($reports as $r) {
     printf("%-12s %-10s %-10d %-12d $%-14.2f $%-14.2f\n",
-        $r->fecha, $r->terminal_id, $r->num_reportes, 
+        $r->fecha, $r->terminal_id, $r->num_reportes,
         $r->total_tickets, $r->total_ventas, $r->total_descuentos
     );
 }
@@ -63,21 +63,21 @@ echo "\n";
 // 2. ANÁLISIS FECHA POR FECHA
 // ═══════════════════════════════════════════════════════════════════════════════
 echo "🔍 2. ANÁLISIS COMPARATIVO (Reportado vs Real)\n";
-echo str_repeat("─", 110) . "\n";
+echo str_repeat('─', 110)."\n";
 
 printf("%-12s %-4s | %-10s %-10s %-8s | %-10s %-10s %-8s | %-10s %-10s\n",
-    "Fecha", "Term", 
-    "Tix.Rep", "Tix.Real", "Diff",
-    "Vent.Rep", "Vent.Real", "Diff",
-    "Desc.Rep", "Desc.Real"
+    'Fecha', 'Term',
+    'Tix.Rep', 'Tix.Real', 'Diff',
+    'Vent.Rep', 'Vent.Real', 'Diff',
+    'Desc.Rep', 'Desc.Real'
 );
-echo str_repeat("─", 110) . "\n";
+echo str_repeat('─', 110)."\n";
 
 $resumen = [];
 
 foreach ($reports as $report) {
     // Calcular valores reales
-    $realData = DB::select("
+    $realData = DB::select('
         SELECT 
             COUNT(DISTINCT t.id) FILTER (WHERE t.paid = TRUE AND t.voided = FALSE) AS tickets_pagados,
             ROUND(COALESCE(SUM(t.total_price - COALESCE(t.total_discount, 0)) 
@@ -89,16 +89,16 @@ foreach ($reports as $report) {
         FROM public.ticket t
         WHERE COALESCE(t.folio_date, t.closing_date::date, t.create_date::date) = ?
           AND t.terminal_id = ?
-    ", [$report->fecha, $report->terminal_id]);
-    
-    if (!empty($realData)) {
+    ', [$report->fecha, $report->terminal_id]);
+
+    if (! empty($realData)) {
         $real = $realData[0];
-        
+
         $diffTickets = $report->total_tickets - $real->tickets_pagados;
         $diffVentas = $report->total_ventas - $real->ventas_netas;
-        
+
         printf("%-12s %-4s | %-10d %-10d %-8d | $%-9.2f $%-9.2f %-8.2f | $%-9.2f $%-9.2f %s\n",
-            $report->fecha, 
+            $report->fecha,
             $report->terminal_id,
             $report->total_tickets,
             $real->tickets_pagados,
@@ -110,7 +110,7 @@ foreach ($reports as $report) {
             $real->total_descuentos,
             (abs($diffVentas) > 50 || abs($diffTickets) > 3) ? '⚠️' : ''
         );
-        
+
         // Guardar para resumen
         $resumen[] = [
             'fecha' => $report->fecha,
@@ -130,18 +130,18 @@ echo "\n";
 // 3. PATRONES IDENTIFICADOS
 // ═══════════════════════════════════════════════════════════════════════════════
 echo "📊 3. PATRONES IDENTIFICADOS\n";
-echo str_repeat("─", 90) . "\n\n";
+echo str_repeat('─', 90)."\n\n";
 
 // Fechas con mayores discrepancias
 echo "🚨 Fechas con Mayores Discrepancias en Ventas:\n";
-usort($resumen, function($a, $b) {
+usort($resumen, function ($a, $b) {
     return abs($b['diff_ventas']) - abs($a['diff_ventas']);
 });
 
 $top10 = array_slice($resumen, 0, 10);
-printf("%-12s %-10s %-15s %-15s %-15s\n", 
-    "Fecha", "Terminal", "Diff Tickets", "Diff Ventas", "Diff Descuentos");
-echo str_repeat("─", 90) . "\n";
+printf("%-12s %-10s %-15s %-15s %-15s\n",
+    'Fecha', 'Terminal', 'Diff Tickets', 'Diff Ventas', 'Diff Descuentos');
+echo str_repeat('─', 90)."\n";
 
 foreach ($top10 as $item) {
     printf("%-12s %-10s %-15d $%-14.2f $%-14.2f %s\n",
@@ -160,10 +160,10 @@ echo "\n";
 // 4. ANÁLISIS DE TICKETS PROBLEMÁTICOS POR TIPO
 // ═══════════════════════════════════════════════════════════════════════════════
 echo "🔍 4. RESUMEN DE TICKETS PROBLEMÁTICOS (TODO OCTUBRE)\n";
-echo str_repeat("─", 90) . "\n";
+echo str_repeat('─', 90)."\n";
 
 // Tickets no pagados
-$noPagados = DB::select("
+$noPagados = DB::select('
     SELECT 
         COUNT(*) as total,
         ROUND(COALESCE(SUM(t.total_price - COALESCE(t.total_discount, 0)), 0)::numeric, 2) as monto_total
@@ -172,35 +172,35 @@ $noPagados = DB::select("
       AND t.paid = FALSE
       AND t.voided = FALSE
       AND t.closing_date IS NOT NULL
-", [$fechaInicio, $fechaFin]);
+', [$fechaInicio, $fechaFin]);
 
-if (!empty($noPagados)) {
-    printf("Tickets Cerrados NO Pagados:       %d tickets | Monto: $%.2f\n", 
+if (! empty($noPagados)) {
+    printf("Tickets Cerrados NO Pagados:       %d tickets | Monto: $%.2f\n",
         $noPagados[0]->total, $noPagados[0]->monto_total);
 }
 
 // Tickets con descuento 100%
-$desc100 = DB::select("
+$desc100 = DB::select('
     SELECT COUNT(*) as total
     FROM public.ticket t
     WHERE COALESCE(t.folio_date, t.closing_date::date, t.create_date::date) BETWEEN ? AND ?
       AND t.total_price > 0
       AND COALESCE(t.total_discount, 0) >= t.total_price * 0.99
-", [$fechaInicio, $fechaFin]);
+', [$fechaInicio, $fechaFin]);
 
-if (!empty($desc100)) {
+if (! empty($desc100)) {
     printf("Tickets con Descuento 100%%:        %d tickets\n", $desc100[0]->total);
 }
 
 // Tickets anulados
-$anulados = DB::select("
+$anulados = DB::select('
     SELECT COUNT(*) as total
     FROM public.ticket t
     WHERE COALESCE(t.folio_date, t.closing_date::date, t.create_date::date) BETWEEN ? AND ?
       AND t.voided = TRUE
-", [$fechaInicio, $fechaFin]);
+', [$fechaInicio, $fechaFin]);
 
-if (!empty($anulados)) {
+if (! empty($anulados)) {
     printf("Tickets Anulados:                   %d tickets\n", $anulados[0]->total);
 }
 
@@ -229,8 +229,8 @@ $mismatch = DB::select("
     WHERE ABS(neto - pagado) > 0.50
 ", [$fechaInicio, $fechaFin]);
 
-if (!empty($mismatch)) {
-    printf("Tickets con Pago ≠ Neto:            %d tickets | Diferencia: $%.2f\n", 
+if (! empty($mismatch)) {
+    printf("Tickets con Pago ≠ Neto:            %d tickets | Diferencia: $%.2f\n",
         $mismatch[0]->total, $mismatch[0]->diferencia_total);
 }
 
@@ -240,19 +240,19 @@ echo "\n";
 // 5. ESTADÍSTICAS GENERALES
 // ═══════════════════════════════════════════════════════════════════════════════
 echo "📈 5. ESTADÍSTICAS GENERALES DEL MES\n";
-echo str_repeat("─", 90) . "\n";
+echo str_repeat('─', 90)."\n";
 
 $totalDiffVentas = array_sum(array_column($resumen, 'diff_ventas'));
 $totalDiffTickets = array_sum(array_column($resumen, 'diff_tickets'));
 $totalDiffDescuentos = array_sum(array_column($resumen, 'diff_descuentos'));
 
-$diasConDiscrepancia = count(array_filter($resumen, function($item) {
+$diasConDiscrepancia = count(array_filter($resumen, function ($item) {
     return abs($item['diff_ventas']) > 50;
 }));
 
 printf("Total Días Analizados:              %d días\n", count($resumen));
-printf("Días con Discrepancia > $50:        %d días (%.1f%%)\n", 
-    $diasConDiscrepancia, 
+printf("Días con Discrepancia > $50:        %d días (%.1f%%)\n",
+    $diasConDiscrepancia,
     ($diasConDiscrepancia / count($resumen)) * 100
 );
 printf("Diferencia Acumulada en Tickets:    %d tickets\n", $totalDiffTickets);
@@ -265,7 +265,7 @@ echo "\n";
 // 6. DÍAS CRÍTICOS PARA ANÁLISIS DETALLADO
 // ═══════════════════════════════════════════════════════════════════════════════
 echo "🎯 6. DÍAS RECOMENDADOS PARA ANÁLISIS DETALLADO\n";
-echo str_repeat("─", 90) . "\n\n";
+echo str_repeat('─', 90)."\n\n";
 
 echo "Ejecuta el análisis detallado para estas fechas:\n\n";
 

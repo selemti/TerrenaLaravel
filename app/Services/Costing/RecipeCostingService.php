@@ -13,8 +13,7 @@ class RecipeCostingService
 {
     public function __construct(
         private readonly string $connection = 'pgsql'
-    ) {
-    }
+    ) {}
 
     public function calculate(int $recipeId, ?CarbonInterface $at = null): array
     {
@@ -213,7 +212,7 @@ class RecipeCostingService
     public function createSnapshot(int $recipeId, ?CarbonInterface $at = null, ?string $notes = null): RecipeCostSnapshot
     {
         $at = $at ?? now();
-        
+
         // Call stored procedure to create snapshot
         DB::connection($this->connection)->statement(
             'SELECT selemti.sp_snapshot_recipe_cost(?, ?)',
@@ -273,13 +272,13 @@ class RecipeCostingService
     public function compareSnapshots(RecipeCostSnapshot $current, RecipeCostSnapshot $previous): array
     {
         $portionDiff = $current->portion_cost - $previous->portion_cost;
-        $portionPct = $previous->portion_cost > 0 
-            ? ($portionDiff / $previous->portion_cost) * 100 
+        $portionPct = $previous->portion_cost > 0
+            ? ($portionDiff / $previous->portion_cost) * 100
             : 0;
 
         $batchDiff = $current->batch_cost - $previous->batch_cost;
-        $batchPct = $previous->batch_cost > 0 
-            ? ($batchDiff / $previous->batch_cost) * 100 
+        $batchPct = $previous->batch_cost > 0
+            ? ($batchDiff / $previous->batch_cost) * 100
             : 0;
 
         return [
@@ -311,8 +310,8 @@ class RecipeCostingService
     public function shouldCreateAutoSnapshot(int $recipeId, float $thresholdPct = 2.0): bool
     {
         $latest = $this->getLatestSnapshot($recipeId);
-        
-        if (!$latest) {
+
+        if (! $latest) {
             return true; // No snapshot exists, create first one
         }
 

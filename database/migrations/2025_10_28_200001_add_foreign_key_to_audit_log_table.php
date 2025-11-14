@@ -56,7 +56,7 @@ return new class extends Migration
             AND conname IN ('audit_log_user_id_foreign', 'selemti_audit_log_user_id_foreign')
         ");
 
-        if (!empty($fks)) {
+        if (! empty($fks)) {
             Schema::connection('pgsql')->table('selemti.audit_log', function (Blueprint $table) {
                 $table->dropForeign(['user_id']);
             });

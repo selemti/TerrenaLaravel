@@ -114,62 +114,6 @@
         </div>
     </div>
 
-    {{-- Cierre Masivo --}}
-    <div class="card border-0 shadow-sm mb-4 full-width-card border-primary">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-                <i class="fa-solid fa-bolt me-2"></i>
-                Cierre Masivo de Tickets
-            </h5>
-            <span class="badge bg-warning text-dark">Acción Masiva</span>
-        </div>
-        <div class="card-body">
-            <div class="alert alert-info mb-4">
-                <i class="fa-solid fa-info-circle me-2"></i>
-                <strong>¿Qué hace esta herramienta?</strong><br>
-                Cierra automáticamente tickets con monto > 0 y deuda = 0 (típicamente descuentos no cerrados).
-                Se recomienda cerrar primero tickets >30 días. Se crea un backup automático antes de ejecutar.
-            </div>
-
-            <div class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label">Días Mínimos de Antigüedad</label>
-                    <input type="number" class="form-control" id="minDays" value="30" min="7" max="365">
-                    <small class="text-muted">Mínimo 7 días (recomendado: 30)</small>
-                </div>
-                <div class="col-md-4">
-                    <button type="button" class="btn btn-outline-primary" onclick="previewMassiveClose()">
-                        <i class="fa-solid fa-eye me-1"></i> Vista Previa
-                    </button>
-                    <button type="button" class="btn btn-danger" onclick="showExecuteConfirmation()" id="btnExecuteMassive" disabled>
-                        <i class="fa-solid fa-bolt me-1"></i> Ejecutar Cierre Masivo
-                    </button>
-                </div>
-                <div class="col-md-5">
-                    <div id="previewResults"></div>
-                </div>
-            </div>
-
-            <div id="previewDetails" class="mt-4" style="display: none;">
-                <h6 class="text-primary">Muestra de Tickets a Cerrar</h6>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered" id="previewTable">
-                        <thead class="table-light">
-                            <tr>
-                                <th>ID</th>
-                                <th>Fecha Creación</th>
-                                <th>Días</th>
-                                <th>Terminal</th>
-                                <th class="text-end">Monto</th>
-                            </tr>
-                        </thead>
-                        <tbody id="previewTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
     {{-- Filtros --}}
     <div class="card border-0 shadow-sm mb-4 full-width-card">
         <div class="card-body">
@@ -188,6 +132,9 @@
                 <div class="col-md-8 text-end">
                     <button type="button" class="btn btn-outline-primary" onclick="location.reload()">
                         <i class="fa-solid fa-refresh me-1"></i> Actualizar
+                    </button>
+                    <button type="button" class="btn btn-warning ms-2" onclick="openMassiveCloseWizard()">
+                        <i class="fa-solid fa-bolt me-1"></i> Cierre Masivo
                     </button>
                 </div>
             </form>
@@ -250,8 +197,14 @@
                                                 'pagado_sin_cierre' => 'Pagado sin cierre',
                                                 default => 'Desconocido'
                                             };
+                                            // Verificar si es legacy (pre-sistema de sesiones)
+                                            $ticketDate = \Carbon\Carbon::parse($ticket->create_date);
+                                            $isTicketLegacy = $ticketDate->lt(\Carbon\Carbon::parse('2025-10-01')); // Antes de octubre 2025
                                         @endphp
                                         <span class="badge {{ $badgeClass }} badge-tipo">{{ $badgeText }}</span>
+                                        @if($isTicketLegacy)
+                                            <span class="badge bg-light text-dark badge-tipo ms-1" title="Ticket anterior al sistema de sesiones">Legacy</span>
+                                        @endif
                                     </td>
                                     <td>{{ $formatDate($ticket->create_date) }}</td>
                                     <td>
@@ -265,14 +218,46 @@
                                     <td class="text-end font-monospace">{{ $formatMoney($ticket->due_amount) }}</td>
                                     <td class="text-center">{{ $ticket->num_items }}</td>
                                     <td class="text-center">
+                                        @php
+                                            // Verificar si la sesión del ticket tiene postcorte aprobado
+                                            $session = null;
+                                            $sesionBloqueada = false;
+                                            $isLegacy = false;
+                                            try {
+                                                $sessionCheck = DB::connection('pgsql')->selectOne("
+                                                    SELECT s.id,
+                                                           (SELECT COUNT(*) FROM selemti.postcorte p
+                                                            WHERE p.sesion_id = s.id AND p.aprobado_en IS NOT NULL) as bloqueado
+                                                    FROM selemti.sesion_cajon s
+                                                    WHERE s.terminal_id = ?
+                                                      AND s.apertura_ts <= ?
+                                                      AND (s.cierre_ts IS NULL OR s.cierre_ts >= ?)
+                                                    LIMIT 1
+                                                ", [$ticket->terminal_id, $ticket->create_date, $ticket->create_date]);
+
+                                                $session = $sessionCheck;
+                                                $isLegacy = !$session; // Ticket sin sesión = legacy
+                                                $sesionBloqueada = $session && $session->bloqueado > 0;
+                                            } catch (\Exception $e) {
+                                                $sesionBloqueada = false;
+                                                $isLegacy = true; // En caso de error, asumir legacy
+                                            }
+                                        @endphp
                                         <div class="btn-group btn-group-sm" role="group">
-                                            {{-- Anular (excepto tickets ya pagados y cerrados) --}}
+                                            {{-- Anular (excepto tickets ya pagados y cerrados, o si sesión bloqueada) --}}
                                             @if($ticket->tipo_problema !== 'pagado_sin_cierre' && $ticket->tipo_problema !== 'cerrado_con_descuento_100')
-                                                <button type="button" class="btn btn-outline-danger"
-                                                        onclick="voidTicket({{ $ticket->id }})"
-                                                        title="Anular ticket">
-                                                    <i class="fa-solid fa-ban"></i>
-                                                </button>
+                                                @if(!$sesionBloqueada)
+                                                    <button type="button" class="btn btn-outline-danger"
+                                                            onclick="voidTicket({{ $ticket->id }})"
+                                                            title="Anular ticket">
+                                                        <i class="fa-solid fa-ban"></i>
+                                                    </button>
+                                                @else
+                                                    <button type="button" class="btn btn-outline-secondary" disabled
+                                                            title="Sesión cerrada - No se puede modificar">
+                                                        <i class="fa-solid fa-lock"></i>
+                                                    </button>
+                                                @endif
                                             @endif
 
                                             {{-- Cerrar (solo para pagados sin cierre) --}}
@@ -284,22 +269,30 @@
                                                 </button>
                                             @endif
 
-                                            {{-- Marcar como pagado (solo para cerrados sin pago con transacciones) --}}
+                                            {{-- Mensaje informativo para tickets cerrados sin pago con transacciones --}}
                                             @if($ticket->tipo_problema === 'cerrado_sin_pago' && $ticket->num_transacciones > 0)
-                                                <button type="button" class="btn btn-outline-primary"
-                                                        onclick="markAsPaid({{ $ticket->id }})"
-                                                        title="Marcar como pagado">
-                                                    <i class="fa-solid fa-dollar-sign"></i>
-                                                </button>
+                                                <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" data-bs-placement="top"
+                                                      title="Debe procesarse el pago desde el POS">
+                                                    <button type="button" class="btn btn-outline-secondary" disabled style="pointer-events: none;">
+                                                        <i class="fa-solid fa-cash-register"></i>
+                                                    </button>
+                                                </span>
                                             @endif
 
-                                            {{-- Reabrir (solo para cerrados sin pago sin transacciones) --}}
+                                            {{-- Reabrir (solo para cerrados sin pago sin transacciones, y si sesión no bloqueada) --}}
                                             @if($ticket->tipo_problema === 'cerrado_sin_pago' && $ticket->num_transacciones == 0)
-                                                <button type="button" class="btn btn-outline-warning"
-                                                        onclick="reopenTicket({{ $ticket->id }})"
-                                                        title="Reabrir ticket">
-                                                    <i class="fa-solid fa-rotate-left"></i>
-                                                </button>
+                                                @if(!$sesionBloqueada)
+                                                    <button type="button" class="btn btn-outline-warning"
+                                                            onclick="reopenTicket({{ $ticket->id }})"
+                                                            title="Reabrir ticket">
+                                                        <i class="fa-solid fa-rotate-left"></i>
+                                                    </button>
+                                                @else
+                                                    <button type="button" class="btn btn-outline-secondary" disabled
+                                                            title="Sesión cerrada - No se puede modificar">
+                                                        <i class="fa-solid fa-lock"></i>
+                                                    </button>
+                                                @endif
                                             @endif
                                             
                                             {{-- Cerrar directamente tickets con descuento 100% - no se necesita confirmación ni razón --}}
@@ -366,12 +359,9 @@
                             <label for="ticketActionReason" class="form-label">Razón:</label>
                             <select class="form-select" id="ticketActionReason">
                                 <option value="">Seleccione una razón</option>
-                                <option value="Error en captura">Error en captura</option>
-                                <option value="Cliente no se presentó">Cliente no se presentó</option>
-                                <option value="Producto no disponible">Producto no disponible</option>
-                                <option value="Fallo en preparación">Fallo en preparación</option>
-                                <option value="Devolución de cliente">Devolución de cliente</option>
-                                <option value="Fallo en sistema">Fallo en sistema</option>
+                                @foreach($voidReasons as $id => $reason)
+                                    <option value="{{ $reason }}">{{ $reason }}</option>
+                                @endforeach
                                 <option value="Otro">Otro</option>
                             </select>
                             <input type="text" class="form-control mt-2 d-none" id="otherReasonInput" placeholder="Especifique la razón">
@@ -399,6 +389,137 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación de Ejecución -->
+    <div class="modal fade" id="confirmExecutionModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-danger">
+                <div class="modal-header bg-danger text-white py-2">
+                    <h6 class="modal-title mb-0">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                        Confirmación Requerida
+                    </h6>
+                </div>
+                <div class="modal-body py-3">
+                    <div class="text-center mb-3">
+                        <i class="fa-solid fa-circle-exclamation fa-3x text-warning mb-2"></i>
+                        <h5 class="text-danger mb-0">⚠️ Acción Irreversible</h5>
+                    </div>
+
+                    <div class="alert alert-warning py-2 mb-3">
+                        <small><strong>Esta acción:</strong></small>
+                        <ul class="mb-0 mt-1 small">
+                            <li>Cerrará <strong id="confirmTicketCount">0</strong> tickets (<strong id="confirmMinDays">0</strong>+ días)</li>
+                            <li>Cambios permanentes en BD</li>
+                            <li>Backup automático incluido</li>
+                        </ul>
+                    </div>
+
+                    <div class="border border-primary rounded p-3">
+                        <label class="form-label fw-bold mb-2 small">
+                            Escriba: <span class="text-danger">CERRAR MASIVO</span>
+                        </label>
+                        <input type="text" class="form-control text-center"
+                               id="confirmationInput"
+                               placeholder="Escriba aquí..."
+                               autocomplete="off">
+                        <small class="form-text text-muted d-block mt-1">
+                            <i class="fa-solid fa-keyboard me-1"></i>
+                            Exactamente como se muestra arriba
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="cancelConfirmation()">
+                        <i class="fa-solid fa-xmark me-1"></i> Cancelar
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger" id="btnConfirmExecution" onclick="confirmExecution()" disabled>
+                        <i class="fa-solid fa-bolt me-1"></i> Ejecutar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Wizard para Cierre Masivo -->
+    <div class="modal fade" id="massiveCloseModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-warning py-2">
+                    <div>
+                        <h6 class="modal-title mb-0">
+                            <i class="fa-solid fa-bolt me-2"></i>
+                            <span id="wizardTitle">Cierre Masivo</span>
+                        </h6>
+                        <small class="text-muted" id="wizardStep" style="font-size: 0.75rem;">Paso 1 de 3</small>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body py-3" style="min-height: 350px; max-height: 70vh;">
+                    <!-- PASO 1: Configuración -->
+                    <div id="wizardStep1" style="display: none;">
+                        <div class="alert alert-info py-2 mb-3">
+                            <small class="d-block mb-1"><strong><i class="fa-solid fa-info-circle me-1"></i> ¿Qué hace?</strong></small>
+                            <small>Cierra automáticamente dos tipos de tickets:</small>
+                            <ul class="mb-1 mt-1 small ps-3">
+                                <li>Pagados sin fecha de cierre (falla del POS)</li>
+                                <li>Con descuento 100% (no marcados como pagados)</li>
+                            </ul>
+                            <div class="mt-2 p-2 bg-white rounded border">
+                                <small><i class="fa-solid fa-shield-halved text-warning me-1"></i> <strong>Seguridad:</strong> Backup automático incluido</small>
+                            </div>
+                        </div>
+
+                        <div class="card border-primary">
+                            <div class="card-body py-3">
+                                <label class="form-label fw-bold mb-2">
+                                    <i class="fa-solid fa-calendar-days me-2"></i>
+                                    Antigüedad Mínima (días)
+                                </label>
+                                <p class="text-muted small mb-2">
+                                    Solo tickets con esta antigüedad o más. Recomendado: 30+ días.
+                                </p>
+                                <input type="number" class="form-control" id="minDaysWizard" value="30" min="7" max="365">
+                                <small class="form-text" id="rangeHintWizard">Cargando...</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PASO 2: Vista Previa -->
+                    <div id="wizardStep2" style="display: none;">
+                        <div id="previewContent">
+                            <div class="text-center p-5">
+                                <i class="fa-solid fa-spinner fa-spin fa-2x mb-3 text-primary"></i>
+                                <p>Cargando tickets...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PASO 3: Resultado -->
+                    <div id="wizardStep3" style="display: none;">
+                        <div id="resultContent" class="text-center p-5">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-sm btn-secondary" id="btnCancel" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btnBack" onclick="goToPreviousStep()" style="display: none;">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Atrás
+                    </button>
+                    <button type="button" class="btn btn-sm btn-primary" id="btnNext" onclick="goToNextStep()">
+                        Siguiente <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger" id="btnExecute" onclick="executeFromWizard()" style="display: none;">
+                        <i class="fa-solid fa-bolt me-1"></i> Ejecutar
+                    </button>
+                    <button type="button" class="btn btn-sm btn-success" id="btnClose" onclick="closeWizard()" style="display: none;">
+                        <i class="fa-solid fa-check me-1"></i> Cerrar
+                    </button>
                 </div>
             </div>
         </div>
@@ -555,6 +676,10 @@
 
     // Función auxiliar para formatear dinero
     function formatMoney(amount) {
+        // Validar null, undefined, o valores no numéricos
+        if (amount === null || amount === undefined || amount === '') {
+            amount = 0;
+        }
         if (typeof amount === 'string') {
             amount = parseFloat(amount);
         }
@@ -604,47 +729,62 @@
         modal.show();
     }
     
-    // Función para cerrar directamente tickets con descuento 100% - sin confirmación ni razón
-    async function closeTicketDirect(ticketId) {
-        if (confirm(`¿Está seguro que desea CERRAR el ticket #${ticketId} con descuento 100%?\n\nEste ticket ya tiene monto total de $0.`)) {
-            // Primero obtener el nombre del descuento
-            try {
-                const response = await fetch(`{{ url('/api/caja/ticket') }}/${ticketId}`, {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
-                });
+    // Función para cerrar directamente tickets con descuento 100% - con modal bonito
+    function closeTicketDirect(ticketId) {
+        currentTicketId = ticketId;
+        currentAction = 'close-discount';
 
-                if (response.ok) {
-                    const ticketData = await response.json();
-                    const ticket = ticketData.ticket || {};
-                    let discountReason = 'Cierre por descuento 100%';
-                    
-                    // Obtener el nombre del descuento aplicado
-                    if (ticket.discounts && ticket.discounts.length > 0) {
-                        const firstDiscount = ticket.discounts[0];
-                        discountReason = `${firstDiscount.name || firstDiscount.descripcion || 'Descuento'} - Cierre automático`;
-                    } else if (ticket.total_discount > 0) {
-                        discountReason = `Descuento Aplicado - Cierre automático`;
-                    }
-                    
-                    // Ejecutar el cierre con la razón del descuento
-                    executeActionWithReason('{{ route("admin.tickets.close") }}', { 
-                        ticket_id: ticketId 
-                    }, ticketId, discountReason);
-                } else {
-                    // Si no se puede obtener el descuento, usar el cierre normal
-                    executeAction('{{ route("admin.tickets.close") }}', { ticket_id: ticketId }, ticketId);
-                }
-            } catch (error) {
-                console.error('Error obteniendo información del descuento:', error);
-                // Si falla, usar el cierre normal
-                executeAction('{{ route("admin.tickets.close") }}', { ticket_id: ticketId }, ticketId);
-            }
-        }
+        document.getElementById('actionDescription').innerHTML = `
+            <strong>¿Confirma cerrar el ticket #${ticketId}?</strong><br>
+            <small class="text-muted">Este ticket tiene descuento del 100% (monto total: $0.00)</small>
+        `;
+        document.getElementById('ticketActionModalLabel').textContent = 'Cerrar Ticket con Descuento';
+        document.getElementById('confirmActionBtn').textContent = 'Cerrar Ticket';
+
+        // NO requerir razón para descuentos 100%
+        document.getElementById('ticketActionReason').closest('.mb-3').style.display = 'none';
+
+        const modal = new bootstrap.Modal(document.getElementById('ticketActionModal'));
+        modal.show();
     }
     
+    // Función para ejecutar cierre con información del descuento
+    async function executeCloseWithDiscountInfo(ticketId) {
+        try {
+            // Obtener información del ticket para el descuento
+            const response = await fetch(`{{ url('/api/caja/ticket') }}/${ticketId}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+
+            let discountReason = 'Descuento 100%';
+            if (response.ok) {
+                const ticketData = await response.json();
+                const ticket = ticketData.ticket || {};
+
+                // Obtener el nombre del descuento aplicado
+                if (ticket.discounts && ticket.discounts.length > 0) {
+                    const firstDiscount = ticket.discounts[0];
+                    discountReason = `${firstDiscount.name || firstDiscount.descripcion || 'Descuento'} - Cierre automático`;
+                } else if (ticket.total_discount > 0) {
+                    discountReason = `Descuento Aplicado - Cierre automático`;
+                }
+            }
+
+            // Ejecutar el cierre con la razón del descuento
+            executeAction('{{ route("admin.tickets.close") }}', {
+                ticket_id: ticketId,
+                reason: discountReason
+            }, ticketId);
+        } catch (error) {
+            console.error('Error obteniendo información del descuento:', error);
+            // Si falla, usar cierre sin razón específica
+            executeAction('{{ route("admin.tickets.close") }}', { ticket_id: ticketId }, ticketId);
+        }
+    }
+
     // Función modificada para ejecutar acción con razón específica
     async function executeActionWithReason(url, data, ticketId, reason = null) {
         try {
@@ -689,24 +829,6 @@
         }
     }
 
-    // Función para preparar la acción de marcar como pagado
-    function prepareMarkAsPaid(ticketId) {
-        currentTicketId = ticketId;
-        currentAction = 'mark-paid';
-        
-        document.getElementById('actionDescription').textContent = `¿Está seguro que desea marcar como PAGADO el ticket #${ticketId}?\n\nEsto verificará que las transacciones cubran el monto total.`;
-        document.getElementById('ticketActionModalLabel').textContent = 'Marcar como Pagado';
-        document.getElementById('confirmActionBtn').textContent = 'Marcar Pagado';
-        
-        // Resetear el formulario
-        document.getElementById('ticketActionReason').value = '';
-        document.getElementById('otherReasonInput').classList.add('d-none');
-        document.getElementById('otherReasonInput').value = '';
-        
-        const modal = new bootstrap.Modal(document.getElementById('ticketActionModal'));
-        modal.show();
-    }
-
     // Función para preparar la acción de reabrir ticket
     function prepareReopenTicket(ticketId) {
         currentTicketId = ticketId;
@@ -729,44 +851,55 @@
     function confirmAction() {
         const reasonSelect = document.getElementById('ticketActionReason');
         const reason = reasonSelect.value;
-        
-        // Validar que se haya seleccionado una razón
-        if (!reason) {
-            alert('Por favor seleccione una razón para la acción.');
-            return;
-        }
 
-        // Si se selecciona "Otro", mostrar campo de texto
-        let finalReason = reason;
-        if (reason === 'Otro') {
-            const otherInput = document.getElementById('otherReasonInput');
-            if (otherInput.classList.contains('d-none')) {
-                otherInput.classList.remove('d-none');
-                otherInput.focus();
-                return; // No continuar, se necesita especificar la razón
-            }
-            const otherReason = otherInput.value.trim();
-            if (!otherReason) {
-                alert('Por favor especifique la razón en el campo de texto.');
+        // Para tickets con descuento 100%, NO se requiere razón (se obtiene automáticamente de la BD)
+        // Para cierre normal tampoco se requiere razón
+        const requiresReason = currentAction !== 'close-discount' && currentAction !== 'close';
+
+        if (requiresReason) {
+            // Validar que se haya seleccionado una razón
+            if (!reason) {
+                alert('Por favor seleccione una razón para la acción.');
                 return;
             }
-            finalReason = otherReason;
-        }
 
-        // Ejecutar la acción correspondiente
-        switch(currentAction) {
-            case 'void':
-                executeAction('{{ route("admin.tickets.void") }}', { ticket_id: currentTicketId, reason: finalReason }, currentTicketId);
-                break;
-            case 'close':
-                executeAction('{{ route("admin.tickets.close") }}', { ticket_id: currentTicketId }, currentTicketId);
-                break;
-            case 'mark-paid':
-                executeAction('{{ route("admin.tickets.mark-paid") }}', { ticket_id: currentTicketId }, currentTicketId);
-                break;
-            case 'reopen':
-                executeAction('{{ route("admin.tickets.reopen") }}', { ticket_id: currentTicketId, reason: finalReason }, currentTicketId);
-                break;
+            // Si se selecciona "Otro", mostrar campo de texto
+            let finalReason = reason;
+            if (reason === 'Otro') {
+                const otherInput = document.getElementById('otherReasonInput');
+                if (otherInput.classList.contains('d-none')) {
+                    otherInput.classList.remove('d-none');
+                    otherInput.focus();
+                    return; // No continuar, se necesita especificar la razón
+                }
+                const otherReason = otherInput.value.trim();
+                if (!otherReason) {
+                    alert('Por favor especifique la razón en el campo de texto.');
+                    return;
+                }
+                finalReason = otherReason;
+            }
+
+            // Ejecutar acciones que requieren razón
+            switch(currentAction) {
+                case 'void':
+                    executeAction('{{ route("admin.tickets.void") }}', { ticket_id: currentTicketId, reason: finalReason }, currentTicketId);
+                    break;
+                case 'reopen':
+                    executeAction('{{ route("admin.tickets.reopen") }}', { ticket_id: currentTicketId, reason: finalReason }, currentTicketId);
+                    break;
+            }
+        } else {
+            // Ejecutar acciones que NO requieren razón
+            switch(currentAction) {
+                case 'close':
+                    executeAction('{{ route("admin.tickets.close") }}', { ticket_id: currentTicketId }, currentTicketId);
+                    break;
+                case 'close-discount':
+                    // Obtiene automáticamente el nombre del descuento de la BD
+                    executeCloseWithDiscountInfo(currentTicketId);
+                    break;
+            }
         }
 
         // Cerrar el modal
@@ -802,11 +935,6 @@
     // Función para cerrar ticket
     function closeTicket(ticketId) {
         prepareCloseTicket(ticketId);
-    }
-
-    // Función para marcar como pagado
-    function markAsPaid(ticketId) {
-        prepareMarkAsPaid(ticketId);
     }
 
     // Función para reabrir ticket
@@ -876,17 +1004,148 @@
         }
     }
 
-    // ========== CIERRE MASIVO ==========
+    // ========== CIERRE MASIVO - WIZARD ==========
 
-    // Función para obtener vista previa del cierre masivo
-    async function previewMassiveClose() {
-        const minDays = parseInt(document.getElementById('minDays').value);
+    // Variables globales
+    let ticketsToClose = [];
+    let currentWizardStep = 1;
+    let rangeData = null;
 
-        if (minDays < 7) {
-            alert('El número mínimo de días debe ser al menos 7');
-            return;
+    // Cargar rango de días disponible al iniciar la página
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            const response = await fetch('{{ route("admin.tickets.massive-close.range") }}', {
+                headers: { 'Accept': 'application/json' }
+            });
+            const result = await response.json();
+
+            if (result.ok && result.range) {
+                rangeData = result.range;
+            }
+        } catch (error) {
+            console.error('Error al cargar rango:', error);
         }
 
+        // Los tooltips se inicializan globalmente en terrena.blade.php
+    });
+
+    // Abrir wizard
+    async function openMassiveCloseWizard() {
+        // Resetear wizard
+        currentWizardStep = 1;
+        ticketsToClose = [];
+
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('massiveCloseModal'));
+        modal.show();
+
+        // Cargar rango si no está disponible
+        if (!rangeData) {
+            try {
+                const response = await fetch('{{ route("admin.tickets.massive-close.range") }}', {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const result = await response.json();
+                if (result.ok && result.range) {
+                    rangeData = result.range;
+                }
+            } catch (error) {
+                console.error('Error al cargar rango:', error);
+            }
+        }
+
+        // Configurar Paso 1
+        if (rangeData && rangeData.total_tickets > 0) {
+            const minDaysInput = document.getElementById('minDaysWizard');
+            const rangeHint = document.getElementById('rangeHintWizard');
+
+            minDaysInput.min = rangeData.dias_minimo || 7;
+            minDaysInput.max = rangeData.dias_maximo || 365;
+            minDaysInput.value = Math.min(30, rangeData.dias_maximo);
+            rangeHint.textContent = `Rango disponible: ${rangeData.dias_minimo}-${rangeData.dias_maximo} días (${rangeData.total_tickets} tickets)`;
+            rangeHint.classList.remove('text-danger');
+            rangeHint.classList.add('text-success');
+        } else {
+            const rangeHint = document.getElementById('rangeHintWizard');
+            rangeHint.textContent = 'No hay tickets problemáticos disponibles';
+            rangeHint.classList.add('text-danger');
+            document.getElementById('btnNext').disabled = true;
+        }
+
+        showWizardStep(1);
+    }
+
+    // Mostrar paso específico del wizard
+    function showWizardStep(step) {
+        currentWizardStep = step;
+
+        // Ocultar todos los pasos
+        document.getElementById('wizardStep1').style.display = 'none';
+        document.getElementById('wizardStep2').style.display = 'none';
+        document.getElementById('wizardStep3').style.display = 'none';
+
+        // Mostrar paso actual
+        document.getElementById(`wizardStep${step}`).style.display = 'block';
+        document.getElementById('wizardStep').textContent = `Paso ${step} de 3`;
+
+        // Actualizar botones
+        const btnCancel = document.getElementById('btnCancel');
+        const btnBack = document.getElementById('btnBack');
+        const btnNext = document.getElementById('btnNext');
+        const btnExecute = document.getElementById('btnExecute');
+        const btnClose = document.getElementById('btnClose');
+
+        // Reset todos los botones
+        btnCancel.style.display = 'inline-block';
+        btnBack.style.display = 'none';
+        btnNext.style.display = 'none';
+        btnExecute.style.display = 'none';
+        btnClose.style.display = 'none';
+
+        if (step === 1) {
+            document.getElementById('wizardTitle').textContent = 'Cierre Masivo - Configuración';
+            btnNext.style.display = 'inline-block';
+            btnNext.disabled = false;
+        } else if (step === 2) {
+            document.getElementById('wizardTitle').textContent = 'Cierre Masivo - Vista Previa';
+            btnBack.style.display = 'inline-block';
+            btnExecute.style.display = 'inline-block';
+            btnExecute.disabled = ticketsToClose.length === 0;
+        } else if (step === 3) {
+            document.getElementById('wizardTitle').textContent = 'Cierre Masivo - Resultado';
+            btnCancel.style.display = 'none';
+            btnClose.style.display = 'inline-block';
+        }
+    }
+
+    // Ir al siguiente paso
+    async function goToNextStep() {
+        if (currentWizardStep === 1) {
+            // Validar input
+            const minDays = parseInt(document.getElementById('minDaysWizard').value);
+            const minInput = parseInt(document.getElementById('minDaysWizard').min);
+            const maxInput = parseInt(document.getElementById('minDaysWizard').max);
+
+            if (minDays < minInput || minDays > maxInput) {
+                alert(`El número de días debe estar entre ${minInput} y ${maxInput}`);
+                return;
+            }
+
+            // Ir a paso 2 y cargar tickets
+            showWizardStep(2);
+            await loadTicketsPreview(minDays);
+        }
+    }
+
+    // Ir al paso anterior
+    function goToPreviousStep() {
+        if (currentWizardStep === 2) {
+            showWizardStep(1);
+        }
+    }
+
+    // Cargar vista previa de tickets
+    async function loadTicketsPreview(minDays) {
         try {
             const response = await fetch(`{{ route('admin.tickets.massive-close.preview') }}?min_days=${minDays}`, {
                 method: 'GET',
@@ -899,74 +1158,224 @@
             const result = await response.json();
 
             if (result.ok && result.stats) {
-                const stats = result.stats;
-
-                // Mostrar resumen en la columna de resultados
-                const previewHtml = `
-                    <div class="alert alert-${stats.cantidad > 0 ? 'warning' : 'success'} mb-0">
-                        <strong>Vista Previa:</strong><br>
-                        <i class="fa-solid fa-ticket me-1"></i> ${stats.cantidad || 0} tickets<br>
-                        <i class="fa-solid fa-dollar-sign me-1"></i> ${formatMoney(stats.monto_total)}<br>
-                        <small>Rango: ${stats.fecha_mas_antigua || 'N/A'} a ${stats.fecha_mas_reciente || 'N/A'}</small>
+                ticketsToClose = result.tickets || [];
+                displayPreviewInWizard(result.stats, ticketsToClose);
+            } else {
+                document.getElementById('previewContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fa-solid fa-exclamation-triangle me-2"></i>
+                        Error: ${result.message || 'No se pudo obtener la vista previa'}
                     </div>
                 `;
-                document.getElementById('previewResults').innerHTML = previewHtml;
-
-                // Habilitar botón de ejecución si hay tickets
-                document.getElementById('btnExecuteMassive').disabled = stats.cantidad === 0;
-
-                // Mostrar muestra de tickets
-                if (result.sample && result.sample.length > 0) {
-                    let tableHtml = '';
-                    result.sample.forEach(ticket => {
-                        tableHtml += `
-                            <tr>
-                                <td class="font-monospace">#${ticket.id}</td>
-                                <td>${ticket.create_date ? new Date(ticket.create_date).toLocaleDateString() : 'N/A'}</td>
-                                <td>${ticket.dias || 0} días</td>
-                                <td class="font-monospace">${ticket.terminal_id || 'N/A'}</td>
-                                <td class="text-end">${formatMoney(ticket.total_price)}</td>
-                            </tr>
-                        `;
-                    });
-                    document.getElementById('previewTableBody').innerHTML = tableHtml;
-                    document.getElementById('previewDetails').style.display = 'block';
-                } else {
-                    document.getElementById('previewDetails').style.display = 'none';
-                }
-            } else {
-                alert('Error al obtener vista previa: ' + (result.message || 'Error desconocido'));
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al obtener vista previa: ' + error.message);
+            document.getElementById('previewContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fa-solid fa-exclamation-triangle me-2"></i>
+                    Error al cargar tickets: ${error.message}
+                </div>
+            `;
         }
     }
 
-    // Función para mostrar modal de confirmación de ejecución
-    function showExecuteConfirmation() {
-        const minDays = parseInt(document.getElementById('minDays').value);
+    // Mostrar vista previa en el wizard
+    function displayPreviewInWizard(stats, tickets) {
+        const cantidad = stats.cantidad || 0;
 
-        const confirmation = prompt(
-            `⚠️ ADVERTENCIA: Esta acción cerrará MASIVAMENTE todos los tickets con más de ${minDays} días.\n\n` +
-            `Se creará un backup automático antes de ejecutar.\n\n` +
-            `Para confirmar, escriba exactamente: CERRAR MASIVO`
-        );
+        // Habilitar/deshabilitar botón de ejecución
+        document.getElementById('btnExecute').disabled = cantidad === 0;
 
-        if (confirmation === 'CERRAR MASIVO') {
-            executeMassiveClose(minDays);
-        } else if (confirmation !== null) {
-            alert('Confirmación incorrecta. Debe escribir exactamente "CERRAR MASIVO"');
+        if (cantidad === 0) {
+            document.getElementById('previewContent').innerHTML = `
+                <div class="alert alert-success text-center">
+                    <i class="fa-solid fa-check-circle fa-3x mb-3 text-success"></i>
+                    <h4>No hay tickets para cerrar</h4>
+                    <p>No se encontraron tickets problemáticos con los criterios especificados.</p>
+                </div>
+            `;
+            return;
         }
+
+        // Generar tabla con TODOS los tickets
+        let tableRows = '';
+        tickets.forEach((ticket, index) => {
+            const tipoBadge = ticket.tipo === 'Pagado sin cierre'
+                ? '<span class="badge bg-info text-white" style="font-size: 0.7rem;">Pagado</span>'
+                : '<span class="badge bg-success" style="font-size: 0.7rem;">Desc. 100%</span>';
+
+            tableRows += `
+                <tr>
+                    <td class="text-muted">${index + 1}</td>
+                    <td class="font-monospace"><strong>#${ticket.id}</strong></td>
+                    <td>${tipoBadge}</td>
+                    <td>${ticket.create_date ? new Date(ticket.create_date).toLocaleDateString('es-MX', {day: '2-digit', month: '2-digit'}) : 'N/A'}</td>
+                    <td class="text-center"><small>${ticket.dias || 0}d</small></td>
+                    <td class="font-monospace"><small>${ticket.terminal_id || 'N/A'}</small></td>
+                    <td class="text-end">${formatMoney(ticket.total_price)}</td>
+                </tr>
+            `;
+        });
+
+        const contentHtml = `
+            <div class="alert alert-warning py-2 mb-3">
+                <div class="row text-center g-2">
+                    <div class="col-4">
+                        <i class="fa-solid fa-ticket text-warning"></i>
+                        <div class="fw-bold">${cantidad}</div>
+                        <small class="text-muted">Tickets</small>
+                    </div>
+                    <div class="col-4">
+                        <i class="fa-solid fa-dollar-sign text-success"></i>
+                        <div class="fw-bold">${formatMoney(stats.monto_total)}</div>
+                        <small class="text-muted">Total</small>
+                    </div>
+                    <div class="col-4">
+                        <i class="fa-solid fa-calendar-days text-primary"></i>
+                        <div><small><strong>${stats.fecha_mas_antigua || 'N/A'}</strong> a <strong>${stats.fecha_mas_reciente || 'N/A'}</strong></small></div>
+                        <small class="text-muted">Rango</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-2">
+                <small class="text-primary fw-bold">
+                    <i class="fa-solid fa-list me-1"></i>
+                    Tickets a cerrar (${cantidad})
+                </small>
+            </div>
+            <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                <table class="table table-sm table-hover table-bordered mb-0" style="font-size: 0.85rem;">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th style="width: 40px;">#</th>
+                            <th style="width: 80px;">ID</th>
+                            <th style="width: 140px;">Tipo</th>
+                            <th>Fecha</th>
+                            <th class="text-center" style="width: 70px;">Días</th>
+                            <th style="width: 70px;">Term.</th>
+                            <th class="text-end" style="width: 80px;">Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        document.getElementById('previewContent').innerHTML = contentHtml;
     }
 
-    // Función para ejecutar el cierre masivo
-    async function executeMassiveClose(minDays) {
+    // Mostrar modal de confirmación
+    function executeFromWizard() {
+        const minDays = parseInt(document.getElementById('minDaysWizard').value);
+        const cantidad = ticketsToClose.length;
+
+        // Actualizar datos en el modal de confirmación
+        document.getElementById('confirmTicketCount').textContent = cantidad;
+        document.getElementById('confirmMinDays').textContent = minDays;
+        document.getElementById('confirmationInput').value = '';
+        document.getElementById('btnConfirmExecution').disabled = true;
+
+        // Ocultar el wizard temporalmente
+        const wizardModal = bootstrap.Modal.getInstance(document.getElementById('massiveCloseModal'));
+        wizardModal.hide();
+
+        // Esperar a que se cierre el wizard antes de abrir el de confirmación
+        document.getElementById('massiveCloseModal').addEventListener('hidden.bs.modal', function openConfirmModal() {
+            // Mostrar modal de confirmación
+            const confirmModal = new bootstrap.Modal(document.getElementById('confirmExecutionModal'));
+            confirmModal.show();
+
+            // Focus en el input
+            setTimeout(() => {
+                document.getElementById('confirmationInput').focus();
+            }, 500);
+
+            // Remover el listener para no acumularlo
+            document.getElementById('massiveCloseModal').removeEventListener('hidden.bs.modal', openConfirmModal);
+        }, { once: true });
+    }
+
+    // Validar input de confirmación en tiempo real
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmInput = document.getElementById('confirmationInput');
+        const btnConfirm = document.getElementById('btnConfirmExecution');
+
+        if (confirmInput) {
+            confirmInput.addEventListener('input', function() {
+                const value = this.value.trim();
+                btnConfirm.disabled = value !== 'CERRAR MASIVO';
+
+                // Feedback visual
+                if (value.length > 0) {
+                    if (value === 'CERRAR MASIVO') {
+                        this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                    } else {
+                        this.classList.remove('is-valid');
+                        this.classList.add('is-invalid');
+                    }
+                } else {
+                    this.classList.remove('is-valid', 'is-invalid');
+                }
+            });
+
+            // Permitir ejecutar con Enter
+            confirmInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && this.value.trim() === 'CERRAR MASIVO') {
+                    confirmExecution();
+                }
+            });
+        }
+    });
+
+    // Cancelar confirmación
+    function cancelConfirmation() {
+        const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmExecutionModal'));
+        confirmModal.hide();
+
+        // Volver a mostrar el wizard en el paso 2
+        document.getElementById('confirmExecutionModal').addEventListener('hidden.bs.modal', function reopenWizard() {
+            const wizardModal = new bootstrap.Modal(document.getElementById('massiveCloseModal'));
+            wizardModal.show();
+            // Remover el listener
+            document.getElementById('confirmExecutionModal').removeEventListener('hidden.bs.modal', reopenWizard);
+        }, { once: true });
+    }
+
+    // Ejecutar tras confirmación
+    async function confirmExecution() {
+        const minDays = parseInt(document.getElementById('minDaysWizard').value);
+        const cantidad = ticketsToClose.length;
+
+        // Cerrar modal de confirmación
+        const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmExecutionModal'));
+        confirmModal.hide();
+
+        // Esperar a que se cierre antes de continuar
+        document.getElementById('confirmExecutionModal').addEventListener('hidden.bs.modal', async function executeAfterClose() {
+            // Mostrar el wizard de nuevo
+            const wizardModal = new bootstrap.Modal(document.getElementById('massiveCloseModal'));
+            wizardModal.show();
+
+            // Remover el listener
+            document.getElementById('confirmExecutionModal').removeEventListener('hidden.bs.modal', executeAfterClose);
+
+            // Ejecutar el cierre masivo
+            await performMassiveClose(minDays, cantidad);
+        }, { once: true });
+    }
+
+    // Función separada para ejecutar el cierre masivo
+    async function performMassiveClose(minDays, cantidad) {
+
         try {
             // Deshabilitar botón mientras se ejecuta
-            const btn = document.getElementById('btnExecuteMassive');
+            const btn = document.getElementById('btnExecute');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Ejecutando...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Ejecutando...';
 
             const response = await fetch(`{{ route('admin.tickets.massive-close.execute') }}`, {
                 method: 'POST',
@@ -983,23 +1392,59 @@
 
             const result = await response.json();
 
+            // Ir a paso 3 (resultado)
+            showWizardStep(3);
+
             if (result.ok) {
-                alert(`✅ ÉXITO\n\n${result.message}\n\nTickets cerrados: ${result.affected || 0}`);
-                // Recargar la página para mostrar los cambios
-                location.reload();
+                showSuccessResult(result.affected || cantidad, result.message);
             } else {
-                alert('❌ ERROR\n\n' + result.message);
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-bolt me-1"></i> Ejecutar Cierre Masivo';
+                showErrorResult(result.message || 'Error desconocido');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('❌ ERROR\n\nError al ejecutar el cierre masivo: ' + error.message);
-
-            const btn = document.getElementById('btnExecuteMassive');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-bolt me-1"></i> Ejecutar Cierre Masivo';
+            showWizardStep(3);
+            showErrorResult('Error al ejecutar el cierre masivo: ' + error.message);
         }
+    }
+
+    // Mostrar resultado exitoso
+    function showSuccessResult(cantidad, message) {
+        document.getElementById('resultContent').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fa-solid fa-circle-check fa-4x mb-3 text-success"></i>
+                <h5 class="text-success mb-3">¡Completado Exitosamente!</h5>
+                <div class="alert alert-success py-2 mb-3">
+                    <div class="fw-bold mb-1"><i class="fa-solid fa-check me-1"></i>${cantidad} tickets cerrados</div>
+                    <small>${message}</small>
+                </div>
+                <small class="text-muted d-block">
+                    <i class="fa-solid fa-shield-halved me-1"></i>
+                    Backup automático creado
+                </small>
+            </div>
+        `;
+    }
+
+    // Mostrar resultado con error
+    function showErrorResult(errorMessage) {
+        document.getElementById('resultContent').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fa-solid fa-circle-xmark fa-4x mb-3 text-danger"></i>
+                <h5 class="text-danger mb-3">Error en la Operación</h5>
+                <div class="alert alert-danger py-2 mb-3">
+                    <div class="fw-bold mb-1"><i class="fa-solid fa-exclamation-triangle me-1"></i>Ocurrió un problema</div>
+                    <small>${errorMessage}</small>
+                </div>
+                <small class="text-muted">No se realizaron cambios</small>
+            </div>
+        `;
+    }
+
+    // Cerrar wizard y recargar
+    function closeWizard() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('massiveCloseModal'));
+        modal.hide();
+        location.reload();
     }
 </script>
 @endpush

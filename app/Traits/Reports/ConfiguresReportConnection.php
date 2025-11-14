@@ -17,7 +17,7 @@ trait ConfiguresReportConnection
     protected function configureReportConnection(): void
     {
         DB::connection('pgsql')->statement("SET TIME ZONE 'America/Mexico_City'");
-        DB::connection('pgsql')->statement("SET search_path TO public, selemti");
+        DB::connection('pgsql')->statement('SET search_path TO public, selemti');
     }
 
     /**
@@ -38,7 +38,7 @@ trait ConfiguresReportConnection
      */
     protected function getValidTicketCondition(): string
     {
-        return "t.paid = TRUE AND t.voided = FALSE";
+        return 't.paid = TRUE AND t.voided = FALSE';
     }
 
     /**
@@ -56,6 +56,6 @@ trait ConfiguresReportConnection
      */
     protected function getTicketNetAmount(): string
     {
-        return "(t.total_price - COALESCE(t.total_discount, 0))";
+        return '(t.total_price - COALESCE(t.total_discount, 0))';
     }
 }

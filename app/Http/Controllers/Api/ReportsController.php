@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Routing\Controller;
 use Carbon\Carbon;
 use Illuminate\Database\Connection;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 
 class ReportsController extends Controller
 {
@@ -16,7 +16,7 @@ class ReportsController extends Controller
             ->selectRaw("MIN({$dateColumn}) AS min_fecha, MAX({$dateColumn}) AS max_fecha")
             ->first();
 
-        if (!$stats || !$stats->min_fecha || !$stats->max_fecha) {
+        if (! $stats || ! $stats->min_fecha || ! $stats->max_fecha) {
             return false;
         }
 
@@ -64,6 +64,7 @@ class ReportsController extends Controller
             ->orderBy('fecha')
             ->orderBy('sucursal_id')
             ->get();
+
         return response()->json(['ok' => true, 'desde' => $desde, 'hasta' => $hasta, 'data' => $rows]);
     }
 
@@ -75,6 +76,7 @@ class ReportsController extends Controller
             ->orderBy('fecha')
             ->orderBy('terminal_id')
             ->get();
+
         return response()->json(['ok' => true, 'desde' => $desde, 'hasta' => $hasta, 'data' => $rows]);
     }
 
@@ -87,6 +89,7 @@ class ReportsController extends Controller
             ->orderBy('fecha')
             ->orderBy('familia')
             ->get();
+
         return response()->json(['ok' => true, 'data' => $rows]);
     }
 
@@ -98,6 +101,7 @@ class ReportsController extends Controller
             ->orderBy('fecha')
             ->orderBy('hora')
             ->get();
+
         return response()->json(['ok' => true, 'data' => $rows]);
     }
 
@@ -152,14 +156,16 @@ class ReportsController extends Controller
 
     public function stockValorizado()
     {
-        $rows = $this->pg()->select("SELECT * FROM selemti.vw_stock_valorizado ORDER BY valor DESC");
+        $rows = $this->pg()->select('SELECT * FROM selemti.vw_stock_valorizado ORDER BY valor DESC');
+
         return response()->json(['ok' => true, 'data' => $rows]);
     }
 
     public function consumoVsMovimientos(Request $request)
     {
         [$desde, $hasta] = $this->range($request);
-        $rows = $this->pg()->select("SELECT * FROM selemti.vw_consumo_vs_movimientos WHERE fecha BETWEEN ? AND ? ORDER BY fecha DESC, sucursal_id", [$desde, $hasta]);
+        $rows = $this->pg()->select('SELECT * FROM selemti.vw_consumo_vs_movimientos WHERE fecha BETWEEN ? AND ? ORDER BY fecha DESC, sucursal_id', [$desde, $hasta]);
+
         return response()->json(['ok' => true, 'data' => $rows]);
     }
 
@@ -167,6 +173,7 @@ class ReportsController extends Controller
     {
         $limit = (int) ($request->query('limit', 200));
         $rows = $this->pg()->select("SELECT * FROM selemti.vw_movimientos_anomalos ORDER BY ts DESC LIMIT $limit");
+
         return response()->json(['ok' => true, 'data' => $rows]);
     }
 
@@ -190,7 +197,7 @@ class ReportsController extends Controller
             'hasta' => $hasta,
             'tickets' => $tickets,
             'venta_total' => $venta,
-            'ticket_promedio' => $avg
+            'ticket_promedio' => $avg,
         ]);
     }
 
@@ -210,7 +217,7 @@ class ReportsController extends Controller
             'desde' => $desde,
             'hasta' => $hasta,
             'unidades' => $units,
-            'venta_total' => $total
+            'venta_total' => $total,
         ]);
     }
 
@@ -230,7 +237,7 @@ class ReportsController extends Controller
             ->orderByDesc(DB::raw('SUM(monto)'))
             ->get();
 
-        return response()->json(['ok'=>true,'desde'=>$desde,'hasta'=>$hasta,'data'=>$rows]);
+        return response()->json(['ok' => true, 'desde' => $desde, 'hasta' => $hasta, 'data' => $rows]);
     }
 
     public function ventasCategorias(Request $request)
@@ -241,7 +248,8 @@ class ReportsController extends Controller
             ->orderBy('fecha')
             ->orderBy('categoria')
             ->get();
-        return response()->json(['ok'=>true,'desde'=>$desde,'hasta'=>$hasta,'data'=>$rows]);
+
+        return response()->json(['ok' => true, 'desde' => $desde, 'hasta' => $hasta, 'data' => $rows]);
     }
 
     public function ventasPorSucursal(Request $request)
@@ -253,7 +261,8 @@ class ReportsController extends Controller
             ->orderBy('fecha')
             ->orderBy('sucursal_id')
             ->get();
-        return response()->json(['ok'=>true,'desde'=>$desde,'hasta'=>$hasta,'data'=>$rows]);
+
+        return response()->json(['ok' => true, 'desde' => $desde, 'hasta' => $hasta, 'data' => $rows]);
     }
 
     public function ordenesRecientes(Request $request)
@@ -268,15 +277,16 @@ class ReportsController extends Controller
             ->orderByDesc('o.closing_date')
             ->limit($limit)
             ->get([
-                DB::raw("o.ticket_ref AS ticket"),
-                DB::raw("o.closing_date AS closing_date"),
-                DB::raw("COALESCE(term.location, o.sucursal_id) AS location"),
+                DB::raw('o.ticket_ref AS ticket'),
+                DB::raw('o.closing_date AS closing_date'),
+                DB::raw('COALESCE(term.location, o.sucursal_id) AS location'),
                 DB::raw("COALESCE(term.name, '') AS terminal_name"),
-                DB::raw("COALESCE(term.id, o.terminal_id) AS terminal_id"),
-                DB::raw("o.total AS total")
+                DB::raw('COALESCE(term.id, o.terminal_id) AS terminal_id'),
+                DB::raw('o.total AS total'),
             ])
             ->map(function ($row) {
                 $fecha = Carbon::parse($row->closing_date, config('app.timezone'));
+
                 return [
                     'ticket' => $row->ticket,
                     'hora' => $fecha->format('H:i'),
@@ -291,7 +301,7 @@ class ReportsController extends Controller
             'ok' => true,
             'desde' => $desde,
             'hasta' => $hasta,
-            'data' => $rows
+            'data' => $rows,
         ]);
     }
 }

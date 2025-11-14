@@ -1,0 +1,618 @@
+table_name|column_name|data_type|is_nullable|column_default|column_key
+alert_events|id|bigint|NO|nextval('alert_events_id_seq'::regclass)|PRI
+alert_events|recipe_id|bigint|NO||
+alert_events|snapshot_at|"timestamp without time zone"|NO||
+alert_events|old_portion_cost|numeric|YES||
+alert_events|new_portion_cost|numeric|YES||
+alert_events|delta_pct|numeric|YES||
+alert_events|created_at|"timestamp without time zone"|YES|now()|
+alert_events|handled|boolean|NO|false|
+alert_events|assigned_to|bigint|YES||
+alert_events|acknowledged_at|"timestamp with time zone"|YES||
+alert_events|resolution_notes|text|YES||
+alert_events|severity|"character varying"|NO|"'medium'::character varying"|
+alert_rules|id|bigint|NO|nextval('alert_rules_id_seq'::regclass)|PRI
+alert_rules|recipe_id|bigint|YES||
+alert_rules|category_id|bigint|YES||
+alert_rules|threshold_pct|numeric|NO|10.0|
+alert_rules|active|boolean|NO|true|
+alert_rules|notes|text|YES||
+alert_rules|scope|"character varying"|NO|"'global'::character varying"|
+alert_rules|threshold_numeric|numeric|YES||
+alert_rules|threshold_percent|numeric|YES||
+alert_rules|notification_channels|jsonb|YES||
+alertas_cortes|id|bigint|NO|nextval('alertas_cortes_id_seq'::regclass)|PRI
+alertas_cortes|postcorte_id|bigint|YES||
+alertas_cortes|sesion_id|bigint|YES||
+alertas_cortes|tipo|"character varying"|NO||
+alertas_cortes|destinatario_id|integer|YES||
+alertas_cortes|leida|boolean|YES|false|
+alertas_cortes|creada_en|"timestamp with time zone"|YES|now()|
+alertas_cortes|leida_en|"timestamp with time zone"|YES||
+almacen|id|text|NO||PRI
+almacen|sucursal_id|bigint|NO||
+almacen|nombre|text|NO||
+almacen|activo|boolean|NO|true|
+audit_log|id|bigint|NO|nextval('audit_log_id_seq'::regclass)|PRI
+audit_log|timestamp|"timestamp without time zone"|NO|now()|
+audit_log|user_id|bigint|NO||
+audit_log|accion|"character varying"|NO||
+audit_log|entidad|"character varying"|NO||
+audit_log|entidad_id|bigint|NO||
+audit_log|motivo|text|YES||
+audit_log|evidencia_url|text|YES||
+audit_log|payload_json|jsonb|YES||
+audit_log_global|id|bigint|NO|nextval('audit_log_global_id_seq'::regclass)|PRI
+audit_log_global|schema_name|text|NO||
+audit_log_global|table_name|text|NO||
+audit_log_global|operation|text|NO||
+audit_log_global|record_id|text|YES||
+audit_log_global|old_data|jsonb|YES||
+audit_log_global|new_data|jsonb|YES||
+audit_log_global|changed_by_user_id|bigint|YES||
+audit_log_global|changed_at|"timestamp without time zone"|YES|now()|
+audit_log_global|ip_address|inet|YES||
+audit_log_global|user_agent|text|YES||
+auditoria|id|bigint|NO|nextval('auditoria_id_seq'::regclass)|PRI
+auditoria|quien|integer|YES||
+auditoria|que|text|NO||
+auditoria|payload|jsonb|YES||
+auditoria|creado_en|"timestamp with time zone"|NO|now()|
+backup_tickets_cierre_masivo_20251112_112653|id|integer|YES||
+backup_tickets_cierre_masivo_20251112_112653|global_id|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_112653|create_date|"timestamp without time zone"|YES||
+backup_tickets_cierre_masivo_20251112_112653|closing_date|"timestamp without time zone"|YES||
+backup_tickets_cierre_masivo_20251112_112653|active_date|"timestamp without time zone"|YES||
+backup_tickets_cierre_masivo_20251112_112653|deliveery_date|"timestamp without time zone"|YES||
+backup_tickets_cierre_masivo_20251112_112653|creation_hour|integer|YES||
+backup_tickets_cierre_masivo_20251112_112653|paid|boolean|YES||
+backup_tickets_cierre_masivo_20251112_112653|voided|boolean|YES||
+backup_tickets_cierre_masivo_20251112_112653|void_reason|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_112653|wasted|boolean|YES||
+backup_tickets_cierre_masivo_20251112_112653|refunded|boolean|YES||
+backup_tickets_cierre_masivo_20251112_112653|settled|boolean|YES||
+backup_tickets_cierre_masivo_20251112_112653|drawer_resetted|boolean|YES||
+backup_tickets_cierre_masivo_20251112_112653|sub_total|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_112653|total_discount|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_112653|total_tax|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_112653|total_price|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_112653|paid_amount|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_112653|due_amount|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_112653|advance_amount|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_112653|adjustment_amount|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_112653|number_of_guests|integer|YES||
+backup_tickets_cierre_masivo_20251112_112653|status|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_112653|bar_tab|boolean|YES||
+backup_tickets_cierre_masivo_20251112_112653|is_tax_exempt|boolean|YES||
+backup_tickets_cierre_masivo_20251112_112653|is_re_opened|boolean|YES||
+backup_tickets_cierre_masivo_20251112_112653|service_charge|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_112653|delivery_charge|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_112653|customer_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_112653|delivery_address|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_112653|customer_pickeup|boolean|YES||
+backup_tickets_cierre_masivo_20251112_112653|delivery_extra_info|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_112653|ticket_type|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_112653|shift_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_112653|owner_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_112653|driver_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_112653|gratuity_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_112653|void_by_user|integer|YES||
+backup_tickets_cierre_masivo_20251112_112653|terminal_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_112653|folio_date|date|YES||
+backup_tickets_cierre_masivo_20251112_112653|branch_key|text|YES||
+backup_tickets_cierre_masivo_20251112_112653|daily_folio|integer|YES||
+backup_tickets_cierre_masivo_20251112_112653|backup_timestamp|"timestamp with time zone"|YES||
+backup_tickets_cierre_masivo_20251112_112653|backup_user_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_112653|backup_user_name|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_121131|id|integer|YES||
+backup_tickets_cierre_masivo_20251112_121131|global_id|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_121131|create_date|"timestamp without time zone"|YES||
+backup_tickets_cierre_masivo_20251112_121131|closing_date|"timestamp without time zone"|YES||
+backup_tickets_cierre_masivo_20251112_121131|active_date|"timestamp without time zone"|YES||
+backup_tickets_cierre_masivo_20251112_121131|deliveery_date|"timestamp without time zone"|YES||
+backup_tickets_cierre_masivo_20251112_121131|creation_hour|integer|YES||
+backup_tickets_cierre_masivo_20251112_121131|paid|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121131|voided|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121131|void_reason|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_121131|wasted|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121131|refunded|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121131|settled|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121131|drawer_resetted|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121131|sub_total|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121131|total_discount|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121131|total_tax|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121131|total_price|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121131|paid_amount|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121131|due_amount|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121131|advance_amount|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121131|adjustment_amount|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121131|number_of_guests|integer|YES||
+backup_tickets_cierre_masivo_20251112_121131|status|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_121131|bar_tab|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121131|is_tax_exempt|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121131|is_re_opened|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121131|service_charge|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121131|delivery_charge|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121131|customer_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_121131|delivery_address|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_121131|customer_pickeup|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121131|delivery_extra_info|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_121131|ticket_type|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_121131|shift_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_121131|owner_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_121131|driver_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_121131|gratuity_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_121131|void_by_user|integer|YES||
+backup_tickets_cierre_masivo_20251112_121131|terminal_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_121131|folio_date|date|YES||
+backup_tickets_cierre_masivo_20251112_121131|branch_key|text|YES||
+backup_tickets_cierre_masivo_20251112_121131|daily_folio|integer|YES||
+backup_tickets_cierre_masivo_20251112_121131|backup_timestamp|"timestamp with time zone"|YES||
+backup_tickets_cierre_masivo_20251112_121131|backup_user_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_121131|backup_user_name|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_121211|id|integer|YES||
+backup_tickets_cierre_masivo_20251112_121211|global_id|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_121211|create_date|"timestamp without time zone"|YES||
+backup_tickets_cierre_masivo_20251112_121211|closing_date|"timestamp without time zone"|YES||
+backup_tickets_cierre_masivo_20251112_121211|active_date|"timestamp without time zone"|YES||
+backup_tickets_cierre_masivo_20251112_121211|deliveery_date|"timestamp without time zone"|YES||
+backup_tickets_cierre_masivo_20251112_121211|creation_hour|integer|YES||
+backup_tickets_cierre_masivo_20251112_121211|paid|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121211|voided|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121211|void_reason|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_121211|wasted|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121211|refunded|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121211|settled|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121211|drawer_resetted|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121211|sub_total|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121211|total_discount|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121211|total_tax|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121211|total_price|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121211|paid_amount|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121211|due_amount|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121211|advance_amount|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121211|adjustment_amount|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121211|number_of_guests|integer|YES||
+backup_tickets_cierre_masivo_20251112_121211|status|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_121211|bar_tab|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121211|is_tax_exempt|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121211|is_re_opened|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121211|service_charge|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121211|delivery_charge|"double precision"|YES||
+backup_tickets_cierre_masivo_20251112_121211|customer_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_121211|delivery_address|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_121211|customer_pickeup|boolean|YES||
+backup_tickets_cierre_masivo_20251112_121211|delivery_extra_info|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_121211|ticket_type|"character varying"|YES||
+backup_tickets_cierre_masivo_20251112_121211|shift_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_121211|owner_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_121211|driver_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_121211|gratuity_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_121211|void_by_user|integer|YES||
+backup_tickets_cierre_masivo_20251112_121211|terminal_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_121211|folio_date|date|YES||
+backup_tickets_cierre_masivo_20251112_121211|branch_key|text|YES||
+backup_tickets_cierre_masivo_20251112_121211|daily_folio|integer|YES||
+backup_tickets_cierre_masivo_20251112_121211|backup_timestamp|"timestamp with time zone"|YES||
+backup_tickets_cierre_masivo_20251112_121211|backup_user_id|integer|YES||
+backup_tickets_cierre_masivo_20251112_121211|backup_user_name|"character varying"|YES||
+bodega|id|integer|NO|nextval('bodega_id_seq'::regclass)|PRI
+bodega|sucursal_id|bigint|NO||UNI
+bodega|sucursal_id|bigint|NO||
+bodega|codigo|text|NO||UNI
+bodega|nombre|text|NO||
+cache|key|"character varying"|NO||PRI
+cache|value|text|NO||
+cache|expiration|integer|NO||
+cache_locks|key|"character varying"|NO||PRI
+cache_locks|owner|"character varying"|NO||
+cache_locks|expiration|integer|NO||
+caja_fondo|id|bigint|NO|nextval('caja_fondo_id_seq'::regclass)|PRI
+caja_fondo|sucursal_id|integer|NO||
+caja_fondo|fecha|date|NO||
+caja_fondo|monto_inicial|numeric|NO||
+caja_fondo|moneda|"character varying"|YES|"'MXN'::character varying"|
+caja_fondo|estado|"character varying"|NO|"'ABIERTO'::character varying"|
+caja_fondo|creado_por|integer|NO||
+caja_fondo|created_at|"timestamp without time zone"|YES|now()|
+caja_fondo|updated_at|"timestamp without time zone"|YES|now()|
+caja_fondo_adj|id|bigint|NO|nextval('caja_fondo_adj_id_seq'::regclass)|PRI
+caja_fondo_adj|mov_id|bigint|YES||
+caja_fondo_adj|tipo|"character varying"|NO||
+caja_fondo_adj|archivo_url|text|NO||
+caja_fondo_adj|observaciones|text|YES||
+caja_fondo_adj|created_at|"timestamp without time zone"|YES|now()|
+caja_fondo_arqueo|id|bigint|NO|nextval('caja_fondo_arqueo_id_seq'::regclass)|PRI
+caja_fondo_arqueo|fondo_id|bigint|YES||
+caja_fondo_arqueo|fecha_cierre|"timestamp without time zone"|NO|now()|
+caja_fondo_arqueo|efectivo_contado|numeric|NO||
+caja_fondo_arqueo|diferencia|numeric|NO||
+caja_fondo_arqueo|observaciones|text|YES||
+caja_fondo_arqueo|cerrado_por|integer|NO||
+caja_fondo_mov|id|bigint|NO|nextval('caja_fondo_mov_id_seq'::regclass)|PRI
+caja_fondo_mov|fondo_id|bigint|YES||
+caja_fondo_mov|fecha_hora|"timestamp without time zone"|NO|now()|
+caja_fondo_mov|tipo|"character varying"|NO||
+caja_fondo_mov|concepto|text|NO||
+caja_fondo_mov|proveedor_id|integer|YES||
+caja_fondo_mov|monto|numeric|NO||
+caja_fondo_mov|metodo|"character varying"|NO|"'EFECTIVO'::character varying"|
+caja_fondo_mov|requiere_comprobante|boolean|YES|false|
+caja_fondo_mov|estatus|"character varying"|NO|"'CAPTURADO'::character varying"|
+caja_fondo_mov|creado_por|integer|NO||
+caja_fondo_mov|aprobado_por|integer|YES||
+caja_fondo_mov|created_at|"timestamp without time zone"|YES|now()|
+caja_fondo_mov|updated_at|"timestamp without time zone"|YES|now()|
+caja_fondo_usuario|fondo_id|bigint|NO||PRI
+caja_fondo_usuario|fondo_id|bigint|NO||
+caja_fondo_usuario|user_id|integer|NO||PRI
+caja_fondo_usuario|rol|"character varying"|NO||
+cash_fund_arqueos|id|bigint|NO|nextval('cash_fund_arqueos_id_seq'::regclass)|PRI
+cash_fund_arqueos|cash_fund_id|bigint|NO||UNI
+cash_fund_arqueos|cash_fund_id|bigint|NO||
+cash_fund_arqueos|monto_esperado|numeric|NO||
+cash_fund_arqueos|monto_contado|numeric|NO||
+cash_fund_arqueos|diferencia|numeric|NO||
+cash_fund_arqueos|observaciones|text|YES||
+cash_fund_arqueos|created_by_user_id|bigint|NO||
+cash_fund_arqueos|created_at|"timestamp without time zone"|YES||
+cash_fund_arqueos|updated_at|"timestamp without time zone"|YES||
+cash_fund_movement_audit_log|id|bigint|NO|nextval('cash_fund_movement_audit_log_id_seq'::regclass)|PRI
+cash_fund_movement_audit_log|movement_id|bigint|NO||
+cash_fund_movement_audit_log|action|"character varying"|NO||
+cash_fund_movement_audit_log|field_changed|"character varying"|YES||
+cash_fund_movement_audit_log|old_value|text|YES||
+cash_fund_movement_audit_log|new_value|text|YES||
+cash_fund_movement_audit_log|observaciones|text|YES||
+cash_fund_movement_audit_log|changed_by_user_id|bigint|NO||
+cash_fund_movement_audit_log|created_at|"timestamp without time zone"|NO|now()|
+cash_fund_movements|id|bigint|NO|nextval('cash_fund_movements_id_seq'::regclass)|PRI
+cash_fund_movements|cash_fund_id|bigint|NO||
+cash_fund_movements|tipo|"character varying"|NO||
+cash_fund_movements|concepto|text|NO||
+cash_fund_movements|proveedor_id|integer|YES||
+cash_fund_movements|monto|numeric|NO||
+cash_fund_movements|metodo|"character varying"|NO||
+cash_fund_movements|estatus|"character varying"|NO|"'APROBADO'::character varying"|
+cash_fund_movements|requiere_comprobante|boolean|NO|false|
+cash_fund_movements|tiene_comprobante|boolean|NO|false|
+cash_fund_movements|adjunto_path|"character varying"|YES||
+cash_fund_movements|created_by_user_id|bigint|NO||
+cash_fund_movements|approved_by_user_id|bigint|YES||
+cash_fund_movements|approved_at|"timestamp without time zone"|YES||
+cash_fund_movements|created_at|"timestamp without time zone"|YES||
+cash_fund_movements|updated_at|"timestamp without time zone"|YES||
+cash_funds|id|bigint|NO|nextval('cash_funds_id_seq'::regclass)|PRI
+cash_funds|sucursal_id|integer|NO||
+cash_funds|fecha|date|NO||
+cash_funds|monto_inicial|numeric|NO||
+cash_funds|moneda|"character varying"|NO|"'MXN'::character varying"|
+cash_funds|estado|"character varying"|NO|"'ABIERTO'::character varying"|
+cash_funds|responsable_user_id|bigint|NO||
+cash_funds|created_by_user_id|bigint|NO||
+cash_funds|closed_at|"timestamp without time zone"|YES||
+cash_funds|created_at|"timestamp without time zone"|YES||
+cash_funds|updated_at|"timestamp without time zone"|YES||
+cash_funds|descripcion|"character varying"|YES||
+cat_almacenes|id|bigint|NO|nextval('cat_almacenes_id_seq'::regclass)|PRI
+cat_almacenes|clave|"character varying"|NO||UNI
+cat_almacenes|nombre|"character varying"|NO||
+cat_almacenes|sucursal_id|bigint|YES||
+cat_almacenes|activo|boolean|NO|true|
+cat_almacenes|created_at|"timestamp without time zone"|YES||
+cat_almacenes|updated_at|"timestamp without time zone"|YES||
+cat_proveedores|id|bigint|NO|nextval('cat_proveedores_id_seq'::regclass)|PRI
+cat_proveedores|rfc|"character varying"|NO||UNI
+cat_proveedores|nombre|"character varying"|NO||
+cat_proveedores|telefono|"character varying"|YES||
+cat_proveedores|email|"character varying"|YES||
+cat_proveedores|activo|boolean|NO|true|
+cat_proveedores|created_at|"timestamp without time zone"|YES||
+cat_proveedores|updated_at|"timestamp without time zone"|YES||
+cat_proveedores|razon_social|"character varying"|YES||
+cat_proveedores|tipo_comprobante|"character varying"|YES||
+cat_proveedores|uso_cfdi|"character varying"|YES||
+cat_proveedores|metodo_pago|"character varying"|YES||
+cat_proveedores|forma_pago|"character varying"|YES||
+cat_proveedores|regimen_fiscal|"character varying"|YES||
+cat_proveedores|contacto_nombre|"character varying"|YES||
+cat_proveedores|contacto_email|"character varying"|YES||
+cat_proveedores|contacto_telefono|"character varying"|YES||
+cat_proveedores|direccion|"character varying"|YES||
+cat_proveedores|ciudad|"character varying"|YES||
+cat_proveedores|estado|"character varying"|YES||
+cat_proveedores|pais|"character varying"|YES||
+cat_proveedores|cp|"character varying"|YES||
+cat_proveedores|notas|text|YES||
+cat_sucursales|id|bigint|NO|nextval('cat_sucursales_id_seq'::regclass)|PRI
+cat_sucursales|clave|"character varying"|NO||UNI
+cat_sucursales|nombre|"character varying"|NO||
+cat_sucursales|ubicacion|"character varying"|YES||
+cat_sucursales|activo|boolean|NO|true|
+cat_sucursales|created_at|"timestamp without time zone"|YES||
+cat_sucursales|updated_at|"timestamp without time zone"|YES||
+cat_sucursales|pos_location|"character varying"|YES||
+cat_unidades|id|bigint|NO|nextval('cat_unidades_id_seq'::regclass)|PRI
+cat_unidades|created_at|"timestamp without time zone"|YES||
+cat_unidades|updated_at|"timestamp without time zone"|YES||
+cat_unidades|clave|"character varying"|YES||UNI
+cat_unidades|nombre|"character varying"|YES||
+cat_unidades|activo|boolean|NO|true|
+cat_unidades|categoria|"character varying"|YES||
+cat_uom_conversion|id|bigint|NO|nextval('cat_uom_conversion_id_seq'::regclass)|PRI
+cat_uom_conversion|origen_id|bigint|NO||UNI
+cat_uom_conversion|origen_id|bigint|NO||
+cat_uom_conversion|origen_id|bigint|NO||UNI
+cat_uom_conversion|destino_id|bigint|NO||
+cat_uom_conversion|destino_id|bigint|NO||UNI
+cat_uom_conversion|destino_id|bigint|NO||UNI
+cat_uom_conversion|factor|numeric|NO||
+cat_uom_conversion|created_at|"timestamp without time zone"|YES||
+cat_uom_conversion|updated_at|"timestamp without time zone"|YES||
+cat_uom_conversion|is_exact|boolean|NO|true|
+cat_uom_conversion|scope|"character varying"|NO|"'global'::character varying"|
+cat_uom_conversion|notes|text|YES||
+conciliacion|id|bigint|NO|nextval('conciliacion_id_seq'::regclass)|PRI
+conciliacion|postcorte_id|bigint|NO||
+conciliacion|postcorte_id|bigint|NO||UNI
+conciliacion|conciliado_por|integer|YES||
+conciliacion|conciliado_en|"timestamp with time zone"|YES|now()|
+conciliacion|estatus|text|NO|'EN_REVISION'::text|
+conciliacion|notas|text|YES||
+conversiones_unidad_legacy|id|integer|NO|nextval('conversiones_unidad_id_seq'::regclass)|PRI
+conversiones_unidad_legacy|unidad_origen_id|integer|NO||UNI
+conversiones_unidad_legacy|unidad_origen_id|integer|NO||
+conversiones_unidad_legacy|unidad_destino_id|integer|NO||UNI
+conversiones_unidad_legacy|unidad_destino_id|integer|NO||
+conversiones_unidad_legacy|factor_conversion|numeric|NO||
+conversiones_unidad_legacy|formula_directa|text|YES||
+conversiones_unidad_legacy|precision_estimada|numeric|YES|1.0|
+conversiones_unidad_legacy|activo|boolean|YES|true|
+conversiones_unidad_legacy|created_at|"timestamp without time zone"|YES|now()|
+cost_layer|id|bigint|NO|nextval('cost_layer_id_seq'::regclass)|PRI
+cost_layer|item_id|"character varying"|NO||
+cost_layer|batch_id|bigint|YES||
+cost_layer|ts_in|"timestamp without time zone"|NO||
+cost_layer|qty_in|numeric|NO||
+cost_layer|qty_left|numeric|NO||
+cost_layer|unit_cost|numeric|NO||
+cost_layer|sucursal_id|"character varying"|YES||
+cost_layer|source_ref|text|YES||
+cost_layer|source_id|bigint|YES||
+failed_jobs|id|bigint|NO|nextval('failed_jobs_id_seq'::regclass)|PRI
+failed_jobs|uuid|"character varying"|NO||UNI
+failed_jobs|connection|text|NO||
+failed_jobs|queue|text|NO||
+failed_jobs|payload|text|NO||
+failed_jobs|exception|text|NO||
+failed_jobs|failed_at|"timestamp without time zone"|NO|now()|
+formas_pago|id|bigint|NO|nextval('formas_pago_id_seq'::regclass)|PRI
+formas_pago|codigo|text|NO||
+formas_pago|payment_type|text|YES||
+formas_pago|transaction_type|text|YES||
+formas_pago|payment_sub_type|text|YES||
+formas_pago|custom_name|text|YES||
+formas_pago|custom_ref|text|YES||
+formas_pago|activo|boolean|NO|true|
+formas_pago|prioridad|integer|NO|100|
+formas_pago|creado_en|"timestamp with time zone"|NO|now()|
+hist_cost_insumo|id|bigint|NO|nextval('hist_cost_insumo_id_seq'::regclass)|PRI
+hist_cost_insumo|item_id|"character varying"|NO||
+hist_cost_insumo|fecha_efectiva|date|NO||
+hist_cost_insumo|costo_wac|numeric|YES||
+hist_cost_insumo|costo_peps|numeric|YES||
+hist_cost_insumo|costo_ueps|numeric|YES||
+hist_cost_insumo|costo_std|numeric|YES||
+hist_cost_insumo|algoritmo_principal|text|YES|'WAC'::text|
+hist_cost_insumo|valid_from|date|NO|('now'::text)::date|
+hist_cost_insumo|valid_to|date|YES||
+hist_cost_insumo|sys_from|"timestamp without time zone"|NO|now()|
+hist_cost_insumo|sys_to|"timestamp without time zone"|YES||
+hist_cost_insumo|created_at|"timestamp without time zone"|YES|now()|
+hist_cost_insumo|updated_at|"timestamp without time zone"|YES|now()|
+hist_cost_insumo|deleted_at|"timestamp without time zone"|YES||
+hist_cost_receta|id|bigint|NO|nextval('hist_cost_receta_id_seq'::regclass)|PRI
+hist_cost_receta|receta_version_id|bigint|NO||
+hist_cost_receta|fecha_calculo|date|NO||
+hist_cost_receta|costo_total|numeric|YES||
+hist_cost_receta|costo_porcion|numeric|YES||
+hist_cost_receta|algoritmo_utilizado|text|YES|'WAC'::text|
+hist_cost_receta|valid_from|date|NO|('now'::text)::date|
+hist_cost_receta|valid_to|date|YES||
+hist_cost_receta|sys_from|"timestamp without time zone"|NO|now()|
+hist_cost_receta|sys_to|"timestamp without time zone"|YES||
+historial_costos_item|id|integer|NO|nextval('historial_costos_item_id_seq'::regclass)|PRI
+historial_costos_item|item_id|"character varying"|NO||
+historial_costos_item|item_id|"character varying"|NO||UNI
+historial_costos_item|fecha_efectiva|date|NO||UNI
+historial_costos_item|fecha_registro|"timestamp without time zone"|YES|now()|
+historial_costos_item|costo_anterior|numeric|YES||
+historial_costos_item|costo_nuevo|numeric|YES||
+historial_costos_item|tipo_cambio|"character varying"|YES||
+historial_costos_item|referencia_id|integer|YES||
+historial_costos_item|referencia_tipo|"character varying"|YES||
+historial_costos_item|usuario_id|integer|YES||
+historial_costos_item|valid_from|date|NO||
+historial_costos_item|valid_to|date|YES||
+historial_costos_item|sys_from|"timestamp without time zone"|NO|now()|
+historial_costos_item|sys_to|"timestamp without time zone"|YES||
+historial_costos_item|costo_wac|numeric|YES||
+historial_costos_item|costo_peps|numeric|YES||
+historial_costos_item|costo_ueps|numeric|YES||
+historial_costos_item|costo_estandar|numeric|YES||
+historial_costos_item|algoritmo_principal|"character varying"|YES|"'WAC'::character varying"|
+historial_costos_item|version_datos|integer|YES|1|UNI
+historial_costos_item|recalculado|boolean|YES|false|
+historial_costos_item|fuente_datos|"character varying"|YES||
+historial_costos_item|metadata_calculo|json|YES||
+historial_costos_item|created_at|"timestamp without time zone"|YES|now()|
+historial_costos_receta|id|integer|NO|nextval('historial_costos_receta_id_seq'::regclass)|PRI
+historial_costos_receta|receta_version_id|integer|NO||
+historial_costos_receta|fecha_calculo|date|NO||
+historial_costos_receta|costo_total|numeric|YES||
+historial_costos_receta|costo_porcion|numeric|YES||
+historial_costos_receta|algoritmo_utilizado|"character varying"|YES||
+historial_costos_receta|version_datos|integer|YES|1|
+historial_costos_receta|metadata_calculo|json|YES||
+historial_costos_receta|created_at|"timestamp without time zone"|YES|now()|
+historial_costos_receta|valid_from|date|NO||
+historial_costos_receta|valid_to|date|YES||
+historial_costos_receta|sys_from|"timestamp without time zone"|NO|now()|
+historial_costos_receta|sys_to|"timestamp without time zone"|YES||
+insumo|id|bigint|NO|nextval('insumo_id_seq'::regclass)|PRI
+insumo|sku|text|YES||UNI
+insumo|nombre|text|NO||
+insumo|um_id|integer|NO||
+insumo|perecible|boolean|NO|false|
+insumo|merma_pct|numeric|NO|0.000|
+insumo|activo|boolean|NO|true|
+insumo|meta|jsonb|YES||
+insumo|codigo|"character varying"|YES||UNI
+insumo|categoria_codigo|"character varying"|YES||
+insumo|subcategoria_codigo|"character varying"|YES||
+insumo|consecutivo|integer|YES||
+insumo|codigo_alterno|"character varying"|YES||
+insumo_presentacion|id|bigint|NO|nextval('insumo_presentacion_id_seq'::regclass)|PRI
+insumo_presentacion|item_id|"character varying"|NO||
+insumo_presentacion|proveedor_id|integer|YES||
+insumo_presentacion|um_compra_id|integer|NO||
+insumo_presentacion|factor_a_um|numeric|NO|1.0|
+insumo_presentacion|costo_ultimo|numeric|NO|0.0|
+insumo_presentacion|activo|boolean|NO|true|
+insumo_presentacion|created_at|"timestamp without time zone"|YES|now()|
+insumo_presentacion|updated_at|"timestamp without time zone"|YES|now()|
+insumo_presentacion|deleted_at|"timestamp without time zone"|YES||
+insumo_proveedor_presentacion|id|bigint|NO|nextval('insumo_proveedor_presentacion_id_seq'::regclass)|PRI
+insumo_proveedor_presentacion|item_id|"character varying"|NO||
+insumo_proveedor_presentacion|proveedor_id|text|NO||
+insumo_proveedor_presentacion|uom_compra_id|integer|NO||
+insumo_proveedor_presentacion|cantidad_en_uom_compra|numeric|NO|1|
+insumo_proveedor_presentacion|uom_base_id|integer|NO||
+insumo_proveedor_presentacion|factor_a_base|numeric|NO|1|
+insumo_proveedor_presentacion|precio_compra|numeric|YES||
+insumo_proveedor_presentacion|moneda|character|NO|'MXN'::bpchar|
+insumo_proveedor_presentacion|activo|boolean|NO|true|
+insumo_proveedor_presentacion|created_at|"timestamp with time zone"|NO|now()|
+insumo_proveedor_presentacion|updated_at|"timestamp with time zone"|NO|now()|
+insumo_proveedor_presentacion|deleted_at|"timestamp without time zone"|YES||
+inv_consumo_pos|id|bigint|NO|nextval('inv_consumo_pos_id_seq'::regclass)|PRI
+inv_consumo_pos|ticket_id|bigint|NO||UNI
+inv_consumo_pos|ticket_item_id|bigint|YES||UNI
+inv_consumo_pos|sucursal_id|integer|NO||
+inv_consumo_pos|terminal_id|integer|NO||
+inv_consumo_pos|estado|"character varying"|NO|"'PENDIENTE'::character varying"|
+inv_consumo_pos|created_at|"timestamp without time zone"|YES|now()|
+inv_consumo_pos|requiere_reproceso|boolean|NO|true|
+inv_consumo_pos|procesado|boolean|NO|false|
+inv_consumo_pos|fecha_proceso|"timestamp without time zone"|YES||
+inv_consumo_pos|revertido|boolean|NO|false|
+inv_consumo_pos_det|id|bigint|NO|nextval('inv_consumo_pos_det_id_seq'::regclass)|PRI
+inv_consumo_pos_det|consumo_id|bigint|YES||
+inv_consumo_pos_det|mp_id|integer|NO||
+inv_consumo_pos_det|uom_id|integer|YES||
+inv_consumo_pos_det|cantidad|numeric|NO||
+inv_consumo_pos_det|factor|numeric|NO|1|
+inv_consumo_pos_det|origen|"character varying"|NO||
+inv_consumo_pos_det|requiere_reproceso|boolean|NO|true|
+inv_consumo_pos_det|procesado|boolean|NO|false|
+inv_consumo_pos_det|fecha_proceso|"timestamp without time zone"|YES||
+inv_consumo_pos_det|revertido|boolean|NO|false|
+inv_consumo_pos_log|id|bigint|NO|nextval('inv_consumo_pos_log_id_seq'::regclass)|PRI
+inv_consumo_pos_log|ticket_id|bigint|NO||
+inv_consumo_pos_log|accion|"character varying"|NO||
+inv_consumo_pos_log|registrado_en|"timestamp with time zone"|NO|now()|
+inv_consumo_pos_log|payload|jsonb|YES||
+inv_stock_policy|id|bigint|NO|nextval('inv_stock_policy_id_seq'::regclass)|PRI
+inv_stock_policy|item_id|"character varying"|NO||UNI
+inv_stock_policy|item_id|"character varying"|NO||
+inv_stock_policy|sucursal_id|bigint|NO||UNI
+inv_stock_policy|sucursal_id|bigint|NO||
+inv_stock_policy|min_qty|numeric|NO|'0'::numeric|
+inv_stock_policy|max_qty|numeric|NO|'0'::numeric|
+inv_stock_policy|reorder_qty|numeric|NO|'0'::numeric|
+inv_stock_policy|activo|boolean|NO|true|
+inv_stock_policy|created_at|"timestamp without time zone"|YES||
+inv_stock_policy|updated_at|"timestamp without time zone"|YES||
+inventory_batch|id|integer|NO|nextval('inventory_batch_id_seq'::regclass)|PRI
+inventory_batch|item_id|"character varying"|NO||
+inventory_batch|lote_proveedor|"character varying"|NO||
+inventory_batch|fecha_recepcion|date|NO||
+inventory_batch|fecha_caducidad|date|NO||
+inventory_batch|temperatura_recepcion|numeric|YES||
+inventory_batch|documento_url|"character varying"|YES||
+inventory_batch|cantidad_original|numeric|NO||
+inventory_batch|cantidad_actual|numeric|NO||
+inventory_batch|estado|"character varying"|YES|"'ACTIVO'::character varying"|
+inventory_batch|ubicacion_id|"character varying"|NO||
+inventory_batch|created_at|"timestamp without time zone"|YES|now()|
+inventory_batch|updated_at|"timestamp without time zone"|YES|now()|
+inventory_batch|unit_cost|numeric|NO|'0'::numeric|
+inventory_count_lines|id|bigint|NO|nextval('inventory_count_lines_id_seq'::regclass)|PRI
+inventory_count_lines|inventory_count_id|bigint|NO||
+inventory_count_lines|item_id|"character varying"|NO||
+inventory_count_lines|inventory_batch_id|bigint|YES||
+inventory_count_lines|qty_teorica|numeric|NO|'0'::numeric|
+inventory_count_lines|qty_contada|numeric|NO|'0'::numeric|
+inventory_count_lines|qty_variacion|numeric|NO|'0'::numeric|
+inventory_count_lines|uom|"character varying"|NO||
+inventory_count_lines|motivo|"character varying"|YES||
+inventory_count_lines|meta|jsonb|YES||
+inventory_count_lines|created_at|"timestamp with time zone"|YES||
+inventory_count_lines|updated_at|"timestamp with time zone"|YES||
+inventory_counts|id|bigint|NO|nextval('inventory_counts_id_seq'::regclass)|PRI
+inventory_counts|folio|"character varying"|YES||UNI
+inventory_counts|sucursal_id|"character varying"|YES||
+inventory_counts|almacen_id|"character varying"|YES||
+inventory_counts|programado_para|"timestamp with time zone"|YES||
+inventory_counts|iniciado_en|"timestamp with time zone"|YES||
+inventory_counts|cerrado_en|"timestamp with time zone"|YES||
+inventory_counts|estado|"character varying"|NO|"'BORRADOR'::character varying"|
+inventory_counts|creado_por|bigint|YES||
+inventory_counts|cerrado_por|bigint|YES||
+inventory_counts|notas|text|YES||
+inventory_counts|total_items|numeric|NO|'0'::numeric|
+inventory_counts|total_variacion|numeric|NO|'0'::numeric|
+inventory_counts|meta|jsonb|YES||
+inventory_counts|created_at|"timestamp with time zone"|YES||
+inventory_counts|updated_at|"timestamp with time zone"|YES||
+inventory_snapshot|snapshot_date|date|NO||PRI
+inventory_snapshot|branch_id|text|NO||PRI
+inventory_snapshot|item_id|"character varying"|NO||
+inventory_snapshot|item_id|"character varying"|NO||PRI
+inventory_snapshot|teorico_qty|numeric|NO|0|
+inventory_snapshot|fisico_qty|numeric|YES||
+inventory_snapshot|teorico_cost|numeric|YES||
+inventory_snapshot|valor_teorico|numeric|YES||
+inventory_snapshot|variance_qty|numeric|YES||
+inventory_snapshot|variance_cost|numeric|YES||
+inventory_snapshot|created_at|"timestamp with time zone"|NO|now()|
+inventory_snapshot|updated_at|"timestamp with time zone"|NO|now()|
+inventory_wastes|id|bigint|NO|nextval('inventory_wastes_id_seq'::regclass)|PRI
+inventory_wastes|production_order_id|bigint|YES||
+inventory_wastes|item_id|"character varying"|NO||
+inventory_wastes|inventory_batch_id|bigint|YES||
+inventory_wastes|qty|numeric|NO||
+inventory_wastes|uom|"character varying"|NO||
+inventory_wastes|motivo|"character varying"|YES||
+inventory_wastes|sucursal_id|"character varying"|YES||
+inventory_wastes|almacen_id|"character varying"|YES||
+inventory_wastes|user_id|bigint|YES||
+inventory_wastes|ref_tipo|"character varying"|YES||
+inventory_wastes|ref_id|bigint|YES||
+inventory_wastes|registrado_en|"timestamp with time zone"|NO|now()|
+inventory_wastes|meta|jsonb|YES||
+inventory_wastes|notas|text|YES||
+inventory_wastes|created_at|"timestamp with time zone"|YES||
+inventory_wastes|updated_at|"timestamp with time zone"|YES||
+item_categories|id|bigint|NO|nextval('item_categories_id_seq'::regclass)|PRI
+item_categories|nombre|"character varying"|NO||
+item_categories|slug|"character varying"|YES||UNI
+item_categories|codigo|"character varying"|YES||UNI
+item_categories|descripcion|text|YES||
+item_categories|activo|boolean|NO|true|
+item_categories|prefijo|"character varying"|YES||
+item_categories|created_at|"timestamp without time zone"|YES||
+item_categories|updated_at|"timestamp without time zone"|YES||
+item_category_counters|category_id|bigint|NO||PRI
+item_category_counters|last_val|bigint|NO|0|
+item_category_counters|updated_at|"timestamp without time zone"|YES||

@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-$rootPath = realpath(__DIR__ . '/..');
+$rootPath = realpath(__DIR__.'/..');
 if ($rootPath === false) {
     fwrite(STDERR, "No se pudo resolver la ruta raíz del proyecto.\n");
     exit(1);
 }
 
-require $rootPath . '/vendor/autoload.php';
+require $rootPath.'/vendor/autoload.php';
 
-if (class_exists(Dotenv\Dotenv::class) && file_exists($rootPath . '/.env')) {
+if (class_exists(Dotenv\Dotenv::class) && file_exists($rootPath.'/.env')) {
     Dotenv\Dotenv::createImmutable($rootPath)->safeLoad();
 }
 
@@ -49,14 +49,14 @@ try {
     );
     $pdo->exec('SET search_path TO selemti, public');
 } catch (Throwable $exception) {
-    fwrite(STDERR, "No se pudo conectar a PostgreSQL: " . $exception->getMessage() . "\n");
+    fwrite(STDERR, 'No se pudo conectar a PostgreSQL: '.$exception->getMessage()."\n");
     exit(1);
 }
 
 $schemaList = implode(',', array_map(static fn ($value) => $pdo->quote($value), $schemas));
 
 $tables = [];
-$tableSql = <<<SQL
+$tableSql = <<<'SQL'
 select
     t.table_schema,
     t.table_name,
@@ -72,7 +72,7 @@ $tableSql = sprintf($tableSql, $schemaList);
 $tableRows = $pdo->query($tableSql)->fetchAll();
 
 foreach ($tableRows as $row) {
-    $key = $row['table_schema'] . '.' . $row['table_name'];
+    $key = $row['table_schema'].'.'.$row['table_name'];
     $tables[$key] = [
         'schema' => $row['table_schema'],
         'name' => $row['table_name'],
@@ -92,7 +92,7 @@ foreach ($tableRows as $row) {
     ];
 }
 
-$columnSql = <<<SQL
+$columnSql = <<<'SQL'
 select
     c.table_schema,
     c.table_name,
@@ -118,8 +118,8 @@ $columnSql = sprintf($columnSql, $schemaList);
 $columnRows = $pdo->query($columnSql)->fetchAll();
 
 foreach ($columnRows as $row) {
-    $key = $row['table_schema'] . '.' . $row['table_name'];
-    if (!isset($tables[$key])) {
+    $key = $row['table_schema'].'.'.$row['table_name'];
+    if (! isset($tables[$key])) {
         continue;
     }
 
@@ -133,15 +133,15 @@ foreach ($columnRows as $row) {
 
     $formattedType = $row['data_type'];
     if ($row['character_maximum_length'] !== null) {
-        $formattedType .= '(' . $row['character_maximum_length'] . ')';
+        $formattedType .= '('.$row['character_maximum_length'].')';
     } elseif ($row['numeric_precision'] !== null) {
-        $formattedType .= '(' . $row['numeric_precision'];
+        $formattedType .= '('.$row['numeric_precision'];
         if ($row['numeric_scale'] !== null) {
-            $formattedType .= ',' . $row['numeric_scale'];
+            $formattedType .= ','.$row['numeric_scale'];
         }
         $formattedType .= ')';
     } elseif ($row['datetime_precision'] !== null && stripos($row['data_type'], 'timestamp') !== false) {
-        $formattedType .= '(' . $row['datetime_precision'] . ')';
+        $formattedType .= '('.$row['datetime_precision'].')';
     }
 
     $tables[$key]['columns'][] = [
@@ -156,7 +156,7 @@ foreach ($columnRows as $row) {
     ];
 }
 
-$pkSql = <<<SQL
+$pkSql = <<<'SQL'
 select
     nsp.nspname as table_schema,
     tbl.relname as table_name,
@@ -180,7 +180,7 @@ $decodeJsonArray = static function ($value): array {
     }
 
     $decoded = json_decode((string) $value, true);
-    if (!is_array($decoded)) {
+    if (! is_array($decoded)) {
         return [];
     }
 
@@ -193,8 +193,8 @@ $decodeJsonArray = static function ($value): array {
 };
 
 foreach ($pkRows as $row) {
-    $key = $row['table_schema'] . '.' . $row['table_name'];
-    if (!isset($tables[$key])) {
+    $key = $row['table_schema'].'.'.$row['table_name'];
+    if (! isset($tables[$key])) {
         continue;
     }
     $tables[$key]['primary_key'] = [
@@ -203,7 +203,7 @@ foreach ($pkRows as $row) {
     ];
 }
 
-$uniqueSql = <<<SQL
+$uniqueSql = <<<'SQL'
 select
     nsp.nspname as table_schema,
     tbl.relname as table_name,
@@ -222,8 +222,8 @@ $uniqueSql = sprintf($uniqueSql, $schemaList);
 $uniqueRows = $pdo->query($uniqueSql)->fetchAll();
 
 foreach ($uniqueRows as $row) {
-    $key = $row['table_schema'] . '.' . $row['table_name'];
-    if (!isset($tables[$key])) {
+    $key = $row['table_schema'].'.'.$row['table_name'];
+    if (! isset($tables[$key])) {
         continue;
     }
     $tables[$key]['unique_constraints'][] = [
@@ -232,7 +232,7 @@ foreach ($uniqueRows as $row) {
     ];
 }
 
-$checkSql = <<<SQL
+$checkSql = <<<'SQL'
 select
     nsp.nspname as table_schema,
     tbl.relname as table_name,
@@ -249,8 +249,8 @@ $checkSql = sprintf($checkSql, $schemaList);
 $checkRows = $pdo->query($checkSql)->fetchAll();
 
 foreach ($checkRows as $row) {
-    $key = $row['table_schema'] . '.' . $row['table_name'];
-    if (!isset($tables[$key])) {
+    $key = $row['table_schema'].'.'.$row['table_name'];
+    if (! isset($tables[$key])) {
         continue;
     }
     $tables[$key]['check_constraints'][] = [
@@ -259,7 +259,7 @@ foreach ($checkRows as $row) {
     ];
 }
 
-$fkSql = <<<SQL
+$fkSql = <<<'SQL'
 select
     nsp.nspname as table_schema,
     tbl.relname as table_name,
@@ -289,14 +289,14 @@ $fkSql = sprintf($fkSql, $schemaList);
 $fkRows = $pdo->query($fkSql)->fetchAll();
 
 foreach ($fkRows as $row) {
-    $key = $row['table_schema'] . '.' . $row['table_name'];
-    if (!isset($tables[$key])) {
+    $key = $row['table_schema'].'.'.$row['table_name'];
+    if (! isset($tables[$key])) {
         continue;
     }
     $tables[$key]['foreign_keys'][] = [
         'name' => $row['conname'],
         'columns' => $decodeJsonArray($row['columns']),
-        'referenced_table' => $row['foreign_schema'] . '.' . $row['foreign_table'],
+        'referenced_table' => $row['foreign_schema'].'.'.$row['foreign_table'],
         'referenced_columns' => $decodeJsonArray($row['foreign_columns']),
         'definition' => $row['definition'],
         'on_delete' => $row['confdeltype'],
@@ -305,7 +305,7 @@ foreach ($fkRows as $row) {
     ];
 }
 
-$indexSql = <<<SQL
+$indexSql = <<<'SQL'
 select
     nsp.nspname as table_schema,
     tbl.relname as table_name,
@@ -338,8 +338,8 @@ $indexSql = sprintf($indexSql, $schemaList);
 $indexRows = $pdo->query($indexSql)->fetchAll();
 
 foreach ($indexRows as $row) {
-    $key = $row['table_schema'] . '.' . $row['table_name'];
-    if (!isset($tables[$key])) {
+    $key = $row['table_schema'].'.'.$row['table_name'];
+    if (! isset($tables[$key])) {
         continue;
     }
     $tables[$key]['indexes'][] = [
@@ -383,7 +383,7 @@ foreach ($tables as $key => &$table) {
         }
     }
 
-    if (!($hasCreatedAt && $hasUpdatedAt)) {
+    if (! ($hasCreatedAt && $hasUpdatedAt)) {
         $table['flags']['sin_timestamps'] = true;
     }
 
@@ -396,13 +396,13 @@ foreach ($tables as $key => &$table) {
 
     foreach ($table['foreign_keys'] as $fk) {
         $fkColumns = $fk['columns'] ?? [];
-        if (!$fkColumns) {
+        if (! $fkColumns) {
             continue;
         }
 
         $hasSupportingIndex = false;
         foreach ($table['indexes'] as $index) {
-            if (!$index['columns']) {
+            if (! $index['columns']) {
                 continue;
             }
 
@@ -414,7 +414,7 @@ foreach ($tables as $key => &$table) {
             }
         }
 
-        if (!$hasSupportingIndex) {
+        if (! $hasSupportingIndex) {
             $fkWithoutIndex[] = $fk['name'];
         }
     }
@@ -436,26 +436,26 @@ foreach ($tables as $table) {
 }
 
 $date = (new DateTimeImmutable('now'))->format('Y-m-d');
-$outputPath = $rootPath . '/docs/DATA_DICTIONARY-' . $date . '.md';
+$outputPath = $rootPath.'/docs/DATA_DICTIONARY-'.$date.'.md';
 
 $lines = [];
 $lines[] = '# Diccionario de Datos';
 $lines[] = '';
-$lines[] = '- Fecha de generación: ' . $date;
-$lines[] = '- Esquemas analizados: ' . implode(', ', $schemas);
+$lines[] = '- Fecha de generación: '.$date;
+$lines[] = '- Esquemas analizados: '.implode(', ', $schemas);
 $lines[] = '- Search path: selemti, public';
 $lines[] = '';
 
 foreach ($bySchema as $schema => $tablesInSchema) {
-    $lines[] = '## Diagrama ER - esquema ' . $schema;
+    $lines[] = '## Diagrama ER - esquema '.$schema;
     $lines[] = '```mermaid';
     $lines[] = 'erDiagram';
 
     foreach ($tablesInSchema as $table) {
-        $alias = strtoupper($schema . '_' . str_replace('.', '_', $table['name']));
+        $alias = strtoupper($schema.'_'.str_replace('.', '_', $table['name']));
         $lines[] = "    {$alias} {";
         foreach ($table['columns'] as $column) {
-            $colLine = '        ' . $column['type'] . ' ' . $column['name'];
+            $colLine = '        '.$column['type'].' '.$column['name'];
             if ($table['primary_key'] && in_array($column['name'], $table['primary_key']['columns'], true)) {
                 $colLine .= ' PK';
             }
@@ -465,16 +465,16 @@ foreach ($bySchema as $schema => $tablesInSchema) {
     }
 
     foreach ($tablesInSchema as $table) {
-        $alias = strtoupper($table['schema'] . '_' . str_replace('.', '_', $table['name']));
+        $alias = strtoupper($table['schema'].'_'.str_replace('.', '_', $table['name']));
         foreach ($table['foreign_keys'] as $fk) {
             $ref = $fk['referenced_table'];
-            if (!isset($tables[$ref])) {
+            if (! isset($tables[$ref])) {
                 continue;
             }
             if ($tables[$ref]['schema'] !== $schema) {
                 continue;
             }
-            $refAlias = strtoupper($tables[$ref]['schema'] . '_' . str_replace('.', '_', $tables[$ref]['name']));
+            $refAlias = strtoupper($tables[$ref]['schema'].'_'.str_replace('.', '_', $tables[$ref]['name']));
             $lines[] = "    {$refAlias} ||--o{ {$alias} : \"{$fk['name']}\"";
         }
     }
@@ -499,10 +499,10 @@ if ($focusedTables) {
     $lines[] = '```mermaid';
     $lines[] = 'erDiagram';
     foreach ($focusedTables as $table) {
-        $alias = strtoupper($table['schema'] . '_' . str_replace('.', '_', $table['name']));
+        $alias = strtoupper($table['schema'].'_'.str_replace('.', '_', $table['name']));
         $lines[] = "    {$alias} {";
         foreach ($table['columns'] as $column) {
-            $colLine = '        ' . $column['type'] . ' ' . $column['name'];
+            $colLine = '        '.$column['type'].' '.$column['name'];
             if ($table['primary_key'] && in_array($column['name'], $table['primary_key']['columns'], true)) {
                 $colLine .= ' PK';
             }
@@ -511,14 +511,14 @@ if ($focusedTables) {
         $lines[] = '    }';
     }
     foreach ($focusedTables as $table) {
-        $alias = strtoupper($table['schema'] . '_' . str_replace('.', '_', $table['name']));
+        $alias = strtoupper($table['schema'].'_'.str_replace('.', '_', $table['name']));
         foreach ($table['foreign_keys'] as $fk) {
             $refKey = $fk['referenced_table'];
-            if (!isset($focusedTables[$refKey])) {
+            if (! isset($focusedTables[$refKey])) {
                 continue;
             }
 
-            $refAlias = strtoupper($focusedTables[$refKey]['schema'] . '_' . str_replace('.', '_', $focusedTables[$refKey]['name']));
+            $refAlias = strtoupper($focusedTables[$refKey]['schema'].'_'.str_replace('.', '_', $focusedTables[$refKey]['name']));
             $lines[] = "    {$refAlias} ||--o{ {$alias} : \"{$fk['name']}\"";
         }
     }
@@ -530,17 +530,17 @@ $lines[] = '## Detalle de tablas';
 $lines[] = '';
 
 foreach ($tables as $table) {
-    $lines[] = '### ' . $table['schema'] . '.' . $table['name'];
-    $lines[] = '- Descripción: ' . ($table['description'] ?? 'sin comentario');
+    $lines[] = '### '.$table['schema'].'.'.$table['name'];
+    $lines[] = '- Descripción: '.($table['description'] ?? 'sin comentario');
     $rowEstimate = $table['row_estimate'];
-    $rowText = $rowEstimate === null ? 'desconocido' : '~' . number_format($rowEstimate);
-    $lines[] = '- Filas estimadas: ' . $rowText;
+    $rowText = $rowEstimate === null ? 'desconocido' : '~'.number_format($rowEstimate);
+    $lines[] = '- Filas estimadas: '.$rowText;
 
     $flagLabels = [];
     if ($table['flags']['faltan_indices_fk']) {
         $label = 'faltan índices para FKs';
-        if (!empty($table['fk_missing_indexes'])) {
-            $label .= ' (' . implode(', ', $table['fk_missing_indexes']) . ')';
+        if (! empty($table['fk_missing_indexes'])) {
+            $label .= ' ('.implode(', ', $table['fk_missing_indexes']).')';
         }
         $flagLabels[] = $label;
     }
@@ -550,7 +550,7 @@ foreach ($tables as $table) {
     if ($table['flags']['sin_timestamps']) {
         $flagLabels[] = 'sin timestamps';
     }
-    $lines[] = '- Flags: ' . ($flagLabels ? implode(' | ', $flagLabels) : 'ninguno');
+    $lines[] = '- Flags: '.($flagLabels ? implode(' | ', $flagLabels) : 'ninguno');
     $lines[] = '';
 
     $lines[] = '#### Columnas';
@@ -575,7 +575,7 @@ foreach ($tables as $table) {
 
     $lines[] = '#### Llave primaria';
     if ($table['primary_key']) {
-        $lines[] = '- ' . $table['primary_key']['name'] . ': ' . implode(', ', $table['primary_key']['columns']);
+        $lines[] = '- '.$table['primary_key']['name'].': '.implode(', ', $table['primary_key']['columns']);
     } else {
         $lines[] = '- No definida';
     }
@@ -584,8 +584,8 @@ foreach ($tables as $table) {
     $lines[] = '#### Llaves foráneas';
     if ($table['foreign_keys']) {
         foreach ($table['foreign_keys'] as $fk) {
-            $lines[] = '- ' . $fk['name'] . ': (' . implode(', ', $fk['columns']) . ') ➜ ' .
-                $fk['referenced_table'] . ' (' . implode(', ', $fk['referenced_columns']) . ')';
+            $lines[] = '- '.$fk['name'].': ('.implode(', ', $fk['columns']).') ➜ '.
+                $fk['referenced_table'].' ('.implode(', ', $fk['referenced_columns']).')';
         }
     } else {
         $lines[] = '- Sin llaves foráneas';
@@ -605,13 +605,13 @@ foreach ($tables as $table) {
             if ($index['is_partial']) {
                 $attributes[] = 'PARCIAL';
             }
-            if (!$index['is_valid']) {
+            if (! $index['is_valid']) {
                 $attributes[] = 'INVALIDO';
             }
-            $attributeText = $attributes ? ' [' . implode(', ', $attributes) . ']' : '';
-            $predicateText = $index['predicate'] ? ' WHERE ' . $index['predicate'] : '';
-            $lines[] = '- ' . $index['name'] . $attributeText . ' (' . implode(', ', $index['columns']) . ')'
-                . ' USING ' . strtoupper($index['method']) . $predicateText;
+            $attributeText = $attributes ? ' ['.implode(', ', $attributes).']' : '';
+            $predicateText = $index['predicate'] ? ' WHERE '.$index['predicate'] : '';
+            $lines[] = '- '.$index['name'].$attributeText.' ('.implode(', ', $index['columns']).')'
+                .' USING '.strtoupper($index['method']).$predicateText;
         }
     } else {
         $lines[] = '- Sin índices';
@@ -621,7 +621,7 @@ foreach ($tables as $table) {
     $lines[] = '#### Restricciones UNIQUE';
     if ($table['unique_constraints']) {
         foreach ($table['unique_constraints'] as $constraint) {
-            $lines[] = '- ' . $constraint['name'] . ': ' . implode(', ', $constraint['columns']);
+            $lines[] = '- '.$constraint['name'].': '.implode(', ', $constraint['columns']);
         }
     } else {
         $lines[] = '- Sin restricciones UNIQUE adicionales';
@@ -631,7 +631,7 @@ foreach ($tables as $table) {
     $lines[] = '#### Restricciones CHECK';
     if ($table['check_constraints']) {
         foreach ($table['check_constraints'] as $constraint) {
-            $lines[] = '- ' . $constraint['name'] . ': ' . $constraint['definition'];
+            $lines[] = '- '.$constraint['name'].': '.$constraint['definition'];
         }
     } else {
         $lines[] = '- Sin restricciones CHECK';
@@ -639,9 +639,9 @@ foreach ($tables as $table) {
     $lines[] = '';
 }
 
-$markdown = implode("\n", $lines) . "\n";
+$markdown = implode("\n", $lines)."\n";
 
-if (false === file_put_contents($outputPath, $markdown)) {
+if (file_put_contents($outputPath, $markdown) === false) {
     fwrite(STDERR, "No se pudo escribir el archivo {$outputPath}\n");
     exit(1);
 }

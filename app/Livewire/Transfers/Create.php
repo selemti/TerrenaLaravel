@@ -34,8 +34,11 @@ class Create extends Component
     ];
 
     public array $lineas = [];
+
     public array $almacenes = [];
+
     public array $items = [];
+
     public bool $loading = false;
 
     public function mount(): void
@@ -73,6 +76,7 @@ class Create extends Component
                 type: 'warning',
                 body: 'Debes agregar al menos un ítem'
             );
+
             return;
         }
 
@@ -96,7 +100,7 @@ class Create extends Component
         } catch (\Exception $e) {
             $this->dispatch('toast',
                 type: 'error',
-                body: 'Error: ' . $e->getMessage()
+                body: 'Error: '.$e->getMessage()
             );
         } finally {
             $this->loading = false;
@@ -149,9 +153,9 @@ class Create extends Component
                 ->where('activo', true)
                 ->orderBy('nombre')
                 ->get(['id', 'nombre', 'clave'])
-                ->map(fn($row) => [
+                ->map(fn ($row) => [
                     'id' => (int) $row->id,
-                    'nombre' => trim(($row->clave ? "{$row->clave} - " : '') . $row->nombre),
+                    'nombre' => trim(($row->clave ? "{$row->clave} - " : '').$row->nombre),
                 ])
                 ->toArray();
         } catch (\Exception $e) {
@@ -169,7 +173,7 @@ class Create extends Component
                 ->orderBy('i.nombre')
                 ->limit(200)
                 ->get(['i.id', 'i.nombre', 'u.codigo as uom_codigo', 'u.id as uom_id'])
-                ->map(fn($row) => [
+                ->map(fn ($row) => [
                     'id' => $row->id,
                     'nombre' => $row->nombre,
                     'uom_codigo' => $row->uom_codigo,
@@ -193,7 +197,7 @@ class Create extends Component
             'ok' => true,
             'data' => [
                 'id' => $transferId,
-                'numero' => 'TRANS-' . str_pad($transferId, 6, '0', STR_PAD_LEFT),
+                'numero' => 'TRANS-'.str_pad($transferId, 6, '0', STR_PAD_LEFT),
                 'almacen_origen_id' => $this->form['almacen_origen_id'],
                 'almacen_destino_id' => $this->form['almacen_destino_id'],
                 'fecha_solicitada' => $this->form['fecha_solicitada'],

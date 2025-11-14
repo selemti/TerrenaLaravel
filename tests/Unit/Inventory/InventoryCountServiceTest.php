@@ -11,7 +11,7 @@ class InventoryCountServiceTest extends TestCase
 {
     public function test_normalize_line_requires_item_id(): void
     {
-        $service = new InventoryCountService();
+        $service = new InventoryCountService;
 
         $this->expectException(InvalidArgumentException::class);
 
@@ -23,7 +23,7 @@ class InventoryCountServiceTest extends TestCase
 
     public function test_normalize_line_maps_expected_fields(): void
     {
-        $service = new InventoryCountService();
+        $service = new InventoryCountService;
 
         $result = $this->invokeNormalizeLine($service, [
             'item_id' => 10,

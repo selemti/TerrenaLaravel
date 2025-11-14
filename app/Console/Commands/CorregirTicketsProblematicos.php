@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class CorregirTicketsProblematicos extends Command
 {
@@ -22,18 +22,19 @@ class CorregirTicketsProblematicos extends Command
         $tipo = $this->argument('tipo');
         $dry_run = $this->option('dry-run');
 
-        $this->warn("╔═══════════════════════════════════════════════════════════════════╗");
-        $this->warn("║          🔧 CORRECCIÓN DE TICKETS PROBLEMÁTICOS                   ║");
-        $this->warn("╚═══════════════════════════════════════════════════════════════════╝");
+        $this->warn('╔═══════════════════════════════════════════════════════════════════╗');
+        $this->warn('║          🔧 CORRECCIÓN DE TICKETS PROBLEMÁTICOS                   ║');
+        $this->warn('╚═══════════════════════════════════════════════════════════════════╝');
         $this->newLine();
 
         if ($dry_run) {
-            $this->info("🔍 MODO DRY-RUN: No se aplicarán cambios a la base de datos");
+            $this->info('🔍 MODO DRY-RUN: No se aplicarán cambios a la base de datos');
             $this->newLine();
         } else {
-            $this->error("⚠️  ATENCIÓN: Este comando modificará la base de datos");
-            if (!$this->confirm('¿Estás seguro de continuar?')) {
+            $this->error('⚠️  ATENCIÓN: Este comando modificará la base de datos');
+            if (! $this->confirm('¿Estás seguro de continuar?')) {
                 $this->info('Operación cancelada.');
+
                 return Command::SUCCESS;
             }
         }
@@ -47,7 +48,8 @@ class CorregirTicketsProblematicos extends Command
                 return $this->corregirTicketsAbiertos($dry_run);
             default:
                 $this->error("Tipo de corrección no válido: {$tipo}");
-                $this->info("Tipos disponibles: preview, descuento100, abiertos");
+                $this->info('Tipos disponibles: preview, descuento100, abiertos');
+
                 return Command::FAILURE;
         }
     }
@@ -55,75 +57,75 @@ class CorregirTicketsProblematicos extends Command
     private function previewProblematicos()
     {
         [$fecha_inicio, $fecha_fin] = $this->determinarPeriodo();
-        
+
         $this->info("📅 Período: {$fecha_inicio} a {$fecha_fin}");
         $this->newLine();
 
         // 1. Tickets con descuento 100%
         $tickets_desc100 = $this->obtenerTicketsDescuento100($fecha_inicio, $fecha_fin);
-        
-        $this->warn("🚨 TICKETS CON DESCUENTO 100% (total_price = 0):");
-        $this->line("   Total: " . count($tickets_desc100));
-        
+
+        $this->warn('🚨 TICKETS CON DESCUENTO 100% (total_price = 0):');
+        $this->line('   Total: '.count($tickets_desc100));
+
         if (count($tickets_desc100) > 0) {
             $headers = ['ID', 'Fecha', 'Total Price', 'Descuento', 'Items', 'Acción Sugerida'];
-            $rows = array_map(function($t) {
-                $accion = $t->suma_items > 0 
+            $rows = array_map(function ($t) {
+                $accion = $t->suma_items > 0
                     ? "Restaurar total_price = \${$t->suma_items}"
-                    : "Anular (voided = TRUE)";
-                
+                    : 'Anular (voided = TRUE)';
+
                 return [
                     $t->id,
                     substr($t->create_date, 0, 10),
-                    '$' . $t->total_price,
-                    '$' . $t->total_discount,
-                    '$' . $t->suma_items,
-                    $accion
+                    '$'.$t->total_price,
+                    '$'.$t->total_discount,
+                    '$'.$t->suma_items,
+                    $accion,
                 ];
             }, array_slice($tickets_desc100, 0, 20));
-            
+
             $this->table($headers, $rows);
-            
+
             if (count($tickets_desc100) > 20) {
-                $this->line("   ... y " . (count($tickets_desc100) - 20) . " más");
+                $this->line('   ... y '.(count($tickets_desc100) - 20).' más');
             }
         }
         $this->newLine();
 
         // 2. Tickets abiertos
         $tickets_abiertos = $this->obtenerTicketsAbiertos($fecha_inicio, $fecha_fin);
-        
-        $this->warn("📋 TICKETS ABIERTOS SIN PAGAR:");
-        $this->line("   Total: " . count($tickets_abiertos));
-        
+
+        $this->warn('📋 TICKETS ABIERTOS SIN PAGAR:');
+        $this->line('   Total: '.count($tickets_abiertos));
+
         if (count($tickets_abiertos) > 0) {
             $headers = ['ID', 'Creación', 'Cierre', 'Total', 'Desc', 'Neto', 'Acción'];
-            $rows = array_map(function($t) {
+            $rows = array_map(function ($t) {
                 $neto = $t->total_price - $t->total_discount;
-                $accion = $neto <= 0 ? "Anular" : "Revisar manual";
-                
+                $accion = $neto <= 0 ? 'Anular' : 'Revisar manual';
+
                 return [
                     $t->id,
                     substr($t->fecha_creacion, 0, 10),
                     $t->closing_date ? substr($t->closing_date, 0, 10) : 'NULL',
-                    '$' . $t->total_price,
-                    '$' . $t->total_discount,
-                    '$' . $neto,
-                    $accion
+                    '$'.$t->total_price,
+                    '$'.$t->total_discount,
+                    '$'.$neto,
+                    $accion,
                 ];
             }, array_slice($tickets_abiertos, 0, 20));
-            
+
             $this->table($headers, $rows);
-            
+
             if (count($tickets_abiertos) > 20) {
-                $this->line("   ... y " . (count($tickets_abiertos) - 20) . " más");
+                $this->line('   ... y '.(count($tickets_abiertos) - 20).' más');
             }
         }
         $this->newLine();
 
-        $this->info("💡 Para corregir, ejecuta:");
-        $this->line("   php artisan ventas:corregir-tickets descuento100 --dry-run");
-        $this->line("   php artisan ventas:corregir-tickets abiertos --dry-run");
+        $this->info('💡 Para corregir, ejecuta:');
+        $this->line('   php artisan ventas:corregir-tickets descuento100 --dry-run');
+        $this->line('   php artisan ventas:corregir-tickets abiertos --dry-run');
 
         return Command::SUCCESS;
     }
@@ -134,11 +136,12 @@ class CorregirTicketsProblematicos extends Command
         $tickets = $this->obtenerTicketsDescuento100($fecha_inicio, $fecha_fin);
 
         if (count($tickets) === 0) {
-            $this->info("✅ No se encontraron tickets con descuento 100% problemáticos");
+            $this->info('✅ No se encontraron tickets con descuento 100% problemáticos');
+
             return Command::SUCCESS;
         }
 
-        $this->info("📋 Tickets a corregir: " . count($tickets));
+        $this->info('📋 Tickets a corregir: '.count($tickets));
         $this->newLine();
 
         $corregidos = 0;
@@ -146,69 +149,70 @@ class CorregirTicketsProblematicos extends Command
         $omitidos = 0;
 
         DB::beginTransaction();
-        
+
         try {
             foreach ($tickets as $ticket) {
                 $this->line("Procesando ticket #{$ticket->id}...");
-                
+
                 if ($ticket->suma_items > 0) {
                     // Caso A: Restaurar total_price con la suma de items
                     $nuevo_total = $ticket->suma_items;
-                    
-                    if (!$dry_run) {
-                        DB::update("
+
+                    if (! $dry_run) {
+                        DB::update('
                             UPDATE public.ticket 
                             SET total_price = :total_price,
                                 updated_date = NOW()
                             WHERE id = :id
-                        ", [
+                        ', [
                             'total_price' => $nuevo_total,
-                            'id' => $ticket->id
+                            'id' => $ticket->id,
                         ]);
                     }
-                    
+
                     $this->info("  ✓ Restaurado: total_price = \${$nuevo_total} (era \$0)");
                     $corregidos++;
-                    
+
                 } elseif ($ticket->total_discount > 0) {
                     // Caso B: No hay items, pero hay descuento - Anular ticket
-                    if (!$dry_run) {
-                        DB::update("
+                    if (! $dry_run) {
+                        DB::update('
                             UPDATE public.ticket 
                             SET voided = TRUE,
                                 updated_date = NOW()
                             WHERE id = :id
-                        ", ['id' => $ticket->id]);
+                        ', ['id' => $ticket->id]);
                     }
-                    
+
                     $this->warn("  ⚠ Anulado: Sin items pero descuento de \${$ticket->total_discount}");
                     $anulados++;
-                    
+
                 } else {
-                    $this->comment("  - Omitido: Sin items ni descuento válido");
+                    $this->comment('  - Omitido: Sin items ni descuento válido');
                     $omitidos++;
                 }
             }
 
-            if (!$dry_run) {
+            if (! $dry_run) {
                 DB::commit();
                 $this->newLine();
-                $this->info("✅ Cambios guardados en la base de datos");
+                $this->info('✅ Cambios guardados en la base de datos');
             } else {
                 DB::rollBack();
                 $this->newLine();
-                $this->warn("🔍 DRY-RUN: No se guardaron cambios");
+                $this->warn('🔍 DRY-RUN: No se guardaron cambios');
             }
 
             $this->newLine();
-            $this->info("📊 RESUMEN:");
+            $this->info('📊 RESUMEN:');
             $this->line("   Tickets corregidos (total_price restaurado): {$corregidos}");
             $this->line("   Tickets anulados: {$anulados}");
             $this->line("   Tickets omitidos: {$omitidos}");
 
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->error("❌ Error al procesar tickets: " . $e->getMessage());
+            $this->error('❌ Error al procesar tickets: '.$e->getMessage());
+
             return Command::FAILURE;
         }
 
@@ -221,38 +225,39 @@ class CorregirTicketsProblematicos extends Command
         $tickets = $this->obtenerTicketsAbiertos($fecha_inicio, $fecha_fin);
 
         if (count($tickets) === 0) {
-            $this->info("✅ No se encontraron tickets abiertos problemáticos");
+            $this->info('✅ No se encontraron tickets abiertos problemáticos');
+
             return Command::SUCCESS;
         }
 
-        $this->info("📋 Tickets a revisar: " . count($tickets));
+        $this->info('📋 Tickets a revisar: '.count($tickets));
         $this->newLine();
 
         $anulados = 0;
         $omitidos = 0;
 
         DB::beginTransaction();
-        
+
         try {
             foreach ($tickets as $ticket) {
                 $neto = $ticket->total_price - $ticket->total_discount;
-                
+
                 $this->line("Procesando ticket #{$ticket->id} (neto: \${$neto})...");
-                
+
                 if ($neto <= 0) {
                     // Anular tickets con neto cero o negativo
-                    if (!$dry_run) {
-                        DB::update("
+                    if (! $dry_run) {
+                        DB::update('
                             UPDATE public.ticket 
                             SET voided = TRUE,
                                 updated_date = NOW()
                             WHERE id = :id
-                        ", ['id' => $ticket->id]);
+                        ', ['id' => $ticket->id]);
                     }
-                    
+
                     $this->warn("  ⚠ Anulado: Neto = \${$neto}");
                     $anulados++;
-                    
+
                 } else {
                     // Tickets con neto positivo requieren revisión manual
                     $this->comment("  - Omitido: Requiere revisión manual (neto = \${$neto})");
@@ -260,30 +265,31 @@ class CorregirTicketsProblematicos extends Command
                 }
             }
 
-            if (!$dry_run) {
+            if (! $dry_run) {
                 DB::commit();
                 $this->newLine();
-                $this->info("✅ Cambios guardados en la base de datos");
+                $this->info('✅ Cambios guardados en la base de datos');
             } else {
                 DB::rollBack();
                 $this->newLine();
-                $this->warn("🔍 DRY-RUN: No se guardaron cambios");
+                $this->warn('🔍 DRY-RUN: No se guardaron cambios');
             }
 
             $this->newLine();
-            $this->info("📊 RESUMEN:");
+            $this->info('📊 RESUMEN:');
             $this->line("   Tickets anulados (neto <= 0): {$anulados}");
             $this->line("   Tickets omitidos (requieren revisión): {$omitidos}");
 
             if ($omitidos > 0) {
                 $this->newLine();
                 $this->warn("⚠️  HAY {$omitidos} TICKETS QUE REQUIEREN REVISIÓN MANUAL");
-                $this->line("   Usa: php artisan ventas:corregir-tickets preview --ticket-id=ID");
+                $this->line('   Usa: php artisan ventas:corregir-tickets preview --ticket-id=ID');
             }
 
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->error("❌ Error al procesar tickets: " . $e->getMessage());
+            $this->error('❌ Error al procesar tickets: '.$e->getMessage());
+
             return Command::FAILURE;
         }
 
@@ -292,9 +298,9 @@ class CorregirTicketsProblematicos extends Command
 
     private function obtenerTicketsDescuento100($fecha_inicio, $fecha_fin)
     {
-        $where_id = $this->option('ticket-id') 
-            ? "AND t.id = :ticket_id" 
-            : "";
+        $where_id = $this->option('ticket-id')
+            ? 'AND t.id = :ticket_id'
+            : '';
 
         $query = "
             SELECT 
@@ -318,7 +324,7 @@ class CorregirTicketsProblematicos extends Command
 
         $params = [
             'fecha_inicio' => $fecha_inicio,
-            'fecha_fin' => $fecha_fin
+            'fecha_fin' => $fecha_fin,
         ];
 
         if ($this->option('ticket-id')) {
@@ -330,9 +336,9 @@ class CorregirTicketsProblematicos extends Command
 
     private function obtenerTicketsAbiertos($fecha_inicio, $fecha_fin)
     {
-        $where_id = $this->option('ticket-id') 
-            ? "AND t.id = :ticket_id" 
-            : "";
+        $where_id = $this->option('ticket-id')
+            ? 'AND t.id = :ticket_id'
+            : '';
 
         $query = "
             SELECT 
@@ -355,7 +361,7 @@ class CorregirTicketsProblematicos extends Command
 
         $params = [
             'fecha_inicio' => $fecha_inicio,
-            'fecha_fin' => $fecha_fin
+            'fecha_fin' => $fecha_fin,
         ];
 
         if ($this->option('ticket-id')) {
@@ -373,6 +379,7 @@ class CorregirTicketsProblematicos extends Command
 
         // Por defecto: mes anterior
         $mes_anterior = Carbon::now()->subMonth();
+
         return [$mes_anterior->startOfMonth()->format('Y-m-d'), $mes_anterior->endOfMonth()->format('Y-m-d')];
     }
 }

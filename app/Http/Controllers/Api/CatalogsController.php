@@ -22,13 +22,13 @@ class CatalogsController extends Controller
                 'translated_name',
                 'visible',
                 'beverage',
-                'sort_order'
+                'sort_order',
             ])
             ->orderBy('sort_order')
             ->orderBy('name');
 
         // Only visible categories by default
-        if (!$r->boolean('show_all')) {
+        if (! $r->boolean('show_all')) {
             $query->where('visible', true);
         }
 
@@ -37,7 +37,7 @@ class CatalogsController extends Controller
         return response()->json([
             'ok' => true,
             'data' => $categories,
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 
@@ -47,7 +47,7 @@ class CatalogsController extends Controller
         $query = Almacen::query();
 
         // Only active warehouses by default
-        if (!$r->boolean('show_all')) {
+        if (! $r->boolean('show_all')) {
             $query->where('activo', true);
         }
 
@@ -62,7 +62,7 @@ class CatalogsController extends Controller
         return response()->json([
             'ok' => true,
             'data' => $almacenes,
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 
@@ -72,7 +72,7 @@ class CatalogsController extends Controller
         $query = Sucursal::query();
 
         // Only active branches by default
-        if (!$r->boolean('show_all')) {
+        if (! $r->boolean('show_all')) {
             $query->where('activo', true);
         }
 
@@ -81,7 +81,7 @@ class CatalogsController extends Controller
         return response()->json([
             'ok' => true,
             'data' => $sucursales,
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 
@@ -94,56 +94,56 @@ class CatalogsController extends Controller
                 'label' => 'Entrada',
                 'description' => 'Entrada de inventario',
                 'affects_stock' => true,
-                'sign' => '+'
+                'sign' => '+',
             ],
             [
                 'value' => 'SALIDA',
                 'label' => 'Salida',
                 'description' => 'Salida de inventario',
                 'affects_stock' => true,
-                'sign' => '-'
+                'sign' => '-',
             ],
             [
                 'value' => 'AJUSTE',
                 'label' => 'Ajuste',
                 'description' => 'Ajuste de inventario',
                 'affects_stock' => true,
-                'sign' => '±'
+                'sign' => '±',
             ],
             [
                 'value' => 'MERMA',
                 'label' => 'Merma',
                 'description' => 'Merma o desperdicio',
                 'affects_stock' => true,
-                'sign' => '-'
+                'sign' => '-',
             ],
             [
                 'value' => 'RECEPCION',
                 'label' => 'Recepción',
                 'description' => 'Recepción de compra',
                 'affects_stock' => true,
-                'sign' => '+'
+                'sign' => '+',
             ],
             [
                 'value' => 'TRASPASO_IN',
                 'label' => 'Traspaso Entrada',
                 'description' => 'Traspaso entre almacenes (entrada)',
                 'affects_stock' => true,
-                'sign' => '+'
+                'sign' => '+',
             ],
             [
                 'value' => 'TRASPASO_OUT',
                 'label' => 'Traspaso Salida',
                 'description' => 'Traspaso entre almacenes (salida)',
                 'affects_stock' => true,
-                'sign' => '-'
+                'sign' => '-',
             ],
         ];
 
         return response()->json([
             'ok' => true,
             'data' => $types,
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 

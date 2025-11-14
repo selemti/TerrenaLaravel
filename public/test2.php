@@ -1,1 +1,1 @@
-<?php echo 'PHP en public funciona: ' . phpversion(); ?>
+<?php echo 'PHP en public funciona: '.phpversion();

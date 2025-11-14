@@ -12,7 +12,7 @@ class AlmacenFactory extends Factory
     public function definition(): array
     {
         return [
-            'nombre' => $this->faker->company() . ' Almacén',
+            'nombre' => $this->faker->company().' Almacén',
             'clave' => strtoupper($this->faker->unique()->lexify('ALM-???')),
             'sucursal_id' => 1,
             'tipo' => $this->faker->randomElement(['PRINCIPAL', 'SECUNDARIO', 'TRANSITO']),

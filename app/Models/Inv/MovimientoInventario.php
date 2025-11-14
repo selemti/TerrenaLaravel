@@ -7,15 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class MovimientoInventario extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.mov_inv';
+
     protected $primaryKey = 'id';
+
     // public $incrementing = true; // BIGSERIAL
     public $timestamps = false; // Solo usa created_at
 
     protected $fillable = [
-        'ts', 'item_id', 'lote_id', 'cantidad', 'qty_original', 
-        'uom_original_id', 'costo_unit', 'tipo', 'ref_tipo', 'ref_id', 
-        'sucursal_id', 'usuario_id', 'created_at'
+        'ts', 'item_id', 'lote_id', 'cantidad', 'qty_original',
+        'uom_original_id', 'costo_unit', 'tipo', 'ref_tipo', 'ref_id',
+        'sucursal_id', 'usuario_id', 'created_at',
     ];
 
     protected $casts = [

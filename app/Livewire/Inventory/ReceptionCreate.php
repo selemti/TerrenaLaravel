@@ -1,16 +1,17 @@
 <?php
+
 namespace App\Livewire\Inventory;
 
-use Livewire\Component;
-use Livewire\WithFileUploads;
-use Livewire\Attributes\On;
-use App\Services\Inventory\ReceptionService;
-use Illuminate\Support\Facades\Storage;
+use App\Models\Catalogs\Almacen;
 use App\Models\Catalogs\Proveedor;
 use App\Models\Catalogs\Sucursal;
-use App\Models\Catalogs\Almacen;
 use App\Models\Inv\Item as InvItem;
+use App\Services\Inventory\ReceptionService;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\On;
+use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class ReceptionCreate extends Component
 {
@@ -19,10 +20,15 @@ class ReceptionCreate extends Component
     public bool $asModal = false;
 
     public ?int $supplier_id = null;
+
     public ?string $branch_id = null;
+
     public ?string $warehouse_id = null;
+
     public array $lines = [];
+
     public array $purchaseUoms = ['PZ', 'CAJA', 'LT'];
+
     public array $baseUoms = ['GR', 'ML', 'PZ'];
 
     public function mount(bool $asModal = false): void
@@ -49,16 +55,16 @@ class ReceptionCreate extends Component
     public function addLine(): void
     {
         $this->lines[] = [
-            'item_id'      => null,
-            'qty_pack'     => 1,
+            'item_id' => null,
+            'qty_pack' => 1,
             'uom_purchase' => $this->purchaseUoms[0] ?? 'PZ',
-            'pack_size'    => 1,
-            'uom_base'     => $this->baseUoms[0] ?? 'PZ',
-            'lot'          => '',
-            'exp_date'     => '',
-            'temp'         => null,
-            'evidence'     => null,
-            'precio_unit'  => null,
+            'pack_size' => 1,
+            'uom_base' => $this->baseUoms[0] ?? 'PZ',
+            'lot' => '',
+            'exp_date' => '',
+            'temp' => null,
+            'evidence' => null,
+            'precio_unit' => null,
         ];
     }
 
@@ -93,18 +99,18 @@ class ReceptionCreate extends Component
     protected function rules(): array
     {
         return [
-            'supplier_id'             => 'required|integer|exists:cat_proveedores,id',
-            'branch_id'               => 'nullable|string|exists:cat_sucursales,id',
-            'warehouse_id'            => 'nullable|string|exists:cat_almacenes,id',
-            'lines'                   => 'required|array|min:1',
-            'lines.*.item_id'         => 'required|string|exists:items,id',
-            'lines.*.qty_pack'        => 'required|numeric|min:0.0001',
-            'lines.*.pack_size'       => 'nullable|numeric|min:0.0001',
-            'lines.*.uom_purchase'    => 'required|string',
-            'lines.*.uom_base'        => 'required|string|in:GR,ML,PZ',
-            'lines.*.exp_date'        => 'nullable|date',
-            'lines.*.temp'            => 'nullable|numeric',
-            'lines.*.precio_unit'     => 'nullable|numeric|min:0',
+            'supplier_id' => 'required|integer|exists:cat_proveedores,id',
+            'branch_id' => 'nullable|string|exists:cat_sucursales,id',
+            'warehouse_id' => 'nullable|string|exists:cat_almacenes,id',
+            'lines' => 'required|array|min:1',
+            'lines.*.item_id' => 'required|string|exists:items,id',
+            'lines.*.qty_pack' => 'required|numeric|min:0.0001',
+            'lines.*.pack_size' => 'nullable|numeric|min:0.0001',
+            'lines.*.uom_purchase' => 'required|string',
+            'lines.*.uom_base' => 'required|string|in:GR,ML,PZ',
+            'lines.*.exp_date' => 'nullable|date',
+            'lines.*.temp' => 'nullable|numeric',
+            'lines.*.precio_unit' => 'nullable|numeric|min:0',
         ];
     }
 
@@ -130,7 +136,7 @@ class ReceptionCreate extends Component
             $normalized['uom_purchase'] = isset($normalized['uom_purchase']) ? strtoupper($normalized['uom_purchase']) : null;
             $normalized['uom_base'] = isset($normalized['uom_base']) ? strtoupper($normalized['uom_base']) : null;
 
-            if (!empty($normalized['evidence'])) {
+            if (! empty($normalized['evidence'])) {
                 $path = $normalized['evidence']->store('evidencias', 'public');
                 $normalized['doc_url'] = Storage::disk('public')->url($path);
             }
@@ -140,10 +146,10 @@ class ReceptionCreate extends Component
         }
 
         $header = [
-            'supplier_id'  => (int) $this->supplier_id,
-            'branch_id'    => $this->branch_id ?: null,
+            'supplier_id' => (int) $this->supplier_id,
+            'branch_id' => $this->branch_id ?: null,
             'warehouse_id' => $this->warehouse_id ?: null,
-            'user_id'      => auth()->id() ?? 1,
+            'user_id' => auth()->id() ?? 1,
         ];
 
         $id = $svc->createReception($header, $lines);
@@ -152,10 +158,12 @@ class ReceptionCreate extends Component
         if ($this->asModal) {
             $this->dispatch('reception-saved', receptionId: $id, message: $message);
             $this->resetForm();
+
             return;
         }
 
         session()->flash('ok', $message);
+
         return redirect()->route('inv.receptions');
     }
 
@@ -209,13 +217,13 @@ class ReceptionCreate extends Component
     public function render()
     {
         $view = view('inventory.receptions-create', [
-            'suppliers'  => $this->suppliers(),
-            'branches'   => $this->branches(),
+            'suppliers' => $this->suppliers(),
+            'branches' => $this->branches(),
             'warehouses' => $this->warehouses(),
-            'items'      => $this->items(),
+            'items' => $this->items(),
             'purchaseUoms' => $this->purchaseUoms,
-            'baseUoms'     => $this->baseUoms,
-            'asModal'      => $this->asModal,
+            'baseUoms' => $this->baseUoms,
+            'asModal' => $this->asModal,
         ]);
 
         if ($this->asModal) {
@@ -223,8 +231,8 @@ class ReceptionCreate extends Component
         }
 
         return $view->layout('layouts.terrena', [
-            'active'    => 'inventario',
-            'title'     => 'Nueva Recepción',
+            'active' => 'inventario',
+            'title' => 'Nueva Recepción',
             'pageTitle' => 'Nueva recepción',
         ]);
     }

@@ -31,20 +31,20 @@ class RecalcularCostosRecetasCommand extends Command
         $date = $this->option('date');
         $branchId = $this->option('branch');
 
-        if (!$date) {
+        if (! $date) {
             $date = now()->subDay()->format('Y-m-d');
         }
 
-        $this->info("Iniciando recálculo de costos para la fecha: {$date}" . ($branchId ? " y sucursal: {$branchId}" : ""));
+        $this->info("Iniciando recálculo de costos para la fecha: {$date}".($branchId ? " y sucursal: {$branchId}" : ''));
 
-        $result = $service->recalcularCostos($branchId ? (int)$branchId : null, $date);
+        $result = $service->recalcularCostos($branchId ? (int) $branchId : null, $date);
 
         if ($result['success']) {
             $this->info("Recálculo de costos completado exitosamente para la fecha {$date}");
-            $this->info("Items afectados: " . $result['affected_items']);
-            $this->info("Subrecetas afectadas: " . $result['affected_subrecetas']);
-            $this->info("Recetas afectadas: " . $result['affected_recetas']);
-            $this->info("Alertas generadas: " . $result['alerts_generated']);
+            $this->info('Items afectados: '.$result['affected_items']);
+            $this->info('Subrecetas afectadas: '.$result['affected_subrecetas']);
+            $this->info('Recetas afectadas: '.$result['affected_recetas']);
+            $this->info('Alertas generadas: '.$result['alerts_generated']);
         } else {
             $this->error($result['message']);
         }

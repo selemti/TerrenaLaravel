@@ -1,6 +1,7 @@
 <?php
 
-return new class extends \Illuminate\Database\Migrations\Migration {
+return new class extends \Illuminate\Database\Migrations\Migration
+{
     public function up(): void
     {
         // 1) Tabla + secuencia + función + trigger (PG 9.5 usa EXECUTE PROCEDURE)
@@ -78,7 +79,7 @@ SQL);
 
     public function down(): void
     {
-        \Illuminate\Support\Facades\DB::unprepared("ALTER TABLE selemti.items DROP CONSTRAINT IF EXISTS items_category_fk");
+        \Illuminate\Support\Facades\DB::unprepared('ALTER TABLE selemti.items DROP CONSTRAINT IF EXISTS items_category_fk');
 
         \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 DO $$
@@ -92,9 +93,9 @@ END IF;
 END$$;
 SQL);
 
-        \Illuminate\Support\Facades\DB::unprepared("DROP TRIGGER IF EXISTS trg_item_categories_autocode ON selemti.item_categories");
-        \Illuminate\Support\Facades\DB::unprepared("DROP FUNCTION IF EXISTS selemti.fn_gen_cat_codigo()");
-        \Illuminate\Support\Facades\DB::unprepared("DROP SEQUENCE IF EXISTS selemti.seq_cat_codigo");
-        \Illuminate\Support\Facades\DB::unprepared("DROP TABLE IF EXISTS selemti.item_categories");
+        \Illuminate\Support\Facades\DB::unprepared('DROP TRIGGER IF EXISTS trg_item_categories_autocode ON selemti.item_categories');
+        \Illuminate\Support\Facades\DB::unprepared('DROP FUNCTION IF EXISTS selemti.fn_gen_cat_codigo()');
+        \Illuminate\Support\Facades\DB::unprepared('DROP SEQUENCE IF EXISTS selemti.seq_cat_codigo');
+        \Illuminate\Support\Facades\DB::unprepared('DROP TABLE IF EXISTS selemti.item_categories');
     }
 };

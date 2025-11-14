@@ -9,13 +9,21 @@ use Livewire\Component;
 class PosMappingForm extends Component
 {
     public ?PosMap $mapping = null;
+
     public $tipo = '';
+
     public $plu = '';
+
     public $receta_id = '';
+
     public $recipe_version_id = '';
+
     public $valid_from = '';
+
     public $valid_to = '';
+
     public $vigente_desde = '';
+
     // No hay campos 'sucursal_id' ni 'activo' en la tabla pos_map en el esquema actual
     public $showForm = false;
 
@@ -58,7 +66,7 @@ class PosMappingForm extends Component
             $this->dispatch('notify', 'Mapeo actualizado correctamente');
         } else {
             PosMap::create($this->only(
-                'tipo', 'plu', 'receta_id', 'recipe_version_id', 
+                'tipo', 'plu', 'receta_id', 'recipe_version_id',
                 'valid_from', 'valid_to', 'vigente_desde'
             ));
             $this->dispatch('notify', 'Mapeo creado correctamente');
@@ -83,6 +91,7 @@ class PosMappingForm extends Component
                 $dirty[$key] = $this->{$key};
             }
         }
+
         return $dirty;
     }
 }

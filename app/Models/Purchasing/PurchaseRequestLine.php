@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PurchaseRequestLine extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.purchase_request_lines';
 
     protected $fillable = [
@@ -23,12 +24,12 @@ class PurchaseRequestLine extends Model
     ];
 
     protected $casts = [
-        'qty'             => 'decimal:6',
-        'last_price'      => 'decimal:6',
+        'qty' => 'decimal:6',
+        'last_price' => 'decimal:6',
         'fecha_requerida' => 'date',
-        'meta'            => 'array',
-        'created_at'      => 'datetime',
-        'updated_at'      => 'datetime',
+        'meta' => 'array',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function request(): BelongsTo

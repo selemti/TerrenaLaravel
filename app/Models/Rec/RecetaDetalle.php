@@ -2,20 +2,23 @@
 
 namespace App\Models\Rec;
 
+use App\Models\Inv\Item;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Inv\Item;
 
 class RecetaDetalle extends Model
 {
     use HasFactory;
+
     protected $table = 'selemti.receta_det';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false; // Solo usa created_at
 
     protected $fillable = [
-        'receta_version_id', 'item_id', 'cantidad', 'unidad_medida', 
-        'merma_porcentaje', 'instrucciones_especificas', 'orden', 'created_at'
+        'receta_version_id', 'item_id', 'cantidad', 'unidad_medida',
+        'merma_porcentaje', 'instrucciones_especificas', 'orden', 'created_at',
     ];
 
     protected $casts = [
@@ -28,7 +31,7 @@ class RecetaDetalle extends Model
     {
         return $this->belongsTo(RecetaVersion::class, 'receta_version_id');
     }
-    
+
     public function item()
     {
         return $this->belongsTo(Item::class, 'item_id', 'id');

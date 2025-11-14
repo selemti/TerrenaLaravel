@@ -2,10 +2,9 @@
 
 namespace App\Services\Operations;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
-use Throwable;
 
 class PosConsumptionService
 {
@@ -45,7 +44,7 @@ class PosConsumptionService
                     ->where('type', 'MENU_ITEM')
                     ->first();
 
-                if (!$recipeMap) {
+                if (! $recipeMap) {
                     $requiresReprocess = true;
                 } else {
                     // 4. Calculate consumption
@@ -64,7 +63,7 @@ class PosConsumptionService
                     }
                 }
             }
-            
+
             // 5. Insert data
             DB::connection($this->connection)->table('selemti.inv_consumo_pos')->insert([
                 'id' => $consumoId,
@@ -78,22 +77,22 @@ class PosConsumptionService
                 'updated_at' => now(),
             ]);
 
-            if (!empty($consumoDetails)) {
+            if (! empty($consumoDetails)) {
                 DB::connection($this->connection)->table('selemti.inv_consumo_pos_det')->insert($consumoDetails);
 
                 // 6. Generate inventory movements
                 foreach ($consumoDetails as $detail) {
-                     $movInvRecords[] = [
+                    $movInvRecords[] = [
                         'id' => Str::uuid(),
                         'branch_id' => $header->branch_id,
                         'item_id' => $detail['item_id'],
                         'tipo_movimiento' => 'SALIDA_VENTA',
                         'cantidad' => -$detail['cantidad_teorica'],
                         'ref_tipo' => 'CONSUMO_POS',
-                        'ref_id' => (string)$consumoId,
+                        'ref_id' => (string) $consumoId,
                         'created_at' => now(),
                         'updated_at' => now(),
-                     ];
+                    ];
                 }
                 DB::connection($this->connection)->table('selemti.mov_inv')->insert($movInvRecords);
             }
@@ -101,7 +100,7 @@ class PosConsumptionService
             return [
                 'status' => 'success',
                 'consumo_id' => $consumoId,
-                'requiere_reproceso' => $requiresReprocess
+                'requiere_reproceso' => $requiresReprocess,
             ];
         });
     }

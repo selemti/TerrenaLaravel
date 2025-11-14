@@ -11,9 +11,13 @@ class PosMappingIndex extends Component
     use WithPagination;
 
     public $search = '';
+
     public $tipo = '';
+
     public $perPage = 10;
+
     public $showForm = false;
+
     public $editingId = null;
 
     protected $queryString = ['search', 'tipo', 'perPage'];
@@ -23,9 +27,9 @@ class PosMappingIndex extends Component
         $query = PosMap::query();
 
         if ($this->search) {
-            $query->where(function($q) {
-                $q->where('plu', 'like', '%' . $this->search . '%')
-                  ->orWhere('receta_id', 'like', '%' . $this->search . '%');
+            $query->where(function ($q) {
+                $q->where('plu', 'like', '%'.$this->search.'%')
+                    ->orWhere('receta_id', 'like', '%'.$this->search.'%');
             });
         }
 
@@ -36,8 +40,8 @@ class PosMappingIndex extends Component
         // No hay columnas 'sucursal_id' ni 'activo' en la tabla pos_map en el esquema actual, quitamos estos filtros
 
         $mappings = $query->with(['recipe:id,nombre_plato'])
-                         ->orderBy('created_at', 'desc')
-                         ->paginate($this->perPage);
+            ->orderBy('created_at', 'desc')
+            ->paginate($this->perPage);
 
         // Obtener valores únicos para filtros
         $tipos = PosMap::distinct('tipo')->pluck('tipo');

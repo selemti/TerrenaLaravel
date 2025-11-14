@@ -17,7 +17,9 @@ class RecipeCostSnapshotsTest extends TestCase
     use DatabaseTransactions;
 
     protected User $user;
+
     protected Receta $receta;
+
     protected RecetaVersion $version;
 
     protected function setUp(): void
@@ -26,9 +28,9 @@ class RecipeCostSnapshotsTest extends TestCase
 
         // Get first available user or create test user
         $this->user = User::first();
-        if (!$this->user) {
+        if (! $this->user) {
             // Fallback: create minimal user for testing
-            $this->user = new User();
+            $this->user = new User;
             $this->user->id = 1;
             $this->user->email = 'test@test.com';
             $this->user->nombre_completo = 'Test User';
@@ -288,7 +290,7 @@ class RecipeCostSnapshotsTest extends TestCase
         ];
 
         foreach ($endpoints as $endpoint) {
-            $response = $this->{$endpoint['method'] . 'Json'}($endpoint['uri']);
+            $response = $this->{$endpoint['method'].'Json'}($endpoint['uri']);
             $response->assertUnauthorized();
         }
     }
@@ -336,7 +338,7 @@ class RecipeCostSnapshotsTest extends TestCase
         $response->assertOk();
 
         $data = $response->json('data');
-        
+
         // Should be ordered by snapshot_at DESC
         $this->assertGreaterThan($data[1]['snapshot_at'], $data[0]['snapshot_at']);
         $this->assertGreaterThan($data[2]['snapshot_at'], $data[1]['snapshot_at']);
@@ -346,7 +348,7 @@ class RecipeCostSnapshotsTest extends TestCase
     public function test_snapshot_returns_404_for_nonexistent_recipe()
     {
         $response = $this->actingAs($this->user, 'sanctum')
-            ->postJson("/api/recipes/NONEXISTENT/cost/snapshot");
+            ->postJson('/api/recipes/NONEXISTENT/cost/snapshot');
 
         $response->assertNotFound();
     }

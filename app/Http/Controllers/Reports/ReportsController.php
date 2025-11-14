@@ -20,7 +20,7 @@ class ReportsController extends Controller
      * Lista las órdenes de compra que aún no tienen recepción posteada.
      *
      * @route GET /api/reports/purchasing/late-po
-     * @return JsonResponse
+     *
      * @todo Agregar filtros por proveedor y rango de fechas.
      */
     public function purchasingLatePO(): JsonResponse
@@ -52,7 +52,7 @@ class ReportsController extends Controller
      * Muestra recepciones fuera de tolerancia pendientes de aprobaciones.
      *
      * @route GET /api/reports/inventory/over-tolerance
-     * @return JsonResponse
+     *
      * @todo Añadir joins a proveedores y exportación CSV.
      */
     public function inventoryOverTolerance(): JsonResponse
@@ -83,7 +83,7 @@ class ReportsController extends Controller
      * Devuelve el top de insumos con prioridad URGENTE para compra.
      *
      * @route GET /api/reports/inventory/top-urgent
-     * @return JsonResponse
+     *
      * @todo Incorporar métricas de rotación y stock restante.
      */
     public function inventoryTopUrgent(): JsonResponse

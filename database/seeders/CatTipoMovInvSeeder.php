@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
  * Seeder for the cat_tipo_mov_inv table.
  *
  * @version 2.1
+ *
  * @author Gemini
  */
 class CatTipoMovInvSeeder extends Seeder

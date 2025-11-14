@@ -266,7 +266,7 @@ Los 21 tickets abiertos con deuda (antiguos) están sumándose a las ventas del 
 ## 📎 ARCHIVOS GENERADOS
 
 1. **`docs/Ventas/ANALISIS_TICKETS_ABIERTOS.md`** - Análisis completo con scripts de corrección
-2. **`BD/Noviembre/fix_tickets/01_diagnostico_tickets.sql`** - Script SQL de diagnóstico
+2. **`docs/docs/BD/NoviembreDocsDocs/fix_tickets/01_diagnostico_tickets.sql`** - Script SQL de diagnóstico
 3. **`docs/Ventas/DIAGNOSTICO_TICKETS_06NOV2025.md`** - Este reporte (resultados de ejecución)
 
 ---

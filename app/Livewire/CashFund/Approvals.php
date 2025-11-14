@@ -25,10 +25,15 @@ use Livewire\Component;
 class Approvals extends Component
 {
     public ?int $selectedFondoId = null;
+
     public ?CashFund $selectedFondo = null;
+
     public bool $showDetailModal = false;
+
     public bool $showRejectModal = false;
+
     public bool $showApproveModal = false;
+
     public bool $loading = false;
 
     public string $rejectReason = '';
@@ -36,7 +41,7 @@ class Approvals extends Component
     public function mount()
     {
         // Verificar permisos
-        if (!Auth::user()->can('approve-cash-funds')) {
+        if (! Auth::user()->can('approve-cash-funds')) {
             abort(403, 'No tienes permisos para aprobar fondos de caja chica');
         }
     }
@@ -80,6 +85,7 @@ class Approvals extends Component
                 type: 'warning',
                 body: "Hay {$movimientosSinComprobante} movimiento(s) sin comprobante que requieren aprobación explícita primero"
             );
+
             return;
         }
 
@@ -96,8 +102,9 @@ class Approvals extends Component
      */
     public function approveMovement(int $movementId): void
     {
-        if (!Auth::user()->can('approve-cash-funds')) {
+        if (! Auth::user()->can('approve-cash-funds')) {
             $this->dispatch('toast', type: 'error', body: 'No tienes permisos para esta acción');
+
             return;
         }
 
@@ -131,7 +138,7 @@ class Approvals extends Component
         } catch (\Exception $e) {
             $this->dispatch('toast',
                 type: 'error',
-                body: 'Error al aprobar movimiento: ' . $e->getMessage()
+                body: 'Error al aprobar movimiento: '.$e->getMessage()
             );
         } finally {
             $this->loading = false;
@@ -143,20 +150,22 @@ class Approvals extends Component
      */
     public function rejectMovement(int $movementId, string $reason): void
     {
-        if (!Auth::user()->can('approve-cash-funds')) {
+        if (! Auth::user()->can('approve-cash-funds')) {
             $this->dispatch('toast', type: 'error', body: 'No tienes permisos para esta acción');
+
             return;
         }
 
         if (empty($reason)) {
             $this->dispatch('toast', type: 'warning', body: 'Debes proporcionar una razón para el rechazo');
+
             return;
         }
 
         $this->loading = true;
 
         try {
-            DB::transaction(function () use ($movementId, $reason) {
+            DB::transaction(function () use ($movementId) {
                 $movement = CashFundMovement::findOrFail($movementId);
 
                 $movement->update([
@@ -180,7 +189,7 @@ class Approvals extends Component
         } catch (\Exception $e) {
             $this->dispatch('toast',
                 type: 'error',
-                body: 'Error al rechazar movimiento: ' . $e->getMessage()
+                body: 'Error al rechazar movimiento: '.$e->getMessage()
             );
         } finally {
             $this->loading = false;
@@ -200,8 +209,9 @@ class Approvals extends Component
             'rejectReason.max' => 'La razón no puede exceder 500 caracteres',
         ]);
 
-        if (!Auth::user()->can('approve-cash-funds')) {
+        if (! Auth::user()->can('approve-cash-funds')) {
             $this->dispatch('toast', type: 'error', body: 'No tienes permisos para esta acción');
+
             return;
         }
 
@@ -227,7 +237,7 @@ class Approvals extends Component
         } catch (\Exception $e) {
             $this->dispatch('toast',
                 type: 'error',
-                body: 'Error al rechazar fondo: ' . $e->getMessage()
+                body: 'Error al rechazar fondo: '.$e->getMessage()
             );
         } finally {
             $this->loading = false;
@@ -239,11 +249,12 @@ class Approvals extends Component
      */
     public function approveFund(): void
     {
-        if (!Auth::user()->can('close-cash-funds')) {
+        if (! Auth::user()->can('close-cash-funds')) {
             $this->dispatch('toast',
                 type: 'error',
                 body: 'No tienes permisos para cerrar fondos definitivamente'
             );
+
             return;
         }
 
@@ -258,6 +269,7 @@ class Approvals extends Component
                 type: 'warning',
                 body: "Hay {$movimientosPendientes} movimiento(s) sin comprobante pendientes de aprobación"
             );
+
             return;
         }
 
@@ -282,7 +294,7 @@ class Approvals extends Component
         } catch (\Exception $e) {
             $this->dispatch('toast',
                 type: 'error',
-                body: 'Error al cerrar fondo: ' . $e->getMessage()
+                body: 'Error al cerrar fondo: '.$e->getMessage()
             );
         } finally {
             $this->loading = false;
@@ -371,11 +383,11 @@ class Approvals extends Component
             'canApprove' => Auth::user()->can('approve-cash-funds'),
             'canClose' => Auth::user()->can('close-cash-funds'),
         ])
-        ->layout('layouts.terrena', [
-            'active' => 'caja',
-            'title' => 'Aprobaciones · Caja Chica',
-            'pageTitle' => 'Aprobación de Fondos',
-        ]);
+            ->layout('layouts.terrena', [
+                'active' => 'caja',
+                'title' => 'Aprobaciones · Caja Chica',
+                'pageTitle' => 'Aprobación de Fondos',
+            ]);
     }
 
     protected function getSucursalNombre(int $sucursalId): string
@@ -387,7 +399,7 @@ class Approvals extends Component
                 ->first(['nombre', 'clave']);
 
             if ($sucursal) {
-                return trim(($sucursal->clave ? "{$sucursal->clave} - " : '') . $sucursal->nombre);
+                return trim(($sucursal->clave ? "{$sucursal->clave} - " : '').$sucursal->nombre);
             }
 
             return "Sucursal #{$sucursalId}";

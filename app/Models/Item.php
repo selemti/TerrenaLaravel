@@ -8,9 +8,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Item extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.items';
+
     protected $guarded = [];
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $casts = [

@@ -7,11 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class PosMap extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.pos_map';
+
     protected $guarded = [];
+
     protected $primaryKey = 'id';
+
     public $incrementing = true;
+
     protected $keyType = 'int';
+
     public $timestamps = true;
 
     protected $fillable = [

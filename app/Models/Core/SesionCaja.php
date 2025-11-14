@@ -2,19 +2,21 @@
 
 namespace App\Models\Core;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Pos\Terminal;
+use Illuminate\Database\Eloquent\Model;
 
 class SesionCaja extends Model
 {
     protected $table = 'sesion_cajon'; // Asume DB_SCHEMA=selemti
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
 
     protected $fillable = [
-        'sucursal', 'terminal_id', 'terminal_nombre', 'cajero_usuario_id', 
+        'sucursal', 'terminal_id', 'terminal_nombre', 'cajero_usuario_id',
         'apertura_ts', 'cierre_ts', 'estatus', 'opening_float', 'closing_float',
-        'dah_evento_id', 'skipped_precorte'
+        'dah_evento_id', 'skipped_precorte',
     ];
 
     protected $casts = [

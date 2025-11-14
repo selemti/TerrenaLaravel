@@ -20,6 +20,7 @@ use Livewire\Component;
 class Detail extends Component
 {
     public string $fondoId;
+
     public ?CashFund $fondo = null;
 
     public function mount(string $id)
@@ -27,7 +28,7 @@ class Detail extends Component
         $this->fondoId = $id;
         $this->loadFondo();
 
-        if (!$this->fondo) {
+        if (! $this->fondo) {
             abort(404, 'Fondo no encontrado');
         }
     }
@@ -36,22 +37,23 @@ class Detail extends Component
     {
         $movimiento = $this->fondo->movements()->find($movementId);
 
-        if (!$movimiento || !$movimiento->adjunto_path) {
+        if (! $movimiento || ! $movimiento->adjunto_path) {
             $this->dispatch('toast',
                 type: 'warning',
                 body: 'Este movimiento no tiene comprobante'
             );
+
             return;
         }
 
         return response()->download(
-            storage_path('app/public/' . $movimiento->adjunto_path)
+            storage_path('app/public/'.$movimiento->adjunto_path)
         );
     }
 
     public function render()
     {
-        if (!$this->fondo) {
+        if (! $this->fondo) {
             abort(404, 'Fondo no encontrado');
         }
 
@@ -68,7 +70,7 @@ class Detail extends Component
             ->with('createdBy')
             ->orderBy('created_at', 'asc') // Orden cronológico
             ->get()
-            ->map(function($mov) {
+            ->map(function ($mov) {
                 return [
                     'id' => $mov->id,
                     'tipo' => $mov->tipo,
@@ -124,7 +126,7 @@ class Detail extends Component
             if ($responsableUser) {
                 $responsableNombre = $responsableUser->nombre_completo ??
                                     $responsableUser->name ??
-                                    'Usuario #' . $this->fondo->responsable_user_id;
+                                    'Usuario #'.$this->fondo->responsable_user_id;
             }
         }
 
@@ -134,7 +136,7 @@ class Detail extends Component
             if ($creadoPorUser) {
                 $creadoPorNombre = $creadoPorUser->nombre_completo ??
                                   $creadoPorUser->name ??
-                                  'Usuario #' . $this->fondo->created_by_user_id;
+                                  'Usuario #'.$this->fondo->created_by_user_id;
             }
         }
 
@@ -163,11 +165,11 @@ class Detail extends Component
             'arqueo' => $arqueoData,
             'timeline' => $timeline,
         ])
-        ->layout('layouts.terrena', [
-            'active' => 'caja',
-            'title' => 'Detalle · Caja Chica',
-            'pageTitle' => "Fondo #{$this->fondoId} - Detalle Completo",
-        ]);
+            ->layout('layouts.terrena', [
+                'active' => 'caja',
+                'title' => 'Detalle · Caja Chica',
+                'pageTitle' => "Fondo #{$this->fondoId} - Detalle Completo",
+            ]);
     }
 
     /**
@@ -183,7 +185,7 @@ class Detail extends Component
             'descripcion' => 'Fondo abierto',
             'fecha' => $this->fondo->created_at->format('d/m/Y H:i'),
             'usuario' => $this->fondo->createdBy->nombre_completo ?? 'Sistema',
-            'detalle' => "Monto inicial: $" . number_format($this->fondo->monto_inicial, 2),
+            'detalle' => 'Monto inicial: $'.number_format($this->fondo->monto_inicial, 2),
             'icono' => 'fa-plus-circle',
             'color' => 'success',
         ];
@@ -192,10 +194,10 @@ class Detail extends Component
         foreach ($this->fondo->movements as $mov) {
             $events[] = [
                 'tipo' => 'MOVIMIENTO',
-                'descripcion' => $mov->tipo . ' registrado',
+                'descripcion' => $mov->tipo.' registrado',
                 'fecha' => $mov->created_at->format('d/m/Y H:i'),
                 'usuario' => $mov->createdBy->nombre_completo ?? 'Sistema',
-                'detalle' => $mov->concepto . " - $" . number_format($mov->monto, 2),
+                'detalle' => $mov->concepto.' - $'.number_format($mov->monto, 2),
                 'icono' => $mov->tipo === 'EGRESO' ? 'fa-arrow-down' : 'fa-arrow-up',
                 'color' => $mov->tipo === 'EGRESO' ? 'danger' : 'success',
             ];
@@ -208,7 +210,7 @@ class Detail extends Component
                 'descripcion' => 'Arqueo realizado',
                 'fecha' => $this->fondo->arqueo->created_at->format('d/m/Y H:i'),
                 'usuario' => $this->fondo->arqueo->createdBy->nombre_completo ?? 'Sistema',
-                'detalle' => "Diferencia: $" . number_format(abs($this->fondo->arqueo->diferencia), 2) .
+                'detalle' => 'Diferencia: $'.number_format(abs($this->fondo->arqueo->diferencia), 2).
                            ($this->fondo->arqueo->diferencia > 0 ? ' (a favor)' : ($this->fondo->arqueo->diferencia < 0 ? ' (faltante)' : ' (cuadra)')),
                 'icono' => 'fa-calculator',
                 'color' => abs($this->fondo->arqueo->diferencia) < 0.01 ? 'success' : 'warning',
@@ -247,7 +249,7 @@ class Detail extends Component
                 ->first(['nombre', 'clave']);
 
             if ($sucursal) {
-                return trim(($sucursal->clave ? "{$sucursal->clave} - " : '') . $sucursal->nombre);
+                return trim(($sucursal->clave ? "{$sucursal->clave} - " : '').$sucursal->nombre);
             }
 
             return "Sucursal #{$sucursalId}";

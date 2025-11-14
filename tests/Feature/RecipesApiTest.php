@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Catalogs\Unidad;
+use App\Models\Inv\Item;
 use App\Models\Rec\Receta;
 use App\Models\Rec\RecetaDetalle;
-use App\Models\Inv\Item;
 use App\Models\User;
-use App\Models\Catalogs\Unidad;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -75,12 +75,12 @@ class RecipesApiTest extends TestCase
                     'receta_id',
                     'nombre',
                     'ingredientes' => [
-                        '*' => ['item_id', 'nombre', 'cantidad', 'costo_unitario', 'costo_total']
+                        '*' => ['item_id', 'nombre', 'cantidad', 'costo_unitario', 'costo_total'],
                     ],
                     'costo_total',
-                    'costo_unitario'
+                    'costo_unitario',
                 ],
-                'timestamp'
+                'timestamp',
             ])
             ->assertJsonPath('ok', true)
             ->assertJsonPath('data.receta_id', $receta->id);
@@ -136,10 +136,10 @@ class RecipesApiTest extends TestCase
                 'data' => [
                     'receta_id',
                     'bom' => [
-                        '*' => ['item_id', 'nombre', 'cantidad', 'nivel']
-                    ]
+                        '*' => ['item_id', 'nombre', 'cantidad', 'nivel'],
+                    ],
                 ],
-                'timestamp'
+                'timestamp',
             ])
             ->assertJsonPath('ok', true);
 
@@ -174,7 +174,7 @@ class RecipesApiTest extends TestCase
 
         // Nivel 1: Insumo directo (Carne)
         $carne = Item::factory()->create(['nombre' => 'Carne']);
-        
+
         // Agregar ingredientes a receta final
         RecetaDetalle::factory()->create([
             'receta_id' => $recetaFinal->id,
@@ -195,7 +195,7 @@ class RecipesApiTest extends TestCase
             ->assertJsonPath('ok', true);
 
         $bom = $response->json('data.bom');
-        
+
         // Debe tener 3 items: Pan (nivel 1), Carne (nivel 1), Harina (nivel 2)
         $this->assertGreaterThanOrEqual(2, count($bom));
 
@@ -236,10 +236,10 @@ class RecipesApiTest extends TestCase
             ->assertJsonPath('ok', true);
 
         $bom = $response->json('data.bom');
-        
+
         // Verificar que no hay más de 10 niveles de recursión
         $niveles = array_column($bom, 'nivel');
-        $maxNivel = !empty($niveles) ? max($niveles) : 0;
+        $maxNivel = ! empty($niveles) ? max($niveles) : 0;
         $this->assertLessThanOrEqual(10, $maxNivel);
     }
 
@@ -367,7 +367,7 @@ class RecipesApiTest extends TestCase
         $response->assertStatus(200);
 
         $bom = $response->json('data.bom');
-        
+
         // Debe agregar las cantidades (100 + 50 = 150)
         $quesoItem = collect($bom)->firstWhere('nombre', 'Queso');
         $this->assertNotNull($quesoItem);

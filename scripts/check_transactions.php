@@ -1,6 +1,7 @@
 <?php
-require __DIR__ . '/../vendor/autoload.php';
-$app = require_once __DIR__ . '/../bootstrap/app.php';
+
+require __DIR__.'/../vendor/autoload.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 // Get transactions columns
@@ -12,7 +13,7 @@ $columns = DB::select("
 ");
 
 echo "Columnas de public.transactions:\n";
-echo str_repeat("=", 50) . "\n";
+echo str_repeat('=', 50)."\n";
 foreach ($columns as $col) {
     echo "- {$col->column_name} ({$col->data_type})\n";
 }

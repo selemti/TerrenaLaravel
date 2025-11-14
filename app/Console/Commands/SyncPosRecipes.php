@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class SyncPosRecipes extends Command
 {
@@ -19,7 +18,7 @@ class SyncPosRecipes extends Command
 
         $conn = $this->resolvePosConnection();
 
-        $this->info(($dry ? '[DRY RUN] ' : '') . 'Sincronizando productos del POS...');
+        $this->info(($dry ? '[DRY RUN] ' : '').'Sincronizando productos del POS...');
 
         $items = $conn->table('public.menu_item as mi')
             ->leftJoin('public.menu_group as mg', 'mi.group_id', '=', 'mg.id')
@@ -43,12 +42,12 @@ class SyncPosRecipes extends Command
             $exists = DB::table('selemti.receta_cab')->where('id', $recipeId)->first();
             if ($exists) {
                 $updatedRecipes++;
-                if (!$dry) {
+                if (! $dry) {
                     DB::table('selemti.receta_cab')->where('id', $recipeId)->update($attributes + ['updated_at' => now()]);
                 }
             } else {
                 $createdRecipes++;
-                if (!$dry) {
+                if (! $dry) {
                     DB::table('selemti.receta_cab')->insert($attributes + [
                         'id' => $recipeId,
                         'porciones_standard' => 1,
@@ -65,9 +64,9 @@ class SyncPosRecipes extends Command
                 ->where('version', 1)
                 ->exists();
 
-            if (!$versionExists) {
+            if (! $versionExists) {
                 $createdVersions++;
-                if (!$dry) {
+                if (! $dry) {
                     DB::table('selemti.receta_version')->insert([
                         'receta_id' => $recipeId,
                         'version' => 1,
@@ -93,7 +92,7 @@ class SyncPosRecipes extends Command
 
     protected function syncModifiers(bool $dry, $conn): void
     {
-        $this->info(($dry ? '[DRY RUN] ' : '') . 'Sincronizando modificadores del POS...');
+        $this->info(($dry ? '[DRY RUN] ' : '').'Sincronizando modificadores del POS...');
 
         $modifiers = $conn->table('public.menu_modifier as mm')
             ->leftJoin('public.menu_modifier_group as mg', 'mm.group_id', '=', 'mg.id')
@@ -109,12 +108,12 @@ class SyncPosRecipes extends Command
             $recipeId = sprintf('REC-MOD-%05d', $mod->id);
 
             $recipeExists = DB::table('selemti.receta_cab')->where('id', $recipeId)->exists();
-            if (!$recipeExists) {
+            if (! $recipeExists) {
                 $createdModRecipes++;
-                if (!$dry) {
+                if (! $dry) {
                     DB::table('selemti.receta_cab')->insert([
                         'id' => $recipeId,
-                        'nombre_plato' => $mod->group_name ? $mod->group_name . ' · ' . $mod->name : $mod->name,
+                        'nombre_plato' => $mod->group_name ? $mod->group_name.' · '.$mod->name : $mod->name,
                         'codigo_plato_pos' => $modCode,
                         'categoria_plato' => $mod->group_name,
                         'porciones_standard' => 1,
@@ -137,10 +136,10 @@ class SyncPosRecipes extends Command
             }
 
             $exists = DB::table('selemti.modificadores_pos')->where('codigo_pos', $modCode)->first();
-            if (!$exists) {
+            if (! $exists) {
                 $createdMods++;
             }
-            if (!$dry) {
+            if (! $dry) {
                 DB::table('selemti.modificadores_pos')->updateOrInsert(
                     ['codigo_pos' => $modCode],
                     [

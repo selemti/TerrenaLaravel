@@ -5,10 +5,9 @@ namespace App\Http\Controllers\Reports;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use Illuminate\Http\Response;
 
 class SalesJournalController extends BaseReportController
 {
@@ -70,8 +69,8 @@ class SalesJournalController extends BaseReportController
             'reporte_journal_%s_%s%s.pdf',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            !empty($branches)
-                ? '_' . str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
+            ! empty($branches)
+                ? '_'.str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
                 : ''
         );
 
@@ -113,8 +112,8 @@ class SalesJournalController extends BaseReportController
 
     protected function fetch(Carbon $start, Carbon $end, array $branches, array $terminals): array
     {
-        $lSql = "SELECT * FROM public.vw_report_journal_lines WHERE folio_date BETWEEN ? AND ?";
-        $pSql = "SELECT * FROM public.vw_report_journal_payments WHERE folio_date BETWEEN ? AND ?";
+        $lSql = 'SELECT * FROM public.vw_report_journal_lines WHERE folio_date BETWEEN ? AND ?';
+        $pSql = 'SELECT * FROM public.vw_report_journal_payments WHERE folio_date BETWEEN ? AND ?';
         $bindingsL = [$start->toDateString(), $end->toDateString()];
         $bindingsP = [$start->toDateString(), $end->toDateString()];
 
@@ -137,6 +136,7 @@ class SalesJournalController extends BaseReportController
 
         $lines = collect(DB::connection('pgsql')->select($lSql, $bindingsL));
         $payments = collect(DB::connection('pgsql')->select($pSql, $bindingsP));
+
         return [$lines, $payments];
     }
 }

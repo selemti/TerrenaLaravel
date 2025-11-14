@@ -11,7 +11,7 @@ trait RequiresPostgresConnection
         try {
             DB::connection('pgsql')->getPdo();
         } catch (\Throwable $e) {
-            $this->markTestSkipped('PostgreSQL connection unavailable: ' . $e->getMessage());
+            $this->markTestSkipped('PostgreSQL connection unavailable: '.$e->getMessage());
         }
     }
 }

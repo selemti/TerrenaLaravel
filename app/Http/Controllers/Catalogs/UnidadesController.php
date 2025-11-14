@@ -15,19 +15,21 @@ class UnidadesController extends Controller
         $q = trim($request->query('q', ''));
         $query = Unidad::query();
         if ($q !== '') {
-            $query->where(function($w) use ($q){
-                $w->where('codigo','ILIKE',"%{$q}%")
-                  ->orWhere('nombre','ILIKE',"%{$q}%");
+            $query->where(function ($w) use ($q) {
+                $w->where('codigo', 'ILIKE', "%{$q}%")
+                    ->orWhere('nombre', 'ILIKE', "%{$q}%");
             });
         }
         $rows = $query->orderBy('codigo')->paginate(15)->withQueryString();
-        return view('catalogs.unidades.index', compact('rows','q'))
+
+        return view('catalogs.unidades.index', compact('rows', 'q'))
             ->with('active', 'config');
     }
 
     public function create()
     {
         $unidad = new Unidad(['es_base' => false, 'factor_conversion_base' => 1]);
+
         return view('catalogs.unidades.create', compact('unidad'))
             ->with('active', 'config');
     }
@@ -35,9 +37,10 @@ class UnidadesController extends Controller
     public function store(StoreUnidadRequest $request)
     {
         $data = $request->validated();
-        $data['es_base'] = (bool)($data['es_base'] ?? false);
+        $data['es_base'] = (bool) ($data['es_base'] ?? false);
         Unidad::create($data);
-        return redirect()->route('catalogos.unidades.index')->with('ok','Unidad creada');
+
+        return redirect()->route('catalogos.unidades.index')->with('ok', 'Unidad creada');
     }
 
     public function show(Unidad $unidad)
@@ -55,14 +58,16 @@ class UnidadesController extends Controller
     public function update(UpdateUnidadRequest $request, Unidad $unidad)
     {
         $data = $request->validated();
-        $data['es_base'] = (bool)($data['es_base'] ?? false);
+        $data['es_base'] = (bool) ($data['es_base'] ?? false);
         $unidad->update($data);
-        return redirect()->route('catalogos.unidades.index')->with('ok','Unidad actualizada');
+
+        return redirect()->route('catalogos.unidades.index')->with('ok', 'Unidad actualizada');
     }
 
     public function destroy(Unidad $unidad)
     {
         $unidad->delete();
-        return redirect()->route('catalogos.unidades.index')->with('ok','Unidad eliminada');
+
+        return redirect()->route('catalogos.unidades.index')->with('ok', 'Unidad eliminada');
     }
 }

@@ -28,11 +28,12 @@ class CheckLegacyLinks extends Command
      */
     public function handle(): int
     {
-        $filesystem = new Filesystem();
+        $filesystem = new Filesystem;
         $viewsPath = resource_path('views');
 
         if (! $filesystem->exists($viewsPath)) {
             $this->error('No se encontró el directorio de vistas.');
+
             return self::FAILURE;
         }
 
@@ -50,7 +51,7 @@ class CheckLegacyLinks extends Command
 
         $matches = [];
         foreach ($filesystem->allFiles($viewsPath) as $file) {
-            $relativePath = Str::after($file->getPathname(), base_path() . DIRECTORY_SEPARATOR);
+            $relativePath = Str::after($file->getPathname(), base_path().DIRECTORY_SEPARATOR);
             $lines = preg_split('/\R/', $filesystem->get($file->getPathname()));
 
             foreach ($lines as $index => $line) {
@@ -73,6 +74,7 @@ class CheckLegacyLinks extends Command
 
         if (empty($matches)) {
             $this->info('Sin coincidencias legacy en resources/views.');
+
             return self::SUCCESS;
         }
 

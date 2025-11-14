@@ -2,7 +2,6 @@
 
 namespace Database\Factories\Rec;
 
-use App\Models\Inv\Item;
 use App\Models\Rec\Receta;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -13,7 +12,7 @@ class RecetaFactory extends Factory
     public function definition(): array
     {
         return [
-            'id' => 'REC-' . strtoupper($this->faker->unique()->bothify('??###')),
+            'id' => 'REC-'.strtoupper($this->faker->unique()->bothify('??###')),
             'nombre_plato' => $this->faker->words(3, true),
             'codigo_plato_pos' => $this->faker->unique()->numerify('PLT-####'),
             'categoria_plato' => $this->faker->randomElement(['ENTRADA', 'PLATO_FUERTE', 'POSTRE', 'BEBIDA']),

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class HistorialCostoItem extends Model
 {
     protected $table = 'selemti.historial_costos_item';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -36,21 +37,21 @@ class HistorialCostoItem extends Model
     ];
 
     protected $casts = [
-        'fecha_efectiva'   => 'date',
-        'fecha_registro'   => 'datetime',
-        'valid_from'       => 'date',
-        'valid_to'         => 'date',
-        'sys_from'         => 'datetime',
-        'sys_to'           => 'datetime',
-        'costo_anterior'   => 'decimal:2',
-        'costo_nuevo'      => 'decimal:2',
-        'costo_wac'        => 'decimal:4',
-        'costo_peps'       => 'decimal:4',
-        'costo_ueps'       => 'decimal:4',
-        'costo_estandar'   => 'decimal:4',
-        'version_datos'    => 'integer',
-        'recalculado'      => 'boolean',
+        'fecha_efectiva' => 'date',
+        'fecha_registro' => 'datetime',
+        'valid_from' => 'date',
+        'valid_to' => 'date',
+        'sys_from' => 'datetime',
+        'sys_to' => 'datetime',
+        'costo_anterior' => 'decimal:2',
+        'costo_nuevo' => 'decimal:2',
+        'costo_wac' => 'decimal:4',
+        'costo_peps' => 'decimal:4',
+        'costo_ueps' => 'decimal:4',
+        'costo_estandar' => 'decimal:4',
+        'version_datos' => 'integer',
+        'recalculado' => 'boolean',
         'metadata_calculo' => 'array',
-        'created_at'       => 'datetime',
+        'created_at' => 'datetime',
     ];
 }

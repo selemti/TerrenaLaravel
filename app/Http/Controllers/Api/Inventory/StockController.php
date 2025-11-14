@@ -4,15 +4,13 @@ namespace App\Http\Controllers\Api\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Services\Audit\AuditLogService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class StockController extends Controller
 {
-    public function __construct(private AuditLogService $auditLogService)
-    {
-    }
+    public function __construct(private AuditLogService $auditLogService) {}
 
     // GET /api/inventory/kpis
     public function kpis(Request $r)
@@ -47,11 +45,11 @@ class StockController extends Controller
             'ok' => true,
             'data' => [
                 'total_items' => $totalItems,
-                'inventory_value' => round((float)($inventoryValue->total ?? 0), 2),
+                'inventory_value' => round((float) ($inventoryValue->total ?? 0), 2),
                 'low_stock_count' => $lowStock,
                 'expiring_items' => $expiringItems,
             ],
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 
@@ -61,7 +59,7 @@ class StockController extends Controller
         $conn = DB::connection('pgsql');
 
         $query = $conn->table('selemti.items as i')
-            ->leftJoin('selemti.vw_stock_valorizado as sv', function($join) use ($r) {
+            ->leftJoin('selemti.vw_stock_valorizado as sv', function ($join) use ($r) {
                 $join->on('i.id', '=', 'sv.item_key');
                 if ($r->filled('sucursal_id')) {
                     $join->where('sv.sucursal_id', $r->get('sucursal_id'));
@@ -80,15 +78,15 @@ class StockController extends Controller
                 DB::raw('COALESCE(sv.costo_wac, i.costo_promedio, 0) as costo'),
                 DB::raw('COALESCE(sv.valor, 0) as valor_total'),
                 'i.activo',
-                DB::raw("COALESCE(sv.sucursal_id, '0') as ubicacion_id")
+                DB::raw("COALESCE(sv.sucursal_id, '0') as ubicacion_id"),
             ]);
 
         // Search filter
         if ($term = $r->string('q')->toString()) {
             $query->where(function ($q) use ($term) {
                 $q->where('i.id', 'ilike', "%{$term}%")
-                  ->orWhere('i.nombre', 'ilike', "%{$term}%")
-                  ->orWhere('i.descripcion', 'ilike', "%{$term}%");
+                    ->orWhere('i.nombre', 'ilike', "%{$term}%")
+                    ->orWhere('i.descripcion', 'ilike', "%{$term}%");
             });
         }
 
@@ -106,25 +104,25 @@ class StockController extends Controller
         } elseif ($status === 'low_stock') {
             // Items with stock below minimum
             $query->where('i.activo', true)
-                  ->whereExists(function($q) {
-                      $q->select(DB::raw(1))
+                ->whereExists(function ($q) {
+                    $q->select(DB::raw(1))
                         ->from('selemti.vw_stock_brechas as sb')
                         ->whereColumn('sb.item_id', 'i.id')
                         ->whereRaw('sb.stock_actual < sb.min_qty');
-                  });
+                });
         } elseif ($status === 'expiring') {
             // Items with batches expiring in next 30 days
             $expiringDate = Carbon::now()->addDays(30);
             $query->where('i.activo', true)
-                  ->whereExists(function($q) use ($expiringDate) {
-                      $q->select(DB::raw(1))
+                ->whereExists(function ($q) use ($expiringDate) {
+                    $q->select(DB::raw(1))
                         ->from('selemti.inventory_batch as b')
                         ->whereColumn('b.item_id', 'i.id')
                         ->where('b.estado', 'ACTIVO')
                         ->whereNotNull('b.fecha_caducidad')
                         ->where('b.fecha_caducidad', '<=', $expiringDate)
                         ->where('b.cantidad_actual', '>', 0);
-                  });
+                });
         }
 
         // Ordering
@@ -138,7 +136,7 @@ class StockController extends Controller
         return response()->json([
             'ok' => true,
             'data' => $results,
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 
@@ -149,8 +147,12 @@ class StockController extends Controller
             ->selectRaw('item_id, SUM(cantidad_actual) AS stock')
             ->groupBy('item_id');
 
-        if ($r->filled('item_id'))      $q->where('item_id', $r->get('item_id'));
-        if ($r->filled('ubicacion_id')) $q->where('ubicacion_id', $r->get('ubicacion_id'));
+        if ($r->filled('item_id')) {
+            $q->where('item_id', $r->get('item_id'));
+        }
+        if ($r->filled('ubicacion_id')) {
+            $q->where('ubicacion_id', $r->get('ubicacion_id'));
+        }
 
         return response()->json($q->get());
     }
@@ -162,16 +164,22 @@ class StockController extends Controller
             ->where('item_id', $itemId)
             ->orderByDesc('ts');
 
-        if ($r->filled('lote_id')) $q->where('lote_id', $r->get('lote_id'));
-        if ($r->filled('from'))   $q->where('ts','>=',$r->date('from'));
-        if ($r->filled('to'))     $q->where('ts','<=',$r->date('to'));
+        if ($r->filled('lote_id')) {
+            $q->where('lote_id', $r->get('lote_id'));
+        }
+        if ($r->filled('from')) {
+            $q->where('ts', '>=', $r->date('from'));
+        }
+        if ($r->filled('to')) {
+            $q->where('ts', '<=', $r->date('to'));
+        }
 
         $movements = $q->limit(100)->get();
 
         return response()->json([
             'ok' => true,
             'data' => $movements,
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 
@@ -182,12 +190,14 @@ class StockController extends Controller
             ->where('item_id', $itemId)
             ->orderByDesc('id');
 
-        if ($r->filled('estado')) $q->where('estado', $r->get('estado'));
+        if ($r->filled('estado')) {
+            $q->where('estado', $r->get('estado'));
+        }
 
         return response()->json([
             'ok' => true,
-            'data' => $q->paginate($r->integer('per_page',25)),
-            'timestamp' => now()->toIso8601String()
+            'data' => $q->paginate($r->integer('per_page', 25)),
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 
@@ -251,7 +261,7 @@ class StockController extends Controller
                 'ok' => true,
                 'data' => ['id' => $movementId],
                 'message' => 'Movimiento creado exitosamente',
-                'timestamp' => now()->toIso8601String()
+                'timestamp' => now()->toIso8601String(),
             ], 201);
         } catch (\Exception $e) {
             DB::connection('pgsql')->rollBack();
@@ -259,8 +269,8 @@ class StockController extends Controller
             return response()->json([
                 'ok' => false,
                 'error' => 'movement_creation_failed',
-                'message' => 'Error al crear movimiento: ' . $e->getMessage(),
-                'timestamp' => now()->toIso8601String()
+                'message' => 'Error al crear movimiento: '.$e->getMessage(),
+                'timestamp' => now()->toIso8601String(),
             ], 500);
         }
     }

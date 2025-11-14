@@ -10,10 +10,13 @@ use Livewire\Component;
 class Review extends Component
 {
     public $countId;
+
     public $count;
 
     public string $notas = '';
+
     public string $filterVariacion = 'all'; // all, exactos, variacion, faltantes, sobrantes
+
     public bool $showConfirmModal = false;
 
     public function mount($id)
@@ -85,10 +88,10 @@ class Review extends Component
     public function finalizarConteo()
     {
         try {
-            $service = new InventoryCountService();
+            $service = new InventoryCountService;
 
             // Preparar líneas para finalización
-            $lines = $this->count->lines->map(function($line) {
+            $lines = $this->count->lines->map(function ($line) {
                 return [
                     'item_id' => $line->item_id,
                     'inventory_batch_id' => $line->inventory_batch_id,
@@ -116,7 +119,7 @@ class Review extends Component
         } catch (\Exception $e) {
             $this->dispatch('toast',
                 type: 'error',
-                body: 'Error al finalizar conteo: ' . $e->getMessage()
+                body: 'Error al finalizar conteo: '.$e->getMessage()
             );
 
             $this->showConfirmModal = false;

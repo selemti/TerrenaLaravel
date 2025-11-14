@@ -6,35 +6,42 @@ use App\Services\Inventory\InsumoCodeService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Livewire\Component;
 use Illuminate\Validation\Rule;
+use Livewire\Component;
 
 class InsumoCreate extends Component
 {
     public string $categoria = '';
+
     public string $subcategoria = '';
+
     public string $nombre = '';
+
     public ?string $sku = null;
+
     public int|string $um_id = '';
+
     public bool $perecible = false;
+
     public float $merma_pct = 0.0;
+
     public array $units = [];
 
     public bool $authorized = false;
 
     protected array $categorias = [
-        'MP'  => 'Materia Prima',
-        'PT'  => 'Producto Terminado',
-        'EM'  => 'Empaque / Packaging',
+        'MP' => 'Materia Prima',
+        'PT' => 'Producto Terminado',
+        'EM' => 'Empaque / Packaging',
         'LIM' => 'Limpieza / Químicos',
         'SRV' => 'Servicio',
     ];
 
     protected array $subcategorias = [
         'MP' => [
-            'LAC'  => 'Lácteos',
-            'CAR'  => 'Cárnicos',
-            'FRU'  => 'Frutas y verduras',
+            'LAC' => 'Lácteos',
+            'CAR' => 'Cárnicos',
+            'FRU' => 'Frutas y verduras',
             'SECO' => 'Secos / abarrotes',
         ],
         'PT' => [
@@ -65,6 +72,7 @@ class InsumoCreate extends Component
 
         if (! $this->authorized) {
             session()->flash('warning', 'No tienes permiso para dar de alta insumos.');
+
             return;
         }
 
@@ -80,34 +88,35 @@ class InsumoCreate extends Component
     {
         if (! $this->authorized) {
             $this->dispatch('form-error', 'Sin permiso');
+
             return;
         }
 
         $validated = Validator::make(
             [
-                'categoria'    => $this->categoria,
+                'categoria' => $this->categoria,
                 'subcategoria' => $this->subcategoria,
-                'nombre'       => $this->nombre,
-                'um_id'        => $this->um_id,
-                'sku'          => $this->sku,
-                'perecible'    => $this->perecible,
-                'merma_pct'    => $this->merma_pct,
+                'nombre' => $this->nombre,
+                'um_id' => $this->um_id,
+                'sku' => $this->sku,
+                'perecible' => $this->perecible,
+                'merma_pct' => $this->merma_pct,
             ],
             [
-                'categoria'    => ['required', 'string', 'max:4'],
+                'categoria' => ['required', 'string', 'max:4'],
                 'subcategoria' => ['required', 'string', 'max:6'],
-                'nombre'       => ['required', 'string', 'max:255'],
-                'um_id'        => ['required', 'integer', Rule::in($this->unitIds())],
-                'sku'          => ['nullable', 'string', 'max:120'],
-                'perecible'    => ['boolean'],
-                'merma_pct'    => ['required', 'numeric', 'between:0,100', 'decimal:0,3'],
+                'nombre' => ['required', 'string', 'max:255'],
+                'um_id' => ['required', 'integer', Rule::in($this->unitIds())],
+                'sku' => ['nullable', 'string', 'max:120'],
+                'perecible' => ['boolean'],
+                'merma_pct' => ['required', 'numeric', 'between:0,100', 'decimal:0,3'],
             ],
             [],
             [
-                'categoria'    => 'categoría',
+                'categoria' => 'categoría',
                 'subcategoria' => 'subcategoría',
-                'um_id'        => 'unidad de medida',
-                'merma_pct'    => 'merma %',
+                'um_id' => 'unidad de medida',
+                'merma_pct' => 'merma %',
             ]
         )->validate();
 
@@ -116,9 +125,9 @@ class InsumoCreate extends Component
 
             // Mapear categoría a category_id en item_categories
             $categoryMap = [
-                'MP'  => 1, // Materia Prima
-                'PT'  => 2, // Producto Terminado
-                'EM'  => 3, // Empaque / Packaging
+                'MP' => 1, // Materia Prima
+                'PT' => 2, // Producto Terminado
+                'EM' => 3, // Empaque / Packaging
                 'LIM' => 4, // Limpieza / Químicos
                 'SRV' => 5, // Servicio
             ];
@@ -131,18 +140,18 @@ class InsumoCreate extends Component
                 ->first(['clave']);
 
             $payload = [
-                'id'                  => $codes['codigo'], // MP-LAC-00001
-                'nombre'              => $this->nombre,
-                'descripcion'         => null,
-                'categoria_id'        => 'CAT-' . str_pad($categoryId, 4, '0', STR_PAD_LEFT), // CAT-0001
-                'category_id'         => $categoryId,
-                'unidad_medida'       => $unit ? $unit->clave : 'KG',
-                'unidad_medida_id'    => (int) $this->um_id,
-                'perishable'          => (bool) $this->perecible,
-                'tipo'                => 'MATERIA_PRIMA',
-                'activo'              => true,
-                'created_at'          => now(),
-                'updated_at'          => now(),
+                'id' => $codes['codigo'], // MP-LAC-00001
+                'nombre' => $this->nombre,
+                'descripcion' => null,
+                'categoria_id' => 'CAT-'.str_pad($categoryId, 4, '0', STR_PAD_LEFT), // CAT-0001
+                'category_id' => $categoryId,
+                'unidad_medida' => $unit ? $unit->clave : 'KG',
+                'unidad_medida_id' => (int) $this->um_id,
+                'perishable' => (bool) $this->perecible,
+                'tipo' => 'MATERIA_PRIMA',
+                'activo' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
             ];
 
             // Insertar en la tabla selemti.items usando conexión PostgreSQL
@@ -163,12 +172,12 @@ class InsumoCreate extends Component
     public function render()
     {
         return view('livewire.inventory.insumo-create', [
-            'categorias'    => $this->categorias,
+            'categorias' => $this->categorias,
             'subcategorias' => $this->categoria ? ($this->subcategorias[$this->categoria] ?? []) : [],
-            'units'         => $this->units,
+            'units' => $this->units,
         ])->layout('layouts.terrena', [
-            'active'    => 'inventario',
-            'title'     => 'Catálogo · Alta de insumo',
+            'active' => 'inventario',
+            'title' => 'Catálogo · Alta de insumo',
             'pageTitle' => 'Alta de insumo',
         ]);
     }
@@ -191,7 +200,7 @@ class InsumoCreate extends Component
             ->orderBy('clave')
             ->get(['id', 'clave', 'nombre'])
             ->map(fn ($row) => [
-                'id'    => (int) $row->id,
+                'id' => (int) $row->id,
                 'clave' => $row->clave,
                 'nombre' => $row->nombre,
             ])->toArray();

@@ -103,17 +103,39 @@
 
         <!-- STEP 3: Postcorte -->
         <section id="czStep3" data-step="3" class="d-none">
+          <!-- Warning banner for irregular postcorte -->
+          <div class="alert alert-warning d-none mb-3" id="czBannerCorteIrregular" data-role="banner-corte-irregular">
+            <div class="d-flex align-items-start gap-2">
+              <i class="fa-solid fa-triangle-exclamation mt-1"></i>
+              <div>
+                <strong>Corte Irregular Detectado</strong><br>
+                <small>Este corte no siguió el flujo normal (precorte → DPR → postcorte) y requerirá aprobación de un supervisor.</small>
+              </div>
+            </div>
+          </div>
+
           <div class="card mb-2">
             <div class="card-header py-2">Resumen final (Postcorte)</div>
             <div class="card-body p-2">
               <div id="pc3Grid" class="mb-2"></div>
+
+              <!-- Motivo irregular (only visible when skipped_precorte detected) -->
+              <div class="mb-2 d-none" id="czMotivoIrregularContainer" data-role="motivo-irregular-container">
+                <label for="czMotivoIrregular" class="form-label small mb-1 text-danger">
+                  <strong>Motivo del corte irregular <span class="text-danger">*</span></strong>
+                </label>
+                <textarea id="czMotivoIrregular" data-role="motivo-irregular" class="form-control" rows="2" placeholder="Explica por qué no se realizó el precorte antes del corte POS..." required></textarea>
+                <small class="text-muted">Este campo es obligatorio para cortes irregulares</small>
+              </div>
+
               <div class="mb-2">
                 <label for="pc3Notas" class="form-label small mb-1">Notas del postcorte</label>
                 <textarea id="pc3Notas" class="form-control" rows="3" placeholder="Observaciones, incidencias, folios..."></textarea>
               </div>
+
               <div class="d-flex gap-2">
                 <button id="btnPCGuardar" class="btn btn-outline-primary" type="button">Guardar borrador</button>
-                <button id="btnPCValidar" class="btn btn-success ms-auto" type="button">Validar y cerrar</button>
+                <button id="btnPCValidar" class="btn btn-success ms-auto" type="button" data-role="btn-validar">Validar y cerrar</button>
                 <button id="btnPCCancelar" class="btn btn-outline-secondary ms-auto" type="button" data-bs-dismiss="modal">Cerrar</button>
               </div>
             </div>

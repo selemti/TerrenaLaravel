@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Schema;
  * Migration to add unit_cost to the inventory_batch table for batch costing.
  *
  * @version 2.1
+ *
  * @author Gemini
  */
 return new class extends Migration
@@ -44,7 +45,7 @@ return new class extends Migration
     protected function columnExists(string $column): bool
     {
         $result = DB::connection('pgsql')->selectOne(
-            <<<SQL
+            <<<'SQL'
             SELECT 1
             FROM information_schema.columns
             WHERE table_schema = 'selemti'

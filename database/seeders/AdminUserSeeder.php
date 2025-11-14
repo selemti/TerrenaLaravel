@@ -25,10 +25,9 @@ class AdminUserSeeder extends Seeder
         try {
             $user->syncRoles(['Super Admin']);
         } catch (\Exception $e) {
-            $this->command->warn('No se pudieron asignar roles: ' . $e->getMessage());
+            $this->command->warn('No se pudieron asignar roles: '.$e->getMessage());
         }
 
         $this->command->info('Usuario creado: username=soporte / password=password');
     }
 }
-

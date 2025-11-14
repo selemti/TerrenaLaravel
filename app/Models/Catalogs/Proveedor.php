@@ -20,4 +20,3 @@ class Proveedor extends Model
         'activo' => 'boolean',
     ];
 }
-

@@ -24,6 +24,57 @@ class TicketManagementController extends Controller
     }
 
     /**
+     * Obtiene la sesión de caja a la que pertenece un ticket
+     */
+    private function getTicketSession($ticketId)
+    {
+        $ticket = DB::connection('pgsql')
+            ->table('ticket')
+            ->where('id', $ticketId)
+            ->select('terminal_id', 'create_date')
+            ->first();
+
+        if (! $ticket) {
+            return null;
+        }
+
+        // Buscar sesión por terminal y rango de fechas
+        return DB::connection('pgsql')->selectOne('
+            SELECT s.id, s.estatus,
+                   (SELECT COUNT(*) FROM selemti.postcorte p
+                    WHERE p.sesion_id = s.id
+                      AND p.aprobado_en IS NOT NULL) as tiene_postcorte_aprobado
+            FROM selemti.sesion_cajon s
+            WHERE s.terminal_id = ?
+              AND s.apertura_ts <= ?
+              AND (s.cierre_ts IS NULL OR s.cierre_ts >= ?)
+            ORDER BY s.apertura_ts DESC
+            LIMIT 1
+        ', [$ticket->terminal_id, $ticket->create_date, $ticket->create_date]);
+    }
+
+    /**
+     * Valida si se puede modificar un ticket
+     */
+    private function canModifyTicket($ticketId): array
+    {
+        $session = $this->getTicketSession($ticketId);
+
+        // Si no hay sesión, es un ticket legacy (anterior al sistema de sesiones)
+        // Permitir la operación
+        if (! $session) {
+            return ['ok' => true, 'session' => null, 'legacy' => true];
+        }
+
+        // Si hay sesión y tiene postcorte aprobado, bloquear
+        if ($session->tiene_postcorte_aprobado > 0) {
+            return ['ok' => false, 'reason' => 'La sesión ya tiene postcorte aprobado. No se puede modificar.'];
+        }
+
+        return ['ok' => true, 'session' => $session, 'legacy' => false];
+    }
+
+    /**
      * Verifica si un ticket tiene descuento del 100%
      */
     private function hasFullDiscount($ticketId): bool
@@ -172,12 +223,19 @@ class TicketManagementController extends Controller
         $stats = $this->getTicketStats();
         $tickets = $this->getProblematicTickets($request->input('type', 'all'));
 
+        // Cargar razones de anulación desde la BD (tabla Floreant POS)
+        $voidReasons = DB::connection('pgsql')
+            ->table('public.void_reasons')
+            ->orderBy('id')
+            ->pluck('reason_text', 'id');
+
         return view('admin.tickets.management', [
             'title' => 'Gestión de Tickets Problemáticos',
             'active' => 'admin',
             'stats' => $stats,
             'tickets' => $tickets,
             'filterType' => $request->input('type', 'all'),
+            'voidReasons' => $voidReasons,
         ]);
     }
 
@@ -291,6 +349,15 @@ class TicketManagementController extends Controller
         ]);
 
         try {
+            // Validar si se puede modificar el ticket
+            $validation = $this->canModifyTicket($request->ticket_id);
+            if (! $validation['ok']) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'No se puede anular el ticket: '.$validation['reason'],
+                ], 400);
+            }
+
             DB::connection('pgsql')->transaction(function () use ($request) {
                 $ticket = DB::connection('pgsql')
                     ->table('ticket')
@@ -305,22 +372,49 @@ class TicketManagementController extends Controller
                     throw new \Exception('El ticket ya está anulado');
                 }
 
-                // Anular ticket - Usar el usuario administrador con auto_id = 1
+                // Anular ticket (igual que Floreant POS)
+                // IMPORTANTE: Al anular, también se cierra el ticket automáticamente
+                // NOTA: void_by_user apunta a public.users(auto_id), usar admin = 1
                 DB::connection('pgsql')
                     ->table('ticket')
                     ->where('id', $request->ticket_id)
                     ->update([
                         'voided' => true,
                         'void_reason' => $request->reason,
-                        'void_by_user' => 1, // Usar auto_id = 1 para el admin
+                        'void_by_user' => 1, // Admin System en public.users
+                        'closing_date' => now(), // ✅ Cerrar automáticamente al anular (como Floreant)
+                        'due_amount' => 0, // ✅ Limpiar deuda
+                        'status' => 'CLOSED', // ✅ Marcar como cerrado
                     ]);
 
-                // Log de auditoría
+                // Registrar en auditoría
+                $userId = auth()->id() ?? 3; // Usar usuario autenticado o ID 3 por defecto
+                DB::connection('pgsql')->insert('
+                    INSERT INTO selemti.audit_log
+                        (user_id, accion, entidad, entidad_id, motivo, payload_json)
+                    VALUES (?, ?, ?, ?, ?, ?::jsonb)
+                ', [
+                    $userId,
+                    'ticket_void', // accion
+                    'ticket', // entidad
+                    $request->ticket_id, // entidad_id
+                    $request->reason, // motivo
+                    json_encode([
+                        'ticket_id' => $request->ticket_id,
+                        'user_id' => $userId,
+                        'user_name' => auth()->user()->name ?? 'Sistema',
+                        'ip' => $request->ip(),
+                        'ticket_antes' => $ticket,
+                        'razon' => $request->reason,
+                    ]),
+                ]);
+
+                // Log de auditoría adicional en Laravel
                 Log::info('Ticket anulado', [
                     'ticket_id' => $request->ticket_id,
                     'reason' => $request->reason,
-                    'user_id' => 1, // Registrar como admin
-                    'user_name' => 'Administrador del Sistema', // Usar nombre genérico
+                    'user_id' => 1,
+                    'user_name' => 'Administrador del Sistema',
                     'ticket_data' => $ticket,
                 ]);
             });
@@ -357,31 +451,82 @@ class TicketManagementController extends Controller
                     throw new \Exception('Ticket no encontrado');
                 }
 
-                if (! $ticket->paid) {
-                    throw new \Exception('El ticket no está pagado, no se puede cerrar');
-                }
-
                 if ($ticket->closing_date) {
                     throw new \Exception('El ticket ya tiene fecha de cierre');
                 }
 
-                // Cerrar ticket con la fecha de creación o ahora
-                $closingDate = $ticket->create_date ?: now();
+                // Verificar si tiene descuento 100%
+                $hasFullDiscount = $this->hasFullDiscount($request->ticket_id);
 
-                DB::connection('pgsql')
-                    ->table('ticket')
-                    ->where('id', $request->ticket_id)
-                    ->update([
-                        'closing_date' => $closingDate,
-                        'status' => 'CLOSED',
+                // Si tiene descuento 100%, marcarlo como pagado automáticamente
+                if ($hasFullDiscount) {
+                    // Obtener el nombre del descuento para la razón
+                    $discountName = $this->getDiscountName($request->ticket_id);
+                    $reason = $request->input('reason', $discountName);
+
+                    // Marcar como pagado y cerrar en una sola operación
+                    DB::connection('pgsql')
+                        ->table('ticket')
+                        ->where('id', $request->ticket_id)
+                        ->update([
+                            'paid' => true,
+                            'paid_amount' => 0,
+                            'due_amount' => 0,
+                            'closing_date' => $ticket->create_date ?: now(),
+                            'status' => 'CLOSED',
+                        ]);
+
+                    Log::info('Ticket con descuento 100% cerrado', [
+                        'ticket_id' => $request->ticket_id,
+                        'user_id' => auth()->id(),
+                        'discount_name' => $reason,
                     ]);
+                } else {
+                    // Validación normal: debe estar pagado
+                    if (! $ticket->paid) {
+                        throw new \Exception('El ticket no está pagado, no se puede cerrar');
+                    }
 
-                // Log de auditoría
+                    // Cerrar ticket con la fecha de creación o ahora
+                    $closingDate = $ticket->create_date ?: now();
+
+                    DB::connection('pgsql')
+                        ->table('ticket')
+                        ->where('id', $request->ticket_id)
+                        ->update([
+                            'closing_date' => $closingDate,
+                            'status' => 'CLOSED',
+                        ]);
+                }
+
+                // Registrar en auditoría
+                $userId = auth()->id() ?? 3; // Usar usuario autenticado o ID 3 por defecto
+                DB::connection('pgsql')->insert('
+                    INSERT INTO selemti.audit_log
+                        (user_id, accion, entidad, entidad_id, motivo, payload_json)
+                    VALUES (?, ?, ?, ?, ?, ?::jsonb)
+                ', [
+                    $userId,
+                    'ticket_close', // accion
+                    'ticket', // entidad
+                    $request->ticket_id, // entidad_id
+                    $request->input('reason', 'Cierre manual desde gestión'), // motivo
+                    json_encode([
+                        'ticket_id' => $request->ticket_id,
+                        'user_id' => $userId,
+                        'user_name' => auth()->user()->name ?? 'Sistema',
+                        'ip' => $request->ip(),
+                        'ticket_antes' => $ticket,
+                        'closing_date' => $closingDate,
+                    ]),
+                ]);
+
+                // Log de auditoría adicional en Laravel
                 Log::info('Ticket cerrado manualmente', [
                     'ticket_id' => $request->ticket_id,
                     'closing_date' => $closingDate,
-                    'user_id' => 1, // Registrar como admin
-                    'user_name' => 'Administrador del Sistema', // Usar nombre genérico
+                    'user_id' => 1,
+                    'user_name' => 'Administrador del Sistema',
                     'ticket_data' => $ticket,
                 ]);
             });
@@ -399,74 +544,6 @@ class TicketManagementController extends Controller
     }
 
     /**
-     * Marca un ticket como pagado y cerrado
-     * (Para tickets cerrados sin pago que sí fueron pagados)
-     */
-    public function markAsPaid(Request $request)
-    {
-        $request->validate([
-            'ticket_id' => 'required|integer',
-        ]);
-
-        try {
-            DB::connection('pgsql')->transaction(function () use ($request) {
-                $ticket = DB::connection('pgsql')
-                    ->table('ticket')
-                    ->where('id', $request->ticket_id)
-                    ->first();
-
-                if (! $ticket) {
-                    throw new \Exception('Ticket no encontrado');
-                }
-
-                if ($ticket->paid) {
-                    throw new \Exception('El ticket ya está marcado como pagado');
-                }
-
-                // Calcular monto pagado de transacciones
-                $montoPagado = DB::connection('pgsql')
-                    ->table('transactions')
-                    ->where('ticket_id', $request->ticket_id)
-                    ->where('voided', false)
-                    ->sum('amount');
-
-                if ($montoPagado < $ticket->total_price - 0.50) {
-                    throw new \Exception('Las transacciones no cubren el total del ticket');
-                }
-
-                // Marcar como pagado
-                DB::connection('pgsql')
-                    ->table('ticket')
-                    ->where('id', $request->ticket_id)
-                    ->update([
-                        'paid' => true,
-                        'paid_amount' => $montoPagado,
-                        'due_amount' => 0,
-                    ]);
-
-                // Log de auditoría
-                Log::info('Ticket marcado como pagado manualmente', [
-                    'ticket_id' => $request->ticket_id,
-                    'paid_amount' => $montoPagado,
-                    'user_id' => 1, // Registrar como admin
-                    'user_name' => 'Administrador del Sistema', // Usar nombre genérico
-                    'ticket_data' => $ticket,
-                ]);
-            });
-
-            return response()->json([
-                'ok' => true,
-                'message' => 'Ticket marcado como pagado correctamente',
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'ok' => false,
-                'message' => 'Error al marcar ticket como pagado: '.$e->getMessage(),
-            ], 400);
-        }
-    }
-
-    /**
      * Reabre un ticket cerrado incorrectamente
      */
     public function reopen(Request $request)
@@ -477,6 +554,15 @@ class TicketManagementController extends Controller
         ]);
 
         try {
+            // Validar si se puede modificar el ticket
+            $validation = $this->canModifyTicket($request->ticket_id);
+            if (! $validation['ok']) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'No se puede reabrir el ticket: '.$validation['reason'],
+                ], 400);
+            }
+
             DB::connection('pgsql')->transaction(function () use ($request) {
                 $ticket = DB::connection('pgsql')
                     ->table('ticket')
@@ -501,12 +587,34 @@ class TicketManagementController extends Controller
                         'status' => null,
                     ]);
 
-                // Log de auditoría
+                // Registrar en auditoría
+                $userId = auth()->id() ?? 3; // Usar usuario autenticado o ID 3 por defecto
+                DB::connection('pgsql')->insert('
+                    INSERT INTO selemti.audit_log
+                        (user_id, accion, entidad, entidad_id, motivo, payload_json)
+                    VALUES (?, ?, ?, ?, ?, ?::jsonb)
+                ', [
+                    $userId,
+                    'ticket_reopen', // accion
+                    'ticket', // entidad
+                    $request->ticket_id, // entidad_id
+                    $request->reason, // motivo
+                    json_encode([
+                        'ticket_id' => $request->ticket_id,
+                        'user_id' => $userId,
+                        'user_name' => auth()->user()->name ?? 'Sistema',
+                        'ip' => $request->ip(),
+                        'ticket_antes' => $ticket,
+                        'razon' => $request->reason,
+                    ]),
+                ]);
+
+                // Log de auditoría adicional en Laravel
                 Log::info('Ticket reabierto manualmente', [
                     'ticket_id' => $request->ticket_id,
                     'reason' => $request->reason,
-                    'user_id' => 1, // Registrar como admin
-                    'user_name' => 'Administrador del Sistema', // Usar nombre genérico
+                    'user_id' => 1,
+                    'user_name' => 'Administrador del Sistema',
                     'ticket_data' => $ticket,
                 ]);
             });
@@ -524,15 +632,48 @@ class TicketManagementController extends Controller
     }
 
     /**
+     * Obtiene el rango de días disponible para cierre masivo
+     */
+    public function getMassiveCloseRange()
+    {
+        try {
+            $range = DB::connection('pgsql')->selectOne('
+                SELECT
+                    MIN(CURRENT_DATE - create_date::date) as dias_minimo,
+                    MAX(CURRENT_DATE - create_date::date) as dias_maximo,
+                    COUNT(*) as total_tickets
+                FROM public.ticket
+                WHERE voided = false
+                    AND (
+                        (paid = true AND closing_date IS NULL)
+                        OR
+                        (paid = false AND total_price = 0 AND total_discount > 0)
+                    )
+            ');
+
+            return response()->json([
+                'ok' => true,
+                'range' => $range,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Error al obtener rango: '.$e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
      * Vista previa de cierre masivo
      * Muestra cuántos tickets se cerrarían y el impacto
+     * Incluye: 1) Tickets pagados sin closing_date 2) Tickets con descuento 100% sin marcar como pagados
      */
     public function previewMassiveClose(Request $request)
     {
         $minDaysOld = $request->input('min_days', 30);
 
         try {
-            // Contar tickets candidatos
+            // Contar tickets candidatos (ambos tipos)
             $stats = DB::connection('pgsql')->selectOne("
                 SELECT
                     COUNT(*) as cantidad,
@@ -540,38 +681,48 @@ class TicketManagementController extends Controller
                     MIN(create_date::date) as fecha_mas_antigua,
                     MAX(create_date::date) as fecha_mas_reciente
                 FROM public.ticket
-                WHERE total_price > 0
-                    AND COALESCE(due_amount, 0) = 0
-                    AND closing_date IS NULL
-                    AND voided = false
-                    AND paid = false
+                WHERE voided = false
                     AND create_date < CURRENT_DATE - INTERVAL '{$minDaysOld} days'
+                    AND (
+                        -- Tipo 1: Pagados sin fecha de cierre
+                        (paid = true AND closing_date IS NULL)
+                        OR
+                        -- Tipo 2: Descuento 100% sin marcar como pagado
+                        (paid = false AND total_price = 0 AND total_discount > 0)
+                    )
             ");
 
-            // Obtener muestra de tickets
-            $sample = DB::connection('pgsql')->select("
+            // Obtener TODOS los tickets (sin límite)
+            $tickets = DB::connection('pgsql')->select("
                 SELECT
                     id,
                     create_date,
                     total_price,
+                    total_discount,
+                    paid,
+                    closing_date,
                     terminal_id,
                     branch_key,
-                    CURRENT_DATE - create_date::date as dias
+                    CURRENT_DATE - create_date::date as dias,
+                    CASE
+                        WHEN paid = true AND closing_date IS NULL THEN 'Pagado sin cierre'
+                        WHEN paid = false AND total_price = 0 AND total_discount > 0 THEN 'Descuento 100%'
+                    END as tipo
                 FROM public.ticket
-                WHERE total_price > 0
-                    AND COALESCE(due_amount, 0) = 0
-                    AND closing_date IS NULL
-                    AND voided = false
-                    AND paid = false
+                WHERE voided = false
                     AND create_date < CURRENT_DATE - INTERVAL '{$minDaysOld} days'
-                ORDER BY create_date DESC
-                LIMIT 10
+                    AND (
+                        (paid = true AND closing_date IS NULL)
+                        OR
+                        (paid = false AND total_price = 0 AND total_discount > 0)
+                    )
+                ORDER BY create_date ASC
             ");
 
             return response()->json([
                 'ok' => true,
                 'stats' => $stats,
-                'sample' => $sample,
+                'tickets' => $tickets,
                 'min_days' => $minDaysOld,
             ]);
         } catch (\Exception $e) {
@@ -583,7 +734,8 @@ class TicketManagementController extends Controller
     }
 
     /**
-     * Ejecuta cierre masivo de tickets pagados sin fecha de cierre
+     * Ejecuta cierre masivo de tickets
+     * Incluye: 1) Tickets pagados sin closing_date 2) Tickets con descuento 100% sin marcar como pagados
      */
     public function executeMassiveClose(Request $request)
     {
@@ -603,60 +755,77 @@ class TicketManagementController extends Controller
         $minDaysOld = $request->input('min_days', 30);
 
         try {
-            DB::connection('pgsql')->transaction(function () use ($minDaysOld) {
-                // Crear backup antes de modificar
-                DB::connection('pgsql')->statement('
-                    CREATE TABLE IF NOT EXISTS backup_tickets_cierre_masivo_'.date('Ymd_His')." AS
+            $affectedTotal = 0;
+
+            DB::connection('pgsql')->transaction(function () use ($minDaysOld, &$affectedTotal) {
+                // Crear backup antes de modificar (ambos tipos)
+                $userId = auth()->id() ?? 1;
+                $userName = str_replace("'", "''", auth()->user()->name ?? 'Sistema'); // Escapar comillas simples
+                $tableName = 'backup_tickets_cierre_masivo_'.date('Ymd_His');
+
+                DB::connection('pgsql')->statement("
+                    CREATE TABLE IF NOT EXISTS {$tableName} AS
                     SELECT
                         t.*,
                         CURRENT_TIMESTAMP as backup_timestamp,
-                        ? as backup_user_id,
-                        ? as backup_user_name
+                        CAST({$userId} AS INTEGER) as backup_user_id,
+                        CAST('{$userName}' AS VARCHAR(255)) as backup_user_name
                     FROM public.ticket t
-                    WHERE t.total_price > 0
-                        AND COALESCE(t.due_amount, 0) = 0
-                        AND t.closing_date IS NULL
-                        AND t.voided = false
-                        AND t.paid = false
+                    WHERE t.voided = false
                         AND t.create_date < CURRENT_DATE - INTERVAL '{$minDaysOld} days'
-                ", [auth()->id(), auth()->user()->name]);
+                        AND (
+                            (t.paid = true AND t.closing_date IS NULL)
+                            OR
+                            (t.paid = false AND t.total_price = 0 AND t.total_discount > 0)
+                        )
+                ");
 
-                // Ejecutar cierre masivo
-                $affected = DB::connection('pgsql')->update("
+                // UPDATE 1: Tickets pagados sin fecha de cierre
+                $affected1 = DB::connection('pgsql')->update("
                     UPDATE public.ticket
                     SET
                         closing_date = create_date,
-                        paid = true,
-                        paid_amount = COALESCE(total_price, 0),
-                        due_amount = 0,
                         status = 'CLOSED'
-                    WHERE total_price > 0
-                        AND COALESCE(due_amount, 0) = 0
+                    WHERE voided = false
+                        AND paid = true
                         AND closing_date IS NULL
-                        AND voided = false
-                        AND paid = false
                         AND create_date < CURRENT_DATE - INTERVAL '{$minDaysOld} days'
                 ");
 
+                // UPDATE 2: Tickets con descuento 100% - marcar como pagados y cerrar
+                $affected2 = DB::connection('pgsql')->update("
+                    UPDATE public.ticket
+                    SET
+                        paid = true,
+                        paid_amount = 0,
+                        due_amount = 0,
+                        closing_date = COALESCE(closing_date, create_date),
+                        status = 'CLOSED'
+                    WHERE voided = false
+                        AND paid = false
+                        AND total_price = 0
+                        AND total_discount > 0
+                        AND create_date < CURRENT_DATE - INTERVAL '{$minDaysOld} days'
+                ");
+
+                $affectedTotal = $affected1 + $affected2;
+
                 // Log de auditoría
                 Log::info('Cierre masivo de tickets ejecutado', [
-                    'tickets_afectados' => $affected,
+                    'tickets_pagados_cerrados' => $affected1,
+                    'tickets_descuento_100_cerrados' => $affected2,
+                    'total_afectados' => $affectedTotal,
                     'min_days' => $minDaysOld,
                     'user_id' => auth()->id(),
                     'user_name' => auth()->user()->name,
                     'timestamp' => now(),
                 ]);
-
-                // Guardar en variable de sesión
-                session(['massive_close_count' => $affected]);
             });
-
-            $affected = session('massive_close_count', 0);
 
             return response()->json([
                 'ok' => true,
-                'message' => "Se cerraron {$affected} tickets correctamente",
-                'affected' => $affected,
+                'message' => "Se cerraron {$affectedTotal} tickets correctamente",
+                'affected' => $affectedTotal,
             ]);
         } catch (\Exception $e) {
             Log::error('Error en cierre masivo', [

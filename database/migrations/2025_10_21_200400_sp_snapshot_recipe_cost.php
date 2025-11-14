@@ -1,9 +1,10 @@
 <?php
 
-return new class extends \Illuminate\Database\Migrations\Migration {
-  public function up(): void
-  {
-    \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
+return new class extends \Illuminate\Database\Migrations\Migration
+{
+    public function up(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 CREATE OR REPLACE FUNCTION selemti.sp_snapshot_recipe_cost(p_recipe_id bigint, p_at timestamp)
 RETURNS VOID AS $$
 DECLARE
@@ -25,10 +26,10 @@ BEGIN
   VALUES (p_recipe_id, v_rv_id, p_at, v_batch, v_portion, v_bs, v_y);
 END$$ LANGUAGE plpgsql;
 SQL);
-  }
+    }
 
-  public function down(): void
-  {
-    \Illuminate\Support\Facades\DB::unprepared("DROP FUNCTION IF EXISTS selemti.sp_snapshot_recipe_cost(bigint,timestamp)");
-  }
+    public function down(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared('DROP FUNCTION IF EXISTS selemti.sp_snapshot_recipe_cost(bigint,timestamp)');
+    }
 };

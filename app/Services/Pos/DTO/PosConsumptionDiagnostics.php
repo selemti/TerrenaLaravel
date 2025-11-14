@@ -5,18 +5,9 @@ namespace App\Services\Pos\DTO;
 class PosConsumptionDiagnostics
 {
     /**
-     * @param bool $ticketHeaderOk
-     * @param int $itemsTotal
-     * @param int $itemsConReceta
-     * @param int $itemsSinReceta
-     * @param bool $tieneConsumoConfirmado
-     * @param string $estadoConsumo "PENDIENTE" | "CONFIRMADO" | "ANULADO" | "SIN_DATOS"
-     * @param bool $puedeReprocesar
-     * @param bool $puedeReversar
-     * @param bool $faltanEmpaquesToGo
-     * @param bool $faltanConsumiblesOperativos
-     * @param array|null $itemsSinRecetaDetalle Lista de items sin receta con detalles
-     * @param array|null $warnings Lista de advertencias
+     * @param  string  $estadoConsumo  "PENDIENTE" | "CONFIRMADO" | "ANULADO" | "SIN_DATOS"
+     * @param  array|null  $itemsSinRecetaDetalle  Lista de items sin receta con detalles
+     * @param  array|null  $warnings  Lista de advertencias
      */
     public function __construct(
         protected bool $ticketHeaderOk,
@@ -31,8 +22,7 @@ class PosConsumptionDiagnostics
         protected bool $faltanConsumiblesOperativos,
         protected ?array $itemsSinRecetaDetalle = null,
         protected ?array $warnings = null
-    ) {
-    }
+    ) {}
 
     public function getTicketHeaderOk(): bool
     {
@@ -99,7 +89,7 @@ class PosConsumptionDiagnostics
         return $this->itemsSinReceta > 0
             || $this->faltanEmpaquesToGo
             || $this->faltanConsumiblesOperativos
-            || !empty($this->warnings);
+            || ! empty($this->warnings);
     }
 
     public function toArray(): array

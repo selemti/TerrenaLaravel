@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Sucursal extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'cat_sucursales';
+
     protected $guarded = [];
 
     protected $casts = [

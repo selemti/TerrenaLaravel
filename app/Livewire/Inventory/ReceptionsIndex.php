@@ -1,14 +1,16 @@
 <?php
+
 namespace App\Livewire\Inventory;
 
-use Livewire\Component;
-use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Livewire\Attributes\On;
+use Livewire\Component;
 
 class ReceptionsIndex extends Component
 {
     public bool $showCreateModal = false;
+
     public ?string $flashMessage = null;
 
     public function openCreateModal(): void
@@ -75,11 +77,11 @@ class ReceptionsIndex extends Component
             ->get()
             ->map(function ($row) {
                 $row->sucursal_nombre = isset($row->sucursal_nombre)
-                    ? trim(($row->sucursal_clave ? "{$row->sucursal_clave} · " : '') . ($row->sucursal_nombre ?? ''))
+                    ? trim(($row->sucursal_clave ? "{$row->sucursal_clave} · " : '').($row->sucursal_nombre ?? ''))
                     : null;
 
                 $row->almacen_nombre = isset($row->almacen_nombre)
-                    ? trim(($row->almacen_clave ? "{$row->almacen_clave} · " : '') . ($row->almacen_nombre ?? ''))
+                    ? trim(($row->almacen_clave ? "{$row->almacen_clave} · " : '').($row->almacen_nombre ?? ''))
                     : null;
 
                 return $row;
@@ -95,8 +97,8 @@ class ReceptionsIndex extends Component
             'showCreateModal' => $this->showCreateModal,
             'flashMessage' => $this->flashMessage,
         ])->layout('layouts.terrena', [
-            'active'    => 'inventario',
-            'title'     => 'Recepciones · Inventario',
+            'active' => 'inventario',
+            'title' => 'Recepciones · Inventario',
             'pageTitle' => 'Recepciones',
         ]);
     }

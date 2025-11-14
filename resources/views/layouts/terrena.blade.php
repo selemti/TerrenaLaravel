@@ -262,9 +262,18 @@
             <i class="fa-solid fa-cash-register"></i> <span class="label">Caja</span>
             <i class="fa-solid fa-chevron-down ms-auto small"></i>
           </a>
-          <div class="collapse {{ in_array($active ?? '', ['caja', 'cortes', 'cajachica']) ? 'show' : '' }} ms-3" id="menuCaja">
+          <div class="collapse {{ in_array($active ?? '', ['caja', 'cortes', 'cajachica', 'aprobaciones']) ? 'show' : '' }} ms-3" id="menuCaja">
             <a class="nav-link submenu-link" href="{{ route('caja.cortes') }}">
               <i class="fa-solid fa-receipt"></i> <span class="label">Cortes de Caja</span>
+            </a>
+            <a class="nav-link submenu-link" href="{{ route('caja.historico') }}">
+              <i class="fa-solid fa-clock-rotate-left"></i> <span class="label">Histórico de Cortes</span>
+            </a>
+            <a class="nav-link submenu-link"
+               href="{{ route('caja.aprobaciones') }}"
+               x-show="permsLoaded && window.TerrenaHasPerm('aprobar-cortes-irregulares')"
+               x-cloak>
+              <i class="fa-solid fa-user-check"></i> <span class="label">Aprobaciones</span>
             </a>
             <a class="nav-link submenu-link"
                href="{{ route('cashfund.index') }}"
@@ -548,6 +557,54 @@
 
   {{-- JS al final (mismo orden que legacy) --}}
   <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
+
+  {{-- Inicialización global de tooltips de Bootstrap --}}
+  <script>
+  (function() {
+    /**
+     * Inicializa todos los tooltips de Bootstrap en la página
+     * Destruye tooltips existentes primero para evitar duplicados
+     * Se ejecuta automáticamente al cargar la página y expone una función global
+     * para reinicializar cuando se carga contenido dinámico
+     */
+    function initTooltips() {
+      // Destruir tooltips existentes para evitar duplicados
+      const existingTooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+      existingTooltips.forEach(function(el) {
+        const existingTooltip = bootstrap.Tooltip.getInstance(el);
+        if (existingTooltip) {
+          existingTooltip.dispose();
+        }
+      });
+
+      // Inicializar tooltips con configuración estandarizada
+      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl, {
+          trigger: 'hover focus',
+          html: false,
+          animation: true,
+          delay: { show: 300, hide: 100 }
+        });
+      });
+    }
+
+    // Inicializar al cargar el DOM
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initTooltips);
+    } else {
+      initTooltips();
+    }
+
+    // Exponer función global para reinicializar tooltips después de cargar contenido dinámico
+    window.TerrenaInitTooltips = initTooltips;
+
+    // Reinicializar tooltips después de eventos de Livewire
+    document.addEventListener('livewire:navigated', initTooltips);
+    document.addEventListener('livewire:load', initTooltips);
+  })();
+  </script>
+
   <script src="{{ asset('assets/js/chart.umd.min.js') }}"></script>
   <script src="{{ asset('assets/vendor/cleave.min.js') }}"></script>
   <script src="{{ asset('assets/js/moneda.js') }}"></script>
@@ -625,6 +682,261 @@
           el.addEventListener('hidden.bs.collapse', saveCollapseStates);
         }
       });
+    });
+  })();
+  </script>
+
+  {{-- Sistema de Alertas en Navbar --}}
+  <script>
+  (function() {
+    const ALERTS_POLL_INTERVAL = 30000; // 30 seconds
+    let pollTimer = null;
+
+    // Get base path from window.__BASE__ variable
+    const basePath = window.__BASE__ || '';
+
+    // Elements
+    const badgeEl = document.getElementById('hdr-alerts-badge');
+    const listEl = document.getElementById('hdr-alerts-list');
+    const dropdownBtn = document.querySelector('[data-bs-toggle="dropdown"]')?.closest('.dropdown');
+
+    if (!badgeEl || !listEl) {
+      console.warn('[Terrena Alerts] Badge or list elements not found');
+      return;
+    }
+
+    /**
+     * Fetch alerts count from API
+     */
+    async function fetchAlertsCount() {
+      try {
+        const response = await fetch(basePath + '/api/caja/alertas/count', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.ok && typeof data.count === 'number') {
+          updateBadge(data.count);
+        }
+      } catch (error) {
+        console.error('[Terrena Alerts] Error fetching count:', error);
+        // Don't show error to user, just log it
+      }
+    }
+
+    /**
+     * Update badge with count
+     */
+    function updateBadge(count) {
+      if (count > 0) {
+        badgeEl.textContent = count > 99 ? '99+' : count;
+        badgeEl.classList.remove('d-none');
+        badgeEl.classList.add('d-inline-block');
+      } else {
+        badgeEl.textContent = '0';
+        badgeEl.classList.add('d-none');
+        badgeEl.classList.remove('d-inline-block');
+      }
+    }
+
+    /**
+     * Fetch recent alerts from API
+     */
+    async function fetchRecentAlerts() {
+      try {
+        const response = await fetch(basePath + '/api/caja/alertas?limit=10', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.ok && Array.isArray(data.data)) {
+          renderAlerts(data.data);
+        }
+      } catch (error) {
+        console.error('[Terrena Alerts] Error fetching alerts:', error);
+        listEl.innerHTML = '<div class="px-3 py-3 text-muted small text-center">Error al cargar alertas</div>';
+      }
+    }
+
+    /**
+     * Render alerts in dropdown
+     */
+    function renderAlerts(alerts) {
+      if (!alerts || alerts.length === 0) {
+        listEl.innerHTML = '<div class="px-3 py-3 text-muted small text-center">No hay alertas pendientes</div>';
+        return;
+      }
+
+      const html = alerts.map(alert => {
+        const icon = getAlertIcon(alert.tipo);
+        const color = getAlertColor(alert.tipo);
+        const time = formatTime(alert.creado_en);
+        const unread = !alert.leido_en;
+
+        return `
+          <a href="${getAlertLink(alert)}"
+             class="dropdown-item py-2 px-3 ${unread ? 'bg-light' : ''}"
+             data-alert-id="${alert.id}"
+             onclick="markAsRead(${alert.id})">
+            <div class="d-flex align-items-start">
+              <div class="flex-shrink-0 me-2">
+                <i class="${icon} ${color}"></i>
+              </div>
+              <div class="flex-grow-1">
+                <div class="small fw-semibold">${escapeHtml(alert.titulo)}</div>
+                <div class="small text-muted">${escapeHtml(alert.mensaje)}</div>
+                <div class="small text-muted mt-1">${time}</div>
+              </div>
+              ${unread ? '<span class="badge bg-primary rounded-pill">Nuevo</span>' : ''}
+            </div>
+          </a>
+        `;
+      }).join('');
+
+      listEl.innerHTML = html;
+    }
+
+    /**
+     * Get icon for alert type
+     */
+    function getAlertIcon(tipo) {
+      switch (tipo) {
+        case 'REQUIERE_APROBACION':
+          return 'fa-solid fa-exclamation-triangle';
+        case 'APROBADO':
+          return 'fa-solid fa-check-circle';
+        case 'RECHAZADO':
+          return 'fa-solid fa-times-circle';
+        default:
+          return 'fa-solid fa-bell';
+      }
+    }
+
+    /**
+     * Get color for alert type
+     */
+    function getAlertColor(tipo) {
+      switch (tipo) {
+        case 'REQUIERE_APROBACION':
+          return 'text-warning';
+        case 'APROBADO':
+          return 'text-success';
+        case 'RECHAZADO':
+          return 'text-danger';
+        default:
+          return 'text-primary';
+      }
+    }
+
+    /**
+     * Get link for alert
+     */
+    function getAlertLink(alert) {
+      if (alert.tipo === 'REQUIERE_APROBACION') {
+        return basePath + '/caja/cortes/aprobaciones';
+      }
+      // For APROBADO/RECHAZADO, could link to cashier's own cortes
+      return basePath + '/caja/mis-cortes';
+    }
+
+    /**
+     * Format time (relative or absolute)
+     */
+    function formatTime(dateStr) {
+      if (!dateStr) return '';
+
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+
+      if (diffMins < 1) return 'Ahora';
+      if (diffMins < 60) return `Hace ${diffMins} min`;
+
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours < 24) return `Hace ${diffHours}h`;
+
+      const diffDays = Math.floor(diffHours / 24);
+      if (diffDays < 7) return `Hace ${diffDays}d`;
+
+      return date.toLocaleDateString('es-MX', { month: 'short', day: 'numeric' });
+    }
+
+    /**
+     * Escape HTML to prevent XSS
+     */
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    /**
+     * Mark alert as read
+     */
+    window.markAsRead = async function(alertId) {
+      try {
+        await fetch(`${basePath}/api/caja/alertas/${alertId}/marcar-leido`, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+
+        // Refresh count after marking as read
+        setTimeout(() => fetchAlertsCount(), 500);
+      } catch (error) {
+        console.error('[Terrena Alerts] Error marking as read:', error);
+      }
+    };
+
+    /**
+     * Initialize alerts system
+     */
+    function init() {
+      // Fetch count on page load
+      fetchAlertsCount();
+
+      // Fetch alerts when dropdown is opened
+      if (dropdownBtn) {
+        dropdownBtn.addEventListener('show.bs.dropdown', () => {
+          fetchRecentAlerts();
+        });
+      }
+
+      // Poll for new alerts every 30 seconds
+      pollTimer = setInterval(fetchAlertsCount, ALERTS_POLL_INTERVAL);
+    }
+
+    // Start on DOM ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      if (pollTimer) clearInterval(pollTimer);
     });
   })();
   </script>

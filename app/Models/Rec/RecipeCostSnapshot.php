@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Recipe Cost Snapshot Model
- * 
+ *
  * Representa snapshots históricos de costos de recetas
  * Tabla: selemti.recipe_cost_history
  */
@@ -16,8 +16,11 @@ class RecipeCostSnapshot extends Model
     use HasFactory;
 
     protected $table = 'selemti.recipe_cost_history';
+
     protected $connection = 'pgsql';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -82,7 +85,7 @@ class RecipeCostSnapshot extends Model
             ->latest()
             ->first();
 
-        if (!$previous || $previous->portion_cost == 0) {
+        if (! $previous || $previous->portion_cost == 0) {
             return null;
         }
 

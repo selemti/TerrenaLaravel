@@ -12,7 +12,9 @@ class ItemsIndex extends Component
     use WithPagination;
 
     public string $q = '';
+
     public ?string $sucursal = null;
+
     public int $perPage = 25;
 
     // Para que Livewire use bootstrap en la paginación (si no lo tienes, añade en AppServiceProvider Paginator::useBootstrapFive())
@@ -38,11 +40,11 @@ class ItemsIndex extends Component
             $q = mb_strtoupper($this->q);
             $query->where(function ($w) use ($q) {
                 $w->whereRaw('UPPER(v.sku) LIKE ?', ["%{$q}%"])
-                  ->orWhereRaw('UPPER(v.nombre) LIKE ?', ["%{$q}%"]);
+                    ->orWhereRaw('UPPER(v.nombre) LIKE ?', ["%{$q}%"]);
             });
         }
 
-        if (!empty($this->sucursal)) {
+        if (! empty($this->sucursal)) {
             $query->where('v.sucursal', $this->sucursal);
         }
 

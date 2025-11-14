@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ANÁLISIS COMPLETO DE DISCREPANCIAS EN VENTAS
  * Agosto, Septiembre y Octubre 2025
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 $app = require_once __DIR__.'/bootstrap/app.php';
 $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
 
-DB::connection('pgsql')->statement("SET search_path TO selemti,public");
+DB::connection('pgsql')->statement('SET search_path TO selemti,public');
 DB::connection('pgsql')->statement("SET TIME ZONE 'America/Mexico_City'");
 
 echo "\n╔══════════════════════════════════════════════════════════════════════════════╗\n";
@@ -23,22 +24,23 @@ echo "╚═══════════════════════�
 $months = [
     ['name' => 'AGOSTO 2025', 'start' => '2025-08-01', 'end' => '2025-08-31'],
     ['name' => 'SEPTIEMBRE 2025', 'start' => '2025-09-01', 'end' => '2025-09-30'],
-    ['name' => 'OCTUBRE 2025', 'start' => '2025-10-01', 'end' => '2025-10-31']
+    ['name' => 'OCTUBRE 2025', 'start' => '2025-10-01', 'end' => '2025-10-31'],
 ];
 
 foreach ($months as $month) {
     analyzeMonth($month['name'], $month['start'], $month['end']);
 }
 
-function analyzeMonth($monthName, $startDate, $endDate) {
-    echo "\n" . str_repeat("=", 80) . "\n";
+function analyzeMonth($monthName, $startDate, $endDate)
+{
+    echo "\n".str_repeat('=', 80)."\n";
     echo "  📅 ANÁLISIS DE {$monthName}\n";
-    echo str_repeat("=", 80) . "\n\n";
-    
+    echo str_repeat('=', 80)."\n\n";
+
     // 1. RESUMEN GENERAL POR DÍA
     echo "📊 RESUMEN DIARIO DE VENTAS Y PAGOS\n";
-    echo str_repeat("-", 80) . "\n";
-    
+    echo str_repeat('-', 80)."\n";
+
     $dailySummary = DB::connection('pgsql')->select("
         WITH daily_data AS (
             SELECT 
@@ -92,16 +94,16 @@ function analyzeMonth($monthName, $startDate, $endDate) {
         FROM daily_data
         ORDER BY fecha
     ", [$startDate, $endDate]);
-    
+
     $totalDifferencia = 0;
     $totalVentaNeta = 0;
     $totalPagosNetos = 0;
-    
+
     foreach ($dailySummary as $day) {
         echo sprintf(
-            "📆 %s | Tickets: %d (Pag:%d, Anul:%d, NoPag:%d) | " .
-            "Venta Bruta: $%s | Desc: $%s (100%%: $%s)\n" .
-            "   💰 PAGOS: Cash $%s | Credit $%s | Debit $%s | Transfer $%s | Refund $%s\n" .
+            '📆 %s | Tickets: %d (Pag:%d, Anul:%d, NoPag:%d) | '.
+            "Venta Bruta: $%s | Desc: $%s (100%%: $%s)\n".
+            "   💰 PAGOS: Cash $%s | Credit $%s | Debit $%s | Transfer $%s | Refund $%s\n".
             "   📈 Venta Neta Esperada: $%s | Pagos Netos: $%s | ⚠️  DIFERENCIA: $%s\n\n",
             $day->fecha,
             $day->total_tickets,
@@ -120,29 +122,29 @@ function analyzeMonth($monthName, $startDate, $endDate) {
             number_format($day->pagos_netos, 2),
             number_format($day->diferencia, 2)
         );
-        
+
         $totalDifferencia += $day->diferencia;
         $totalVentaNeta += $day->venta_neta_esperada;
         $totalPagosNetos += $day->pagos_netos;
     }
-    
-    echo "\n" . str_repeat("-", 80) . "\n";
+
+    echo "\n".str_repeat('-', 80)."\n";
     echo sprintf(
-        "🎯 TOTAL DEL MES:\n" .
-        "   Venta Neta Esperada: $%s\n" .
-        "   Pagos Netos Recibidos: $%s\n" .
+        "🎯 TOTAL DEL MES:\n".
+        "   Venta Neta Esperada: $%s\n".
+        "   Pagos Netos Recibidos: $%s\n".
         "   ⚠️  DIFERENCIA TOTAL: $%s (%.2f%%)\n",
         number_format($totalVentaNeta, 2),
         number_format($totalPagosNetos, 2),
         number_format($totalDifferencia, 2),
         $totalVentaNeta > 0 ? ($totalDifferencia / $totalVentaNeta * 100) : 0
     );
-    echo str_repeat("-", 80) . "\n\n";
-    
+    echo str_repeat('-', 80)."\n\n";
+
     // 2. ANÁLISIS DE TICKETS PROBLEMÁTICOS
     echo "\n🔍 TICKETS PROBLEMÁTICOS EN {$monthName}\n";
-    echo str_repeat("-", 80) . "\n";
-    
+    echo str_repeat('-', 80)."\n";
+
     $problematicTickets = DB::connection('pgsql')->select("
         SELECT 
             t.id,
@@ -182,30 +184,30 @@ function analyzeMonth($monthName, $startDate, $endDate) {
                COALESCE(SUM(CASE WHEN tr.transaction_type NOT IN ('REFUND', 'VOID') THEN tr.amount ELSE 0 END), 0)) > 0.01
         ORDER BY t.folio_date, tipo_problema, t.id
     ", [$startDate, $endDate]);
-    
+
     $problemCounts = [
         'NO_PAGADO' => 0,
         'ANULADO' => 0,
         'DESC_100_PCT' => 0,
         'PAGO_DIFERENTE' => 0,
-        'OTRO' => 0
+        'OTRO' => 0,
     ];
-    
+
     $problemTotals = [
         'NO_PAGADO' => 0,
         'ANULADO' => 0,
         'DESC_100_PCT' => 0,
         'PAGO_DIFERENTE' => 0,
-        'OTRO' => 0
+        'OTRO' => 0,
     ];
-    
+
     foreach ($problematicTickets as $ticket) {
         $problemCounts[$ticket->tipo_problema]++;
         $problemTotals[$ticket->tipo_problema] += $ticket->total_neto;
-        
+
         if ($ticket->tipo_problema == 'DESC_100_PCT' || $ticket->tipo_problema == 'NO_PAGADO') {
             echo sprintf(
-                "🎫 Ticket #%d [%s] - %s\n" .
+                "🎫 Ticket #%d [%s] - %s\n".
                 "   Items: $%s | Desc: $%s | Neto: $%s | Pagado: $%s (C:$%s Cr:$%s D:$%s T:$%s)\n",
                 $ticket->id,
                 $ticket->fecha,
@@ -221,7 +223,7 @@ function analyzeMonth($monthName, $startDate, $endDate) {
             );
         }
     }
-    
+
     echo "\n📊 RESUMEN DE PROBLEMAS:\n";
     foreach ($problemCounts as $tipo => $count) {
         if ($count > 0) {
@@ -233,12 +235,12 @@ function analyzeMonth($monthName, $startDate, $endDate) {
             );
         }
     }
-    
+
     // 3. ANÁLISIS DE DESCUENTOS
     echo "\n\n💸 ANÁLISIS DE DESCUENTOS EN {$monthName}\n";
-    echo str_repeat("-", 80) . "\n";
-    
-    $discountAnalysis = DB::connection('pgsql')->select("
+    echo str_repeat('-', 80)."\n";
+
+    $discountAnalysis = DB::connection('pgsql')->select('
         SELECT 
             t.folio_date AS fecha,
             COUNT(DISTINCT t.id) AS tickets_con_descuento,
@@ -256,8 +258,8 @@ function analyzeMonth($monthName, $startDate, $endDate) {
           AND t.total_discount > 0
         GROUP BY t.folio_date
         ORDER BY fecha
-    ", [$startDate, $endDate]);
-    
+    ', [$startDate, $endDate]);
+
     foreach ($discountAnalysis as $disc) {
         echo sprintf(
             "📅 %s | Tickets c/desc: %d (100%%: %d) | Total desc: $%s (100%%: $%s)\n",
@@ -268,8 +270,8 @@ function analyzeMonth($monthName, $startDate, $endDate) {
             number_format($disc->monto_desc_100_pct, 2)
         );
     }
-    
-    echo "\n" . str_repeat("=", 80) . "\n";
+
+    echo "\n".str_repeat('=', 80)."\n";
 }
 
 echo "\n✅ Análisis completado\n\n";

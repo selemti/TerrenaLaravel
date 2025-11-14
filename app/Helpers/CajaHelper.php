@@ -2,8 +2,8 @@
 
 namespace App\Helpers;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CajaHelper
 {
@@ -11,6 +11,7 @@ class CajaHelper
     {
         $query = $request->query($key);
         $body = $request->input($key);
+
         return $body ?? $query ?? $default;
     }
 

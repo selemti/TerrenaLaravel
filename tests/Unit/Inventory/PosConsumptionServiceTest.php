@@ -10,7 +10,7 @@ class PosConsumptionServiceTest extends TestCase
 {
     public function test_normalize_line_success(): void
     {
-        $service = new PosConsumptionService();
+        $service = new PosConsumptionService;
 
         $normalized = $service->normalizeLine([
             'item_id' => 5,
@@ -33,7 +33,7 @@ class PosConsumptionServiceTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        $service = new PosConsumptionService();
+        $service = new PosConsumptionService;
         $service->normalizeLine([
             'item_id' => 10,
             'cantidad' => 0,

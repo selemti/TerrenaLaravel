@@ -1,16 +1,18 @@
 <?php
+
 use Illuminate\Support\Facades\DB;
-require __DIR__ . '/../vendor/autoload.php';
-$app = require __DIR__ . '/../bootstrap/app.php';
+
+require __DIR__.'/../vendor/autoload.php';
+$app = require __DIR__.'/../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
-DB::statement("SET search_path TO selemti, public");
+DB::statement('SET search_path TO selemti, public');
 
 $filters = [
-  'receta_%', 'unidades_%', 'stock_policy', 'proveedor', 'presentacion%', 'conversion%', 'uom%', 'sucursal%', 'almacen%'
+    'receta_%', 'unidades_%', 'stock_policy', 'proveedor', 'presentacion%', 'conversion%', 'uom%', 'sucursal%', 'almacen%',
 ];
-$likeList = implode(' OR ', array_map(fn($p)=>"tc.table_name LIKE '".$p."'", $filters));
+$likeList = implode(' OR ', array_map(fn ($p) => "tc.table_name LIKE '".$p."'", $filters));
 
 $fks = DB::select(<<<SQL
 SELECT tc.table_schema AS child_schema, tc.table_name AS child_table,
@@ -27,19 +29,19 @@ ORDER BY tc.table_schema, tc.table_name, kcu.ordinal_position
 SQL);
 
 $ts = date('Ymd-His');
-$out = __DIR__ . "/../docs/DOC_ERD_INVENTARIO_RECETAS-$ts.md";
+$out = __DIR__."/../docs/DOC_ERD_INVENTARIO_RECETAS-$ts.md";
 $f = fopen($out, 'w');
 
 fwrite($f, "ERD — Inventario y Recetas (Filtrado)\n\n");
-fwrite($f, "Fecha: ".date('Y-m-d H:i')."\n\n");
+fwrite($f, 'Fecha: '.date('Y-m-d H:i')."\n\n");
 
 fwrite($f, "```mermaid\n");
 fwrite($f, "erDiagram\n");
 foreach ($fks as $fk) {
-  $child = strtoupper($fk->child_table);
-  $parent = strtoupper($fk->parent_table);
-  $label = $fk->child_column.' -> '.$fk->parent_column;
-  fwrite($f, "  $child }o--|| $parent : \"$label\"\n");
+    $child = strtoupper($fk->child_table);
+    $parent = strtoupper($fk->parent_table);
+    $label = $fk->child_column.' -> '.$fk->parent_column;
+    fwrite($f, "  $child }o--|| $parent : \"$label\"\n");
 }
 fwrite($f, "```\n");
 

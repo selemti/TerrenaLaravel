@@ -148,7 +148,7 @@ resources/views/
 
 ### SQL:
 ```
-BD/Noviembre/VentasReport/v8/
+docs/docs/BD/NoviembreDocsDocs/VentasReport/v8/
 ├── erp_reports_v9.sql ✅ Ejecutado
 ├── cleanup_views.sql
 └── 01_sales_mix.sql
@@ -335,7 +335,7 @@ SET search_path TO public, selemti
 app/Http/Controllers/Reports/
 resources/views/reports/sales/
 resources/views/layouts/terrena.blade.php
-BD/Noviembre/VentasReport/v8/
+docs/docs/BD/NoviembreDocsDocs/VentasReport/v8/
 routes/api.php
 routes/web.php
 ```

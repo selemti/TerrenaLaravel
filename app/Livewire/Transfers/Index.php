@@ -13,6 +13,7 @@ class Index extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $estadoFilter = 'all';
 
     public function updatingSearch(): void
@@ -33,11 +34,11 @@ class Index extends Component
         return view('livewire.transfers.index', [
             'transfers' => $transfers,
         ])
-        ->layout('layouts.terrena', [
-            'active' => 'inventario',
-            'title' => 'Transferencias · Inventario',
-            'pageTitle' => 'Transferencias entre Almacenes',
-        ]);
+            ->layout('layouts.terrena', [
+                'active' => 'inventario',
+                'title' => 'Transferencias · Inventario',
+                'pageTitle' => 'Transferencias entre Almacenes',
+            ]);
     }
 
     /**

@@ -144,7 +144,7 @@ class AlertEngine
 
     protected function relationExists(string $relation): bool
     {
-        $result = DB::selectOne("SELECT to_regclass(?) AS name", [$relation]);
+        $result = DB::selectOne('SELECT to_regclass(?) AS name', [$relation]);
 
         return $result !== null && $result->name !== null;
     }

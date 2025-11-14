@@ -7,15 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class Batch extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.inventory_batch';
+
     protected $primaryKey = 'id';
+
     // public $incrementing = true; // Por defecto
     public $timestamps = true; // Usa created_at y updated_at
 
     protected $fillable = [
-        'item_id', 'lote_proveedor', 'fecha_recepcion', 'fecha_caducidad', 
-        'temperatura_recepcion', 'documento_url', 'cantidad_original', 
-        'cantidad_actual', 'estado', 'ubicacion_id'
+        'item_id', 'lote_proveedor', 'fecha_recepcion', 'fecha_caducidad',
+        'temperatura_recepcion', 'documento_url', 'cantidad_original',
+        'cantidad_actual', 'estado', 'ubicacion_id',
     ];
 
     protected $casts = [

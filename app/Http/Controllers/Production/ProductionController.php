@@ -16,8 +16,7 @@ class ProductionController extends Controller
     public function __construct(
         protected ProductionService $productionService,
         private AuditLogService $auditLogService
-    )
-    {
+    ) {
         $this->middleware(['auth:sanctum', 'permission:can_edit_production_order']);
     }
 
@@ -25,8 +24,7 @@ class ProductionController extends Controller
      * Planifica un batch de producción para una receta.
      *
      * @route POST /api/production/batch/plan
-     * @param Request $request
-     * @return JsonResponse
+     *
      * @todo Validar recipe y qty target con un FormRequest dedicado.
      */
     public function plan(Request $request): JsonResponse
@@ -56,9 +54,7 @@ class ProductionController extends Controller
      * Registra el consumo de insumos para un batch.
      *
      * @route POST /api/production/batch/{batch_id}/consume
-     * @param int $batch_id
-     * @param Request $request
-     * @return JsonResponse
+     *
      * @todo Validar líneas contra inventario disponible y recipe BOM.
      */
     public function consume(int $batch_id, Request $request): JsonResponse
@@ -88,9 +84,7 @@ class ProductionController extends Controller
      * Marca el batch como completado con las cantidades producidas.
      *
      * @route POST /api/production/batch/{batch_id}/complete
-     * @param int $batch_id
-     * @param Request $request
-     * @return JsonResponse
+     *
      * @todo Registrar métricas de rendimiento y lotes generados.
      */
     public function complete(int $batch_id, Request $request): JsonResponse
@@ -120,9 +114,7 @@ class ProductionController extends Controller
      * Postea el batch generando mov_inv de insumos y producto final.
      *
      * @route POST /api/production/batch/{batch_id}/post
-     * @param int $batch_id
-     * @param Request $request
-     * @return JsonResponse
+     *
      * @todo Manejar errores de doble posteo y bloquear cuando ya exista Kardex.
      */
     public function post(int $batch_id, Request $request): JsonResponse

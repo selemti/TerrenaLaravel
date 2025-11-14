@@ -12,7 +12,7 @@ class VendorController extends Controller
     public function byItem($itemId)
     {
         return response()->json(
-            ItemVendor::where('item_id',$itemId)->orderBy('presentacion')->get()
+            ItemVendor::where('item_id', $itemId)->orderBy('presentacion')->get()
         );
     }
 
@@ -32,9 +32,10 @@ class VendorController extends Controller
         ]);
 
         $rec = ItemVendor::updateOrCreate(
-            ['item_id'=>$itemId, 'vendor_id'=>$data['vendor_id'], 'presentacion'=>$data['presentacion']],
+            ['item_id' => $itemId, 'vendor_id' => $data['vendor_id'], 'presentacion' => $data['presentacion']],
             $data + ['activo' => $data['activo'] ?? true]
         );
+
         return response()->json($rec, 201);
     }
 }

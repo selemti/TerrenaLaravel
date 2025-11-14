@@ -14,8 +14,7 @@ class PosSyncService
 {
     public function __construct(
         protected PosConsumptionService $consumptionService
-    ) {
-    }
+    ) {}
 
     /**
      * @param  array<int, array<string, mixed>>  $tickets

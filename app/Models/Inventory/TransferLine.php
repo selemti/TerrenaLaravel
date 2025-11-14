@@ -12,8 +12,11 @@ class TransferLine extends Model
     use HasFactory;
 
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.transfer_det';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -47,20 +50,21 @@ class TransferLine extends Model
 
     public function getVarianzaAttribute(): float
     {
-        if (!$this->cantidad_recibida || !$this->cantidad_despachada) {
+        if (! $this->cantidad_recibida || ! $this->cantidad_despachada) {
             return 0;
         }
-        
+
         return (float) ($this->cantidad_recibida - $this->cantidad_despachada);
     }
 
     public function getVarianzaPorcentajeAttribute(): float
     {
-        if (!$this->cantidad_despachada || $this->cantidad_despachada == 0) {
+        if (! $this->cantidad_despachada || $this->cantidad_despachada == 0) {
             return 0;
         }
-        
+
         $varianza = $this->getVarianzaAttribute();
+
         return ($varianza / (float) $this->cantidad_despachada) * 100;
     }
 

@@ -6,7 +6,8 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         if (! $this->tableExists()) {
@@ -97,7 +98,7 @@ return new class extends Migration {
     private function columnExists(string $column): bool
     {
         $result = DB::connection('pgsql')->selectOne(
-            <<<SQL
+            <<<'SQL'
             SELECT 1
             FROM information_schema.columns
             WHERE table_schema = 'selemti'

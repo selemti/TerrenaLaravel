@@ -3,11 +3,12 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration {
+return new class extends Migration
+{
     protected function scriptPath(): string
     {
         $candidates = [
-            base_path('BD/Noviembre/VentasReport/v9/script_sql_reportes_adicionales.sql'),
+            base_path('docs/docs/BD/NoviembreDocsDocs/VentasReport/v9/script_sql_reportes_adicionales.sql'),
             base_path('database/sql/reportes/script_sql_reportes_adicionales.sql'),
         ];
 

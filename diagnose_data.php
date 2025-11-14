@@ -1,10 +1,11 @@
 <?php
+
 require __DIR__.'/vendor/autoload.php';
 $app = require_once __DIR__.'/bootstrap/app.php';
 $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
 
 echo "DIAGNÓSTICO DE DATOS - 1 DE OCTUBRE 2025\n";
-echo str_repeat("=", 80) . "\n\n";
+echo str_repeat('=', 80)."\n\n";
 
 // Verificar cuántos tickets tenemos
 $ticketCount = DB::connection('pgsql')->selectOne("
@@ -43,7 +44,7 @@ echo "Ticket #15480:\n";
 print_r($sample);
 
 // Ver los items de ese ticket
-$items = DB::connection('pgsql')->select("
+$items = DB::connection('pgsql')->select('
     SELECT 
         item_name,
         item_price,
@@ -51,13 +52,13 @@ $items = DB::connection('pgsql')->select("
         (item_price * item_quantity) as total
     FROM public.ticket_item
     WHERE ticket_id = 15480
-");
+');
 
 echo "\nItems del ticket #15480:\n";
 foreach ($items as $item) {
-    echo sprintf("  %s: $%s x %s = $%s\n", 
-        $item->item_name, 
-        $item->item_price, 
+    echo sprintf("  %s: $%s x %s = $%s\n",
+        $item->item_name,
+        $item->item_price,
         $item->item_quantity,
         $item->total
     );

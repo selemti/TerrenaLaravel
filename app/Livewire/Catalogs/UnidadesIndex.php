@@ -2,11 +2,11 @@
 
 namespace App\Livewire\Catalogs;
 
-use Livewire\Component;
-use Livewire\WithPagination;
-use Livewire\Attributes\On;
 use App\Models\Catalogs\Unidad;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\On;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class UnidadesIndex extends Component
 {
@@ -16,6 +16,7 @@ class UnidadesIndex extends Component
 
     // Filtros / querystring
     public string $search = '';
+
     public string $categoria = '';
 
     protected $queryString = [
@@ -25,6 +26,7 @@ class UnidadesIndex extends Component
 
     // Form modal/simple
     public ?int $editingId = null;
+
     public array $form = [
         'clave' => '',
         'nombre' => '',
@@ -32,8 +34,15 @@ class UnidadesIndex extends Component
         'activo' => true,
     ];
 
-    public function updatingSearch() { $this->resetPage(); }
-    public function updatedCategoria() { $this->resetPage(); }
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedCategoria()
+    {
+        $this->resetPage();
+    }
 
     protected function rules()
     {
@@ -125,7 +134,7 @@ class UnidadesIndex extends Component
             $needle = mb_strtoupper($this->search);
             $q->where(function ($qq) use ($needle) {
                 $qq->whereRaw('UPPER(clave) LIKE ?', ["%{$needle}%"])
-                   ->orWhereRaw('UPPER(nombre) LIKE ?', ["%{$needle}%"]);
+                    ->orWhereRaw('UPPER(nombre) LIKE ?', ["%{$needle}%"]);
             });
         }
 
@@ -134,13 +143,13 @@ class UnidadesIndex extends Component
         }
 
         $q->orderBy('categoria', 'asc')
-          ->orderBy('clave', 'asc');
+            ->orderBy('clave', 'asc');
 
         return view('livewire.catalogs.unidades-index', [
             'rows' => $q->paginate(50),
         ])->layout('layouts.terrena', [
-            'active'    => 'config',
-            'title'     => 'Catálogo · Unidades de Medida',
+            'active' => 'config',
+            'title' => 'Catálogo · Unidades de Medida',
             'pageTitle' => 'Unidades de Medida',
         ]);
     }

@@ -5,9 +5,9 @@ namespace App\Livewire\Catalogs;
 use App\Models\Catalogs\Almacen;
 use App\Models\Catalogs\Sucursal;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\Attributes\On;
 
 class AlmacenesIndex extends Component
 {
@@ -16,24 +16,29 @@ class AlmacenesIndex extends Component
     protected string $paginationTheme = 'bootstrap';
 
     public string $search = '';
+
     public ?int $editId = null;
+
     public string $clave = '';
+
     public string $nombre = '';
+
     public ?int $sucursal_id = null;
+
     public bool $activo = true;
 
     protected function rules(): array
     {
         return [
-            'clave'       => [
+            'clave' => [
                 'required',
                 'string',
                 'max:16',
                 Rule::unique('cat_almacenes', 'clave')->ignore($this->editId),
             ],
-            'nombre'      => ['required', 'string', 'max:80'],
+            'nombre' => ['required', 'string', 'max:80'],
             'sucursal_id' => ['nullable', 'integer', 'exists:cat_sucursales,id'],
-            'activo'      => ['boolean'],
+            'activo' => ['boolean'],
         ];
     }
 
@@ -53,11 +58,11 @@ class AlmacenesIndex extends Component
     {
         $almacen = Almacen::findOrFail($id);
 
-        $this->editId      = $almacen->id;
-        $this->clave       = $almacen->clave;
-        $this->nombre      = $almacen->nombre;
+        $this->editId = $almacen->id;
+        $this->clave = $almacen->clave;
+        $this->nombre = $almacen->nombre;
         $this->sucursal_id = $almacen->sucursal_id;
-        $this->activo      = (bool) $almacen->activo;
+        $this->activo = (bool) $almacen->activo;
         $this->dispatch('toggle-almacen-modal', open: true);
     }
 
@@ -66,10 +71,10 @@ class AlmacenesIndex extends Component
         $this->validate();
 
         $payload = [
-            'clave'       => strtoupper(trim($this->clave)),
-            'nombre'      => trim($this->nombre),
+            'clave' => strtoupper(trim($this->clave)),
+            'nombre' => trim($this->nombre),
             'sucursal_id' => $this->sucursal_id ?: null,
-            'activo'      => (bool) $this->activo,
+            'activo' => (bool) $this->activo,
         ];
 
         if ($this->editId) {
@@ -101,7 +106,7 @@ class AlmacenesIndex extends Component
     {
         $rows = Almacen::with('sucursal:id,nombre')
             ->when($this->search !== '', function ($query) {
-                $needle = '%' . $this->search . '%';
+                $needle = '%'.$this->search.'%';
                 $query->where(function ($sub) use ($needle) {
                     $sub->where('clave', 'ilike', $needle)
                         ->orWhere('nombre', 'ilike', $needle)
@@ -115,8 +120,8 @@ class AlmacenesIndex extends Component
 
         return view('livewire.catalogs.almacenes-index', compact('rows', 'sucursales'))
             ->layout('layouts.terrena', [
-                'active'    => 'config',
-                'title'     => 'Catálogo · Almacenes',
+                'active' => 'config',
+                'title' => 'Catálogo · Almacenes',
                 'pageTitle' => 'Almacenes',
             ]);
     }

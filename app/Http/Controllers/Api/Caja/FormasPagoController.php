@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Api\Caja;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 // ============ FORMAS DE PAGO ============
 
@@ -20,20 +19,21 @@ class FormasPagoController extends Controller
                 ->orderBy('id')
                 ->get([
                     'id', 'codigo', 'payment_type', 'transaction_type', 'payment_sub_type',
-                    'custom_name', 'custom_ref', 'activo', 'prioridad', 'created_at'
+                    'custom_name', 'custom_ref', 'activo', 'prioridad', 'created_at',
                 ]);
 
             return response()->json([
                 'ok' => true,
-                'items' => $formas->toArray()
+                'items' => $formas->toArray(),
             ]);
 
         } catch (\Exception $e) {
-            \Log::error("Error en formas de pago: " . $e->getMessage());
+            \Log::error('Error en formas de pago: '.$e->getMessage());
+
             return response()->json([
                 'ok' => false,
                 'error' => 'server_error',
-                'message' => config('app.debug') ? $e->getMessage() : 'Error al obtener formas de pago'
+                'message' => config('app.debug') ? $e->getMessage() : 'Error al obtener formas de pago',
             ], 500);
         }
     }

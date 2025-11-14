@@ -5,7 +5,6 @@ namespace App\Livewire\InventoryCount;
 use App\Models\InventoryCount;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\Auth;
 
 class Index extends Component
 {
@@ -13,8 +12,11 @@ class Index extends Component
 
     // Filtros
     public string $search = '';
+
     public string $estadoFilter = 'all';
+
     public string $sucursalFilter = 'all';
+
     public string $almacenFilter = 'all';
 
     protected $queryString = [
@@ -31,9 +33,9 @@ class Index extends Component
 
         // Filtro de búsqueda
         if ($this->search) {
-            $query->where(function($q) {
-                $q->where('folio', 'ILIKE', '%' . $this->search . '%')
-                  ->orWhere('notas', 'ILIKE', '%' . $this->search . '%');
+            $query->where(function ($q) {
+                $q->where('folio', 'ILIKE', '%'.$this->search.'%')
+                    ->orWhere('notas', 'ILIKE', '%'.$this->search.'%');
             });
         }
 

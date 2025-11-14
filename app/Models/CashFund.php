@@ -21,6 +21,7 @@ class CashFund extends Model
     use HasFactory;
 
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.cash_funds';
 
     protected $fillable = [

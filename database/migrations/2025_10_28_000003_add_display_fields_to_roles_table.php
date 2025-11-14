@@ -20,13 +20,13 @@ return new class extends Migration
         $rolesTable = $tableNames['roles'];
 
         Schema::table($rolesTable, function (Blueprint $table) use ($rolesTable) {
-            if (!Schema::hasColumn($rolesTable, 'display_name')) {
+            if (! Schema::hasColumn($rolesTable, 'display_name')) {
                 $table->string('display_name')->nullable()->after('guard_name');
             }
-            if (!Schema::hasColumn($rolesTable, 'description')) {
+            if (! Schema::hasColumn($rolesTable, 'description')) {
                 $table->text('description')->nullable()->after('display_name');
             }
-            if (!Schema::hasColumn($rolesTable, 'color')) {
+            if (! Schema::hasColumn($rolesTable, 'color')) {
                 $table->string('color', 7)->nullable()->after('description');
             }
         });
@@ -51,8 +51,8 @@ return new class extends Migration
                 Schema::hasColumn($rolesTable, 'description') ? 'description' : null,
                 Schema::hasColumn($rolesTable, 'color') ? 'color' : null,
             ]);
-            
-            if (!empty($columns)) {
+
+            if (! empty($columns)) {
                 $table->dropColumn($columns);
             }
         });

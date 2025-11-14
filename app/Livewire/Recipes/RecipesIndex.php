@@ -12,9 +12,13 @@ class RecipesIndex extends Component
     use WithPagination;
 
     public string $search = '';
+
     public bool $confirmingDelete = false;
+
     public ?string $deleteId = null;
+
     public string $category = '';
+
     protected int $perPage = 15;
 
     protected $queryString = [
@@ -46,7 +50,7 @@ class RecipesIndex extends Component
 
     public function delete(): void
     {
-        if (!$this->deleteId) {
+        if (! $this->deleteId) {
             return;
         }
 
@@ -64,13 +68,13 @@ class RecipesIndex extends Component
             ->where('id', 'not like', 'REC-MOD-%')
             ->where(function (Builder $q) {
                 $q->whereNull('codigo_plato_pos')
-                  ->orWhere('codigo_plato_pos', 'not like', 'MOD-%');
+                    ->orWhere('codigo_plato_pos', 'not like', 'MOD-%');
             })
             ->when($this->search !== '', function (Builder $query) {
-                $needle = '%' . mb_strtolower($this->search) . '%';
+                $needle = '%'.mb_strtolower($this->search).'%';
                 $query->where(function (Builder $inner) use ($needle) {
                     $inner->whereRaw('LOWER(nombre_plato) LIKE ?', [$needle])
-                          ->orWhereRaw('LOWER(codigo_plato_pos) LIKE ?', [$needle]);
+                        ->orWhereRaw('LOWER(codigo_plato_pos) LIKE ?', [$needle]);
                 });
             })
             ->when($this->category !== '', function (Builder $query) {
@@ -88,7 +92,7 @@ class RecipesIndex extends Component
             ->where('id', 'not like', 'REC-MOD-%')
             ->where(function (Builder $q) {
                 $q->whereNull('codigo_plato_pos')
-                  ->orWhere('codigo_plato_pos', 'not like', 'MOD-%');
+                    ->orWhere('codigo_plato_pos', 'not like', 'MOD-%');
             })
             ->distinct()
             ->orderBy('categoria')

@@ -10,8 +10,11 @@ class SesionCajon extends Model
     use HasFactory;
 
     protected $connection = 'pgsql';
+
     protected $table = 'sesion_cajon';
+
     protected $schema = 'selemti'; // Si usas schema explícito, ajusta en conexión
+
     public $timestamps = true; // Asumiendo created_at/updated_at mapeados a apertura_ts/cierre_ts
 
     protected $fillable = [

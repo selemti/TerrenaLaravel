@@ -26,7 +26,7 @@
         <i class="fa-solid fa-circle-info mt-1"></i>
         <div>
           El alta de insumos sigue el flujo documentado (código interno CAT‑SUB‑##### generado automáticamente).
-          Usa el botón <strong>“Nuevo insumo”</strong> para crear registros en <code>selemti.insumo</code>.
+          Usa el botón <strong>“Nuevo insumo”</strong> para crear registros en <code>selemti.items</code>.
         </div>
       </div>
 

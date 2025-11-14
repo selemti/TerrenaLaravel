@@ -7,13 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class Ticket extends Model
 {
     protected $table = 'public.ticket';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
 
     protected $fillable = [
-        'global_id', 'create_date', 'closing_date', 'paid', 'voided', 
-        'sub_total', 'total_price', 'terminal_id', 'owner_id', 
-        'folio_date', 'branch_key', 'daily_folio'
+        'global_id', 'create_date', 'closing_date', 'paid', 'voided',
+        'sub_total', 'total_price', 'terminal_id', 'owner_id',
+        'folio_date', 'branch_key', 'daily_folio',
     ];
 
     protected $casts = [

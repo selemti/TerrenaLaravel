@@ -13,6 +13,27 @@
 @section('content')
 
     <div class="dashboard-grid">
+        {{-- Banner de retorno cuando viene desde detalle --}}
+        @if(isset($returnPath) && $returnPath && isset($sesionIdForWizard))
+            <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div>
+                        <i class="fa-solid fa-info-circle me-2"></i>
+                        <strong>Vista desde detalle:</strong> Acción sobre la Sesión #{{ $sesionIdForWizard }}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('caja.historico.detalle', $sesionIdForWizard) }}" class="btn btn-sm btn-primary">
+                            <i class="fa-solid fa-arrow-left me-1"></i> Volver al Detalle
+                        </a>
+                        <a href="{{ route('caja.cortes') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fa-solid fa-list me-1"></i> Ver Todos los Cortes
+                        </a>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
             <div class="d-flex align-items-center gap-2">
                 <h2 class="mb-0">Cajas</h2>
@@ -607,5 +628,46 @@
 
     <script type="module" src="{{ asset('assets/js/caja/main.js') }}"></script>
     {{-- Otros JS: helpers.js, state.js, etc., ya cargados en layout --}}
+
+    <script>
+        // Auto-abrir wizard cuando viene el parámetro auto_open
+        document.addEventListener('DOMContentLoaded', function() {
+            @if(isset($autoOpen) && $autoOpen === 'wizard' && isset($sesionIdForWizard))
+                console.log('Auto-open wizard activado para sesión #{{ $sesionIdForWizard }}');
+
+                // Esperar un momento para que la tabla cargue
+                setTimeout(function() {
+                    // Paso 1: Hacer clic en la pestaña "Todas"
+                    const tabTodas = document.getElementById('tab-todas');
+                    if (tabTodas) {
+                        console.log('Cambiando a pestaña "Todas"...');
+                        tabTodas.click();
+
+                        // Paso 2: Después de cambiar de pestaña, buscar el botón del wizard
+                        setTimeout(function() {
+                            // Buscar el botón del wizard para esta sesión
+                            const wizardBtn = document.querySelector('[data-caja-action="wizard"][data-sesion="{{ $sesionIdForWizard }}"]');
+
+                            if (wizardBtn) {
+                                console.log('✓ Botón del wizard encontrado, abriendo wizard...');
+                                wizardBtn.click();
+                            } else {
+                                console.warn('⚠ No se encontró botón de wizard para sesión #{{ $sesionIdForWizard }}');
+                                console.log('Verificando si el botón existe en la tabla...');
+                                // Debug: mostrar todos los botones de wizard disponibles
+                                const allWizardBtns = document.querySelectorAll('[data-caja-action="wizard"]');
+                                console.log('Botones de wizard disponibles:', allWizardBtns.length);
+                                allWizardBtns.forEach(btn => {
+                                    console.log('- Sesión:', btn.getAttribute('data-sesion'));
+                                });
+                            }
+                        }, 300);
+                    } else {
+                        console.error('No se encontró la pestaña "Todas"');
+                    }
+                }, 500);
+            @endif
+        });
+    </script>
 @endpush
 

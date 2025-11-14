@@ -3,7 +3,6 @@
 namespace App\Livewire\CashFund;
 
 use App\Models\CashFund;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -17,6 +16,7 @@ class Index extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $estadoFilter = 'all';
 
     public function updatingSearch(): void
@@ -43,21 +43,21 @@ class Index extends Component
         // Filtrar por búsqueda
         if (trim($this->search) !== '') {
             $search = trim($this->search);
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('id', 'like', "%{$search}%")
-                  ->orWhereHas('responsable', function($q2) use ($search) {
-                      $q2->where('nombre_completo', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('createdBy', function($q2) use ($search) {
-                      $q2->where('nombre_completo', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('responsable', function ($q2) use ($search) {
+                        $q2->where('nombre_completo', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('createdBy', function ($q2) use ($search) {
+                        $q2->where('nombre_completo', 'like', "%{$search}%");
+                    });
             });
         }
 
         $fondos = $query->paginate(20);
 
         // Obtener nombres de sucursales desde PostgreSQL
-        $fondosWithSucursal = $fondos->map(function($fondo) {
+        $fondosWithSucursal = $fondos->map(function ($fondo) {
             $sucursal = $this->getSucursalNombre($fondo->sucursal_id);
 
             return [
@@ -79,11 +79,11 @@ class Index extends Component
         return view('livewire.cash-fund.index', [
             'fondos' => $fondosWithSucursal,
         ])
-        ->layout('layouts.terrena', [
-            'active' => 'cajachica',
-            'title' => 'Caja Chica',
-            'pageTitle' => 'Fondos de Caja Chica',
-        ]);
+            ->layout('layouts.terrena', [
+                'active' => 'cajachica',
+                'title' => 'Caja Chica',
+                'pageTitle' => 'Fondos de Caja Chica',
+            ]);
     }
 
     protected function getSucursalNombre(int $sucursalId): string
@@ -95,7 +95,7 @@ class Index extends Component
                 ->first(['nombre', 'clave']);
 
             if ($sucursal) {
-                return trim(($sucursal->clave ? "{$sucursal->clave} - " : '') . $sucursal->nombre);
+                return trim(($sucursal->clave ? "{$sucursal->clave} - " : '').$sucursal->nombre);
             }
 
             return "Sucursal #{$sucursalId}";

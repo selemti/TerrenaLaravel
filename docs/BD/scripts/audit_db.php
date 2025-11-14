@@ -1,18 +1,19 @@
 <?php
+
 /**
  * Auditoría exhaustiva de base de datos PostgreSQL
  * Identifica tablas duplicadas y legacy
  */
 
 // Conexión a PostgreSQL
-$conn = pg_connect("host=localhost port=5433 dbname=pos user=postgres password=urmikz");
+$conn = pg_connect('host=localhost port=5433 dbname=pos user=postgres password=urmikz');
 
-if (!$conn) {
-    die("Error de conexión: " . pg_last_error());
+if (! $conn) {
+    exit('Error de conexión: '.pg_last_error());
 }
 
 echo "=== AUDITORÍA DE BASE DE DATOS PostgreSQL ===\n";
-echo "Fecha: " . date('Y-m-d H:i:s') . "\n\n";
+echo 'Fecha: '.date('Y-m-d H:i:s')."\n\n";
 
 // 1. Obtener todas las tablas de selemti
 $query_selemti = "
@@ -37,7 +38,7 @@ while ($row = pg_fetch_assoc($result_selemti)) {
     $selemti_tables[] = $row['tablename'];
     echo "- selemti.{$row['tablename']}\n";
 }
-echo "\nTotal tablas selemti: " . count($selemti_tables) . "\n\n";
+echo "\nTotal tablas selemti: ".count($selemti_tables)."\n\n";
 
 echo "=== TABLAS EN SCHEMA PUBLIC ===\n";
 $result_public = pg_query($conn, $query_public);
@@ -46,9 +47,9 @@ while ($row = pg_fetch_assoc($result_public)) {
     $public_tables[] = $row['tablename'];
     echo "- public.{$row['tablename']}\n";
 }
-echo "\nTotal tablas public: " . count($public_tables) . "\n\n";
+echo "\nTotal tablas public: ".count($public_tables)."\n\n";
 
-echo "TOTAL TABLAS: " . (count($selemti_tables) + count($public_tables)) . "\n\n";
+echo 'TOTAL TABLAS: '.(count($selemti_tables) + count($public_tables))."\n\n";
 
 // 3. Contar registros en cada tabla y obtener estructura
 echo "=== ANÁLISIS DETALLADO DE TABLAS SELEMTI ===\n\n";
@@ -103,12 +104,12 @@ foreach ($selemti_tables as $table) {
         'schema' => 'selemti',
         'count' => $count,
         'columns' => $columns,
-        'fks' => $fks
+        'fks' => $fks,
     ];
 
     echo "Tabla: selemti.$table\n";
     echo "  Registros: $count\n";
-    echo "  Columnas (" . count($columns) . "):\n";
+    echo '  Columnas ('.count($columns)."):\n";
     foreach ($columns as $col) {
         echo "    - {$col['column_name']} ({$col['data_type']})";
         if ($col['character_maximum_length']) {
@@ -149,7 +150,7 @@ foreach ($public_tables as $table) {
 
     echo "Tabla: public.$table\n";
     echo "  Registros: $count\n";
-    echo "  Columnas: " . implode(', ', $columns) . "\n\n";
+    echo '  Columnas: '.implode(', ', $columns)."\n\n";
 }
 
 // 5. Identificar duplicados potenciales
@@ -167,26 +168,26 @@ $duplicate_groups = [
         'selemti.unidades_medida_legacy',
         'selemti.cat_unidades',
         'selemti.uom',
-        'selemti.unit_of_measure'
+        'selemti.unit_of_measure',
     ],
     'conversiones' => [
         'selemti.conversion_unidad',
         'selemti.conversiones_unidad_legacy',
         'selemti.uom_conversion_legacy',
-        'selemti.uom_conversions'
+        'selemti.uom_conversions',
     ],
     'recetas' => ['selemti.receta', 'selemti.receta_cab'],
     'caja_chica' => [
         'selemti.caja_fondo',
         'selemti.cash_funds',
-        'selemti.caja_chica'
-    ]
+        'selemti.caja_chica',
+    ],
 ];
 
 foreach ($duplicate_groups as $group_name => $tables) {
     echo "GRUPO: $group_name\n";
     foreach ($tables as $table_full) {
-        list($schema, $table) = explode('.', $table_full);
+        [$schema, $table] = explode('.', $table_full);
 
         // Verificar si existe
         if (($schema === 'selemti' && in_array($table, $selemti_tables)) ||

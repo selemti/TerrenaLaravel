@@ -41,7 +41,7 @@ class TransferHeaderFactory extends Factory
             'despachada_por' => User::factory(),
             'fecha_aprobada' => now(),
             'fecha_despachada' => now(),
-            'numero_guia' => 'GUIA-' . $this->faker->numerify('####'),
+            'numero_guia' => 'GUIA-'.$this->faker->numerify('####'),
         ]);
     }
 

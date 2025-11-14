@@ -11,9 +11,9 @@ class ComponentViewsTest extends TestCase
         // Test that we can render a view that includes our components
         $view = view('components.ui.card', [
             'title' => 'Test Card',
-            'subtitle' => 'Test Subtitle'
+            'subtitle' => 'Test Subtitle',
         ])->render();
-        
+
         $this->assertStringContainsString('Test Card', $view);
         $this->assertStringContainsString('Test Subtitle', $view);
     }
@@ -22,9 +22,9 @@ class ComponentViewsTest extends TestCase
     {
         $view = view('components.ui.input', [
             'id' => 'test-input',
-            'label' => 'Test Label'
+            'label' => 'Test Label',
         ])->render();
-        
+
         $this->assertStringContainsString('Test Label', $view);
         $this->assertStringContainsString('test-input', $view);
     }
@@ -35,10 +35,10 @@ class ComponentViewsTest extends TestCase
             'id' => 'test-select',
             'label' => 'Test Label',
             'options' => [
-                ['value' => '1', 'label' => 'Option 1']
-            ]
+                ['value' => '1', 'label' => 'Option 1'],
+            ],
         ])->render();
-        
+
         $this->assertStringContainsString('Test Label', $view);
         $this->assertStringContainsString('Option 1', $view);
     }

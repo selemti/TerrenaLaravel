@@ -83,8 +83,8 @@ class SalesDrawerController extends BaseReportController
             'reporte_cajon_vs_efectivo_%s_%s%s.xlsx',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            !empty($branches)
-                ? '_' . str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
+            ! empty($branches)
+                ? '_'.str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
                 : ''
         );
 
@@ -102,8 +102,8 @@ class SalesDrawerController extends BaseReportController
             'reporte_cajon_vs_efectivo_%s_%s%s.pdf',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            !empty($branches)
-                ? '_' . str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
+            ! empty($branches)
+                ? '_'.str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
                 : ''
         );
 
@@ -130,7 +130,7 @@ class SalesDrawerController extends BaseReportController
     protected function fetchData(Carbon $start, Carbon $end): Collection
     {
         $rows = DB::connection('pgsql')->select(
-            <<<SQL
+            <<<'SQL'
             SELECT gs.day::date AS report_date, f.*
             FROM generate_series(?::date, ?::date, interval '1 day') AS gs(day)
             CROSS JOIN LATERAL public.f_diag_drawer_vs_cash_transactions_on(gs.day::date) AS f
@@ -143,7 +143,7 @@ class SalesDrawerController extends BaseReportController
 
     protected function applyFilters(Collection $rows, array $branches, ?string $severity): Collection
     {
-        if (!empty($branches)) {
+        if (! empty($branches)) {
             $normalized = collect($branches)
                 ->map(fn ($value) => strtoupper(trim((string) $value)))
                 ->filter()
@@ -153,6 +153,7 @@ class SalesDrawerController extends BaseReportController
 
             $rows = $rows->filter(function (object $row) use ($normalized) {
                 $value = strtoupper((string) ($row->branch_key ?? $row->branch ?? $row->sucursal ?? ''));
+
                 return in_array($value, $normalized, true);
             });
         }

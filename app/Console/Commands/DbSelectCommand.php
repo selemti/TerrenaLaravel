@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Config;
 
 class DbSelectCommand extends Command
 {
@@ -31,37 +30,40 @@ class DbSelectCommand extends Command
         $lower = ltrim(strtolower($sql));
 
         // Guard: only allow read-only statements (SELECT or WITH ... SELECT)
-        if (!(str_starts_with($lower, 'select') || str_starts_with($lower, 'with'))) {
+        if (! (str_starts_with($lower, 'select') || str_starts_with($lower, 'with'))) {
             $this->error('Only SELECT or WITH queries are allowed.');
+
             return self::INVALID;
         }
 
         // Optional: very basic destructive keyword guard
         $blocked = [' insert ', ' update ', ' delete ', ' drop ', ' alter ', ' truncate ', ' grant ', ' revoke '];
-        $lowerPadded = ' ' . preg_replace('/\s+/', ' ', $lower) . ' ';
+        $lowerPadded = ' '.preg_replace('/\s+/', ' ', $lower).' ';
         foreach ($blocked as $kw) {
             if (str_contains($lowerPadded, $kw)) {
-                $this->error('Detected potentially destructive keyword: ' . trim($kw));
+                $this->error('Detected potentially destructive keyword: '.trim($kw));
+
                 return self::INVALID;
             }
         }
 
         // Apply search_path if provided or via env(DB_SCHEMA)
         $schema = $this->option('schema');
-        if (!$schema) {
+        if (! $schema) {
             $schema = env('DB_SCHEMA');
         }
 
         try {
             if ($schema) {
-                DB::statement('set search_path to ' . $schema);
+                DB::statement('set search_path to '.$schema);
             }
 
             $bindings = [];
             if ($b = $this->option('bindings')) {
                 $decoded = json_decode($b, true);
-                if (!is_array($decoded)) {
+                if (! is_array($decoded)) {
                     $this->error('Bindings must be a JSON array.');
+
                     return self::INVALID;
                 }
                 $bindings = array_values($decoded);
@@ -77,6 +79,7 @@ class DbSelectCommand extends Command
             }
         } catch (\Throwable $e) {
             $this->error($e->getMessage());
+
             return self::FAILURE;
         }
 

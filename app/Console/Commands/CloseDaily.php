@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Services\Operations\DailyCloseService;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
 class CloseDaily extends Command
@@ -43,18 +43,20 @@ class CloseDaily extends Command
             } catch (\Exception $e) {
                 $this->error("Failed to process branch {$branchId}: {$e->getMessage()}");
                 Log::error("DailyClose failed for branch {$branchId} on {$date->toDateString()}", [
-                    'exception' => $e
+                    'exception' => $e,
                 ]);
             }
         }
 
         $this->info('Daily Close process finished.');
+
         return Command::SUCCESS;
     }
 
     protected function getDefaultDate(): Carbon
     {
         $now = Carbon::now('America/Mexico_City');
+
         // If run before 10 PM, it's for the previous day. After 10 PM, it's for today.
         return $now->hour >= 22 ? $now : $now->subDay();
     }

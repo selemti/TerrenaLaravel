@@ -2,15 +2,15 @@
 
 /**
  * Análisis Profundo de Discrepancias en Ventas - Octubre 2025
- * 
+ *
  * Este script analiza las discrepancias entre los Drawer Pull Reports
  * y los datos reales de la base de datos, expandiendo el análisis
  * del 1 de octubre a todo el mes.
  */
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__.'/../vendor/autoload.php';
 
-$app = require_once __DIR__ . '/../bootstrap/app.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use Illuminate\Support\Facades\DB;
@@ -24,7 +24,7 @@ echo "════════════════════════�
 // 1. RESUMEN GENERAL DE DISCREPANCIAS POR DÍA
 // ───────────────────────────────────────────────────────────────────────────────
 echo "1. RESUMEN DE DISCREPANCIAS POR DÍA\n";
-echo str_repeat("─", 100) . "\n";
+echo str_repeat('─', 100)."\n";
 
 $discrepancias = DB::select("
     WITH drawer_data AS (
@@ -78,8 +78,8 @@ $discrepancias = DB::select("
 ");
 
 printf("%-12s %-8s %-10s %-10s %-10s %-12s %-12s %-10s\n",
-    "Fecha", "Term", "Tkt Rep", "Tkt Real", "Diff Tkt", "Diff Ventas", "Diff Efect", "Impact");
-echo str_repeat("─", 100) . "\n";
+    'Fecha', 'Term', 'Tkt Rep', 'Tkt Real', 'Diff Tkt', 'Diff Ventas', 'Diff Efect', 'Impact');
+echo str_repeat('─', 100)."\n";
 
 $totalDiffVentas = 0;
 $totalDiffEfectivo = 0;
@@ -87,7 +87,7 @@ $diasConProblemas = 0;
 
 foreach ($discrepancias as $disc) {
     $impact = abs($disc->diff_ventas) > 50 ? '⚠️ ALTO' : (abs($disc->diff_ventas) > 10 ? '⚡ MEDIO' : '✓ BAJO');
-    
+
     printf("%-12s %-8s %-10d %-10d %-10d $%-11.2f $%-11.2f %-10s\n",
         $disc->fecha,
         $disc->terminal_id,
@@ -98,22 +98,22 @@ foreach ($discrepancias as $disc) {
         $disc->diff_efectivo,
         $impact
     );
-    
+
     $totalDiffVentas += $disc->diff_ventas;
     $totalDiffEfectivo += $disc->diff_efectivo;
     $diasConProblemas++;
 }
 
-echo str_repeat("─", 100) . "\n";
+echo str_repeat('─', 100)."\n";
 echo "TOTAL: Días con problemas: $diasConProblemas | ";
-echo "Diff Ventas: $" . number_format($totalDiffVentas, 2) . " | ";
-echo "Diff Efectivo: $" . number_format($totalDiffEfectivo, 2) . "\n\n";
+echo 'Diff Ventas: $'.number_format($totalDiffVentas, 2).' | ';
+echo 'Diff Efectivo: $'.number_format($totalDiffEfectivo, 2)."\n\n";
 
 // ───────────────────────────────────────────────────────────────────────────────
 // 2. TICKETS CON DESCUENTO DEL 100%
 // ───────────────────────────────────────────────────────────────────────────────
 echo "2. TICKETS CON DESCUENTO DEL 100% (PATRÓN CRÍTICO)\n";
-echo str_repeat("─", 100) . "\n";
+echo str_repeat('─', 100)."\n";
 
 $descuentos100 = DB::select("
     SELECT 
@@ -135,9 +135,9 @@ $descuentos100 = DB::select("
 
 if (count($descuentos100) > 0) {
     printf("%-12s %-10s %-8s %-12s %-12s %-8s %-8s %-8s\n",
-        "Fecha", "Ticket", "Term", "Total", "Descuento", "%Desc", "Pagado", "Anulado");
-    echo str_repeat("─", 100) . "\n";
-    
+        'Fecha', 'Ticket', 'Term', 'Total', 'Descuento', '%Desc', 'Pagado', 'Anulado');
+    echo str_repeat('─', 100)."\n";
+
     $montoTotal = 0;
     foreach ($descuentos100 as $desc) {
         printf("%-12s %-10d %-8s $%-11.2f $%-11.2f %-8.1f%% %-8s %-8s\n",
@@ -152,8 +152,8 @@ if (count($descuentos100) > 0) {
         );
         $montoTotal += $desc->total_price;
     }
-    echo str_repeat("─", 100) . "\n";
-    echo "Total de tickets con descuento 100%: " . count($descuentos100) . " | Monto afectado: $" . number_format($montoTotal, 2) . "\n\n";
+    echo str_repeat('─', 100)."\n";
+    echo 'Total de tickets con descuento 100%: '.count($descuentos100).' | Monto afectado: $'.number_format($montoTotal, 2)."\n\n";
 } else {
     echo "✓ No se encontraron tickets con descuento del 100%\n\n";
 }
@@ -162,7 +162,7 @@ if (count($descuentos100) > 0) {
 // 3. TICKETS NO PAGADOS PERO CERRADOS
 // ───────────────────────────────────────────────────────────────────────────────
 echo "3. TICKETS NO PAGADOS PERO CERRADOS (POTENCIAL PÉRDIDA)\n";
-echo str_repeat("─", 100) . "\n";
+echo str_repeat('─', 100)."\n";
 
 $noPagados = DB::select("
     SELECT 
@@ -185,9 +185,9 @@ $noPagados = DB::select("
 
 if (count($noPagados) > 0) {
     printf("%-12s %-10s %-8s %-12s %-12s %-12s %-8s\n",
-        "Fecha", "Ticket", "Term", "Total", "Descuento", "Neto", "#Tx");
-    echo str_repeat("─", 100) . "\n";
-    
+        'Fecha', 'Ticket', 'Term', 'Total', 'Descuento', 'Neto', '#Tx');
+    echo str_repeat('─', 100)."\n";
+
     $montoTotalNoPagado = 0;
     foreach ($noPagados as $np) {
         printf("%-12s %-10d %-8s $%-11.2f $%-11.2f $%-11.2f %-8d\n",
@@ -201,8 +201,8 @@ if (count($noPagados) > 0) {
         );
         $montoTotalNoPagado += $np->neto;
     }
-    echo str_repeat("─", 100) . "\n";
-    echo "Total de tickets no pagados: " . count($noPagados) . " | Monto no cobrado: $" . number_format($montoTotalNoPagado, 2) . "\n\n";
+    echo str_repeat('─', 100)."\n";
+    echo 'Total de tickets no pagados: '.count($noPagados).' | Monto no cobrado: $'.number_format($montoTotalNoPagado, 2)."\n\n";
 } else {
     echo "✓ No se encontraron tickets no pagados\n\n";
 }
@@ -211,7 +211,7 @@ if (count($noPagados) > 0) {
 // 4. PAYMENT VS NET MISMATCH
 // ───────────────────────────────────────────────────────────────────────────────
 echo "4. DISCREPANCIAS ENTRE TOTAL NETO Y PAGOS RECIBIDOS\n";
-echo str_repeat("─", 100) . "\n";
+echo str_repeat('─', 100)."\n";
 
 $paymentMismatch = DB::select("
     SELECT 
@@ -244,9 +244,9 @@ $paymentMismatch = DB::select("
 
 if (count($paymentMismatch) > 0) {
     printf("%-12s %-10s %-12s %-12s %-12s %-12s %-12s\n",
-        "Fecha", "Ticket", "Total", "Descuento", "Neto", "Pagado", "Diferencia");
-    echo str_repeat("─", 100) . "\n";
-    
+        'Fecha', 'Ticket', 'Total', 'Descuento', 'Neto', 'Pagado', 'Diferencia');
+    echo str_repeat('─', 100)."\n";
+
     foreach ($paymentMismatch as $pm) {
         $status = abs($pm->diferencia) > 10 ? '⚠️' : '⚡';
         printf("%s %-12s %-10d $%-11.2f $%-11.2f $%-11.2f $%-11.2f $%-11.2f\n",
@@ -260,8 +260,8 @@ if (count($paymentMismatch) > 0) {
             $pm->diferencia
         );
     }
-    echo str_repeat("─", 100) . "\n";
-    echo "Total de tickets con discrepancia: " . count($paymentMismatch) . "\n\n";
+    echo str_repeat('─', 100)."\n";
+    echo 'Total de tickets con discrepancia: '.count($paymentMismatch)."\n\n";
 } else {
     echo "✓ No se encontraron discrepancias entre neto y pagos\n\n";
 }
@@ -270,7 +270,7 @@ if (count($paymentMismatch) > 0) {
 // 5. RESUMEN DE EXCEPCIONES POR DÍA
 // ───────────────────────────────────────────────────────────────────────────────
 echo "5. RESUMEN DIARIO DE TIPOS DE EXCEPCIONES\n";
-echo str_repeat("─", 100) . "\n";
+echo str_repeat('─', 100)."\n";
 
 $resumenDiario = DB::select("
     SELECT 
@@ -301,9 +301,9 @@ $resumenDiario = DB::select("
 
 if (count($resumenDiario) > 0) {
     printf("%-12s %-10s %-10s %-15s %-15s %-15s\n",
-        "Fecha", "Desc 100%", "No Pagados", "Anul+Tx", "$ Desc 100%", "$ No Pagado");
-    echo str_repeat("─", 100) . "\n";
-    
+        'Fecha', 'Desc 100%', 'No Pagados', 'Anul+Tx', '$ Desc 100%', '$ No Pagado');
+    echo str_repeat('─', 100)."\n";
+
     foreach ($resumenDiario as $rd) {
         printf("%-12s %-10d %-10d %-15d $%-14.2f $%-14.2f\n",
             $rd->fecha,

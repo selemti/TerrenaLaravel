@@ -98,7 +98,7 @@
 **Problema con archivo SQL - Referencias incorrectas**
 
 #### 10. `2025_11_04_000900_create_additional_sales_report_views` 🔧
-**Archivo:** `BD/Noviembre/VentasReport/v9/script_sql_reportes_adicionales.sql`
+**Archivo:** `docs/docs/BD/NoviembreDocsDocs/VentasReport/v9/script_sql_reportes_adicionales.sql`
 
 **Problema:** Usa `ti.discount_amount` pero la columna se llama `ti.discount`
 
@@ -151,7 +151,7 @@ php scripts/register_safe_migrations_part2.php
 ### FASE 2: Corregir Archivo SQL de Reportes
 **Objetivo:** Arreglar referencias de columnas
 
-1. Abrir: `BD/Noviembre/VentasReport/v9/script_sql_reportes_adicionales.sql`
+1. Abrir: `docs/docs/BD/NoviembreDocsDocs/VentasReport/v9/script_sql_reportes_adicionales.sql`
 2. Buscar y reemplazar: `discount_amount` → `discount`
 3. Verificar cambios en línea 45 y siguientes
 4. Copiar archivo corregido a: `database/sql/reportes/` (si no existe el directorio, crearlo)

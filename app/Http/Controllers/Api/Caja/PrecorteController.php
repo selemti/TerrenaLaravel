@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api\Caja;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\JsonResponse;
 
 class PrecorteController extends Controller
 {
@@ -15,36 +15,84 @@ class PrecorteController extends Controller
     public function preflight(Request $request, $sesionId = null): JsonResponse
     {
         $sesionId = $sesionId ?? $request->input('sesion_id', 0);
-        
-        if (!$sesionId) {
+
+        if (! $sesionId) {
             return response()->json(['ok' => false, 'error' => 'missing_sesion_id'], 400);
         }
 
         try {
-            $row = DB::connection('pgsql')->selectOne("SELECT terminal_id FROM selemti.sesion_cajon WHERE id = ?", [$sesionId]);
+            $row = DB::connection('pgsql')->selectOne('SELECT terminal_id FROM selemti.sesion_cajon WHERE id = ?', [$sesionId]);
 
-            if (!$row) {
+            if (! $row) {
                 return response()->json(['ok' => false, 'error' => 'sesion_not_found'], 404);
             }
 
             $tid = (int) $row->terminal_id;
-            $result = DB::connection('pgsql')->selectOne("SELECT COUNT(*) AS c FROM public.ticket WHERE terminal_id = ? AND closing_date IS NULL", [$tid]);
+
+            // ✨ NUEVO: Auto-cerrar tickets con descuento 100% ANTES de validar
+            $autoClosed = $this->autoCloseFullDiscountTickets($tid);
+
+            // AHORA sí, contar tickets abiertos (excluyendo anulados)
+            $result = DB::connection('pgsql')->selectOne('SELECT COUNT(*) AS c FROM public.ticket WHERE terminal_id = ? AND closing_date IS NULL AND voided = false', [$tid]);
             $open = (int) ($result->c ?? 0);
             $blocked = $open > 0;
 
             return response()->json([
-                'ok' => !$blocked,
+                'ok' => ! $blocked,
                 'tickets_abiertos' => $open,
                 'bloqueo' => $blocked,
+                'auto_cerrados' => $autoClosed, // Info adicional
             ]);
 
         } catch (\Exception $e) {
-            \Log::error("Error en preflight (sesion_id: $sesionId): " . $e->getMessage());
+            \Log::error("Error en preflight (sesion_id: $sesionId): ".$e->getMessage());
+
             return response()->json([
                 'ok' => false,
                 'error' => 'server_error',
-                'detail' => config('app.debug') ? $e->getMessage() : 'Error en preflight'
+                'detail' => config('app.debug') ? $e->getMessage() : 'Error en preflight',
             ], 500);
+        }
+    }
+
+    /**
+     * Cierra automáticamente tickets con descuento 100% de una terminal
+     */
+    private function autoCloseFullDiscountTickets($terminalId): int
+    {
+        try {
+            $affected = DB::connection('pgsql')->update("
+                UPDATE public.ticket
+                SET
+                    paid = true,
+                    paid_amount = 0,
+                    due_amount = 0,
+                    closing_date = COALESCE(closing_date, create_date),
+                    status = 'CLOSED'
+                WHERE voided = false
+                    AND terminal_id = ?
+                    AND paid = false
+                    AND total_price = 0
+                    AND total_discount > 0
+                    AND closing_date IS NULL
+            ", [$terminalId]);
+
+            if ($affected > 0) {
+                \Log::info('Auto-cierre de tickets con descuento 100%', [
+                    'terminal_id' => $terminalId,
+                    'cantidad' => $affected,
+                    'contexto' => 'precorte_preflight',
+                ]);
+            }
+
+            return $affected;
+        } catch (\Exception $e) {
+            \Log::error('Error en auto-cierre descuento 100%', [
+                'terminal_id' => $terminalId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return 0;
         }
     }
 
@@ -62,18 +110,18 @@ class PrecorteController extends Controller
         try {
             // Si no tenemos sesion_id, buscarla por terminal y fecha
             if ($sesionId <= 0) {
-                if (!$terminalId) {
+                if (! $terminalId) {
                     return response()->json(['ok' => false, 'error' => 'missing_terminal_id'], 400);
                 }
 
-                if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $bdate)) {
+                if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $bdate)) {
                     $bdate = date('Y-m-d');
                 }
 
-                $d0 = $bdate . ' 00:00:00';
-                $d1 = date('Y-m-d', strtotime($bdate . ' +1 day')) . ' 00:00:00';
+                $d0 = $bdate.' 00:00:00';
+                $d1 = date('Y-m-d', strtotime($bdate.' +1 day')).' 00:00:00';
 
-                $result = DB::connection('pgsql')->selectOne("
+                $result = DB::connection('pgsql')->selectOne('
                     SELECT id
                     FROM selemti.sesion_cajon
                     WHERE terminal_id = ?
@@ -81,7 +129,7 @@ class PrecorteController extends Controller
                       AND COALESCE(cierre_ts, ?) >= ?
                     ORDER BY apertura_ts DESC
                     LIMIT 1
-                ", [$terminalId, $d1, $d1, $d0]);
+                ', [$terminalId, $d1, $d1, $d0]);
 
                 $sesionId = $result ? (int) $result->id : 0;
 
@@ -91,13 +139,13 @@ class PrecorteController extends Controller
             }
 
             // Buscar precorte existente
-            $existing = DB::connection('pgsql')->selectOne("
+            $existing = DB::connection('pgsql')->selectOne('
                 SELECT id, estatus, creado_en
                 FROM selemti.precorte
                 WHERE sesion_id = ?
                 ORDER BY id DESC
                 LIMIT 1
-            ", [$sesionId]);
+            ', [$sesionId]);
 
             if ($existing) {
                 return response()->json([
@@ -105,7 +153,7 @@ class PrecorteController extends Controller
                     'precorte_id' => (int) $existing->id,
                     'estatus' => $existing->estatus ?? 'PENDIENTE',
                     'creado_en' => $existing->creado_en,
-                    'ya_existia' => true
+                    'ya_existia' => true,
                 ]);
             }
 
@@ -121,15 +169,16 @@ class PrecorteController extends Controller
                 'precorte_id' => (int) $result->id,
                 'estatus' => 'PENDIENTE',
                 'creado_en' => $result->creado_en,
-                'ya_existia' => false
+                'ya_existia' => false,
             ]);
 
         } catch (\Exception $e) {
-            \Log::error("Error en createLegacy precorte: " . $e->getMessage());
+            \Log::error('Error en createLegacy precorte: '.$e->getMessage());
+
             return response()->json([
                 'ok' => false,
                 'error' => 'create_failed',
-                'detail' => config('app.debug') ? $e->getMessage() : 'Error al crear precorte'
+                'detail' => config('app.debug') ? $e->getMessage() : 'Error al crear precorte',
             ], 500);
         }
     }
@@ -154,7 +203,9 @@ class PrecorteController extends Controller
 
         // Parsear denominaciones
         $denoms = json_decode($denomsJson, true);
-        if (!is_array($denoms)) $denoms = [];
+        if (! is_array($denoms)) {
+            $denoms = [];
+        }
 
         $totalEfectivo = 0.0;
         foreach ($denoms as $row) {
@@ -171,7 +222,7 @@ class PrecorteController extends Controller
             DB::connection('pgsql')->beginTransaction();
 
             // 1. Eliminar denominaciones anteriores
-            DB::connection('pgsql')->delete("DELETE FROM selemti.precorte_efectivo WHERE precorte_id = ?", [$precorteId]);
+            DB::connection('pgsql')->delete('DELETE FROM selemti.precorte_efectivo WHERE precorte_id = ?', [$precorteId]);
 
             // 2. Insertar nuevas denominaciones
             foreach ($denoms as $row) {
@@ -180,15 +231,15 @@ class PrecorteController extends Controller
 
                 if ($den > 0 && $qty > 0) {
                     $subtotal = $den * $qty;
-                    DB::connection('pgsql')->insert("
+                    DB::connection('pgsql')->insert('
                         INSERT INTO selemti.precorte_efectivo (precorte_id, denominacion, cantidad, subtotal)
                         VALUES (?, ?, ?, ?)
-                    ", [$precorteId, $den, $qty, $subtotal]);
+                    ', [$precorteId, $den, $qty, $subtotal]);
                 }
             }
 
             // 3. Eliminar otros métodos anteriores
-            DB::connection('pgsql')->delete("DELETE FROM selemti.precorte_otros WHERE precorte_id = ?", [$precorteId]);
+            DB::connection('pgsql')->delete('DELETE FROM selemti.precorte_otros WHERE precorte_id = ?', [$precorteId]);
 
             // 4. Insertar nuevos métodos de pago
             if ($declCredito > 0) {
@@ -213,15 +264,15 @@ class PrecorteController extends Controller
             }
 
             // 5. Actualizar totales en precorte
-            $updateSql = "UPDATE selemti.precorte SET declarado_efectivo = ?, declarado_otros = ?";
+            $updateSql = 'UPDATE selemti.precorte SET declarado_efectivo = ?, declarado_otros = ?';
             $params = [$totalEfectivo, $totalOtros];
 
-            if (!empty($notas)) {
-                $updateSql .= ", notas = ?";
+            if (! empty($notas)) {
+                $updateSql .= ', notas = ?';
                 $params[] = $notas;
             }
 
-            $updateSql .= " WHERE id = ?";
+            $updateSql .= ' WHERE id = ?';
             $params[] = $precorteId;
 
             DB::connection('pgsql')->update($updateSql, $params);
@@ -233,7 +284,7 @@ class PrecorteController extends Controller
                 WHERE id = ?
             ", [$precorteId]);
 
-            if (!$result) {
+            if (! $result) {
                 $result = (object) ['declarado_efectivo' => 0, 'declarado_otros' => 0, 'notas' => ''];
             }
 
@@ -249,11 +300,12 @@ class PrecorteController extends Controller
 
         } catch (\Exception $e) {
             DB::connection('pgsql')->rollBack();
-            \Log::error("Error en updateLegacy precorte (id: $precorteId): " . $e->getMessage());
+            \Log::error("Error en updateLegacy precorte (id: $precorteId): ".$e->getMessage());
+
             return response()->json([
                 'ok' => false,
                 'error' => 'update_failed',
-                'detail' => config('app.debug') ? $e->getMessage() : 'Error al actualizar precorte'
+                'detail' => config('app.debug') ? $e->getMessage() : 'Error al actualizar precorte',
             ], 500);
         }
     }
@@ -270,18 +322,18 @@ class PrecorteController extends Controller
 
         try {
             // Buscar precorte por diferentes criterios
-            if (!$precorteId) {
+            if (! $precorteId) {
                 if ($sesionId > 0) {
-                    $result = DB::connection('pgsql')->selectOne("
+                    $result = DB::connection('pgsql')->selectOne('
                         SELECT id
                         FROM selemti.precorte
                         WHERE sesion_id = ?
                         ORDER BY id DESC
                         LIMIT 1
-                    ", [$sesionId]);
+                    ', [$sesionId]);
                     $precorteId = $result ? (int) $result->id : 0;
                 } elseif ($terminalId > 0 && $userId > 0) {
-                    $result = DB::connection('pgsql')->selectOne("
+                    $result = DB::connection('pgsql')->selectOne('
                         SELECT id
                         FROM selemti.sesion_cajon
                         WHERE terminal_id = ?
@@ -289,58 +341,58 @@ class PrecorteController extends Controller
                           AND cierre_ts IS NULL
                         ORDER BY apertura_ts DESC
                         LIMIT 1
-                    ", [$terminalId, $userId]);
+                    ', [$terminalId, $userId]);
 
                     $sid = $result ? (int) $result->id : 0;
 
                     if ($sid > 0) {
-                        $result = DB::connection('pgsql')->selectOne("
+                        $result = DB::connection('pgsql')->selectOne('
                             SELECT id
                             FROM selemti.precorte
                             WHERE sesion_id = ?
                             ORDER BY id DESC
                             LIMIT 1
-                        ", [$sid]);
+                        ', [$sid]);
                         $precorteId = $result ? (int) $result->id : 0;
                         $sesionId = $sid;
                     }
                 }
             }
 
-            if (!$precorteId) {
+            if (! $precorteId) {
                 return response()->json(['ok' => false, 'error' => 'precorte_not_found'], 404);
             }
 
             // Obtener sesión
-            $precorte = DB::connection('pgsql')->selectOne("SELECT sesion_id FROM selemti.precorte WHERE id = ?", [$precorteId]);
-            
-            if (!$precorte) {
+            $precorte = DB::connection('pgsql')->selectOne('SELECT sesion_id FROM selemti.precorte WHERE id = ?', [$precorteId]);
+
+            if (! $precorte) {
                 return response()->json(['ok' => false, 'error' => 'precorte_not_found'], 404);
             }
 
             $sid = (int) $precorte->sesion_id;
 
             // Verificar que existe el corte POS
-            if (!$this->hasPOSCutBySesion($sid)) {
+            if (! $this->hasPOSCutBySesion($sid)) {
                 return response()->json([
                     'ok' => false,
                     'error' => 'pos_cut_missing',
                     'require_pos_cut' => true,
                     'sesion_id' => $sid,
-                    'precorte_id' => $precorteId
+                    'precorte_id' => $precorteId,
                 ], 412);
             }
 
             // Obtener opening_float
-            $sesion = DB::connection('pgsql')->selectOne("SELECT opening_float FROM selemti.sesion_cajon WHERE id = ?", [$sid]);
+            $sesion = DB::connection('pgsql')->selectOne('SELECT opening_float FROM selemti.sesion_cajon WHERE id = ?', [$sid]);
             $openingFloat = (float) ($sesion->opening_float ?? 0);
 
             // Obtener total efectivo declarado
-            $result = DB::connection('pgsql')->selectOne("
+            $result = DB::connection('pgsql')->selectOne('
                 SELECT COALESCE(SUM(subtotal), 0) AS s
                 FROM selemti.precorte_efectivo
                 WHERE precorte_id = ?
-            ", [$precorteId]);
+            ', [$precorteId]);
             $declEf = (float) ($result->s ?? 0);
 
             // Obtener otros métodos declarados
@@ -352,17 +404,23 @@ class PrecorteController extends Controller
             $hasOtros = DB::connection('pgsql')->selectOne("SELECT to_regclass('selemti.precorte_otros') AS t");
 
             if ($hasOtros && $hasOtros->t) {
-                $otros = DB::connection('pgsql')->select("
+                $otros = DB::connection('pgsql')->select('
                     SELECT UPPER(tipo) AS tipo, COALESCE(SUM(monto), 0) AS monto
                     FROM selemti.precorte_otros
                     WHERE precorte_id = ?
                     GROUP BY UPPER(tipo)
-                ", [$precorteId]);
+                ', [$precorteId]);
 
                 foreach ($otros as $r) {
-                    if ($r->tipo === 'CREDITO') $declCredito = (float) $r->monto;
-                    if ($r->tipo === 'DEBITO') $declDebito = (float) $r->monto;
-                    if ($r->tipo === 'TRANSFER') $declTransfer = (float) $r->monto;
+                    if ($r->tipo === 'CREDITO') {
+                        $declCredito = (float) $r->monto;
+                    }
+                    if ($r->tipo === 'DEBITO') {
+                        $declDebito = (float) $r->monto;
+                    }
+                    if ($r->tipo === 'TRANSFER') {
+                        $declTransfer = (float) $r->monto;
+                    }
                 }
             }
 
@@ -387,15 +445,16 @@ class PrecorteController extends Controller
                 'opening_float' => $openingFloat,
                 'precorte_id' => $precorteId,
                 'sesion_id' => $sid,
-                'has_pos_cut' => true
+                'has_pos_cut' => true,
             ]);
 
         } catch (\Exception $e) {
-            \Log::error("Error en resumenLegacy: " . $e->getMessage());
+            \Log::error('Error en resumenLegacy: '.$e->getMessage());
+
             return response()->json([
                 'ok' => false,
                 'error' => 'internal_error',
-                'detail' => config('app.debug') ? $e->getMessage() : 'Error al obtener resumen'
+                'detail' => config('app.debug') ? $e->getMessage() : 'Error al obtener resumen',
             ], 500);
         }
     }
@@ -416,14 +475,14 @@ class PrecorteController extends Controller
         $nota = trim($request->input('nota', $request->input('notas', '')));
 
         // Si es GET y no hay parámetros, solo devolver estado
-        if ($request->isMethod('GET') && !$sesionEstatus && !$precorteEstatus) {
-            $result = DB::connection('pgsql')->selectOne("
+        if ($request->isMethod('GET') && ! $sesionEstatus && ! $precorteEstatus) {
+            $result = DB::connection('pgsql')->selectOne('
                 SELECT id, sesion_id, estatus
                 FROM selemti.precorte
                 WHERE id = ?
-            ", [$precorteId]);
+            ', [$precorteId]);
 
-            if (!$result) {
+            if (! $result) {
                 return response()->json(['ok' => false, 'error' => 'precorte_not_found'], 404);
             }
 
@@ -431,7 +490,7 @@ class PrecorteController extends Controller
                 'ok' => true,
                 'id' => (int) $result->id,
                 'sesion_id' => (int) $result->sesion_id,
-                'estatus' => $result->estatus
+                'estatus' => $result->estatus,
             ]);
         }
 
@@ -443,28 +502,28 @@ class PrecorteController extends Controller
             $params = [];
 
             if ($precorteEstatus !== '') {
-                $sets[] = "estatus = ?";
+                $sets[] = 'estatus = ?';
                 $params[] = $precorteEstatus;
             }
 
             if ($nota !== '') {
-                $sets[] = "notas = ?";
+                $sets[] = 'notas = ?';
                 $params[] = $nota;
             }
 
             if ($sets) {
-                $sql = "UPDATE selemti.precorte SET " . implode(', ', $sets) . " WHERE id = ?";
+                $sql = 'UPDATE selemti.precorte SET '.implode(', ', $sets).' WHERE id = ?';
                 $params[] = $precorteId;
                 DB::connection('pgsql')->update($sql, $params);
             }
 
             if ($sesionEstatus !== '') {
-                $sesion = DB::connection('pgsql')->selectOne("SELECT sesion_id FROM selemti.precorte WHERE id = ?", [$precorteId]);
+                $sesion = DB::connection('pgsql')->selectOne('SELECT sesion_id FROM selemti.precorte WHERE id = ?', [$precorteId]);
 
                 if ($sesion) {
-                    DB::connection('pgsql')->update("UPDATE selemti.sesion_cajon SET estatus = ? WHERE id = ?", [
+                    DB::connection('pgsql')->update('UPDATE selemti.sesion_cajon SET estatus = ? WHERE id = ?', [
                         $sesionEstatus,
-                        $sesion->sesion_id
+                        $sesion->sesion_id,
                     ]);
                 }
             }
@@ -475,16 +534,17 @@ class PrecorteController extends Controller
                 'ok' => true,
                 'precorte_id' => $precorteId,
                 'precorte_estatus' => $precorteEstatus ?: null,
-                'sesion_estatus' => $sesionEstatus ?: null
+                'sesion_estatus' => $sesionEstatus ?: null,
             ]);
 
         } catch (\Exception $e) {
             DB::connection('pgsql')->rollBack();
-            \Log::error("Error en statusLegacy: " . $e->getMessage());
+            \Log::error('Error en statusLegacy: '.$e->getMessage());
+
             return response()->json([
                 'ok' => false,
                 'error' => 'status_update_failed',
-                'detail' => config('app.debug') ? $e->getMessage() : 'Error al actualizar estado'
+                'detail' => config('app.debug') ? $e->getMessage() : 'Error al actualizar estado',
             ], 500);
         }
     }
@@ -502,22 +562,23 @@ class PrecorteController extends Controller
                 RETURNING id, estatus
             ", [$id]);
 
-            if (!$result) {
+            if (! $result) {
                 return response()->json(['ok' => false, 'error' => 'precorte_not_found'], 404);
             }
 
             return response()->json([
                 'ok' => true,
                 'precorte_id' => (int) $result->id,
-                'estatus' => $result->estatus
+                'estatus' => $result->estatus,
             ]);
 
         } catch (\Exception $e) {
-            \Log::error("Error en enviar precorte: " . $e->getMessage());
+            \Log::error('Error en enviar precorte: '.$e->getMessage());
+
             return response()->json([
                 'ok' => false,
                 'error' => 'server_error',
-                'detail' => config('app.debug') ? $e->getMessage() : 'Error al enviar precorte'
+                'detail' => config('app.debug') ? $e->getMessage() : 'Error al enviar precorte',
             ], 500);
         }
     }
@@ -529,8 +590,10 @@ class PrecorteController extends Controller
     {
         if ($id) {
             $request->merge(['id' => $id]);
+
             return $this->updateLegacy($request);
         }
+
         return $this->createLegacy($request);
     }
 
@@ -540,9 +603,12 @@ class PrecorteController extends Controller
     {
         try {
             $reg = DB::connection('pgsql')->selectOne("SELECT to_regclass('selemti.vw_sesion_dpr') AS t");
-            if (!$reg || !$reg->t) return false;
+            if (! $reg || ! $reg->t) {
+                return false;
+            }
 
-            $result = DB::connection('pgsql')->selectOne("SELECT 1 FROM selemti.vw_sesion_dpr WHERE sesion_id = ? LIMIT 1", [$sesionId]);
+            $result = DB::connection('pgsql')->selectOne('SELECT 1 FROM selemti.vw_sesion_dpr WHERE sesion_id = ? LIMIT 1', [$sesionId]);
+
             return (bool) $result;
         } catch (\Exception $e) {
             return false;
@@ -553,15 +619,17 @@ class PrecorteController extends Controller
     {
         try {
             // Si la sesión está abierta (cierre_ts IS NULL), usar NOW() en lugar de todo el día
-            $sesion = DB::connection('pgsql')->selectOne("
+            $sesion = DB::connection('pgsql')->selectOne('
                 SELECT terminal_id,
                        apertura_ts,
                        COALESCE(cierre_ts, NOW()) AS fin
                 FROM selemti.sesion_cajon
                 WHERE id = ?
-            ", [$sesionId]);
+            ', [$sesionId]);
 
-            if (!$sesion) return 0.0;
+            if (! $sesion) {
+                return 0.0;
+            }
 
             $terminalId = (int) $sesion->terminal_id;
             $a = $sesion->apertura_ts;
@@ -596,15 +664,17 @@ class PrecorteController extends Controller
             $params = [$a, $b];
 
             if ($hasTermCol) {
-                $sql .= " AND terminal_id = ?";
+                $sql .= ' AND terminal_id = ?';
                 $params[] = $terminalId;
             }
 
             $result = DB::connection('pgsql')->selectOne($sql, $params);
+
             return (float) ($result->s ?? 0);
 
         } catch (\Exception $e) {
-            \Log::error("Error en sysTransfersFromTransactions: " . $e->getMessage());
+            \Log::error('Error en sysTransfersFromTransactions: '.$e->getMessage());
+
             return 0.0;
         }
     }
@@ -612,14 +682,14 @@ class PrecorteController extends Controller
     private function hasColumn(string $schema, string $table, string $column): bool
     {
         try {
-            $result = DB::connection('pgsql')->selectOne("
+            $result = DB::connection('pgsql')->selectOne('
                 SELECT 1
                 FROM information_schema.columns
                 WHERE table_schema = ?
                   AND table_name = ?
                   AND column_name = ?
                 LIMIT 1
-            ", [$schema, $table, $column]);
+            ', [$schema, $table, $column]);
 
             return (bool) $result;
         } catch (\Exception $e) {
@@ -635,7 +705,7 @@ class PrecorteController extends Controller
         try {
             // Obtener datos de la sesión incluyendo el opening_float (fondo de caja)
             // Si la sesión está abierta (cierre_ts IS NULL), usar NOW() en lugar de todo el día
-            $sesion = DB::connection('pgsql')->selectOne("
+            $sesion = DB::connection('pgsql')->selectOne('
                 SELECT terminal_id,
                        apertura_ts,
                        COALESCE(cierre_ts, NOW()) AS fin,
@@ -643,15 +713,15 @@ class PrecorteController extends Controller
                        COALESCE(opening_float, 0) AS opening_float
                 FROM selemti.sesion_cajon
                 WHERE id = ?
-            ", [$sesionId]);
+            ', [$sesionId]);
 
-            if (!$sesion) {
+            if (! $sesion) {
                 return [
                     'efectivo' => 0,
                     'credito' => 0,
                     'debito' => 0,
                     'tarjetas' => 0,
-                    'transfer' => 0
+                    'transfer' => 0,
                 ];
             }
 
@@ -721,17 +791,18 @@ class PrecorteController extends Controller
                 'credito' => $cr,
                 'debito' => $dbt,
                 'tarjetas' => $cr + $dbt,
-                'transfer' => $tr
+                'transfer' => $tr,
             ];
 
         } catch (\Exception $e) {
-            \Log::error("Error en totalesSistema (sesion_id: $sesionId): " . $e->getMessage());
+            \Log::error("Error en totalesSistema (sesion_id: $sesionId): ".$e->getMessage());
+
             return [
                 'efectivo' => 0,
                 'credito' => 0,
                 'debito' => 0,
                 'tarjetas' => 0,
-                'transfer' => 0
+                'transfer' => 0,
             ];
         }
     }

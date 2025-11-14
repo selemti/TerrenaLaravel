@@ -8,13 +8,16 @@ use Illuminate\Database\Eloquent\Model;
 class RecetaVersion extends Model
 {
     use HasFactory;
+
     protected $table = 'selemti.receta_version';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false; // Solo usa created_at
 
     protected $fillable = [
-        'receta_id', 'version', 'descripcion_cambios', 'fecha_efectiva', 
-        'version_publicada', 'usuario_publicador', 'fecha_publicacion', 'created_at'
+        'receta_id', 'version', 'descripcion_cambios', 'fecha_efectiva',
+        'version_publicada', 'usuario_publicador', 'fecha_publicacion', 'created_at',
     ];
 
     protected $casts = [
@@ -27,7 +30,7 @@ class RecetaVersion extends Model
     {
         return $this->belongsTo(Receta::class, 'receta_id', 'id');
     }
-    
+
     public function detalles()
     {
         return $this->hasMany(RecetaDetalle::class, 'receta_version_id');

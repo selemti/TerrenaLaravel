@@ -14,14 +14,21 @@ class TransferHeader extends Model
     use HasFactory;
 
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.transfer_cab';
+
     protected $primaryKey = 'id';
 
     public const STATUS_SOLICITADA = 'SOLICITADA';
+
     public const STATUS_APROBADA = 'APROBADA';
+
     public const STATUS_EN_TRANSITO = 'EN_TRANSITO';
+
     public const STATUS_RECIBIDA = 'RECIBIDA';
+
     public const STATUS_POSTEADA = 'POSTEADA';
+
     public const STATUS_CANCELADA = 'CANCELADA';
 
     protected $fillable = [

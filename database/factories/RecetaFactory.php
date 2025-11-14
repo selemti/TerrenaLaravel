@@ -20,7 +20,7 @@ class RecetaFactory extends Factory
     public function definition(): array
     {
         return [
-            'id' => 'REC-' . strtoupper($this->faker->unique()->lexify('????')),
+            'id' => 'REC-'.strtoupper($this->faker->unique()->lexify('????')),
             'nombre_plato' => $this->faker->words(3, true),
             'codigo_plato_pos' => $this->faker->optional()->numerify('PLU-####'),
             'categoria_plato' => $this->faker->randomElement(['Entradas', 'Platos Fuertes', 'Postres', 'Bebidas']),
@@ -33,4 +33,3 @@ class RecetaFactory extends Factory
         ];
     }
 }
-

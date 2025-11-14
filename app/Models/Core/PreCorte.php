@@ -7,12 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class PreCorte extends Model
 {
     protected $table = 'selemti.precorte';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
 
     protected $fillable = [
-        'sesion_id', 'declarado_efectivo', 'declarado_otros', 'estatus', 'creado_en', 
-        'creado_por', 'ip_cliente', 'notas'
+        'sesion_id', 'declarado_efectivo', 'declarado_otros', 'estatus', 'creado_en',
+        'creado_por', 'ip_cliente', 'notas',
     ];
 
     protected $casts = [

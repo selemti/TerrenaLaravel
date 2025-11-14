@@ -22,7 +22,7 @@ class RecetaDetalleFactory extends Factory
     {
         return [
             'receta_version_id' => RecetaVersion::factory(),
-            'item_id' => 'ITEM-' . strtoupper($this->faker->unique()->lexify('????')),
+            'item_id' => 'ITEM-'.strtoupper($this->faker->unique()->lexify('????')),
             'cantidad' => $this->faker->randomFloat(2, 10, 500),
             'unidad_medida' => $this->faker->randomElement(['GR', 'ML', 'UND', 'KG', 'LT']),
             'merma_porcentaje' => $this->faker->randomFloat(2, 0, 10),

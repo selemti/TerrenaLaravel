@@ -2,19 +2,20 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Services\Operations\PosConsumptionService;
+use Carbon\Carbon;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
-use Throwable;
 
 class PosReprocess extends Command
 {
     protected $signature = 'pos:reprocess {--date=} {--branch=*} {--force}';
+
     protected $description = 'Finds and reprocesses POS consumption records that required reprocessing.';
 
     protected PosConsumptionService $posConsumptionService;
+
     protected string $connection = 'pgsql';
 
     public function __construct(PosConsumptionService $posConsumptionService)
@@ -25,17 +26,18 @@ class PosReprocess extends Command
 
     public function handle()
     {
-        if (app()->environment('production') && !$this->option('force')) {
+        if (app()->environment('production') && ! $this->option('force')) {
             $this->error('Running in production requires the --force flag.');
+
             return Command::FAILURE;
         }
 
         $date = $this->option('date') ? Carbon::parse($this->option('date'))->toDateString() : null;
         $branches = $this->option('branch') ?: [];
 
-        $this->info("Starting POS Reprocessing...");
-        $this->line("Date filter: " . ($date ?? 'None'));
-        $this->line("Branch filter: " . (!empty($branches) ? implode(', ', $branches) : 'All'));
+        $this->info('Starting POS Reprocessing...');
+        $this->line('Date filter: '.($date ?? 'None'));
+        $this->line('Branch filter: '.(! empty($branches) ? implode(', ', $branches) : 'All'));
 
         $query = DB::connection($this->connection)->table('selemti.inv_consumo_pos')
             ->where('requiere_reproceso', true);
@@ -43,14 +45,15 @@ class PosReprocess extends Command
         if ($date) {
             $query->where('fecha_operacion', $date);
         }
-        if (!empty($branches)) {
+        if (! empty($branches)) {
             $query->whereIn('branch_id', $branches);
         }
 
         $recordsToReprocess = $query->get();
 
         if ($recordsToReprocess->isEmpty()) {
-            $this->info("No records found requiring reprocessing.");
+            $this->info('No records found requiring reprocessing.');
+
             return Command::SUCCESS;
         }
 
@@ -82,7 +85,7 @@ class PosReprocess extends Command
                         'updated_at' => now(),
                     ];
                 }
-                if (!empty($reversalMovements)) {
+                if (! empty($reversalMovements)) {
                     DB::connection($this->connection)->table('selemti.mov_inv')->insert($reversalMovements);
                 }
 
@@ -102,10 +105,10 @@ class PosReprocess extends Command
 
         $bar->finish();
         $this->newLine(2);
-        $this->info("Reprocessing complete.");
+        $this->info('Reprocessing complete.');
 
-        if (!empty($stillRequiresReprocess)) {
-            $this->warn("The following tickets still require reprocessing after this run:");
+        if (! empty($stillRequiresReprocess)) {
+            $this->warn('The following tickets still require reprocessing after this run:');
             foreach ($stillRequiresReprocess as $ticketId) {
                 $this->line("- Ticket ID: {$ticketId}");
             }

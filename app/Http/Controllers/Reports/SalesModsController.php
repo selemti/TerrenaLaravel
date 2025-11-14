@@ -81,8 +81,8 @@ class SalesModsController extends BaseReportController
             'reporte_items_mods_%s_%s%s.xlsx',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            !empty($branches)
-                ? '_' . str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
+            ! empty($branches)
+                ? '_'.str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
                 : ''
         );
 
@@ -100,8 +100,8 @@ class SalesModsController extends BaseReportController
             'reporte_items_mods_%s_%s%s.pdf',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            !empty($branches)
-                ? '_' . str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
+            ! empty($branches)
+                ? '_'.str_replace(' ', '_', strtolower($this->stringifyFilter($branches)))
                 : ''
         );
 
@@ -126,7 +126,7 @@ class SalesModsController extends BaseReportController
     protected function fetchData(Carbon $start, Carbon $end): Collection
     {
         $rows = DB::connection('pgsql')->select(
-            <<<SQL
+            <<<'SQL'
             SELECT gs.day::date AS report_date, f.*
             FROM generate_series(?::date, ?::date, interval '1 day') AS gs(day)
             CROSS JOIN LATERAL public.f_item_mods_on(gs.day::date) AS f
@@ -153,6 +153,7 @@ class SalesModsController extends BaseReportController
         return $rows
             ->filter(function (object $row) use ($normalized) {
                 $value = strtoupper((string) ($row->branch_key ?? $row->branch ?? $row->sucursal ?? ''));
+
                 return in_array($value, $normalized, true);
             })
             ->values();

@@ -5,12 +5,11 @@ namespace App\Services\Pos\DTO;
 class PosConsumptionResult
 {
     /**
-     * @param int $ticketId
-     * @param string $status "OK" | "ALREADY_PROCESSED" | "REPROCESSED" | "REVERSED" | "ERROR"
-     * @param array|null $consumos Lista de consumos: [['item_id'=>..., 'description'=>..., 'qty'=>..., 'uom'=>..., 'costo_unitario'=>..., 'costo_total'=>...]]
-     * @param array|null $missing Lista de huecos de mapeo o problemas
-     * @param string|null $message Mensaje descriptivo adicional
-     * @param array|null $meta Metadata adicional
+     * @param  string  $status  "OK" | "ALREADY_PROCESSED" | "REPROCESSED" | "REVERSED" | "ERROR"
+     * @param  array|null  $consumos  Lista de consumos: [['item_id'=>..., 'description'=>..., 'qty'=>..., 'uom'=>..., 'costo_unitario'=>..., 'costo_total'=>...]]
+     * @param  array|null  $missing  Lista de huecos de mapeo o problemas
+     * @param  string|null  $message  Mensaje descriptivo adicional
+     * @param  array|null  $meta  Metadata adicional
      */
     public function __construct(
         protected int $ticketId,
@@ -19,8 +18,7 @@ class PosConsumptionResult
         protected ?array $missing = null,
         protected ?string $message = null,
         protected ?array $meta = null
-    ) {
-    }
+    ) {}
 
     public function getTicketId(): int
     {

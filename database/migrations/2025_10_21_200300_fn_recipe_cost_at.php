@@ -1,9 +1,10 @@
 <?php
 
-return new class extends \Illuminate\Database\Migrations\Migration {
-  public function up(): void
-  {
-    \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
+return new class extends \Illuminate\Database\Migrations\Migration
+{
+    public function up(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 CREATE OR REPLACE FUNCTION selemti.fn_recipe_cost_at(p_recipe_id bigint, p_at timestamp)
 RETURNS TABLE(batch_cost numeric, portion_cost numeric, batch_size numeric, yield_portions numeric) AS $$
 DECLARE
@@ -43,10 +44,10 @@ BEGIN
   RETURN NEXT;
 END$$ LANGUAGE plpgsql;
 SQL);
-  }
+    }
 
-  public function down(): void
-  {
-    \Illuminate\Support\Facades\DB::unprepared("DROP FUNCTION IF EXISTS selemti.fn_recipe_cost_at(bigint,timestamp)");
-  }
+    public function down(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared('DROP FUNCTION IF EXISTS selemti.fn_recipe_cost_at(bigint,timestamp)');
+    }
 };

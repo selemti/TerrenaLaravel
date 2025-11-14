@@ -128,7 +128,7 @@ class SalesSummaryController extends BaseReportController
             'reporte_resumen_ventas_%s_%s%s.pdf',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            $branches ? '_' . str_replace(' ', '_', strtolower($this->stringifyFilter($branches))) : ''
+            $branches ? '_'.str_replace(' ', '_', strtolower($this->stringifyFilter($branches))) : ''
         );
 
         return $this->renderPdf('reports.exports.sales.summary', [
@@ -177,7 +177,7 @@ class SalesSummaryController extends BaseReportController
 
     protected function fetchRows(Carbon $start, Carbon $end, array $branches, array $terminals): Collection
     {
-        $sql = <<<SQL
+        $sql = <<<'SQL'
             WITH params AS (
                 SELECT
                     ?::date AS start_date,
@@ -428,7 +428,7 @@ class SalesSummaryController extends BaseReportController
                 'branch' => $branchKey,
             ];
 
-            if (!empty($terminals)) {
+            if (! empty($terminals)) {
                 $detailParams['terminal'] = implode(',', $terminals);
             }
 
@@ -509,7 +509,7 @@ class SalesSummaryController extends BaseReportController
                 continue;
             }
 
-            if (!isset($colors[$upper])) {
+            if (! isset($colors[$upper])) {
                 $colors[$upper] = $palette[$index % count($palette)];
                 $index++;
             }
@@ -534,8 +534,8 @@ class SalesSummaryController extends BaseReportController
 
         $options = collect($rows)
             ->map(fn (object $row) => [
-                    'key' => strtoupper(trim((string) ($row->key ?? ''))),
-                    'label' => trim((string) ($row->label ?? ($row->key ?? ''))),
+                'key' => strtoupper(trim((string) ($row->key ?? ''))),
+                'label' => trim((string) ($row->label ?? ($row->key ?? ''))),
             ])
             ->filter(fn (array $opt) => $opt['key'] !== '')
             ->keyBy('key');

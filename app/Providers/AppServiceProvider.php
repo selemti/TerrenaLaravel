@@ -38,11 +38,11 @@ class AppServiceProvider extends ServiceProvider
 
             // Configurar rutas de Livewire con prefijo de subdirectorio
             Livewire::setUpdateRoute(function ($handle) use ($prefix) {
-                return Route::post($prefix . '/livewire/update', $handle);
+                return Route::post($prefix.'/livewire/update', $handle);
             });
 
             Livewire::setScriptRoute(function ($handle) use ($prefix) {
-                return Route::get($prefix . '/livewire/livewire.js', $handle);
+                return Route::get($prefix.'/livewire/livewire.js', $handle);
             });
         }
 
@@ -51,7 +51,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Forzar encoding UTF-8 en PostgreSQL
         if (config('database.default') === 'pgsql') {
-            rescue(fn () => DB::connection('pgsql')->statement("SET search_path TO selemti,public"), report: false);
+            rescue(fn () => DB::connection('pgsql')->statement('SET search_path TO selemti,public'), report: false);
 
             if (! $this->app->runningInConsole()) {
                 rescue(fn () => DB::connection('pgsql')->statement("SET NAMES 'UTF8'"), report: false);

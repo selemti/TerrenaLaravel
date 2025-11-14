@@ -2,25 +2,27 @@
 
 namespace Tests\Feature;
 
-use App\Services\Pos\DTO\PosConsumptionDiagnostics;
-use App\Services\Pos\DTO\PosConsumptionResult;
 use App\Services\Pos\PosConsumptionService;
 use App\Services\Pos\Repositories\ConsumoPosRepository;
 use App\Services\Pos\Repositories\CostosRepository;
 use App\Services\Pos\Repositories\InventarioRepository;
 use App\Services\Pos\Repositories\RecetaRepository;
 use App\Services\Pos\Repositories\TicketRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class PosConsumptionServiceTest extends TestCase
 {
     protected PosConsumptionService $service;
+
     protected TicketRepository $ticketRepo;
+
     protected ConsumoPosRepository $consumoRepo;
+
     protected InventarioRepository $inventarioRepo;
+
     protected RecetaRepository $recetaRepo;
+
     protected CostosRepository $costosRepo;
 
     protected function setUp(): void
@@ -120,16 +122,16 @@ class PosConsumptionServiceTest extends TestCase
         DB::shouldReceive('rollBack')->never();
 
         DB::shouldReceive('select')
-            ->with("
+            ->with('
                 SELECT selemti.fn_expandir_consumo_ticket(?)
-            ", [$ticketId])
+            ', [$ticketId])
             ->once()
             ->andReturn([]);
 
         DB::shouldReceive('select')
-            ->with("
+            ->with('
                 SELECT selemti.fn_confirmar_consumo_ticket(?, true)
-            ", [$ticketId])
+            ', [$ticketId])
             ->once()
             ->andReturn([]);
 
@@ -210,9 +212,9 @@ class PosConsumptionServiceTest extends TestCase
         DB::shouldReceive('rollBack')->never();
 
         DB::shouldReceive('select')
-            ->with("
+            ->with('
                 SELECT selemti.fn_reversar_consumo_ticket(?)
-            ", [$ticketId])
+            ', [$ticketId])
             ->once()
             ->andReturn([]);
 
@@ -327,9 +329,9 @@ class PosConsumptionServiceTest extends TestCase
             ->andReturnSelf();
 
         DB::shouldReceive('select')
-            ->with("
+            ->with('
                 SELECT selemti.sp_snapshot_recipe_cost(?, NOW())
-            ", [$recipeId])
+            ', [$recipeId])
             ->once()
             ->andReturn([]);
 

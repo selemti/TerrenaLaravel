@@ -482,7 +482,7 @@ Después de ejecutar FASE 3 (eliminación):
 
 ## SCRIPTS SQL GENERADOS
 
-Todos los scripts SQL están en la carpeta `BD/Noviembre/`:
+Todos los scripts SQL están en la carpeta `docs/docs/BD/NoviembreDocsDocs/`:
 
 1. `01_agregar_campos_users.sql` - Agregar campos a selemti.users
 2. `02_agregar_codigo_roles.sql` - (Opcional) Agregar código a roles

@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class CashFundMovementAuditLog extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.cash_fund_movement_audit_log';
 
     public $timestamps = false; // Solo usamos created_at

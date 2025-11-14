@@ -3,8 +3,8 @@
 namespace Database\Factories\Rec;
 
 use App\Models\Rec\Receta;
-use App\Models\Rec\RecipeCostSnapshot;
 use App\Models\Rec\RecetaVersion;
+use App\Models\Rec\RecipeCostSnapshot;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class RecipeCostSnapshotFactory extends Factory

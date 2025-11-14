@@ -60,8 +60,9 @@ return new class extends Migration
                 ->where('id', $item['id'])
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 echo "  ⊘ {$item['id']}: no existe\n";
+
                 continue;
             }
 

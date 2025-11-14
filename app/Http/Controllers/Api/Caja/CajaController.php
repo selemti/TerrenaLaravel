@@ -1,17 +1,23 @@
 <?php
+
 namespace App\Http\Controllers\Api\Caja;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Collection;
-use Carbon\Carbon;
 
 class CajaController extends Controller
 {
     public function index(Request $request)
     {
         $date = $request->query('date', Carbon::today()->format('Y-m-d'));  // Fecha por default
+
+        // Parámetros para auto-abrir wizard y retorno
+        $autoOpen = $request->input('auto_open');
+        $returnPath = $request->input('return');
+        $action = $request->input('action');
+        $sesionIdForWizard = $request->input('sesion_id');
 
         // Query para cajas - SOLO muestra terminales con sesiones del día
         $sql = "
@@ -93,7 +99,7 @@ class CajaController extends Controller
             try {
                 $anulaciones = $this->obtenerAnulaciones($date);
             } catch (\Exception $e) {
-                \Log::error("Error obteniendo excepciones en index: " . $e->getMessage());
+                \Log::error('Error obteniendo excepciones en index: '.$e->getMessage());
                 $anulaciones = []; // Continuar con array vacío si falla
             }
 
@@ -110,10 +116,16 @@ class CajaController extends Controller
                 'conciliadas', // Número de conciliadas
                 'difProm',    // Diferencia promedio (0 por ahora)
                 'anulaciones', // Array para partial _anulaciones
-                'active'      // Para el layout terrena.blade.php (menú active)
+                'active',     // Para el layout terrena.blade.php (menú active)
+                // Parámetros para wizard
+                'autoOpen',
+                'returnPath',
+                'action',
+                'sesionIdForWizard'
             ));
         } catch (\Exception $e) {
-            \Log::error("Error en CajaController@index (fecha: {$date}): " . $e->getMessage());
+            \Log::error("Error en CajaController@index (fecha: {$date}): ".$e->getMessage());
+
             // Fallback: vista con datos vacíos para no crashar
             return view('caja.cortes', [
                 'cajas' => collect(),
@@ -125,6 +137,11 @@ class CajaController extends Controller
                 'difProm' => 0,
                 'anulaciones' => [],
                 'active' => 'cortes',  // Fallback para active
+                // Parámetros para wizard
+                'autoOpen' => $autoOpen ?? null,
+                'returnPath' => $returnPath ?? null,
+                'action' => $action ?? null,
+                'sesionIdForWizard' => $sesionIdForWizard ?? null,
             ]);
         }
     }
@@ -145,7 +162,7 @@ class CajaController extends Controller
         }
 
         // 3. Cerrada en POS pero falta precorte
-        if (!$activa && $asignada && !$precorteListo) {
+        if (! $activa && $asignada && ! $precorteListo) {
             return 'PRECORTE_PENDIENTE';
         }
 
@@ -155,12 +172,12 @@ class CajaController extends Controller
         }
 
         // 5. Postcorte creado pero no validado
-        if ($precorteListo && !$sinPostcorte && $postcortePendiente) {
+        if ($precorteListo && ! $sinPostcorte && $postcortePendiente) {
             return 'EN_REVISION';
         }
 
         // 6. Todo completo
-        if ($precorteListo && !$sinPostcorte && !$postcortePendiente) {
+        if ($precorteListo && ! $sinPostcorte && ! $postcortePendiente) {
             return 'CONCILIADA';
         }
 
@@ -320,7 +337,8 @@ class CajaController extends Controller
                 ];
             })->toArray();
         } catch (\Exception $e) {
-            \Log::error("Error obteniendo excepciones (fecha: {$date}): " . $e->getMessage());
+            \Log::error("Error obteniendo excepciones (fecha: {$date}): ".$e->getMessage());
+
             return [];
         }
     }
@@ -354,12 +372,12 @@ class CajaController extends Controller
 
             $ticket = DB::connection('pgsql')->selectOne($sqlTicket, [$ticketId]);
 
-            if (!$ticket) {
+            if (! $ticket) {
                 return response()->json(['ok' => false, 'error' => 'Ticket no encontrado'], 404);
             }
 
             // Obtener items del ticket
-            $sqlItems = "
+            $sqlItems = '
                 SELECT
                     ti.id,
                     ti.item_name,
@@ -371,7 +389,7 @@ class CajaController extends Controller
                 FROM ticket_item ti
                 WHERE ti.ticket_id = ?
                 ORDER BY ti.id
-            ";
+            ';
 
             $items = DB::connection('pgsql')->select($sqlItems, [$ticketId]);
 
@@ -403,7 +421,8 @@ class CajaController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
-            \Log::error("Error obteniendo detalle de ticket {$ticketId}: " . $e->getMessage());
+            \Log::error("Error obteniendo detalle de ticket {$ticketId}: ".$e->getMessage());
+
             return response()->json(['ok' => false, 'error' => 'Error del servidor'], 500);
         }
     }

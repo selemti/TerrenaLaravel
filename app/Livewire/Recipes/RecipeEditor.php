@@ -11,8 +11,11 @@ use Livewire\Component;
 class RecipeEditor extends Component
 {
     public ?string $recipeId = null;
+
     public ?int $versionId = null;
+
     public bool $isNew = false;
+
     public string $idPrefix = 'REC';
 
     public array $form = [
@@ -77,7 +80,7 @@ class RecipeEditor extends Component
         $this->idPrefix = str_starts_with($recipe->id, 'SUB-') ? 'SUB' : 'REC';
 
         $version = $recipe->versiones->first();
-        if (!$version) {
+        if (! $version) {
             $version = RecetaVersion::create([
                 'receta_id' => $recipe->id,
                 'version' => 1,
@@ -124,11 +127,11 @@ class RecipeEditor extends Component
     protected function generateSequentialId(string $prefix): string
     {
         $prefix = strtoupper($prefix);
-        if (!in_array($prefix, ['REC', 'SUB'], true)) {
+        if (! in_array($prefix, ['REC', 'SUB'], true)) {
             $prefix = 'REC';
         }
 
-        $pattern = '^' . $prefix . '\-[0-9]{5}$';
+        $pattern = '^'.$prefix.'\-[0-9]{5}$';
         $last = DB::table('selemti.receta_cab')
             ->whereRaw('id ~ ?', [$pattern])
             ->orderBy('id', 'desc')
@@ -172,7 +175,7 @@ class RecipeEditor extends Component
 
     public function regenerateId(): void
     {
-        if (!$this->isNew) {
+        if (! $this->isNew) {
             return;
         }
 
@@ -235,7 +238,7 @@ class RecipeEditor extends Component
             RecetaDetalle::where('receta_version_id', $version->id)->delete();
 
             foreach ($this->ingredients as $index => $row) {
-                if (!$row['item_id']) {
+                if (! $row['item_id']) {
                     continue;
                 }
 
@@ -261,6 +264,7 @@ class RecipeEditor extends Component
         $this->ingredients = collect($this->ingredients)
             ->map(function ($row, $index) {
                 $row['orden'] = $row['orden'] ?? ($index + 1);
+
                 return $row;
             })
             ->toArray();

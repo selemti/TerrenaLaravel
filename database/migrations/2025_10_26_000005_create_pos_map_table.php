@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Schema;
  * Creates the pos_map table to link POS codes with internal recipes.
  *
  * @version 2.1
+ *
  * @author Gemini
+ *
  * @see /docs/Recetas/POS_MAPPING.md
  */
 return new class extends Migration

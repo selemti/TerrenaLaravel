@@ -5,8 +5,8 @@
  * Enfocado en los tickets y transacciones directamente
  */
 
-require __DIR__ . '/../vendor/autoload.php';
-$app = require_once __DIR__ . '/../bootstrap/app.php';
+require __DIR__.'/../vendor/autoload.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use Illuminate\Support\Facades\DB;
@@ -23,7 +23,7 @@ $fechaFin = '2025-11-01';
 // 1. TICKETS CON DESCUENTO DEL 100%
 // ═══════════════════════════════════════════════════════════════════════════════
 echo "📊 1. TICKETS CON DESCUENTO DEL 100%\n";
-echo str_repeat("─", 90) . "\n";
+echo str_repeat('─', 90)."\n";
 
 $desc100 = DB::select("
     SELECT 
@@ -48,9 +48,9 @@ $desc100 = DB::select("
 
 if (count($desc100) > 0) {
     printf("%-12s %-8s %-8s %-10s %-10s %-6s %-6s %s\n",
-        "Fecha", "Ticket", "Term", "Total", "Desc", "Pago", "Anul", "Items");
-    echo str_repeat("─", 90) . "\n";
-    
+        'Fecha', 'Ticket', 'Term', 'Total', 'Desc', 'Pago', 'Anul', 'Items');
+    echo str_repeat('─', 90)."\n";
+
     $totalAfectado = 0;
     foreach ($desc100 as $t) {
         $items = substr($t->items ?? 'N/A', 0, 30);
@@ -66,8 +66,8 @@ if (count($desc100) > 0) {
         );
         $totalAfectado += $t->total;
     }
-    echo str_repeat("─", 90) . "\n";
-    echo "Total: " . count($desc100) . " tickets | Monto total: $" . number_format($totalAfectado, 2) . "\n\n";
+    echo str_repeat('─', 90)."\n";
+    echo 'Total: '.count($desc100).' tickets | Monto total: $'.number_format($totalAfectado, 2)."\n\n";
 } else {
     echo "✓ No se encontraron tickets con descuento del 100%\n\n";
 }
@@ -76,9 +76,9 @@ if (count($desc100) > 0) {
 // 2. TICKETS NO PAGADOS (PAID = FALSE) CON MONTO > 0
 // ═══════════════════════════════════════════════════════════════════════════════
 echo "📊 2. TICKETS NO PAGADOS (PÉRDIDA POTENCIAL)\n";
-echo str_repeat("─", 90) . "\n";
+echo str_repeat('─', 90)."\n";
 
-$noPagados = DB::select("
+$noPagados = DB::select('
     SELECT 
         COALESCE(t.folio_date, t.closing_date::date, t.create_date::date) AS fecha,
         t.id,
@@ -96,13 +96,13 @@ $noPagados = DB::select("
       AND t.total_price > 0
     ORDER BY t.total_price DESC
     LIMIT 30
-", [$fechaInicio, $fechaFin]);
+', [$fechaInicio, $fechaFin]);
 
 if (count($noPagados) > 0) {
     printf("%-12s %-8s %-8s %-10s %-10s %-10s %-8s\n",
-        "Fecha", "Ticket", "Term", "Total", "Desc", "Neto", "Cerrado");
-    echo str_repeat("─", 90) . "\n";
-    
+        'Fecha', 'Ticket', 'Term', 'Total', 'Desc', 'Neto', 'Cerrado');
+    echo str_repeat('─', 90)."\n";
+
     $montoNoPagado = 0;
     foreach ($noPagados as $t) {
         printf("%-12s %-8d %-8s $%-9.2f $%-9.2f $%-9.2f %-8s\n",
@@ -116,8 +116,8 @@ if (count($noPagados) > 0) {
         );
         $montoNoPagado += $t->neto;
     }
-    echo str_repeat("─", 90) . "\n";
-    echo "Total: " . count($noPagados) . " tickets | Monto no cobrado: $" . number_format($montoNoPagado, 2) . "\n\n";
+    echo str_repeat('─', 90)."\n";
+    echo 'Total: '.count($noPagados).' tickets | Monto no cobrado: $'.number_format($montoNoPagado, 2)."\n\n";
 } else {
     echo "✓ Todos los tickets fueron pagados\n\n";
 }
@@ -126,7 +126,7 @@ if (count($noPagados) > 0) {
 // 3. TICKETS ANULADOS CON TRANSACCIONES
 // ═══════════════════════════════════════════════════════════════════════════════
 echo "📊 3. TICKETS ANULADOS QUE TIENEN TRANSACCIONES\n";
-echo str_repeat("─", 90) . "\n";
+echo str_repeat('─', 90)."\n";
 
 $anuladosConTx = DB::select("
     SELECT 
@@ -150,9 +150,9 @@ $anuladosConTx = DB::select("
 
 if (count($anuladosConTx) > 0) {
     printf("%-12s %-8s %-8s %-10s %-6s %-10s %-10s %-10s\n",
-        "Fecha", "Ticket", "Term", "Total", "#Tx", "Cash", "Refund", "Void");
-    echo str_repeat("─", 90) . "\n";
-    
+        'Fecha', 'Ticket', 'Term', 'Total', '#Tx', 'Cash', 'Refund', 'Void');
+    echo str_repeat('─', 90)."\n";
+
     foreach ($anuladosConTx as $t) {
         printf("%-12s %-8d %-8s $%-9.2f %-6d $%-9.2f $%-9.2f $%-9.2f\n",
             $t->fecha,
@@ -165,8 +165,8 @@ if (count($anuladosConTx) > 0) {
             $t->void_trans
         );
     }
-    echo str_repeat("─", 90) . "\n";
-    echo "Total: " . count($anuladosConTx) . " tickets anulados con transacciones\n\n";
+    echo str_repeat('─', 90)."\n";
+    echo 'Total: '.count($anuladosConTx)." tickets anulados con transacciones\n\n";
 } else {
     echo "✓ No hay tickets anulados con transacciones\n\n";
 }
@@ -175,7 +175,7 @@ if (count($anuladosConTx) > 0) {
 // 4. DISCREPANCIAS: PAGOS NO COINCIDEN CON TOTAL NETO
 // ═══════════════════════════════════════════════════════════════════════════════
 echo "📊 4. DISCREPANCIAS: TOTAL NETO ≠ TOTAL PAGADO\n";
-echo str_repeat("─", 90) . "\n";
+echo str_repeat('─', 90)."\n";
 
 $discrepancias = DB::select("
     SELECT 
@@ -209,9 +209,9 @@ $discrepancias = DB::select("
 
 if (count($discrepancias) > 0) {
     printf("%-12s %-8s %-8s %-10s %-10s %-10s %-10s %-10s\n",
-        "Fecha", "Ticket", "Term", "Total", "Desc", "Neto", "Pagado", "Diferencia");
-    echo str_repeat("─", 90) . "\n";
-    
+        'Fecha', 'Ticket', 'Term', 'Total', 'Desc', 'Neto', 'Pagado', 'Diferencia');
+    echo str_repeat('─', 90)."\n";
+
     $totalDiff = 0;
     foreach ($discrepancias as $t) {
         $alert = abs($t->diferencia) > 10 ? '⚠️ ' : '⚡ ';
@@ -228,8 +228,8 @@ if (count($discrepancias) > 0) {
         );
         $totalDiff += abs($t->diferencia);
     }
-    echo str_repeat("─", 90) . "\n";
-    echo "Total: " . count($discrepancias) . " tickets | Diferencia acumulada: $" . number_format($totalDiff, 2) . "\n\n";
+    echo str_repeat('─', 90)."\n";
+    echo 'Total: '.count($discrepancias).' tickets | Diferencia acumulada: $'.number_format($totalDiff, 2)."\n\n";
 } else {
     echo "✓ Todos los tickets tienen pagos correctos\n\n";
 }
@@ -238,9 +238,9 @@ if (count($discrepancias) > 0) {
 // 5. RESUMEN CONSOLIDADO POR FECHA
 // ═══════════════════════════════════════════════════════════════════════════════
 echo "📊 5. RESUMEN CONSOLIDADO POR FECHA\n";
-echo str_repeat("─", 90) . "\n";
+echo str_repeat('─', 90)."\n";
 
-$resumen = DB::select("
+$resumen = DB::select('
     SELECT 
         COALESCE(t.folio_date, t.closing_date::date, t.create_date::date) AS fecha,
         COUNT(*) FILTER (WHERE t.paid = TRUE AND t.voided = FALSE) AS tickets_pagados,
@@ -254,17 +254,17 @@ $resumen = DB::select("
       AND COALESCE(t.folio_date, t.closing_date::date, t.create_date::date) < ?
     GROUP BY COALESCE(t.folio_date, t.closing_date::date, t.create_date::date)
     ORDER BY fecha
-", [$fechaInicio, $fechaFin]);
+', [$fechaInicio, $fechaFin]);
 
 if (count($resumen) > 0) {
     printf("%-12s %-10s %-12s %-10s %-10s %-15s %-15s\n",
-        "Fecha", "Pagados", "No Pagados", "Anulados", "Desc100%", "Ventas Netas", "No Cobrado");
-    echo str_repeat("─", 110) . "\n";
-    
+        'Fecha', 'Pagados', 'No Pagados', 'Anulados', 'Desc100%', 'Ventas Netas', 'No Cobrado');
+    echo str_repeat('─', 110)."\n";
+
     $totalVentas = 0;
     $totalNoCobrado = 0;
     $totalPagados = 0;
-    
+
     foreach ($resumen as $r) {
         printf("%-12s %-10d %-12d %-10d %-10d $%-14.2f $%-14.2f\n",
             $r->fecha,
@@ -279,9 +279,9 @@ if (count($resumen) > 0) {
         $totalNoCobrado += ($r->monto_no_cobrado ?? 0);
         $totalPagados += $r->tickets_pagados;
     }
-    echo str_repeat("─", 110) . "\n";
-    echo "TOTAL: Tickets pagados: $totalPagados | Ventas: $" . number_format($totalVentas, 2) . 
-         " | No cobrado: $" . number_format($totalNoCobrado, 2) . "\n\n";
+    echo str_repeat('─', 110)."\n";
+    echo "TOTAL: Tickets pagados: $totalPagados | Ventas: $".number_format($totalVentas, 2).
+         ' | No cobrado: $'.number_format($totalNoCobrado, 2)."\n\n";
 }
 
 echo "═══════════════════════════════════════════════════════════════════════════════════\n";

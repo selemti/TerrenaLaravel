@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class StockPolicy extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'stock_policy';
+
     protected $guarded = [];
 
     protected $casts = [

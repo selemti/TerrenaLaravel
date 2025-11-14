@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class DrawerHistory extends Model
 {
     protected $table = 'public.drawer_assigned_history';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
 
     protected $fillable = [
-        'time', 'operation', 'a_user'
+        'time', 'operation', 'a_user',
     ];
 
     protected $casts = [

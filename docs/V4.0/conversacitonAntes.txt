@@ -1,0 +1,562 @@
+changed 1 package in 27s
+
+🎉 Update ran successfully! Please restart Codex.
+
+  To get started, describe a task or try one of these commands:
+
+  /init - create an AGENTS.md file with instructions for Codex
+  /status - show current session configuration
+  /approvals - choose what Codex can do without approval
+  /model - choose what model and reasoning effort to use
+
+  ¿alguna duda
+
+
+• I’m thinking this task is complex and needs multiple steps like gathering documentation, inspecting relevant code modules, comparing system inventory with docs, and summarizing findings. I’ll start by
+  └ Need to review documentation and codebase to align inventory system features with existing docs.
+    □ Reunir y revisar la documentación disponible sobre inventarios (docs/, briefs) para entender lo esperado.
+    □ Inspeccionar el código y la base de datos relacionados con inventarios para identificar lo implementado.
+    List legacy
+    Search Inventory
+    Read INVENTORY_API.md
+• I need to rest a large file, but it describes key features. I want to check the Livewire components and specifically examine app/Livewire/Inventory/InsumoCreate.php and ItemsManage. My goal is to align the
+  documentation with the actual code to see what's implemented versus what's documented. I need to identify the current state by inspecting the inventory modules. A possible approach could be to map the docs
+  to the corresponding code modules. I'll check the directory for app/Livewire/Inventory.
+    List InventoryCount
+    Read ItemsManage.php, ESTRUCTURA_ITEMS_PRESENTACIONES.md
+    Search inventory in migrations
+    List Inventory
+
+• Ran rg -l "class InventoryCount" -g"*.php" -n
+  └ tests/Unit/Inventory/InventoryCountServiceTest.php
+    app/Models/InventoryCount.php
+
+• Explored
+  └ Read InventoryCount.php, InventoryCountLine.php
+    List Inventory
+    Read api.php
+    Search inventory in api.php
+• Ran rg -l "Transfer" tests -g"*.php"
+  └ tests/Feature/TransferWorkflowTest.php
+    tests/Unit/Services/TransferServiceTest.php
+    tests/Unit/Services/ServiceInstantiationTest.php
+
+• Explored
+  └ Read TransferServiceTest.php, TransferController.php
+  └ Read TransferController.php, TransferApiController.php
+    List Purchasing
+    Read README.md
+    Search Inventario in README.md
+
+• Explored
+  └ Read UomConversionService.php, UOM_STRATEGY_TERRENA.md, Index.php, Create.php, Capture.php, Review.php, Detail.php
+
+• Explored
+  └ Read InventoryCountService.php, 2025_11_15_010000_create_inventory_counts_tables.php, Item.php, ItemsIndex.php, web.php, ReceptionsIndex.php
+
+• Ran rg -n "Recepcion" -n docs -g"*.md" | head
+    docs/Orquestador/wireflows_front.md:33:- Recepciones/Transfer/Ajustes relacionados
+    docs/Orquestador/wireflows_front.md:142:  - Recepciones
+
+• Explored
+  └ docs/POS/LIVE_AVAILABILITY.md:22:| Inventario barra | Conteos físicos rápidos (opcional) para refrescar disponibilidad. |
+    docs/InventoryCounts/README.md:135:### 1. Index - Listado de Conteos
+    … +6 lines
+    docs/Orquestador/wireflows_inventory_pos.md:20:- *Conteos abiertos* → ir a Conteos.
+    docs/Orquestador/wireflows_inventory_pos.md:86:## 6) Conteos Físicos (Wizard)
+
+• Explored
+  └ Read wireflows_inventory_pos.md
+    Search PosConsumption
+    Read ANÁLISIS MÓDULO INVENTARIO - TERRENA LARAVEL.md, Inventario.md
+
+• Ran rg -n "function createdBy" -n app/Models -g"*InventoryCount*.php"
+  └ (no output)
+
+• I’m spotting mismatches between model fillable fields (created_by) and database migration columns (creado_por), meaning Livewire components referencing relationships like createdBy might error due to
+  nonexistent relations. I’ll also verify if the service writes to the correct table schema or if it risks failing, since migration targets a namespaced schema but service may use default. There’s a lot to
+  untangle here around naming inconsistencies and table references.
+
+• Explored
+  └ Read LotsIndex.php, OrquestadorPanel.php, InventoryCount.php, 2025_11_15_010000_create_inventory_counts_tables.php, InventoryCountService.php, Index.php, Capture.php, README.md
+    Search Recepci in Inventario.md
+    Read Inventario.md, ReceptionService.php, ReceptionsIndex.php, ReceptionDetail.php, ReceivingController.php, ReceivingService.php
+
+• I'm gathering detailed comparisons between the documented features and the actual code implementation, especially focusing on areas like ReceivingService stubs, Inventory API endpoints, transfers, and
+  inventory counts. There’s a lot to highlight about outdated or missing docs, code features without docs, schema inconsistencies, and partial implementations; I’m compiling line references and examples to
+  craft a clear, structured final summary for the user.
+
+• Explored
+  └ Read LotsIndex.php
+
+• There's a lot to unpack between the docs and code around inventory features like FEFO, batch tables, and Livewire components. I'll clarify gaps like mismatched statuses, incomplete services, missing UI, and
+  inconsistent module implementations, then organize the summary into clear sections covering matching parts, missing docs, undocumented code, and backlog issues. I'll also reference specific files and lines
+  to support these observations.
+
+• Explored
+  └ Read InsumoController.php, Inventario.md, FLUJO_ALTA_ITEMS_V2.md, PROJECT_STATUS.md, INVENTORY_API.md, ItemController.php
+
+• I’m gathering key mismatches between documentation and code around inventory features, including missing schema specifications, incomplete service implementations, status discrepancies, and UI versus backend
+  alignments. I plan to organize the final summary into context, document versus code for items/catalogs, receptions/batches, inventory counts, and transfers, highlighting line references and major gaps
+  especially with table usage and relationships.
+
+• Explored
+  └ Read TransferController.php, TRANSFER_MODULE_V1.md, PhysicalCounts.php, UOM_STRATEGY_TERRENA.md, insumos_alta.md, InsumoCreate.php, ItemsManage.php, Item.php
+
+• I've gathered a detailed comparison between documentation and code for inventory-related modules touching on table schema mismatches, missing relationships, and API inconsistencies—especially around items,
+  batches, counts, and receptions. There’s a clear split in schemas used, affecting visibility and data integrity between services and UI components. Next, I'll break down key areas like Items/UOM, Receptions/
+  Batches, and Physical Counts before suggesting concrete next steps for alignment and service completion.
+
+• Explored
+
+• I’m compiling a detailed overview comparing inventory documentation with code, noting mismatches in model fillable fields, missing UI features, API documentation alignment, undocumented code parts, and
+  schema inconsistencies. I’ll include inline references to docs and code, call out areas needing verification—like tests and watchers—and suggest clear next steps to clarify and unify inventory-related
+  components.
+
+• Estado Inventario
+
+  - Items/UOM La documentación reciente describe un flujo de dos pasos ya operativo (docs/Inventario/FLUJO_ALTA_ITEMS_V2.md:20-63), pero el master spec aún marca el wizard como pendiente (docs/UI-UX/
+    MASTER/02_MODULOS/Inventario.md:304-313). El código sí implementa la redirección y autoapertura del modal (app/Livewire/Inventory/InsumoCreate.php:128-156, app/Livewire/Inventory/ItemsManage.php:99-
+    Item.php:8-33). Hace falta decidir cuál será la fuente de verdad y ajustar controladores/servicios para no duplicar catálogos. El strategy de UOM (cat_unidades + cat_uom_conversion) sí coincide con los
+    modelos (docs/Inventario/UOM_STRATEGY_TERRENA.md:16-101, app/Models/Catalogs/Unidad.php), pero conviene documentar que Inventory/ItemsManage dependede esas tablas para los dropdowns.
+  - Recepciones/Lotes El documento de módulo promete un flujo completo con FEFO, estados Pre-validada→Aprobada→Posteada y adjuntos (docs/UI-UX/MASTER/02_MODULOS/Inventario.md:315-327), pero hoy
+    hay dos servicios en paralelo: ReceptionService (usado por el modal) inserta directamente en recepcion_cab, inventory_batch y mov_inv sin prefijar el esquema selemti (app/Services/Inventory/
+    ReceptionService.php:23-104), mientras que el servicio oficial ReceivingService expuesto por /api/purchasing/receptions/* es puro stub con TODOs (app/Services/Inventory/ReceivingService.php:17-137).
+    Además, el listado Livewire lee desde selemti.recepcion_* (app/Livewire/Inventory/ReceptionsIndex.php:37-86), por lo que no verá las recepciones creadas por ReceptionService en la tabla sin esquema.
+    ReceptionDetail intenta consumir los endpoints del servicio stub (app/Livewire/Inventory/ReceptionDetail.php:17-77), así que la UI nunca obtiene datos reales. El componente de lotes también consulta
+    inventory_batch sin esquema (app/Livewire/Inventory/LotsIndex.php:16-30), pese a que la migración la crea en selemti (database/migrations/2025_11_15_000000_create_inventory_receiving_tables.php:13-83).
+    Todo esto confirma lo que ya advierte el status doc (formularios prototipo con datos mock, docs/V2/PROJECT_STATUS.md:63-70). Necesitamos unificar hacia un solo servicio con estados y tolerancias y ajustar
+    las consultas al esquema correcto.
+  - Conteos físicos La guía (docs/InventoryCounts/README.md:38-99) detalla estados BORRADOR→EN_PROCESO→AJUSTADO/CANCELADO, relaciones createdBy/closedBy y accesorios de exactitud. El modelo real solo tiene la
+    relación lines y campos created_by/updated_by que ni siquiera existen en la migración (la tabla define creado_por/cerrado_por, database/migrations/2025_11_15_010000_create_inventory_counts_tables.php:18-
+    33, mientras que el modelo usa created_by, app/Models/InventoryCount.php:17-26). Las vistas Livewire llaman a with(['createdBy','closedBy']) y a filtros por esos campos (app/Livewire/InventoryCount/
+    Index.php:29-74), así que hoy mismo se dispara una excepción porque las relaciones no existen. InventoryCountService también opera sobre tablas sin prefijo (DB::table('inventory_counts')/
+    inventory_count_lines', app/Services/Inventory/InventoryCountService.php:19-138) y setea estado EN_PROCESO de inmediato; las pantallas leen desde selemti.inventory_counts y esperan BORRADOR/AJUSTADO o
+    incluso CERRADO (app/Livewire/Inventory/PhysicalCounts.php:26-132). Resultado: los conteos creados desde la UI no se reflejan en los modelos, y los ajustes en mov_inv se insertan en la tabla sin esquema
+    (app/Services/Inventory/InventoryCountService.php:187-204), distinta de la que usan los reportes. También faltan los campos documentados en InventoryCountLine (hoy solo tiene uom_id/notas, app/Models/
+    InventoryCountLine.php:17-44, no qty_variacion, motivo, meta ni relación batch).
+  - Transferencias Aquí la implementación está más cercana a lo descrito en docs/Inventario/legacy/TRANSFER_MODULE_V1.md:3-44: el servicio ejecuta el flujo completo, crea registros en selemti.transfer_* y
+    genera mov_inv (app/Services/Inventory/TransferService.php). Hay pruebas unitarias (tests/Unit/Services/TransferServiceTest.php). Las piezas que siguen siendo mock son la respuesta del controlador legacy
+    (app/Http/Controllers/Inventory/TransferController.php:24-55) y las validaciones/permisos marcadas como TODO en las rutas (líneas 65-188). Documentación y código coinciden en que la cancelación queda
+    pendiente y no hay UI final todavía, pero habría que documentar que el endpoint GET /api/inventory/transfers/{id} aún regresa datos hardcodeados.
+  - APIs y tableros El documento de Inventory API describe exactamente el CRUD de ítems (docs/Inventario/INVENTORY_API.md:3-80), y el controlador expuesto en routes/api.php lo implementa (app/Http/Controllers/
+    Api/Inventory/ItemController.php:11-105). También está activo el dashboard Livewire (app/Livewire/Inventory/ItemsIndex.php:68-205), con KPIs y “movimiento rápido” que insertan directo en mov_inv; esto
+    solo aparece tangencialmente en el project status (docs/V2/PROJECT_STATUS.md:63-70). Si se quiere mantener esa funcionalidad, debe documentarse junto al riesgo ya mencionado en el doc (depende de vistas
+    v_stock_resumen/v_kardex_item que hoy son TODOs dentro del componente). El panel de orquestación (app/Livewire/Inventory/OrquestadorPanel.php) tampoco tiene mención en los specs de inventario, solo en
+    wireflows de orquestador; convendría enlazarlo para que soporte no quede “fantasma”.
+  - Documentación pendiente/contradictoria Además del caso del wizard, hay varias áreas donde la doc afirma que algo está listo pero el código es un stub (recepciones, conteos). El mismo repositorio lo admite
+    en docs/V2/PROJECT_STATUS.md:115-122, pero los briefs de módulo (docs/UI-UX/MASTER/02_MODULOS/Inventario.md:315-340) se usan como referencia operativa y podrían inducir a error. El lado opuesto también
+    ocurre: tenemos componentes como Inventory/PhysicalCounts o el quick-move de ItemsIndex sin descripción funcional. Necesitamos consolidar una única fuente (probablemente docs/V2) y degradar/actualizar el
+    material anterior para evitar instrucciones encontradas.
+  - Siguientes pasos
+      1. Definir el esquema definitivo para insumo/items, inventory_counts, recepcion_*, inventory_batch y mov_inv; ajustar servicios y componentes a selemti.* o mover las migraciones al esquema que realmente
+         se usa. Sin esto, la UI seguirá insertando/leyendo en lugares distintos.
+      2. Completar ReceivingService (estados, tolerancias, integración con PO) y hacer que el modal de recepciones consuma ese flujo en vez de ReceptionService, o documentar y retirar el servicio duplicado. Lo
+         mismo aplica para conteos: agregar relaciones/scopes en el modelo, exponer BORRADOR/EN_PROCESO/AJUSTADO/CANCELADO y alinear InventoryCountService al mismo esquema.
+      3. Limpiar la documentación: marcar qué specs están vigentes, añadir las piezas que ya existen (wizard, orquestador, dashboard) y destacar las brechas reales (recepciones, conteos móviles, permisos). Sin
+         esa depuración es difícil saber qué falta por implementar y qué solo está pendiente de QA/documentación.
+
+
+› en este analisis si validaste conectado a la BD ? recuerda que los datos de conexión esta en el .env y que mi IP  172.24.240.1 ya que tu esas en WSL y la BD esta mi maquina, por favor usa esta IP solo para
+  conexiones, guardalo en tu memorioa pero modifiques mis archivos deconfiguración,
+
+
+
+
+› vamos a definir el flujo operativo primero ya que tengamos el flujo iremos documentados los modulos que necesitamos para uno a uno
+
+  └ Need to consolidate inventory documentation into operational flow before per-module specs.
+    □ Reunir información existente sobre procesos de inventario (alta, recepciones, conteos, transferencias, ajustes) desde docs y código.
+    □ Proponer flujo operativo end-to-end alineando las etapas críticas y los módulos implicados.
+    □ Validar con el usuario el flujo antes de documentar cada módulo y acordar siguientes pasos.
+
+• I’m gathering info from docs and code to draft a clear, step-by-step inventory flow with references. I’ll cover master data creation, purchasing and receiving, inventory movements and transfers, and counts,
+  mapping each step to the relevant documentation and code files with line numbers. This way, I can propose a structured flow showcasing all key inventory modules and their interactions.
+
+─ Worked for 14s ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• Flujo Operativo Propuesto
+
+    82, app/Livewire/Inventory/InsumoCreate.php:128-156, app/Livewire/Inventory/ItemsManage.php:99-110). Este paso debe consolidar el catálogo en selemti.items (hoy conviven insumo y items; cuando definamos la
+    fuente final, el flujo usará siempre la misma).
+  - 2. Preparación de compra y recepción Las órdenes salen desde Purchasing; al llegar la mercancía se abre la recepción (modal Livewire) capturando proveedor, sucursal, almacén, lotes, caducidad y temperatura
+    (docs/UI-UX/MASTER/02_MODULOS/Inventario.md:315-327, app/Livewire/Inventory/ReceptionsIndex.php:37-86, app/Livewire/Inventory/ReceptionCreate.php:17-118). Aquí necesitamos un único servicio: hoy
+    posteada, se generan lotes (inventory_batch) y movimientos RECEPCION en mov_inv.
+  - 3. Disponibilidad y ajustes diarios Con el stock actualizado, el dashboard de inventario ofrece KPIs, vista de kardex y movimientos rápidos para ajustes menores (app/Livewire/Inventory/ItemsIndex.php:68-
+    205). Este paso depende de vistas v_stock_resumen/v_kardex_item; mientras no existan, solo podremos consultar datos crudos. También aquí caen otros procesos automáticos como POS consumption y producción,
+    pero podemos dejarlos fuera hasta cerrar el núcleo de inventario.
+  - 4. Transferencias internas Cuando se necesita mover producto entre almacenes, el flujo documentado es SOLICITADA → APROBADA → EN_TRANSITO → RECIBIDA → POSTEADA (docs/Inventario/legacy/
+    TRANSFER_MODULE_V1.md:3-44). El servicio ya implementa validación de stock, despacho, recepción con varianzas y movimientos TRASPASO_OUT/IN (app/Services/Inventory/TransferService.php:12-214), y las APIs
+    están en routes/api.php. Falta reemplazar las respuestas mock del controlador legacy y completar permisos/logging, pero el orden de pasos coincide con el documento.
+  - 5. Conteos físicos periódicos El flujo deseado (BORRADOR → EN_PROCESO → AJUSTADO/CANCELADO) y las pantallas Index/Create/Capture/Review/Detail están descritos en docs/InventoryCounts/README.md:16-198 y
+    ya existen en Livewire (app/Livewire/InventoryCount/*.php). El servicio genera ajustes automáticos en mov_inv al finalizar (app/Services/Inventory/InventoryCountService.php:13-204). Antes de documentar el
+    módulo conviene alinear modelo y DB: la migración usa columnas creado_por/cerrado_por en selemti.inventory_counts, pero el modelo consulta created_by/closedBy y el servicio escribe en tablas sin prefijo;
+
+  1. Congelar el mapa del flujo con estos cinco pasos (maestro → recepción → disponibilidad → transferencias → conteos). Si falta algún proceso clave (producción, POS, devoluciones), lo añadimos después de
+     validar el núcleo.
+      2. Recepciones y batches (unificar servicios, definir estados y tolerancias).
+      3. Dashboard/KPIs/Kardex (fuente de datos, permisos de movimiento rápido).
+      4. Transferencias (pulir API/UX, añadir cancelación/reconciliación).
+      5. Conteos físicos (esquema único, relaciones, métricas).
+  3. Para cada módulo repetiremos la dinámica: revisar código + docs, ajustar lo necesario y actualizar documentación una vez que el flujo esté operativo.
+
+  Si te parece bien esta secuencia, paso a documentar el primer módulo (catalogación) y a listar los gaps técnicos que tenemos que cerrar para que siga el flujo.
+
+
+› Si me parece bien, pero conforme vamos definiendo vamos a ir documetando todo en docs\V4.0\ en sus respectivas carpetas para que podamos así poder tener las ultimas versiones ya ordenadas y no nos pase lo
+  que tenemos ahorita... Con respecto a las altas de los items es importante la definición de como se van a dar de altal, unidad de medidas, nombre, etc... esto es sumamente importante y recuerdo ya estar
+  definido en la BD
+
+
+• Perfecto: arrancamos ese orden nuevo bajo docs/V4.0/, de modo que cada módulo tenga su versión vigente ahí y podamos ir jubilando el material disperso. Para el primer bloque (alta de items) propongo:
+
+  - Fuente de verdad Revisar la definición ya cerrada en BD (catálogo selemti.items, categorías, UOM canonizadas en cat_unidades, estrategia UOM doc). Confirmo lo que ya tenemos en docs/Inventario/
+    UOM_STRATEGY_TERRENA.md y docs/Inventario/insumos_alta.md y lo traslado/depuro en docs/V4.0/Inventario/Items.md incluyendo:
+      - Formato de código CAT-SUB-#####, reglas de naming y campos obligatorios.
+      - Matriz CAT/SUB + mapeo a item_categories.
+      - Unidades permitidas (base KG/L/PZ, cómo se definen compra/salida, conversiones).
+      - Reglas operativas (perecedero, merma, permisos) y el flujo de dos pasos (InsumoCreate → ItemsManage) ya implementado.
+  - Checklist técnico dentro de ese doc: qué tablas/migraciones intervienen, qué servicios los usan (InsumoCodeService, API /api/inventory/items), qué validaciones están en código, y cualquier gap detectado
+    (por ejemplo, controlador legacy aún guardando en insumo).
+
+  Si estás de acuerdo, preparo ese documento como primer artefacto bajo docs/V4.0/Inventario/Items.md y a la par identifico los ajustes necesarios en código para que todo el flujo apunte al mismo esquema.
+  Luego seguimos con Recepciones y así sucesivamente. ¿Te late que empecemos con ese archivo?
+
+
+› eliminamos cualquier controlador legacy... todo debe ser nuevo..., me gustaría que no te bayas solo a nivel Documentos, quiero que tambien valides rutas, archivos, controladores, BD y todo lo que haga falta
+  para validarlo y tener todo con fuentes de verdad reales sin supuestos, inventos, todo alienado a codigo, archivos y BD, nada que no exista y esto es una regla
+
+
+• I'm reviewing the approach for verifying the database schema, particularly for the items module, considering whether to connect to the DB or rely on migrations. I’m also thinking about documenting the
+  workflow under docs/V4.0, emphasizing RESTful design and noting any legacy controller removals. I want to ensure the plan covers gathering code data, inspecting migrations for categories, and properly
+  updating the documentation path.
+
+• Updated Plan
+  └ Preparing first module doc requires verifying code/routes/DB; plan stays same but next step now collecting detailed info for items module.
+    □ Reunir y verificar información del flujo de alta de items (rutas, controladores, modelos, migraciones, DB).
+    □ Crear documento `docs/V4.0/Inventario/Items.md` con definición basada en código real (sin legacy).
+    □ Compartir hallazgos y siguiente módulo a documentar.
+
+• Explored
+  └ Search item_categories
+
+• I’m planning to create detailed docs under docs/V4.0/Inventario describing the inventory process, including tables, routes, controllers, and risks like legacy controllers still writing to old tables. I'll
+  ensure the directory exists and use apply_patch to add the file referencing actual SQL/migrations for accuracy.
+
+• Ran mkdir -p docs/V4.0/Inventario
+  └ (no output)
+
+• Added docs/V4.0/Inventario/Items.md (+84 -0)
+     1 +# Inventario · Alta de Items (V4.0)
+     2 +
+     3 +## 1. Alcance
+     4 +
+     5 +Fuente de verdad para el flujo de creación y mantenimiento de insumos en `selemti.items`. Esta versión sustituye cualquier documento legacy (`docs/Inventario/insumos_alta.md`, `docs/UI-UX/MASTER/02_MOD
+        ULOS/Inventario.md` para este tema) y se mantiene sincronizada con:
+     6 +
+     7 +- Componentes Livewire `Inventory\InsumoCreate` y `Inventory\ItemsManage`.
+     8 +- API REST `App\Http\Controllers\Api\Inventory\ItemController`.
+     9 +- Servicios `App\Services\Inventory\InsumoCodeService` y `App\Models\Inv\Item`.
+    10 +- Esquema Postgres `selemti` (tablas `items`, `item_categories`, `cat_unidades`, `item_vendor`).
+    11 +
+    12 +Todo flujo o controlador que no aparezca aquí se considera legacy y debe eliminarse (ej. `App\Http\Controllers\Inventory\InsumoController` que aún escribe en `insumo`).
+    13 +
+    14 +## 2. Tablas y catálogos
+    15 +
+    16 +| Tabla | Campos relevantes | Comentarios |
+    17 +|-------|-------------------|-------------|
+    18 +| `selemti.items` | `id` (PK string `CAT-SUB-#####`), `nombre`, `descripcion`, `categoria_id`, `category_id`, `unidad_medida_id`, `unidad_compra_id`, `unidad_salida_id`, `factor_compra`, `factor_conver
+        sion`, `perishable`, `temperatura_min/max`, `tipo`, `activo`, `costo_promedio`, `created_at`, `updated_at` | Definida por las migraciones históricas y reflejada en `App\Models\Inv\Item` |
+    19 +| `selemti.item_categories` | `id`, `nombre`, `codigo`, `prefijo`, `slug`, `activo` | Trigger `fn_gen_cat_codigo` genera códigos; usado para mapear CAT/SUB |
+    20 +| `selemti.cat_unidades` | `id`, `clave` (KG, L, PZ, etc.), `nombre`, `categoria`, `activo`, `created_at`, `updated_at` | Modelo `App\Models\Catalogs\Unidad` aplica upper-case y scopes |
+    21 +| `selemti.item_vendor` | `item_id`, `vendor_id`, `presentacion`, `unidad_presentacion_id`, `factor_a_canonica`, `costo_ultimo`, `moneda`, `lead_time_dias`, `codigo_proveedor`, `preferente`, `activo`,
+        `created_at` | Cargado desde el modal de Items (`ItemsManage`) |
+    22 +
+    23 +> Nota: `selemti.insumo` ya no es parte del flujo; cualquier escritura a esa tabla debe eliminarse junto con los controladores legacy.
+    24 +
+    25 +## 3. Flujo operativo
+    26 +
+    27 +### Paso 1 · Alta rápida
+    28 +
+    29 +- **Ruta:** `GET /inventory/items/new`
+    30 +- **Componente:** `App\Livewire\Inventory\InsumoCreate`
+    31 +- **Archivos:** `resources/views/livewire/inventory/insumo-create.blade.php`
+    32 +- **Validaciones:** categoría y subcategoría obligatorias, nombre ≤ 255, única selección de UOM base (`KG`, `L`, `PZ`), merma entre 0 y 100 (`app/Livewire/Inventory/InsumoCreate.php`).
+    33 +- **Acciones:**
+    34 +  1. Se verifica permiso `inventory.items.manage` o rol `Super Admin`.
+    35 +  2. Se genera el código interno usando `InsumoCodeService::generateCode($cat,$sub)` que inspecciona `selemti.items` para calcular el consecutivo.
+    36 +  3. Se inserta el registro base en `selemti.items` con `tipo = MATERIA_PRIMA`, `activo = true`, UOM canónica y categoría formateada `CAT-0001`.
+    37 +  4. Se redirige a `/inventory/items` con `session('openItemModal')` para abrir el modal automáticamente.
+    38 +
+    39 +### Paso 2 · Completar información
+    40 +
+    41 +- **Ruta:** `GET /inventory/items`
+    42 +- **Componente:** `App\Livewire\Inventory\ItemsManage`
+    43 +- **Vista:** `resources/views/livewire/inventory/items-manage.blade.php`
+    44 +- **Funciones:**
+    45 +  - Listado con filtros y ordenamiento (`q`, categoría, estado, proveedor preferente).
+    46 +  - Modal de edición que carga datos desde `selemti.items`, proveedores (`selemti.item_vendor`) e historial de costos (`HistorialCostoItem`).
+    47 +  - Guardado con validaciones: SKU alfanumérico, categoría `CAT-XXXX`, factores ≥ 0.0001, temperaturas coherentes.
+    48 +  - CRUD de proveedores con obligación de un proveedor preferente (actualiza `item_vendor` y `costo_promedio`).
+    49 +  - Registro de historial de costos al guardar un proveedor preferente.
+    50 +
+    51 +### Servicios auxiliares
+    52 +
+    53 +- **InsumoCodeService**: consulta `selemti.items` y genera códigos formateados; pendiente encapsular en transacción con bloqueo por par CAT/SUB si se requiere concurrencia.
+    54 +- **API `/api/inventory/items`**: controlador `App\Http\Controllers\Api\Inventory\ItemController` expone CRUD para integraciones (GET list/show, POST create, PUT update, DELETE soft delete). Usa `App\M
+        odels\Inv\Item`.
+    55 +
+    56 +## 4. Datos y reglas
+    57 +
+    58 +1. **Código interno**: `CAT-SUB-#####` (CAT = categoría operativa, SUB = subcategoría, consecutivo de 5 dígitos). No se captura manualmente.
+    59 +2. **UOM base**: restringida a `KG`, `L`, `PZ` (catálogo `selemti.cat_unidades`). Las unidades de compra/salida se definen en el modal. La estrategia completa de conversiones está documentada en `docs/
+        Inventario/UOM_STRATEGY_TERRENA.md`.
+    64 +## 5. Rutas y endpoints activos
+    65 +
+    66 +| Ruta | Propósito | Fuente |
+    67 +|------|-----------|--------|
+    68 +| `GET /inventory/items/new` | Formulario de alta rápida | `routes/web.php` (alias `inventory.items.new`) |
+    71 +| `POST /api/inventory/items` | Crear ítem vía API | `routes/api.php` |
+    72 +| `PUT /api/inventory/items/{id}` | Actualizar | `routes/api.php` |
+    73 +| `DELETE /api/inventory/items/{id}` | Baja lógica (activo = false) | `routes/api.php` |
+    74 +
+    75 +## 6. Riesgos y tareas abiertas
+    76 +
+    80 +4. **Duplicidad de fuentes**: confirmar que sólo `selemti.items` es el padrón. Cualquier referencia a `public.item` se considera legacy y no interviene en este flujo.
+    81 +
+    82 +---
+    83 +
+    84 +Todo cambio al flujo de alta debe actualizar este archivo **antes** de mergear código relacionado.
+
+• I’m gathering key points to wrap up: confirming verification steps, noting document and code paths with line numbers, and highlighting how files reference each other automatically. I'll ensure the summary
+
+  - Documenté el proceso de alta de items (objetivo, tablas selemti.items, item_categories, cat_unidades, rutas UI/API, validaciones y tareas abiertas) en docs/V4.0/Inventario/Items.md:1. Todo lo descrito sale
+    de los componentes app/Livewire/Inventory/InsumoCreate.php:86-160, app/Livewire/Inventory/ItemsManage.php:99-205, el modelo app/Models/Inv/Item.php:8-34 y el CRUD REST app/Http/Controllers/Api/Inventory/
+    ItemController.php:11-105.
+  - Dejé explícito que cualquier alta debe usar ese flujo y que el controlador legacy app/Http/Controllers/Inventory/InsumoController.php:12-92 (que aún escribe en insumo) se tiene que retirar; no queda
+    “supuesto” alguno.
+  - También asenté las reglas de código CAT-SUB-#####, UOM base (según app/Services/Inventory/InsumoCodeService.php y docs/Inventario/UOM_STRATEGY_TERRENA.md) y los riesgos aún abiertos (bloqueo de
+    consecutivos, map estático de categorías, limpieza de tablas legacy).
+
+  Siguientes pasos sugeridos
+
+  1. Alinear o eliminar InsumoController para que no vuelva a usar insumo.
+  2. Repetir el ejercicio con Recepciones/Lotes (ver app/Livewire/Inventory/ReceptionCreate.php, app/Services/Inventory/ReceptionService.php, app/Services/Inventory/ReceivingService.php) y crear su ficha en
+     docs/V4.0/Inventario/.
+  3. Cuando tengamos el nuevo doc aprobado, podemos empezar a mover los módulos restantes (dashboard, transferencias, conteos) a V4.0 y desmontar documentación vieja.
+
+
+› pudes ve que otra cosa escribe en insumos, para que de una vez tengamo bien mapeado todo lo que tenemos que ir revisando
+
+
+• Ran rg -n "insumo" -g"*.php*"
+  └ config/permissions_map.php:35:        ['perm' => 'recipes.view',                       'label' => 'Ver recetarios',                           'desc' => 'Consultar recetas e insumos asociados.'],
+    resources/views/inventory/insumos/create.blade.php:4:    <i class="fa-solid fa-boxes-stacked me-1"></i> Alta de insumo
+    … +131 lines
+    storage/framework/views/14c72e473f74c523c15e93c6c99cc44b.php:28:          El alta de insumos sigue el flujo documentado (código interno CAT‑SUB‑##### generado automáticamente).
+    storage/framework/views/14c72e473f74c523c15e93c6c99cc44b.php:29:          Usa el botón <strong>“Nuevo insumo”</strong> para crear registros en <code>selemti.insumo</code>.
+
+• Ran rg -n "insumo" app -g"*.php"
+  └ app/Console/Commands/RecalcularCostosRecetasCommand.php:24:    protected $description = 'Recalcular el costo unitario de recetas publicadas y subrecetas cuyo insumo cambió de precio el día anterior, y
+    propagar costo a padres';
+    … +39 lines
+    app/Http/Controllers/Inventory/InsumoController.php:67:        // Registrar auditoría de creación de insumo
+    app/Http/Controllers/Inventory/InsumoController.php:71:            'insumo',
+
+  └ routes/api.php:322:    ->post('/inventory/insumos', [InsumoController::class, 'store'])
+    routes/api.php:323:    ->name('api.insumos.store');
+    … +3 lines
+• Explored
+  └ Read web.php, 2025_10_30_120000_add_code_columns_to_insumo.php
+    Search table\('insumo
+    Read create.blade.php, items-manage.blade.php
+    database/seeders/AuditLogDemoSeeder.php:169:                'evidencia_url' => 'https://cdn.terrena.mx/audit/insumo_create_912.png',
+    … +21 lines
+    database/migrations/2025_10_30_120000_add_code_columns_to_insumo.php:77:                Schema::hasColumn('insumo', 'consecutivo') ? 'consecutivo' : null,
+    database/migrations/2025_10_30_120000_add_code_columns_to_insumo.php:78:                Schema::hasColumn('insumo', 'codigo_alterno') ? 'codigo_alterno' : null,
+
+─ Worked for 1m 21s ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• Lo único que sigue escribiendo en la tabla legacy insumo (o la toca explícitamente) es lo siguiente:
+
+  - Rutas API heredadas routes/api.php:322-327 siguen apuntando a App\Http\Controllers\Inventory\InsumoController, de modo que cualquier llamada a /api/inventory/insumos* llega al controlador viejo.
+  - Controlador legacy app/Http/Controllers/Inventory/InsumoController.php:27-92 valida el payload y hace DB::table('insumo')->insertGetId(...), además de exponer un bulkImport vacío. Mientras esté enlazado,
+    las altas por API nunca tocarán selemti.items.
+  - Modelo obsoleto app/Models/Insumo.php:1-39 sigue mapeando selemti.insumo. Aunque está marcado como deprecated, cualquier uso accidentado volvería a esa tabla.
+  - Vista/entrada legacy resources/views/inventory/insumos/create.blade.php:1-12 monta el Livewire inventory.insumo-create dentro de una página llamada “Alta de insumo”. Hoy el redirect /inventario/insumos/
+    nuevo (en routes/web.php:107-126) sigue vigente, así que esa ruta aún existe aunque internamente redirija al flujo nuevo.
+  - Alert de UI resources/views/livewire/inventory/items-manage.blade.php:14-31 todavía instruye que el botón crea registros en selemti.insumo; la funcionalidad real usa selemti.items, pero el texto puede
+    confundir y habría que corregirlo.
+  - Migración database/migrations/2025_10_30_120000_add_code_columns_to_insumo.php:11-83 continúa alterando la tabla insumo (sin prefijo selemti). Si ya no queremos mantenerla, esta migración puede archivarse
+    o eliminarse.
+  - Seeds/diagnósticos database/seeders/AuditLogDemoSeeder.php:166-170 y scripts/verify_missing_columns.sql:106 solo mencionan “insumo” como texto, no escriben datos, pero conviene actualizar esos nombres
+    cuando la tabla desaparezca.
+
+  No encontré más escrituras activas; todo el flujo nuevo (InsumoCreate, ItemsManage, API /api/inventory/items) trabaja con selemti.items. Con esto podemos planear:
+
+  1. Deshabilitar las rutas /api/inventory/insumos* y el redirect /inventario/insumos/nuevo.
+  2. Borrar InsumoController, el modelo Insumo, la migración y la vista legacy antes de que alguien vuelva a usarlas.
+  3. Actualizar el copy del modal (items-manage.blade.php) para reflejar selemti.items.
+
+  Cuando quites esas piezas legacy, ya no habrá referencias pendientes a insumo en el código.
+
+
+› no borremos, movemos a un apartado de historico, devemos indagar si tenemos mas controladores, vistas, procesos  que trabajen con isumos. que otras tablas o procesos trabajan insumos, segun yo afecta a
+  receteas, inventarios, produccion, traspasos, unidade de medidas, etc.
+
+
+• Explored
+  └ Read RecalcularCostosRecetasService.php, ProductionService.php, ProductionController.php
+
+• Ran rg -n "insumo" app/Http/Controllers/Reports -g"*.php"
+  └ app/Http/Controllers/Reports/ReportsController.php:83:     * Devuelve el top de insumos con prioridad URGENTE para compra.
+  └ Read ReportsController.php
+
+• I'll list all file references to the insumo table with line numbers, highlight related processes like receta cost recalculation and production service that use item_id on selemti.items, and note legacy
+  assets to move to a historical folder pending validation. I'll confirm that only InsumoController writes to insumo, document watchers, and include instructions for relocating legacy files along with the
+  relevant file paths the user asked for.
+
+• Explored
+  └ Read verify_missing_columns.sql, AuditLogDemoSeeder.php
+
+• I’m gathering all places where the insumo table is touched, highlighting legacy selemti.insumo code with file paths and line numbers, plus other references like migrations, seeds, scripts, and views that
+  should be moved to history. I’m also mapping processes that use the "insumos" concept and planning next steps like moving docs and disabling routes. This will help the user have a clear, organized overview
+  with actionable items.
+
+─ Worked for 56s ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  - Rutas routes/api.php:322-327 siguen exponiendo /api/inventory/insumos* hacia App\Http\Controllers\Inventory\InsumoController; mientras existan, cualquier integración puede seguir escribiendo en la tabla
+    vieja.
+  - Controlador app/Http/Controllers/Inventory/InsumoController.php:27-92 usa DB::table('insumo')->insertGetId(...) y aún registra auditoría como “INSUMO_CREATE”. Hay que mover este archivo (y su provider en
+    el contenedor) a la carpeta histórica y retirar las rutas que lo usan.
+  - Modelo app/Models/Insumo.php:1-39 continúa mapeando selemti.insumo; aunque marcado como deprecated, cualquier uso accidental volvería a ese esquema. Recomiendo moverlo junto con el controlador legacy.
+  - Migración database/migrations/2025_10_30_120000_add_code_columns_to_insumo.php:11-83 altera columnas de insumo sin prefijo de esquema. Si ya no queremos mantener esa tabla, esa migración debe archivarse (o
+    duplicarse en “legacy”) para evitar que se ejecute en ambientes nuevos.
+  - Vista Blade resources/views/inventory/insumos/create.blade.php:1-12 renderiza el componente inventory.insumo-create. Hoy el redirect /inventario/insumos/nuevo (routes/web.php:107-125) sigue apuntando ahí;
+    si queremos conservar solo como histórico, traslademos ambos a un folder legacy/ y quitemos la ruta activa.
+    a items.
+  Estos ya trabajan sobre App\Models\Inv\Item/item_id, pero los listamos para tener el mapa completo:
+  - Producción interna app/Services/Production/ProductionService.php:11-151 y su controlador app/Http/Controllers/Production/ProductionController.php:24-168 hablan de consumo/posteo de insumos, aunque lo hacen
+
+  1. Mover a histórico los archivos listados (controlador, modelo, migración, vista, rutas) bajo legacy/ o docs/_archive/ y quitar su registro del autoload para que nadie los use por error.
+  2. Eliminar rutas activas (/api/inventory/insumos* y /inventario/insumos/nuevo) una vez que el histórico esté guardado; documentar en docs/V4.0/Inventario/Items.md que sólo existe el flujo nuevo (/inventory/
+     items* + API /api/inventory/items*).
+  3. Actualizar mensajes/seeds/scripts para que hablen exclusivamente de items; o si debemos conservar referencias para auditorías, mover esas seeds/scripts a un paquete de “legacy tooling”.
+
+  Con esto tendremos claro qué queda por limpiar y qué módulos dependen del concepto “insumo” aun cuando ya operan sobre items.
+
+
+› ahora que sería mas conveniente viendo todos estos usar items o usar insumos ?
+
+
+• Conviene estandarizar en items (el catálogo maestro selemti.items) y dejar “insumo” sólo como histórico:
+
+    módulo (recetas, inventario, producción) tendría que decidir a cuál creer.
+  - Documentación alineada. La estrategia UOM, el nuevo flujo de alta y los procesos orquestadores ya se documentaron tomando items como base. Migrar esa doc a “insumos” significaría rehacer todo el trabajo y
+    romper la coherencia con lo que se ejecuta hoy.
+  - Dependencias externas. Los vínculos a recetas, compras, POS y lotes están todos referenciando item_id. Mantener el nombre “insumo” como concepto de negocio es válido, pero debe mapearse al registro en
+    items. La tabla insumo puede archivarse junto con sus controladores para consultas históricas, no para operaciones actuales.
+
+  En resumen: consolidamos todo en selemti.items, movemos los artefactos insumo* a un apartado histórico y actualizamos documentación/scripts para que sólo mencionen items.
+
+
+› okey suendo así hagamos todo lo necesario para avanzar y dejar todo alienado
+
+
+• Updated Plan
+  └ Need to align code/doc so only items table used; start by cleaning legacy references (routes, controllers, views, migrations, scripts).
+    □ Inventariar y aislar artefactos legacy de insumos (controladores, rutas, vistas, migraciones, scripts).
+    □ Actualizar documentación/UI para referir sólo a `selemti.items` y mover legacy a histórico sin romper referencias.
+    □ Validar que el flujo nuevo quede único (rutas activas, API, docs) y resumir pendientes para siguientes módulos.
+
+• I'll reorganize old Insumo-related code by moving controllers, models, migrations, and views into new legacy directories outside the autoload paths to keep history without active use. I'll also remove
+  related routes and redirects, update view text, and confirm no leftover references remain after relocating everything carefully.
+
+• Ran mkdir -p legacy/controllers legacy/models legacy/migrations legacy/views/inventory/insumos
+  └ (no output)
+
+• Ran mv app/Models/Insumo.php legacy/models/Insumo.php
+  └ (no output)
+
+• Ran mv resources/views/inventory/insumos/create.blade.php legacy/views/inventory/insumos/create.blade.php
+  └ (no output)
+
+    322 -    ->post('/inventory/insumos', [InsumoController::class, 'store'])
+    323 -    ->name('api.insumos.store');
+    324 -
+    325 -Route::middleware(['auth:sanctum', 'permission:inventory.items.manage'])
+    326 -    ->post('/inventory/insumos/bulk-import', [InsumoController::class, 'bulkImport'])
+    327 -    ->name('api.insumos.bulkImport');
+    328 -
+    321  Route::middleware('auth:sanctum')
+
+• Explored
+  └ Search InsumoController in api.php
+
+• Edited routes/api.php (+0 -1)
+    27  use App\Http\Controllers\Api\Inventory\VendorController;
+    28 -use App\Http\Controllers\Inventory\InsumoController;
+    28  use App\Http\Controllers\Inventory\TransferController;
+
+• Edited routes/web.php (+0 -7)
+    115      [
+    116 -        'from' => '/inventario/insumos/nuevo',
+    117 -        'to' => '/inventory/items/new',
+    118 -        'middleware' => ['auth', 'permission:inventory.items.manage'],
+    119 -        'note' => 'Alta de insumos legacy',
+    120 -        'name' => 'insumos.create',
+    121 -    ],
+    122 -    [
+    116          'from' => '/legacy/recetas',
+
+• Edited resources/views/livewire/inventory/items-manage.blade.php (+1 -1)
+    28            El alta de insumos sigue el flujo documentado (código interno CAT‑SUB‑##### generado automáticamente).
+    29 -          Usa el botón <strong>“Nuevo insumo”</strong> para crear registros en <code>selemti.insumo</code>.
+    29 +          Usa el botón <strong>“Nuevo insumo”</strong> para crear registros en <code>selemti.items</code>.
+    30          </div>
+
+• Explored
+  └ Search insumos\.create
+
+• Ran git status -sb
+  └ (no output)
+
+• Ran git status -s docs/V4.0/Inventario/Items.md routes/api.php routes/web.php resources/views/livewire/inventory/items-manage.blade.php legacy/controllers/InsumoController.php legacy/models/Insumo.php
+  │ legacy/migrations/2025_10_30_120000_add_code_columns_to_insumo.php legacy/views/inventory/insumos/create.blade.php
+  └  M resources/views/livewire/inventory/items-manage.blade.php
+
+• Explored
+  └ Search inventory\.insumos
+
+• Updated Plan
+  └ ✔ Inventariar y aislar artefactos legacy de insumos (controladores, rutas, vistas, migraciones, scripts).
+    □ Actualizar documentación/UI para referir sólo a `selemti.items` y mover legacy a histórico sin romper referencias.
+    □ Validar que el flujo nuevo quede único (rutas activas, API, docs) y resumir pendientes para siguientes módulos.
+
+• I'm making sure the documentation and code updates are consistent, noting that some scripts remain in place and may be moved to a legacy folder later. I'll summarize the changes, mention added legacy
+  folders, and highlight next steps like testing and hooking up other modules before wrapping up.
+
+─ Worked for 2m 10s ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• Ajustes Realizados
+
+  - Consolidé el flujo de Alta de Items en docs/V4.0/Inventario/Items.md con el detalle real de tablas, rutas y servicios (app/Livewire/Inventory/InsumoCreate.php, app/Livewire/Inventory/ItemsManage.php, app/
+    Models/Inv/Item.php, app/Http/Controllers/Api/Inventory/ItemController.php). Quedó documentado que selemti.items es la única fuente activa y qué riesgos siguen abiertos.
+      - legacy/views/inventory/insumos/create.blade.php
+      - Corregí el mensaje en resources/views/livewire/inventory/items-manage.blade.php para que hable de selemti.items.
+  Estado / Pendientes
+  - No hay ya ningún endpoint activo que escriba en insumo. El siguiente módulo a sanear/documentar puede ser Recepciones/Batches siguiendo la misma metodología.
+
+  Archivos relevantes
+
+  - docs/V4.0/Inventario/Items.md
+  - routes/api.php
+  - routes/web.php
+  - resources/views/livewire/inventory/items-manage.blade.php
+  - legacy/controllers/InsumoController.php
+  - legacy/models/Insumo.php
+  - legacy/migrations/2025_10_30_120000_add_code_columns_to_insumo.php
+  - legacy/views/inventory/insumos/create.blade.php
+
+  Siguiente paso natural: repetir este barrido con Recepciones/Lotes para dejar también ese flujo documentado en docs/V4.0 y eliminar los stubs duplicados.
+

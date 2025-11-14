@@ -20,22 +20,18 @@ class PosConsumptionService
         protected InventarioRepository $inventarioRepo,
         protected RecetaRepository $recetaRepo,
         protected CostosRepository $costosRepo
-    ) {
-    }
+    ) {}
 
     /**
      * Ingesta un ticket (caso normal de venta pagada)
      * No vuelve a descontar inventario si ya existe consumo confirmado
-     *
-     * @param int $ticketId
-     * @return PosConsumptionResult
      */
     public function ingestarTicket(int $ticketId): PosConsumptionResult
     {
         try {
             // Verificar que el ticket existe
             $header = $this->ticketRepo->getTicketHeader($ticketId);
-            if (!$header) {
+            if (! $header) {
                 return new PosConsumptionResult(
                     ticketId: $ticketId,
                     status: 'ERROR',
@@ -96,17 +92,13 @@ class PosConsumptionService
             return new PosConsumptionResult(
                 ticketId: $ticketId,
                 status: 'ERROR',
-                message: 'Error al ingestar ticket: ' . $e->getMessage()
+                message: 'Error al ingestar ticket: '.$e->getMessage()
             );
         }
     }
 
     /**
      * Reprocesa un ticket histórico que no tenía receta mapeada
-     *
-     * @param int $ticketId
-     * @param int $userId
-     * @return PosConsumptionResult
      */
     public function reprocesarTicket(int $ticketId, int $userId): PosConsumptionResult
     {
@@ -115,8 +107,9 @@ class PosConsumptionService
 
             // 1. Verificar que el ticket existe
             $header = $this->ticketRepo->getTicketHeader($ticketId);
-            if (!$header) {
+            if (! $header) {
                 DB::connection('pgsql')->rollBack();
+
                 return new PosConsumptionResult(
                     ticketId: $ticketId,
                     status: 'ERROR',
@@ -127,6 +120,7 @@ class PosConsumptionService
             // 2. Verificar si ya tiene consumo confirmado
             if ($this->consumoRepo->hasMovInvForTicket($ticketId)) {
                 DB::connection('pgsql')->rollBack();
+
                 return new PosConsumptionResult(
                     ticketId: $ticketId,
                     status: 'ALREADY_PROCESSED',
@@ -135,14 +129,14 @@ class PosConsumptionService
             }
 
             // 3. Expandir consumo (llama a fn_expandir_consumo_ticket)
-            DB::connection('pgsql')->select("
+            DB::connection('pgsql')->select('
                 SELECT selemti.fn_expandir_consumo_ticket(?)
-            ", [$ticketId]);
+            ', [$ticketId]);
 
             // 4. Confirmar consumo con flag de reproceso
-            DB::connection('pgsql')->select("
+            DB::connection('pgsql')->select('
                 SELECT selemti.fn_confirmar_consumo_ticket(?, true)
-            ", [$ticketId]);
+            ', [$ticketId]);
 
             // 5. Registrar en log de reprocesos
             DB::connection('pgsql')->table('selemti.pos_reprocess_log')->insert([
@@ -188,18 +182,13 @@ class PosConsumptionService
             return new PosConsumptionResult(
                 ticketId: $ticketId,
                 status: 'ERROR',
-                message: 'Error al reprocesar ticket: ' . $e->getMessage()
+                message: 'Error al reprocesar ticket: '.$e->getMessage()
             );
         }
     }
 
     /**
      * Reversa el consumo de un ticket
-     *
-     * @param int $ticketId
-     * @param int $userId
-     * @param string|null $motivo
-     * @return PosConsumptionResult
      */
     public function reversarTicket(int $ticketId, int $userId, ?string $motivo = null): PosConsumptionResult
     {
@@ -208,8 +197,9 @@ class PosConsumptionService
 
             // 1. Verificar que el ticket existe
             $header = $this->ticketRepo->getTicketHeader($ticketId);
-            if (!$header) {
+            if (! $header) {
                 DB::connection('pgsql')->rollBack();
+
                 return new PosConsumptionResult(
                     ticketId: $ticketId,
                     status: 'ERROR',
@@ -218,8 +208,9 @@ class PosConsumptionService
             }
 
             // 2. Verificar que tiene consumo para reversar
-            if (!$this->consumoRepo->hasMovInvForTicket($ticketId)) {
+            if (! $this->consumoRepo->hasMovInvForTicket($ticketId)) {
                 DB::connection('pgsql')->rollBack();
+
                 return new PosConsumptionResult(
                     ticketId: $ticketId,
                     status: 'ERROR',
@@ -232,9 +223,9 @@ class PosConsumptionService
             $movimientosAntes = $this->inventarioRepo->getMovimientosByTicket($ticketId);
 
             // 4. Llamar función de reversa
-            DB::connection('pgsql')->select("
+            DB::connection('pgsql')->select('
                 SELECT selemti.fn_reversar_consumo_ticket(?)
-            ", [$ticketId]);
+            ', [$ticketId]);
 
             // 5. Registrar en log de reversas
             DB::connection('pgsql')->table('selemti.pos_reverse_log')->insert([
@@ -278,25 +269,22 @@ class PosConsumptionService
             return new PosConsumptionResult(
                 ticketId: $ticketId,
                 status: 'ERROR',
-                message: 'Error al reversar ticket: ' . $e->getMessage()
+                message: 'Error al reversar ticket: '.$e->getMessage()
             );
         }
     }
 
     /**
      * Diagnostica el estado de un ticket
-     *
-     * @param int $ticketId
-     * @return PosConsumptionDiagnostics
      */
     public function diagnosticarTicket(int $ticketId): PosConsumptionDiagnostics
     {
         try {
             // 1. Verificar header del ticket
             $header = $this->ticketRepo->getTicketHeader($ticketId);
-            $ticketHeaderOk = !empty($header);
+            $ticketHeaderOk = ! empty($header);
 
-            if (!$ticketHeaderOk) {
+            if (! $ticketHeaderOk) {
                 return new PosConsumptionDiagnostics(
                     ticketHeaderOk: false,
                     itemsTotal: 0,
@@ -339,7 +327,7 @@ class PosConsumptionService
 
             // 4. Verificar estado del consumo
             $estadoConsumo = $this->consumoRepo->getEstadoConsumo($ticketId);
-            if (!$estadoConsumo) {
+            if (! $estadoConsumo) {
                 $estadoConsumo = 'SIN_DATOS';
             }
 
@@ -347,7 +335,7 @@ class PosConsumptionService
             $hasMovInv = $this->consumoRepo->hasMovInvForTicket($ticketId);
 
             // 5. Determinar si puede reprocesar
-            $puedeReprocesar = !$hasMovInv && $itemsTotal > 0;
+            $puedeReprocesar = ! $hasMovInv && $itemsTotal > 0;
 
             // 6. Determinar si puede reversar
             $puedeReversar = $hasMovInv && $estadoConsumo !== 'ANULADO';
@@ -367,7 +355,7 @@ class PosConsumptionService
             if ($faltanConsumiblesOperativos) {
                 $warnings[] = 'Faltan consumibles operativos en el consumo';
             }
-            if (!$header['paid'] ?? false) {
+            if (! $header['paid'] ?? false) {
                 $warnings[] = 'Ticket no está pagado';
             }
             if ($header['voided'] ?? false) {
@@ -406,7 +394,7 @@ class PosConsumptionService
                 puedeReversar: false,
                 faltanEmpaquesToGo: false,
                 faltanConsumiblesOperativos: false,
-                warnings: ['Error al diagnosticar: ' . $e->getMessage()]
+                warnings: ['Error al diagnosticar: '.$e->getMessage()]
             );
         }
     }
@@ -414,17 +402,15 @@ class PosConsumptionService
     /**
      * Recalcula el costo estándar de una receta
      *
-     * @param int $recipeId
-     * @return void
      * @throws \Exception
      */
     public function recalcularCostoReceta(int $recipeId): void
     {
         try {
             // Llamar al stored procedure de snapshot de costo
-            DB::connection('pgsql')->select("
+            DB::connection('pgsql')->select('
                 SELECT selemti.sp_snapshot_recipe_cost(?, NOW())
-            ", [$recipeId]);
+            ', [$recipeId]);
 
             Log::info('Costo de receta recalculado', [
                 'recipe_id' => $recipeId,
@@ -443,9 +429,6 @@ class PosConsumptionService
 
     /**
      * Formatea los consumos para la respuesta
-     *
-     * @param array $detalles
-     * @return array
      */
     protected function formatConsumos(array $detalles): array
     {
@@ -456,7 +439,7 @@ class PosConsumptionService
             $qty = (float) ($det['qty'] ?? 0);
             $uom = $det['uom'] ?? 'UNI';
 
-            if (!$itemId) {
+            if (! $itemId) {
                 continue;
             }
 

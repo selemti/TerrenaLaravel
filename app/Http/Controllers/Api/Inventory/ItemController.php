@@ -15,33 +15,37 @@ class ItemController extends Controller
 
         if ($term = $r->string('q')->toString()) {
             $q->where(function ($qq) use ($term) {
-                $qq->where('id','ilike',"%{$term}%")
-                   ->orWhere('nombre','ilike',"%{$term}%")
-                   ->orWhere('descripcion','ilike',"%{$term}%");
+                $qq->where('id', 'ilike', "%{$term}%")
+                    ->orWhere('nombre', 'ilike', "%{$term}%")
+                    ->orWhere('descripcion', 'ilike', "%{$term}%");
             });
         }
 
-        if ($r->filled('activo'))       $q->where('activo', filter_var($r->get('activo'), FILTER_VALIDATE_BOOL));
-        if ($r->filled('categoria_id')) $q->where('categoria_id', $r->get('categoria_id'));
+        if ($r->filled('activo')) {
+            $q->where('activo', filter_var($r->get('activo'), FILTER_VALIDATE_BOOL));
+        }
+        if ($r->filled('categoria_id')) {
+            $q->where('categoria_id', $r->get('categoria_id'));
+        }
 
-        $items = $q->orderBy('nombre')->paginate($r->integer('per_page',25));
+        $items = $q->orderBy('nombre')->paginate($r->integer('per_page', 25));
 
         return response()->json([
             'ok' => true,
             'data' => $items,
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 
     // GET /api/inventory/items/{id}
     public function show($id)
     {
-        $item = Item::with(['uom','uomCompra','uomSalida'])->findOrFail($id);
+        $item = Item::with(['uom', 'uomCompra', 'uomSalida'])->findOrFail($id);
 
         return response()->json([
             'ok' => true,
             'data' => $item,
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 
@@ -65,7 +69,7 @@ class ItemController extends Controller
             'ok' => true,
             'data' => $rec,
             'message' => 'Item creado exitosamente',
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
         ], 201);
     }
 
@@ -74,15 +78,15 @@ class ItemController extends Controller
     {
         $rec = Item::findOrFail($id);
         $rec->fill($r->only([
-            'nombre','descripcion','categoria_id','unidad_medida_id',
-            'unidad_compra_id','unidad_salida_id','activo'
+            'nombre', 'descripcion', 'categoria_id', 'unidad_medida_id',
+            'unidad_compra_id', 'unidad_salida_id', 'activo',
         ]))->save();
 
         return response()->json([
             'ok' => true,
             'data' => $rec,
             'message' => 'Item actualizado exitosamente',
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 
@@ -99,7 +103,7 @@ class ItemController extends Controller
             'ok' => true,
             'data' => ['id' => $id],
             'message' => 'Item desactivado exitosamente',
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 }

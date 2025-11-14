@@ -2,12 +2,11 @@
 
 namespace App\Livewire\Replenishment;
 
-use Livewire\Component;
-use Livewire\WithPagination;
-use Illuminate\Support\Facades\DB;
 use App\Models\ReplenishmentSuggestion;
 use App\Models\Sucursal;
 use App\Services\Replenishment\ReplenishmentService;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class Dashboard extends Component
 {
@@ -15,14 +14,20 @@ class Dashboard extends Component
 
     // Filtros
     public $tipoFilter = 'all';
+
     public $prioridadFilter = 'all';
+
     public $estadoFilter = 'PENDIENTE'; // Por defecto mostrar solo pendientes
+
     public $sucursalFilter = 'all';
+
     public $search = '';
+
     public $urgenciasOnly = false;
 
     // Selección múltiple
     public $selectedIds = [];
+
     public $selectAll = false;
 
     // Agrupación
@@ -52,14 +57,14 @@ class Dashboard extends Component
         $this->generando = true;
 
         try {
-            $service = new ReplenishmentService();
+            $service = new ReplenishmentService;
             $resultado = $service->generateDailySuggestions([
                 'sucursal_id' => $this->sucursalFilter !== 'all' ? $this->sucursalFilter : null,
             ]);
 
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => "Se generaron {$resultado['total']} sugerencias ({$resultado['urgentes']} urgentes)"
+                'message' => "Se generaron {$resultado['total']} sugerencias ({$resultado['urgentes']} urgentes)",
             ]);
 
             $this->resetPage();
@@ -67,7 +72,7 @@ class Dashboard extends Component
         } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Error al generar sugerencias: ' . $e->getMessage()
+                'message' => 'Error al generar sugerencias: '.$e->getMessage(),
             ]);
         } finally {
             $this->generando = false;
@@ -85,13 +90,13 @@ class Dashboard extends Component
 
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => "Sugerencia {$suggestion->folio} aprobada"
+                'message' => "Sugerencia {$suggestion->folio} aprobada",
             ]);
 
         } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Error: ' . $e->getMessage()
+                'message' => 'Error: '.$e->getMessage(),
             ]);
         }
     }
@@ -107,13 +112,13 @@ class Dashboard extends Component
 
             $this->dispatch('notify', [
                 'type' => 'info',
-                'message' => "Sugerencia {$suggestion->folio} rechazada"
+                'message' => "Sugerencia {$suggestion->folio} rechazada",
             ]);
 
         } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Error: ' . $e->getMessage()
+                'message' => 'Error: '.$e->getMessage(),
             ]);
         }
     }
@@ -124,12 +129,12 @@ class Dashboard extends Component
     public function convertirACompra($id)
     {
         try {
-            $service = new ReplenishmentService();
+            $service = new ReplenishmentService;
             $requestId = $service->convertToPurchaseRequest($id);
 
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => "Solicitud de compra creada (ID: {$requestId})"
+                'message' => "Solicitud de compra creada (ID: {$requestId})",
             ]);
 
             return redirect()->route('purchasing.requests.detail', $requestId);
@@ -137,7 +142,7 @@ class Dashboard extends Component
         } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Error: ' . $e->getMessage()
+                'message' => 'Error: '.$e->getMessage(),
             ]);
         }
     }
@@ -148,18 +153,18 @@ class Dashboard extends Component
     public function convertirAProduccion($id)
     {
         try {
-            $service = new ReplenishmentService();
+            $service = new ReplenishmentService;
             $resultado = $service->convertToProductionOrder($id);
 
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => "Orden de producción creada (ID: {$resultado['production_order_id']})"
+                'message' => "Orden de producción creada (ID: {$resultado['production_order_id']})",
             ]);
 
         } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Error: ' . $e->getMessage()
+                'message' => 'Error: '.$e->getMessage(),
             ]);
         }
     }
@@ -172,8 +177,9 @@ class Dashboard extends Component
         if (empty($this->selectedIds)) {
             $this->dispatch('notify', [
                 'type' => 'warning',
-                'message' => 'No hay sugerencias seleccionadas'
+                'message' => 'No hay sugerencias seleccionadas',
             ]);
+
             return;
         }
 
@@ -195,7 +201,7 @@ class Dashboard extends Component
 
         $this->dispatch('notify', [
             'type' => 'success',
-            'message' => "{$count} sugerencias aprobadas"
+            'message' => "{$count} sugerencias aprobadas",
         ]);
     }
 
@@ -207,12 +213,13 @@ class Dashboard extends Component
         if (empty($this->selectedIds)) {
             $this->dispatch('notify', [
                 'type' => 'warning',
-                'message' => 'No hay sugerencias seleccionadas'
+                'message' => 'No hay sugerencias seleccionadas',
             ]);
+
             return;
         }
 
-        $service = new ReplenishmentService();
+        $service = new ReplenishmentService;
         $count = 0;
 
         foreach ($this->selectedIds as $id) {
@@ -232,7 +239,7 @@ class Dashboard extends Component
 
         $this->dispatch('notify', [
             'type' => 'success',
-            'message' => "{$count} solicitudes de compra creadas"
+            'message' => "{$count} solicitudes de compra creadas",
         ]);
     }
 
@@ -278,11 +285,11 @@ class Dashboard extends Component
         // Filtro de búsqueda
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('folio', 'ilike', '%' . $this->search . '%')
-                  ->orWhere('item_id', 'ilike', '%' . $this->search . '%')
-                  ->orWhereHas('item', function ($q2) {
-                      $q2->where('nombre', 'ilike', '%' . $this->search . '%');
-                  });
+                $q->where('folio', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('item_id', 'ilike', '%'.$this->search.'%')
+                    ->orWhereHas('item', function ($q2) {
+                        $q2->where('nombre', 'ilike', '%'.$this->search.'%');
+                    });
             });
         }
 
@@ -341,7 +348,7 @@ class Dashboard extends Component
                 'sucursales' => $sucursales,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error en Dashboard render: ' . $e->getMessage());
+            \Log::error('Error en Dashboard render: '.$e->getMessage());
 
             // Retornar vista con datos vacíos en caso de error
             return view('livewire.replenishment.dashboard', [

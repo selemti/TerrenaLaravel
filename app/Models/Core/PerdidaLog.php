@@ -2,21 +2,23 @@
 
 namespace App\Models\Core; // O App\Models\Inv si lo mueves ahí
 
-use Illuminate\Database\Eloquent\Model;
-use App\Models\Inv\Item;
 use App\Models\Inv\Batch;
+use App\Models\Inv\Item;
 use App\Models\Inv\Unidad;
+use Illuminate\Database\Eloquent\Model;
 
 class PerdidaLog extends Model
 {
-    protected $table = 'selemti.perdida_log'; 
+    protected $table = 'selemti.perdida_log';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false; // Solo usa created_at
 
     protected $fillable = [
-        'ts', 'item_id', 'lote_id', 'sucursal_id', 'clase', 'motivo', 
-        'qty_canonica', 'qty_original', 'uom_original_id', 'evidencia_url', 
-        'usuario_id', 'ref_tipo', 'ref_id', 'created_at'
+        'ts', 'item_id', 'lote_id', 'sucursal_id', 'clase', 'motivo',
+        'qty_canonica', 'qty_original', 'uom_original_id', 'evidencia_url',
+        'usuario_id', 'ref_tipo', 'ref_id', 'created_at',
     ];
 
     protected $casts = [
@@ -30,7 +32,7 @@ class PerdidaLog extends Model
     {
         return $this->belongsTo(Item::class, 'item_id', 'id');
     }
-    
+
     public function lote()
     {
         return $this->belongsTo(Batch::class, 'lote_id');

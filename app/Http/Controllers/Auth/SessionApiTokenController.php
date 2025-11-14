@@ -16,15 +16,14 @@ class SessionApiTokenController extends Controller
      * Generate a new Sanctum API token for the authenticated user.
      *
      * @route GET /session/api-token
+     *
      * @middleware auth (web)
-     * @param Request $request
-     * @return JsonResponse
      */
     public function generate(Request $request): JsonResponse
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'error' => 'Unauthenticated',
                 'message' => 'No hay usuario autenticado en la sesión web.',
@@ -48,15 +47,14 @@ class SessionApiTokenController extends Controller
      * Revoke the current browser token.
      *
      * @route POST /session/api-token/revoke
+     *
      * @middleware auth (web)
-     * @param Request $request
-     * @return JsonResponse
      */
     public function revoke(Request $request): JsonResponse
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['error' => 'Unauthenticated'], 401);
         }
 

@@ -1,9 +1,10 @@
 <?php
 
-return new class extends \Illuminate\Database\Migrations\Migration {
-  public function up(): void
-  {
-    \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
+return new class extends \Illuminate\Database\Migrations\Migration
+{
+    public function up(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 CREATE TABLE IF NOT EXISTS selemti.alert_rules (
   id            BIGSERIAL PRIMARY KEY,
   recipe_id     BIGINT,
@@ -33,12 +34,12 @@ IF NOT EXISTS (
 END IF;
 END$$;
 SQL);
-  }
+    }
 
-  public function down(): void
-  {
-    \Illuminate\Support\Facades\DB::unprepared("DROP INDEX IF EXISTS selemti.ix_alert_events_recipe");
-    \Illuminate\Support\Facades\DB::unprepared("DROP TABLE IF EXISTS selemti.alert_events");
-    \Illuminate\Support\Facades\DB::unprepared("DROP TABLE IF EXISTS selemti.alert_rules");
-  }
+    public function down(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared('DROP INDEX IF EXISTS selemti.ix_alert_events_recipe');
+        \Illuminate\Support\Facades\DB::unprepared('DROP TABLE IF EXISTS selemti.alert_events');
+        \Illuminate\Support\Facades\DB::unprepared('DROP TABLE IF EXISTS selemti.alert_rules');
+    }
 };

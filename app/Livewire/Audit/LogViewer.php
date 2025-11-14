@@ -10,16 +10,23 @@ use Livewire\Component;
 class LogViewer extends Component
 {
     public $desde;
+
     public $hasta;
+
     public $userId;
+
     public $module;
+
     public $search;
-    
+
     public $rows = [];
+
     public $selectedLog = null;
+
     public $usersList = [];
+
     public $modulesList = [];
-    
+
     public $isLoading = false;
 
     public function mount(): void
@@ -27,11 +34,11 @@ class LogViewer extends Component
         // Rango por defecto: último día
         $this->desde = now()->subDay()->format('Y-m-d');
         $this->hasta = now()->format('Y-m-d');
-        
+
         // Cargar listas para filtros
         $this->loadUsersList();
         $this->loadModulesList();
-        
+
         // Cargar datos iniciales
         $this->load();
     }
@@ -39,7 +46,7 @@ class LogViewer extends Component
     public function load(): void
     {
         $this->isLoading = true;
-        
+
         $query = AuditLog::query()
             ->with('user:id,nombre_completo,username')
             ->orderBy('timestamp', 'desc')
@@ -88,17 +95,17 @@ class LogViewer extends Component
                 'entity_id' => $log->entidad_id,
                 'reason' => $log->motivo,
                 'evidence_url' => $log->evidencia_url,
-                'has_payload' => !empty($log->payload_json),
+                'has_payload' => ! empty($log->payload_json),
             ];
         })->toArray();
-        
+
         $this->isLoading = false;
     }
 
     public function selectLog(int $id): void
     {
         $log = AuditLog::with('user')->findOrFail($id);
-        
+
         $this->selectedLog = [
             'id' => $log->id,
             'timestamp' => $log->timestamp->format('Y-m-d H:i:s'),
@@ -116,7 +123,7 @@ class LogViewer extends Component
             'evidence_url' => $log->evidencia_url,
             'payload' => $log->payload_json,
         ];
-        
+
         $this->dispatch('show-log-detail');
     }
 

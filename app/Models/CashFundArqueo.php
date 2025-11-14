@@ -16,6 +16,7 @@ class CashFundArqueo extends Model
     use HasFactory;
 
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.cash_fund_arqueos';
 
     protected $fillable = [

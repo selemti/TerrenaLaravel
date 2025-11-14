@@ -1,15 +1,16 @@
 <?php
+
 use Illuminate\Support\Facades\DB;
 
-require __DIR__ . '/../vendor/autoload.php';
-$app = require __DIR__ . '/../bootstrap/app.php';
+require __DIR__.'/../vendor/autoload.php';
+$app = require __DIR__.'/../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
-DB::statement("SET search_path TO selemti, public");
+DB::statement('SET search_path TO selemti, public');
 
 // Get all FKs for both schemas
-$fks = DB::select(<<<SQL
+$fks = DB::select(<<<'SQL'
 SELECT
   tc.table_schema      AS child_schema,
   tc.table_name        AS child_table,
@@ -31,7 +32,7 @@ ORDER BY tc.table_schema, tc.table_name, kcu.ordinal_position
 SQL);
 
 // Collect tables per schema
-$tables = DB::select(<<<SQL
+$tables = DB::select(<<<'SQL'
 SELECT table_schema, table_name
 FROM information_schema.tables
 WHERE table_schema IN ('public','selemti') AND table_type='BASE TABLE'
@@ -40,40 +41,40 @@ SQL);
 
 $bySchemaTables = [];
 foreach ($tables as $t) {
-  $bySchemaTables[$t->table_schema][] = $t->table_name;
+    $bySchemaTables[$t->table_schema][] = $t->table_name;
 }
 
 // Group FKs per schema (child schema)
-$perSchema = [ 'public'=>[], 'selemti'=>[] ];
+$perSchema = ['public' => [], 'selemti' => []];
 foreach ($fks as $fk) {
-  $perSchema[$fk->child_schema][] = $fk;
+    $perSchema[$fk->child_schema][] = $fk;
 }
 
 $ts = date('Ymd-His');
-$out = __DIR__ . "/../docs/DOC_ERD-FULL-$ts.md";
+$out = __DIR__."/../docs/DOC_ERD-FULL-$ts.md";
 $f = fopen($out, 'w');
 
 fwrite($f, "ERD Completo — public y selemti (Mermaid)\n\n");
-fwrite($f, "Fecha: ".date('Y-m-d H:i')."\n\n");
+fwrite($f, 'Fecha: '.date('Y-m-d H:i')."\n\n");
 
 // Helper to emit a schema section
-$emitSchema = function($schema) use ($f, $bySchemaTables, $perSchema) {
-  fwrite($f, "## Esquema: $schema\n\n");
-  // Optional: listar entidades
-  $list = $bySchemaTables[$schema] ?? [];
-  if (!empty($list)) {
-    fwrite($f, "Tablas ($schema): ".implode(', ', $list)."\n\n");
-  }
-  fwrite($f, "```mermaid\n");
-  fwrite($f, "erDiagram\n");
-  foreach ($perSchema[$schema] ?? [] as $fk) {
-    // child many-to-one parent
-    $child  = strtoupper($fk->child_table);
-    $parent = strtoupper($fk->parent_table);
-    $label  = $fk->child_column.' -> '.$fk->parent_column;
-    fwrite($f, "  $child }o--|| $parent : \"$label\"\n");
-  }
-  fwrite($f, "```\n\n");
+$emitSchema = function ($schema) use ($f, $bySchemaTables, $perSchema) {
+    fwrite($f, "## Esquema: $schema\n\n");
+    // Optional: listar entidades
+    $list = $bySchemaTables[$schema] ?? [];
+    if (! empty($list)) {
+        fwrite($f, "Tablas ($schema): ".implode(', ', $list)."\n\n");
+    }
+    fwrite($f, "```mermaid\n");
+    fwrite($f, "erDiagram\n");
+    foreach ($perSchema[$schema] ?? [] as $fk) {
+        // child many-to-one parent
+        $child = strtoupper($fk->child_table);
+        $parent = strtoupper($fk->parent_table);
+        $label = $fk->child_column.' -> '.$fk->parent_column;
+        fwrite($f, "  $child }o--|| $parent : \"$label\"\n");
+    }
+    fwrite($f, "```\n\n");
 };
 
 // Sections per schema
@@ -81,18 +82,20 @@ $emitSchema('selemti');
 $emitSchema('public');
 
 // Global cross-schema (if any)
-$cross = array_filter($fks, function($fk){ return $fk->child_schema !== $fk->parent_schema; });
-if (!empty($cross)) {
-  fwrite($f, "## Global (Cross-schema)\n\n");
-  fwrite($f, "```mermaid\n");
-  fwrite($f, "flowchart LR\n");
-  foreach ($cross as $fk) {
-    $child  = $fk->child_schema.'.'.$fk->child_table;
-    $parent = $fk->parent_schema.'.'.$fk->parent_table;
-    $label  = $fk->child_column.' -> '.$fk->parent_column;
-    fwrite($f, "  \"$child\" -->|$label| \"$parent\"\n");
-  }
-  fwrite($f, "```\n\n");
+$cross = array_filter($fks, function ($fk) {
+    return $fk->child_schema !== $fk->parent_schema;
+});
+if (! empty($cross)) {
+    fwrite($f, "## Global (Cross-schema)\n\n");
+    fwrite($f, "```mermaid\n");
+    fwrite($f, "flowchart LR\n");
+    foreach ($cross as $fk) {
+        $child = $fk->child_schema.'.'.$fk->child_table;
+        $parent = $fk->parent_schema.'.'.$fk->parent_table;
+        $label = $fk->child_column.' -> '.$fk->parent_column;
+        fwrite($f, "  \"$child\" -->|$label| \"$parent\"\n");
+    }
+    fwrite($f, "```\n\n");
 }
 
 fclose($f);

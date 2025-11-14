@@ -25,6 +25,7 @@ class CashFundMovement extends Model
     use HasFactory;
 
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.cash_fund_movements';
 
     protected $fillable = [
@@ -119,7 +120,7 @@ class CashFundMovement extends Model
      */
     public function getProveedorNombreAttribute(): ?string
     {
-        if (!$this->proveedor_id) {
+        if (! $this->proveedor_id) {
             return null;
         }
 

@@ -10,7 +10,9 @@ class Precorte extends Model
     use HasFactory;
 
     protected $table = 'precorte';
+
     protected $schema = 'selemti';
+
     public $timestamps = true;
 
     protected $fillable = [

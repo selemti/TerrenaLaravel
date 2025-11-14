@@ -2,9 +2,9 @@
 
 namespace App\Services\Inventory;
 
+use App\Models\Inv\Movement;
 use App\Models\Inventory\TransferHeader;
 use App\Models\Inventory\TransferLine;
-use App\Models\Inv\Movement;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use RuntimeException;
@@ -18,12 +18,9 @@ class TransferService
      * Crea una transferencia SOLICITADA entre almacenes.
      *
      * @route POST /api/inventory/transfers/create
-     * @param int $fromAlmacenId
-     * @param int $toAlmacenId
-     * @param array $lines
-     * @param int $userId
-     * @return array
+     *
      * @throws InvalidArgumentException
+     *
      * @todo Persistir cabecera/detalle y validar stocks iniciales.
      */
     public function createTransfer(int $fromAlmacenId, int $toAlmacenId, array $lines, int $userId): array
@@ -72,11 +69,10 @@ class TransferService
      * Aprueba la transferencia y avanza a estado APROBADA.
      *
      * @route POST /api/inventory/transfers/{transfer_id}/approve
-     * @param int $transferId
-     * @param int $userId
-     * @return array
+     *
      * @throws InvalidArgumentException
      * @throws RuntimeException
+     *
      * @todo Validar estado SOLICITADA y registrar quién aprobó.
      */
     public function approveTransfer(int $transferId, int $userId): array
@@ -87,19 +83,25 @@ class TransferService
         return DB::transaction(function () use ($transferId, $userId) {
             $transfer = TransferHeader::with('lineas.item')->findOrFail($transferId);
 
-            if (!$transfer->canApprove()) {
+            if (! $transfer->canApprove()) {
                 throw new RuntimeException("Transfer must be in SOLICITADA status to be approved. Current: {$transfer->estado}");
             }
 
+            // Optimized: Fetch all required stock data in a single query
+            $itemIds = $transfer->lineas->pluck('item_id')->toArray();
+
+            $stocks = DB::connection('pgsql')
+                ->table('selemti.stock')
+                ->select('item_id', 'cantidad_actual')
+                ->where('almacen_id', $transfer->origen_almacen_id)
+                ->whereIn('item_id', $itemIds)
+                ->pluck('cantidad_actual', 'item_id'); // Create a map of [item_id => cantidad_actual]
+
             // Validar stock disponible en almacén origen
             foreach ($transfer->lineas as $line) {
-                $stock = DB::connection('pgsql')
-                    ->table('selemti.stock')
-                    ->where('almacen_id', $transfer->origen_almacen_id)
-                    ->where('item_id', $line->item_id)
-                    ->value('cantidad_actual');
+                $stock = $stocks->get($line->item_id, 0); // Get stock for this item, default to 0 if not found
 
-                if (!$stock || $stock < $line->cantidad_solicitada) {
+                if ($stock < $line->cantidad_solicitada) {
                     throw new RuntimeException(
                         "Stock insuficiente para item {$line->item->nombre}. Disponible: {$stock}, Requerido: {$line->cantidad_solicitada}"
                     );
@@ -123,11 +125,10 @@ class TransferService
      * Marca la transferencia como EN_TRANSITO cuando sale de origen.
      *
      * @route POST /api/inventory/transfers/{transfer_id}/ship
-     * @param int $transferId
-     * @param int $userId
-     * @return array
+     *
      * @throws InvalidArgumentException
      * @throws RuntimeException
+     *
      * @todo Guardar datos de transporte y hora de salida.
      */
     public function markInTransit(int $transferId, int $userId, ?string $numeroGuia = null): array
@@ -138,7 +139,7 @@ class TransferService
         return DB::transaction(function () use ($transferId, $userId, $numeroGuia) {
             $transfer = TransferHeader::with('lineas')->findOrFail($transferId);
 
-            if (!$transfer->canShip()) {
+            if (! $transfer->canShip()) {
                 throw new RuntimeException("Transfer must be in APROBADA status to be shipped. Current: {$transfer->estado}");
             }
 
@@ -168,12 +169,10 @@ class TransferService
      * Registra cantidades recibidas en destino y pasa a RECIBIDA.
      *
      * @route POST /api/inventory/transfers/{transfer_id}/receive
-     * @param int $transferId
-     * @param array $receivedLines
-     * @param int $userId
-     * @return array
+     *
      * @throws InvalidArgumentException
      * @throws RuntimeException
+     *
      * @todo Calcular diferencias y preparar ajustes antes del posteo.
      */
     public function receiveTransfer(int $transferId, array $receivedLines, int $userId): array
@@ -188,15 +187,15 @@ class TransferService
         return DB::transaction(function () use ($transferId, $receivedLines, $userId) {
             $transfer = TransferHeader::with('lineas')->findOrFail($transferId);
 
-            if (!$transfer->canReceive()) {
+            if (! $transfer->canReceive()) {
                 throw new RuntimeException("Transfer must be in EN_TRANSITO status to be received. Current: {$transfer->estado}");
             }
 
             // Actualizar cantidades recibidas y observaciones
             foreach ($receivedLines as $lineData) {
                 $line = $transfer->lineas()->where('id', $lineData['line_id'])->first();
-                
-                if (!$line) {
+
+                if (! $line) {
                     throw new InvalidArgumentException("Line {$lineData['line_id']} not found in transfer {$transferId}");
                 }
 
@@ -215,7 +214,7 @@ class TransferService
 
             // Calcular varianzas
             $varianzas = [];
-            foreach ($transfer->lineas()->get() as $line) {
+            foreach ($transfer->lineas as $line) {
                 if ($line->hasVariance()) {
                     $varianzas[] = [
                         'line_id' => $line->id,
@@ -239,11 +238,10 @@ class TransferService
      * Genera mov_inv negativos/positivos y cierra la transferencia.
      *
      * @route POST /api/inventory/transfers/{transfer_id}/post
-     * @param int $transferId
-     * @param int $userId
-     * @return array
+     *
      * @throws InvalidArgumentException
      * @throws RuntimeException
+     *
      * @todo Insertar TRANSFER_OUT/TRANSFER_IN y sellar estado CERRADA.
      */
     public function postTransferToInventory(int $transferId, int $userId): array
@@ -254,7 +252,7 @@ class TransferService
         return DB::transaction(function () use ($transferId, $userId) {
             $transfer = TransferHeader::with('lineas.item', 'origenAlmacen', 'destinoAlmacen')->findOrFail($transferId);
 
-            if (!$transfer->canPost()) {
+            if (! $transfer->canPost()) {
                 throw new RuntimeException("Transfer must be in RECIBIDA status to be posted. Current: {$transfer->estado}");
             }
 
@@ -313,9 +311,6 @@ class TransferService
     /**
      * Garantiza que un identificador numérico sea válido.
      *
-     * @param int $id
-     * @param string $label
-     * @return void
      * @throws InvalidArgumentException
      */
     protected function guardPositiveId(int $id, string $label): void

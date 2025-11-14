@@ -1,9 +1,10 @@
 <?php
 
-return new class extends \Illuminate\Database\Migrations\Migration {
-  public function up(): void
-  {
-    \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
+return new class extends \Illuminate\Database\Migrations\Migration
+{
+    public function up(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 CREATE TABLE IF NOT EXISTS selemti.recipe_versions (
   id           BIGSERIAL PRIMARY KEY,
   recipe_id    BIGINT NOT NULL,
@@ -63,15 +64,15 @@ IF NOT EXISTS (
 END IF;
 END$$;
 SQL);
-  }
+    }
 
-  public function down(): void
-  {
-    \Illuminate\Support\Facades\DB::unprepared("DROP INDEX IF EXISTS selemti.ix_rch_recipe_at");
-    \Illuminate\Support\Facades\DB::unprepared("DROP TABLE IF EXISTS selemti.recipe_cost_history");
-    \Illuminate\Support\Facades\DB::unprepared("DROP INDEX IF EXISTS selemti.ix_rvi_rv");
-    \Illuminate\Support\Facades\DB::unprepared("DROP TABLE IF EXISTS selemti.recipe_version_items");
-    \Illuminate\Support\Facades\DB::unprepared("DROP INDEX IF EXISTS selemti.ux_recipe_version");
-    \Illuminate\Support\Facades\DB::unprepared("DROP TABLE IF EXISTS selemti.recipe_versions");
-  }
+    public function down(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared('DROP INDEX IF EXISTS selemti.ix_rch_recipe_at');
+        \Illuminate\Support\Facades\DB::unprepared('DROP TABLE IF EXISTS selemti.recipe_cost_history');
+        \Illuminate\Support\Facades\DB::unprepared('DROP INDEX IF EXISTS selemti.ix_rvi_rv');
+        \Illuminate\Support\Facades\DB::unprepared('DROP TABLE IF EXISTS selemti.recipe_version_items');
+        \Illuminate\Support\Facades\DB::unprepared('DROP INDEX IF EXISTS selemti.ux_recipe_version');
+        \Illuminate\Support\Facades\DB::unprepared('DROP TABLE IF EXISTS selemti.recipe_versions');
+    }
 };

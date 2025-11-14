@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Purchasing\Requests;
 
-use App\Models\Inventory\Item;
-use App\Models\Catalogs\Sucursal;
 use App\Models\Catalogs\Proveedor;
+use App\Models\Catalogs\Sucursal;
+use App\Models\Inventory\Item;
 use App\Services\Purchasing\PurchasingService;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -17,8 +17,11 @@ class Create extends Component
 
     // Datos de la solicitud
     public ?string $sucursal_id = null;
+
     public ?int $requested_by = null;
+
     public string $requested_at = '';
+
     public string $notas = '';
 
     // Líneas de la solicitud
@@ -26,6 +29,7 @@ class Create extends Component
 
     // Búsqueda de items
     public string $searchItem = '';
+
     public bool $showItemModal = false;
 
     protected $rules = [
@@ -51,15 +55,18 @@ class Create extends Component
     {
         $item = Item::find($itemId);
 
-        if (!$item) return;
+        if (! $item) {
+            return;
+        }
 
         // Verificar si ya existe
-        $existe = collect($this->lineas)->first(fn($l) => $l['item_id'] == $itemId);
+        $existe = collect($this->lineas)->first(fn ($l) => $l['item_id'] == $itemId);
         if ($existe) {
             $this->dispatch('notify', [
                 'type' => 'warning',
-                'message' => 'El item ya está en la lista'
+                'message' => 'El item ya está en la lista',
             ]);
+
             return;
         }
 
@@ -90,7 +97,7 @@ class Create extends Component
         $this->validate();
 
         try {
-            $service = new PurchasingService();
+            $service = new PurchasingService;
 
             $payload = [
                 'sucursal_id' => $this->sucursal_id,
@@ -113,13 +120,13 @@ class Create extends Component
 
             $result = $service->createRequest($payload);
 
-            session()->flash('success', 'Solicitud creada exitosamente: ' . $result['folio']);
+            session()->flash('success', 'Solicitud creada exitosamente: '.$result['folio']);
 
             return redirect()->route('purchasing.requests.detail', $result['id']);
         } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Error al crear solicitud: ' . $e->getMessage()
+                'message' => 'Error al crear solicitud: '.$e->getMessage(),
             ]);
         }
     }
@@ -130,8 +137,8 @@ class Create extends Component
         if ($this->searchItem) {
             $items = Item::where('activo', true)
                 ->where(function ($q) {
-                    $q->where('codigo', 'ilike', '%' . $this->searchItem . '%')
-                      ->orWhere('nombre', 'ilike', '%' . $this->searchItem . '%');
+                    $q->where('codigo', 'ilike', '%'.$this->searchItem.'%')
+                        ->orWhere('nombre', 'ilike', '%'.$this->searchItem.'%');
                 })
                 ->orderBy('nombre')
                 ->paginate(10, ['*'], 'itemsPage');

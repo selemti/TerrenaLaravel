@@ -30,7 +30,7 @@ class EvidenceController extends Controller
 
         return response()->json([
             'ok' => true,
-            'evidencia_url' => asset('storage/' . $path),
+            'evidencia_url' => asset('storage/'.$path),
             'timestamp' => now()->toIso8601String(),
         ]);
     }

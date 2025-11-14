@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\Caja;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -25,10 +25,10 @@ class AuthController extends Controller
             $user = User::where('username', $validated['username'])->first();
 
             // Verificar credenciales (ajusta según tu esquema)
-            if (!$user || !Hash::check($validated['password'], $user->password)) {
+            if (! $user || ! Hash::check($validated['password'], $user->password)) {
                 return response()->json([
                     'error' => 'Unauthorized',
-                    'message' => 'Credenciales inválidas'
+                    'message' => 'Credenciales inválidas',
                 ], 401);
             }
 
@@ -47,11 +47,12 @@ class AuthController extends Controller
             ]);
 
         } catch (\Throwable $e) {
-            \Log::error("Error en auth/login: " . $e->getMessage());
+            \Log::error('Error en auth/login: '.$e->getMessage());
+
             return response()->json([
                 'ok' => false,
                 'error' => 'Error interno',
-                'message' => config('app.debug') ? $e->getMessage() : 'Error en autenticación'
+                'message' => config('app.debug') ? $e->getMessage() : 'Error en autenticación',
             ], 500);
         }
     }
@@ -76,7 +77,7 @@ class AuthController extends Controller
 
         return response()->json([
             'ok' => true,
-            'message' => 'Sesión cerrada exitosamente'
+            'message' => 'Sesión cerrada exitosamente',
         ]);
     }
 }

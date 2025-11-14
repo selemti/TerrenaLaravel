@@ -1,8 +1,9 @@
 <?php
+
 namespace App\Livewire\Inventory;
 
-use Livewire\Component;
 use Illuminate\Support\Facades\DB;
+use Livewire\Component;
 
 class LotsIndex extends Component
 {

@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PurchaseOrderLine extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'purchase_order_lines';
+
     protected $guarded = [];
 
     protected $casts = [
@@ -63,7 +65,10 @@ class PurchaseOrderLine extends Model
     public function getPorcentajeDescuentoAttribute(): float
     {
         $subtotal = $this->subtotal;
-        if ($subtotal == 0) return 0;
+        if ($subtotal == 0) {
+            return 0;
+        }
+
         return ($this->descuento / $subtotal) * 100;
     }
 
@@ -73,7 +78,10 @@ class PurchaseOrderLine extends Model
     public function getPorcentajeImpuestosAttribute(): float
     {
         $subtotal = $this->subtotal;
-        if ($subtotal == 0) return 0;
+        if ($subtotal == 0) {
+            return 0;
+        }
+
         return ($this->impuestos / $subtotal) * 100;
     }
 

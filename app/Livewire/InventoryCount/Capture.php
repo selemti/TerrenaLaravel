@@ -4,19 +4,21 @@ namespace App\Livewire\InventoryCount;
 
 use App\Models\InventoryCount;
 use App\Models\InventoryCountLine;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class Capture extends Component
 {
     public $countId;
+
     public $count;
 
     // Datos de captura
     public array $contados = [];
+
     public string $search = '';
+
     public bool $soloSinContar = false;
+
     public bool $soloConVariacion = false;
 
     public function mount($id)
@@ -48,9 +50,9 @@ class Capture extends Component
 
         // Filtro de búsqueda
         if ($this->search) {
-            $query->whereHas('item', function($q) {
-                $q->where('nombre', 'ILIKE', '%' . $this->search . '%')
-                  ->orWhere('codigo', 'ILIKE', '%' . $this->search . '%');
+            $query->whereHas('item', function ($q) {
+                $q->where('nombre', 'ILIKE', '%'.$this->search.'%')
+                    ->orWhere('codigo', 'ILIKE', '%'.$this->search.'%');
             });
         }
 
@@ -95,7 +97,7 @@ class Capture extends Component
         } catch (\Exception $e) {
             $this->dispatch('toast',
                 type: 'error',
-                body: 'Error al actualizar: ' . $e->getMessage()
+                body: 'Error al actualizar: '.$e->getMessage()
             );
         }
     }

@@ -7,11 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class InventoryCount extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.inventory_counts';
+
     protected $guarded = [];
+
     protected $primaryKey = 'id';
+
     public $incrementing = true;
+
     protected $keyType = 'int';
+
     public $timestamps = true;
 
     protected $fillable = [

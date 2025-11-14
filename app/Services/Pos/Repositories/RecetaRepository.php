@@ -8,9 +8,6 @@ class RecetaRepository
 {
     /**
      * Obtiene el recipe_version_id mapeado para un pos_code
-     *
-     * @param string $posCode
-     * @return int|null
      */
     public function getRecipeVersionForPosCode(string $posCode): ?int
     {
@@ -25,9 +22,6 @@ class RecetaRepository
 
     /**
      * Obtiene los items de una versión de receta
-     *
-     * @param int $recipeVersionId
-     * @return array
      */
     public function getRecipeItemsByRecipeVersion(int $recipeVersionId): array
     {
@@ -52,9 +46,6 @@ class RecetaRepository
 
     /**
      * Obtiene información de una receta
-     *
-     * @param int $recipeId
-     * @return array|null
      */
     public function getRecipeInfo(int $recipeId): ?array
     {
@@ -68,9 +59,6 @@ class RecetaRepository
 
     /**
      * Verifica si un pos_code tiene mapeo activo
-     *
-     * @param string $posCode
-     * @return bool
      */
     public function hasActiveMapping(string $posCode): bool
     {
@@ -83,8 +71,6 @@ class RecetaRepository
 
     /**
      * Obtiene todos los mapeos activos
-     *
-     * @return array
      */
     public function getAllActiveMappings(): array
     {
@@ -98,9 +84,6 @@ class RecetaRepository
 
     /**
      * Obtiene mapeos por patrón de pos_code
-     *
-     * @param string $pattern
-     * @return array
      */
     public function getMappingsByPattern(string $pattern): array
     {
