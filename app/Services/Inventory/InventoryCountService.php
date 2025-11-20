@@ -2,6 +2,7 @@
 
 namespace App\Services\Inventory;
 
+use Carbon\CarbonInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -10,13 +11,17 @@ use RuntimeException;
 
 class InventoryCountService
 {
+    protected string $connection = 'pgsql';
+
+    protected string $schema = 'selemti';
+
     public function open(array $header, array $lines): int
     {
-        return DB::transaction(function () use ($header, $lines) {
+        return DB::connection($this->connection)->transaction(function () use ($header, $lines) {
             $now = now();
             $folio = $this->nextFolio($header['branch_id'] ?? null);
 
-            $countId = (int) DB::table('inventory_counts')->insertGetId([
+            $countId = (int) $this->table('inventory_counts')->insertGetId([
                 'folio' => $folio,
                 'sucursal_id' => $header['branch_id'] ?? null,
                 'almacen_id' => $header['warehouse_id'] ?? null,
@@ -38,12 +43,12 @@ class InventoryCountService
                 $payload['created_at'] = $now;
                 $payload['updated_at'] = $now;
 
-                DB::table('inventory_count_lines')->insert($payload);
+                $this->table('inventory_count_lines')->insert($payload);
 
                 $totals['items'] += $payload['qty_teorica'];
             }
 
-            DB::table('inventory_counts')
+            $this->table('inventory_counts')
                 ->where('id', $countId)
                 ->update([
                     'total_items' => $totals['items'],
@@ -56,11 +61,11 @@ class InventoryCountService
 
     public function finalize(int $countId, array $lines, int $userId, ?string $notes = null): void
     {
-        DB::transaction(function () use ($countId, $lines, $userId, $notes) {
+        DB::connection($this->connection)->transaction(function () use ($countId, $lines, $userId, $notes) {
             $now = now();
             $varianceTotal = 0.0;
 
-            $count = DB::table('inventory_counts')->lockForUpdate()->find($countId);
+            $count = $this->table('inventory_counts')->lockForUpdate()->find($countId);
 
             if (! $count) {
                 throw new RuntimeException('Conteo de inventario no encontrado');
@@ -70,7 +75,7 @@ class InventoryCountService
                 $payload = $this->normalizeLine($line);
                 $payload['updated_at'] = $now;
 
-                $existing = DB::table('inventory_count_lines')
+                $existing = $this->table('inventory_count_lines')
                     ->where('inventory_count_id', $countId)
                     ->where('item_id', $payload['item_id'])
                     ->when($payload['inventory_batch_id'], function ($query, $batchId) {
@@ -80,7 +85,7 @@ class InventoryCountService
 
                 if ($existing) {
                     $payload['qty_teorica'] = $existing->qty_teorica;
-                    DB::table('inventory_count_lines')
+                    $this->table('inventory_count_lines')
                         ->where('id', $existing->id)
                         ->update([
                             'qty_contada' => $payload['qty_contada'],
@@ -95,8 +100,8 @@ class InventoryCountService
 
                     $this->createAdjustmentMovement(
                         $countId,
-                        (int) $existing->item_id,
-                        $payload['inventory_batch_id'],
+                        (string) $existing->item_id,
+                        $payload['inventory_batch_id'] ? (int) $payload['inventory_batch_id'] : null,
                         $variance,
                         $payload['uom'],
                         $userId,
@@ -107,7 +112,7 @@ class InventoryCountService
                 } else {
                     $payload['inventory_count_id'] = $countId;
                     $payload['qty_variacion'] = $payload['qty_contada'] - $payload['qty_teorica'];
-                    DB::table('inventory_count_lines')->insert(array_merge($payload, [
+                    $this->table('inventory_count_lines')->insert(array_merge($payload, [
                         'created_at' => $now,
                         'updated_at' => $now,
                     ]));
@@ -115,8 +120,8 @@ class InventoryCountService
                     $varianceTotal += $payload['qty_variacion'];
                     $this->createAdjustmentMovement(
                         $countId,
-                        (int) $payload['item_id'],
-                        $payload['inventory_batch_id'],
+                        (string) $payload['item_id'],
+                        $payload['inventory_batch_id'] ? (int) $payload['inventory_batch_id'] : null,
                         $payload['qty_variacion'],
                         $payload['uom'],
                         $userId,
@@ -127,14 +132,14 @@ class InventoryCountService
                 }
             }
 
-            DB::table('inventory_counts')
+            $this->table('inventory_counts')
                 ->where('id', $countId)
                 ->update([
                     'estado' => 'AJUSTADO',
                     'cerrado_en' => $now,
                     'cerrado_por' => $userId,
                     'notas' => $notes,
-                    'total_variacion' => DB::raw('COALESCE(total_variacion,0) + '.$varianceTotal),
+                    'total_variacion' => DB::raw('COALESCE(total_variacion,0) + '.(float) $varianceTotal),
                     'updated_at' => $now,
                 ]);
         });
@@ -149,9 +154,12 @@ class InventoryCountService
             throw new InvalidArgumentException('inventory count line requires item_id');
         }
 
+        $batchId = Arr::get($line, 'inventory_batch_id');
+        $batchId = ($batchId === null || $batchId === '') ? null : (int) $batchId;
+
         return [
-            'item_id' => Arr::get($line, 'item_id'),
-            'inventory_batch_id' => Arr::get($line, 'inventory_batch_id'),
+            'item_id' => (string) Arr::get($line, 'item_id'),
+            'inventory_batch_id' => $batchId,
             'qty_teorica' => $expected,
             'qty_contada' => $counted,
             'qty_variacion' => $counted - $expected,
@@ -164,17 +172,16 @@ class InventoryCountService
     protected function buildMeta(array $line): ?string
     {
         $meta = Arr::only($line, ['notes', 'source']);
+        $meta = array_filter($meta, static fn ($value) => $value !== null && $value !== '');
 
-        return empty(array_filter($meta, fn ($value) => $value !== null && $value !== ''))
-            ? null
-            : json_encode($meta);
+        return empty($meta) ? null : json_encode($meta);
     }
 
     protected function nextFolio(?string $branchId = null): string
     {
         $today = now()->format('Ymd');
 
-        $count = DB::table('inventory_counts')
+        $count = $this->table('inventory_counts')
             ->when($branchId, fn ($query, $branch) => $query->where('sucursal_id', $branch))
             ->whereDate('created_at', now()->toDateString())
             ->count();
@@ -186,20 +193,20 @@ class InventoryCountService
 
     protected function createAdjustmentMovement(
         int $countId,
-        int $itemId,
-        $batchId,
+        string $itemId,
+        ?int $batchId,
         float $variance,
         string $uom,
         int $userId,
-        $timestamp,
-        $branchId = null,
-        $warehouseId = null
+        CarbonInterface $timestamp,
+        ?string $branchId = null,
+        ?string $warehouseId = null
     ): void {
         if (abs($variance) < 0.000001) {
             return;
         }
 
-        DB::table('mov_inv')->insert([
+        $this->table('mov_inv')->insert([
             'item_id' => $itemId,
             'inventory_batch_id' => $batchId,
             'tipo' => 'AJUSTE',
@@ -209,12 +216,17 @@ class InventoryCountService
             'almacen_id' => $warehouseId,
             'ref_tipo' => 'inventory_count',
             'ref_id' => $countId,
-            'user_id' => $userId,
+            'user_id' => $userId ?: null,
             'ts' => $timestamp,
             'meta' => json_encode(['origen' => 'conteo']),
             'notas' => 'Ajuste por conteo',
             'created_at' => $timestamp,
             'updated_at' => $timestamp,
         ]);
+    }
+
+    protected function table(string $name)
+    {
+        return DB::connection($this->connection)->table("{$this->schema}.{$name}");
     }
 }

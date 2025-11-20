@@ -86,7 +86,7 @@ class PosConsumptionService
                         'id' => Str::uuid(),
                         'branch_id' => $header->branch_id,
                         'item_id' => $detail['item_id'],
-                        'tipo_movimiento' => 'SALIDA_VENTA',
+                        'tipo' => 'SALIDA_VENTA',
                         'cantidad' => -$detail['cantidad_teorica'],
                         'ref_tipo' => 'CONSUMO_POS',
                         'ref_id' => (string) $consumoId,

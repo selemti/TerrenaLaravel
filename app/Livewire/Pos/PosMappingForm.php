@@ -16,7 +16,7 @@ class PosMappingForm extends Component
 
     public $receta_id = '';
 
-    public $recipe_version_id = '';
+    public $receta_version_id = '';
 
     public $valid_from = '';
 
@@ -31,7 +31,7 @@ class PosMappingForm extends Component
         'tipo' => 'required|in:MENU,MODIFIER',
         'plu' => 'required|string|max:50',
         'receta_id' => 'nullable|string|max:50',
-        'recipe_version_id' => 'nullable|integer',
+        'receta_version_id' => 'nullable|integer',
         'valid_from' => 'nullable|date',
         'valid_to' => 'nullable|date|after_or_equal:valid_from',
         'vigente_desde' => 'nullable|date',
@@ -66,7 +66,7 @@ class PosMappingForm extends Component
             $this->dispatch('notify', 'Mapeo actualizado correctamente');
         } else {
             PosMap::create($this->only(
-                'tipo', 'plu', 'receta_id', 'recipe_version_id',
+                'tipo', 'plu', 'receta_id', 'receta_version_id',
                 'valid_from', 'valid_to', 'vigente_desde'
             ));
             $this->dispatch('notify', 'Mapeo creado correctamente');

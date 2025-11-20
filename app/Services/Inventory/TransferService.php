@@ -88,13 +88,17 @@ class TransferService
             }
 
             // Optimized: Fetch all required stock data in a single query
+            // TODO: this table (stock) does not exist in BD. Revisar diseño de Inventario.
+            // Placeholder: For now, we'll use a different approach to get stock
             $itemIds = $transfer->lineas->pluck('item_id')->toArray();
 
+            // Calculate stock from mov_inv records (this is a simplified approach)
             $stocks = DB::connection('pgsql')
-                ->table('selemti.stock')
-                ->select('item_id', 'cantidad_actual')
-                ->where('almacen_id', $transfer->origen_almacen_id)
+                ->table('selemti.mov_inv')
+                ->select('item_id', DB::raw('SUM(cantidad) as cantidad_actual'))
+                ->where('sucursal_id', $transfer->origen_almacen_id)
                 ->whereIn('item_id', $itemIds)
+                ->groupBy('item_id')
                 ->pluck('cantidad_actual', 'item_id'); // Create a map of [item_id => cantidad_actual]
 
             // Validar stock disponible en almacén origen
@@ -261,29 +265,29 @@ class TransferService
             foreach ($transfer->lineas as $line) {
                 // Movimiento de SALIDA en almacén origen
                 $movOut = Movement::create([
-                    'almacen_id' => $transfer->origen_almacen_id,
+                    'sucursal_id' => $transfer->origen_almacen_id,
                     'item_id' => $line->item_id,
-                    'tipo_movimiento' => 'TRASPASO_OUT',
+                    'tipo' => 'TRASPASO_OUT',
                     'cantidad' => -abs($line->cantidad_despachada),
                     'unidad_medida' => $line->unidad_medida,
-                    'fecha_movimiento' => now(),
+                    'ts' => now(),
                     'usuario_id' => $userId,
-                    'referencia_tipo' => 'TRANSFER',
-                    'referencia_id' => $transfer->id,
+                    'ref_tipo' => 'TRANSFER',
+                    'ref_id' => $transfer->id,
                     'observaciones' => "Transferencia #{$transfer->id} a {$transfer->destinoAlmacen->nombre}",
                 ]);
 
                 // Movimiento de ENTRADA en almacén destino
                 $movIn = Movement::create([
-                    'almacen_id' => $transfer->destino_almacen_id,
+                    'sucursal_id' => $transfer->destino_almacen_id,
                     'item_id' => $line->item_id,
-                    'tipo_movimiento' => 'TRASPASO_IN',
+                    'tipo' => 'TRASPASO_IN',
                     'cantidad' => abs($line->cantidad_recibida),
                     'unidad_medida' => $line->unidad_medida,
-                    'fecha_movimiento' => now(),
+                    'ts' => now(),
                     'usuario_id' => $userId,
-                    'referencia_tipo' => 'TRANSFER',
-                    'referencia_id' => $transfer->id,
+                    'ref_tipo' => 'TRANSFER',
+                    'ref_id' => $transfer->id,
                     'observaciones' => "Transferencia #{$transfer->id} desde {$transfer->origenAlmacen->nombre}",
                 ]);
 

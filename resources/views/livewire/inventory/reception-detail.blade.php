@@ -1,86 +1,115 @@
-<div class="space-y-5">
-    <h1 class="text-2xl font-semibold">
-        Recepción #{{ $recepcionId }} - Estado: {{ $estado }}
-    </h1>
+<div class="container py-3 space-y-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="h4 mb-0">Recepción #{{ $recepcionId }}</h1>
+            <div class="text-muted small">
+                <span class="badge rounded-pill 
+                    @if($estado === 'VALIDADA') bg-info text-dark
+                    @elseif($estado === 'POSTEADA') bg-success
+                    @elseif($estado === 'BORRADOR') bg-secondary
+                    @else bg-light text-dark @endif">
+                    {{ $estado }}
+                </span>
+                @if($requiere_aprobacion)
+                    <span class="badge bg-warning text-dark ms-2">Requiere aprobación</span>
+                @endif
+            </div>
+        </div>
+        <a href="{{ route('inv.receptions') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fa-solid fa-arrow-left me-1"></i>Volver
+        </a>
+    </div>
 
-    @if($requiere_aprobacion)
-        <div class="alert alert-warning">
-            Fuera de tolerancia - requiere aprobación
+    @if($flashMessage)
+        <div class="alert alert-success py-2">
+            <i class="fa-solid fa-circle-check me-2"></i>{{ $flashMessage }}
         </div>
     @endif
 
-    <div class="flex flex-wrap gap-2 mb-4">
+    @if($errorMessage)
+        <div class="alert alert-danger py-2">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>{{ $errorMessage }}
+        </div>
+    @endif
+
+    <div class="d-flex flex-wrap gap-2 mb-3">
         @if($canValidate)
-            <!-- requires: inventory.receptions.validate -->
             <button
                 type="button"
-                class="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                class="btn btn-primary btn-sm"
                 wire:click="actionValidate"
             >
-                Validar recepción
+                <i class="fa-solid fa-clipboard-check me-1"></i>Validar
             </button>
         @endif
 
         @if($canOverride && $requiere_aprobacion)
-            <!-- requires: inventory.receptions.override_tolerance -->
             <button
                 type="button"
-                class="rounded bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+                class="btn btn-warning btn-sm"
                 wire:click="actionApprove"
             >
-                Aprobar fuera de tolerancia
+                <i class="fa-solid fa-shield-check me-1"></i>Aprobar tolerancia
             </button>
         @endif
 
         @if($canPost)
-            <!-- requires: inventory.receptions.post -->
             <button
                 type="button"
-                class="rounded bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                class="btn btn-success btn-sm"
                 wire:click="actionPost"
             >
-                Postear a inventario
+                <i class="fa-solid fa-box-archive me-1"></i>Postear a inventario
             </button>
         @endif
     </div>
 
-    <!-- TODO: esta vista hace fetch via API en mount(), no usa datos de Blade -->
-    <section class="overflow-x-auto rounded-lg border border-gray-200">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr class="text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    <th class="px-4 py-2">Item</th>
-                    <th class="px-4 py-2">Qty ordenada</th>
-                    <th class="px-4 py-2">Qty recibida</th>
-                    <th class="px-4 py-2">% diferencia</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100 bg-white text-sm text-gray-700">
-                @forelse($lineas as $linea)
-                    <tr @class(['bg-yellow-50' => $linea['fuera_tolerancia'] ?? false])>
-                        <td class="px-4 py-2">
-                            <div class="font-medium">{{ $linea['item_nombre'] ?? 'N/D' }}</div>
-                            <div class="text-xs text-gray-500">ID {{ $linea['item_id'] ?? '-' }}</div>
-                        </td>
-                        <td class="px-4 py-2">{{ $linea['qty_ordenada'] ?? '0.000000' }}</td>
-                        <td class="px-4 py-2">{{ $linea['qty_recibida'] ?? '0.000000' }}</td>
-                        <td class="px-4 py-2">
-                            {{ number_format($linea['diferencia_pct'] ?? 0, 2) }}%
-                            @if($linea['fuera_tolerancia'] ?? false)
-                                <span class="ml-2 inline-block rounded bg-yellow-200 px-2 text-xs font-semibold text-yellow-900">
-                                    fuera
-                                </span>
-                            @endif
-                        </td>
+    <section class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                    <tr class="text-muted small">
+                        <th>Item</th>
+                        <th>Qty ordenada</th>
+                        <th>Qty recibida</th>
+                        <th>% diferencia</th>
+                        <th>Docs</th>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="4" class="px-4 py-3 text-center text-gray-400">
-                            Sin líneas registradas
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse($lineas as $linea)
+                        <tr @class(['table-warning' => $linea['fuera_tolerancia'] ?? false])>
+                            <td>
+                                <div class="fw-semibold">{{ $linea['item_nombre'] ?? 'N/D' }}</div>
+                                <div class="text-muted small">ID {{ $linea['item_id'] ?? '-' }}</div>
+                            </td>
+                            <td>{{ $linea['qty_ordenada'] ?? '0.000000' }}</td>
+                            <td>{{ $linea['qty_recibida'] ?? '0.000000' }}</td>
+                            <td>
+                                {{ number_format($linea['diferencia_pct'] ?? 0, 2) }}%
+                                @if($linea['fuera_tolerancia'] ?? false)
+                                    <span class="badge bg-warning text-dark ms-1">fuera</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if(!empty($linea['doc_url']))
+                                    <a class="small" href="{{ $linea['doc_url'] }}" target="_blank" rel="noreferrer">
+                                        <i class="fa-solid fa-paperclip me-1"></i>Evidencia
+                                    </a>
+                                @else
+                                    <span class="text-muted small">—</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                Sin líneas registradas para esta recepción.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </section>
 </div>

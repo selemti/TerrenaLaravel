@@ -70,6 +70,9 @@
                     <a class="btn btn-outline-secondary" href="{{ route('rec.editor', ['id' => $r->id]) }}">
                       <i class="fa-regular fa-pen-to-square"></i> Editar
                     </a>
+                    <a class="btn btn-outline-primary" href="{{ route('rec.versions', ['id' => $r->id]) }}">
+                      <i class="fa-solid fa-code-compare"></i>
+                    </a>
                     <button class="btn btn-outline-danger"
                             wire:click="confirmDelete('{{ $r->id }}')">
                       <i class="fa-regular fa-trash-can"></i>

@@ -12,6 +12,7 @@ Este directorio concentra la versión vigente de la documentación funcional/té
 | Componentes reutilizables | `docs/V4.0/Frontend/Componentes.md` + `resources/views/components/ui/*` | ✅ Publicado (2025-11-12) |
 | Arquitectura y wiring | `docs/V4.0/Arquitectura/README.md` + `docs/Arquitectura/ROUTES_CONTROLLERS_VIEWS-20251017-0251.md` | ✅ Publicado (2025-11-12) |
 | Stack & convenciones | `docs/V4.0/Guia/Stack.md` + `AGENTS.md` | ✅ Publicado (2025-11-13) |
+| **Deployment & Actualización** | **`docs/V4.0/Guia/Deployment.md`** | **✅ Publicado (2025-11-14)** |
 
 > Mantener estas fichas al día es obligatorio antes de abrir nuevos módulos o permisos.
 
@@ -23,6 +24,7 @@ Este directorio concentra la versión vigente de la documentación funcional/té
 | Frontend · Componentes | `docs/V4.0/Frontend/Componentes.md` | Design system activo: cards, tablas, modales, badges, toasts, registro de componentes y política de actualizaciones. |
 | Arquitectura | `docs/V4.0/Arquitectura/README.md` | Stack Laravel 10 + Livewire, rutas, colas Redis, storage, integraciones y checklist de despliegue. |
 | Stack & convenciones | `docs/V4.0/Guia/Stack.md` | Requerimientos de tooling, comandos locales, políticas de seguridad, commits y checklist transversal. |
+| **Deployment** | **`docs/V4.0/Guia/Deployment.md`** | **Proceso completo de actualización Local→Producción, arquitectura de ambientes (Windows/Ubuntu), configuración Apache Alias, permisos, troubleshooting, rollback.** |
 | Inventario · Items | `docs/V4.0/Inventario/Items.md` | Alta/gestión de catálogo (`InsumoCreate`, `ItemsManage`, API `/api/inventory/items*`, tablas `selemti.items` y catálogos). |
 | Inventario · Recepciones | `docs/V4.0/Inventario/Recepciones.md` | Wizard de recepciones, `ReceptionService`, `recepcion_*`, `inventory_batch`, integración con lotes/mov_inv. |
 | Inventario · Dashboard/Kardex | `docs/V4.0/Inventario/Disponibilidad.md` | KPIs, Kardex, `ItemsIndex`, `LotsIndex`, vista legacy `/inventario`, riesgos del “movimiento rápido”. |
@@ -48,6 +50,7 @@ Este directorio concentra la versión vigente de la documentación funcional/té
 - Verificar rutas activas (`routes/web.php`, `routes/api.php`) y controladores/Livewire asociados.
 - Incluir referencias a servicios, jobs y migraciones que toquen el flujo.
 - Registrar riesgos o gaps detectados y próximos pasos antes de enviar cambios.
+- **Antes de deployment a producción:** seguir proceso documentado en `docs/V4.0/Guia/Deployment.md`.
 
 ## Backlog inmediato
 

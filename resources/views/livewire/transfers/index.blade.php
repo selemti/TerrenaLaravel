@@ -58,22 +58,32 @@
                             <td>{{ $trans['almacen_destino'] }}</td>
                             <td>{{ \Carbon\Carbon::parse($trans['fecha_solicitada'])->format('d/m/Y') }}</td>
                             <td>
-                                @if($trans['estado'] === 'BORRADOR')
-                                    <span class="badge text-bg-secondary">Borrador</span>
-                                @elseif($trans['estado'] === 'DESPACHADA')
-                                    <span class="badge text-bg-info">Despachada</span>
-                                @elseif($trans['estado'] === 'RECIBIDA')
+                                @php $estado = strtoupper($trans['estado']); @endphp
+                                @if($estado === 'SOLICITADA')
+                                    <span class="badge text-bg-secondary">Solicitada</span>
+                                @elseif($estado === 'APROBADA')
+                                    <span class="badge text-bg-primary">Aprobada</span>
+                                @elseif($estado === 'EN_TRANSITO')
+                                    <span class="badge text-bg-info text-dark">En tránsito</span>
+                                @elseif($estado === 'RECIBIDA')
                                     <span class="badge text-bg-success">Recibida</span>
+                                @elseif($estado === 'POSTEADA')
+                                    <span class="badge text-bg-success">Posteada</span>
                                 @else
-                                    <span class="badge text-bg-warning">Parcial</span>
+                                    <span class="badge text-bg-light text-dark">{{ $estado }}</span>
                                 @endif
                             </td>
                             <td>{{ $trans['lineas_count'] }}</td>
                             <td class="small">{{ $trans['creado_por'] }}</td>
                             <td class="text-end">
-                                <button class="btn btn-sm btn-outline-primary" disabled>
-                                    <i class="fa-solid fa-eye"></i> Ver
-                                </button>
+                                <div class="btn-group btn-group-sm">
+                                    <a class="btn btn-outline-primary" href="{{ route('transfers.dispatch', ['id' => $trans['id']]) }}">
+                                        <i class="fa-solid fa-truck"></i>
+                                    </a>
+                                    <a class="btn btn-outline-success" href="{{ route('transfers.receive', ['id' => $trans['id']]) }}">
+                                        <i class="fa-solid fa-box-open"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     @empty

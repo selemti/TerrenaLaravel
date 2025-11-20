@@ -21,10 +21,11 @@ class InventoryOptimizationSeeder extends Seeder
 
     private function addMissingIndexes(): void
     {
+        // TODO: this table (stock) does not exist in BD. Revisar diseño de Inventario.
         // Index for quick stock lookup by almacen and item (used in transfer approval)
-        if (! Schema::hasIndex('selemti.stock', ['almacen_id', 'item_id'])) {
-            DB::connection('pgsql')->statement('CREATE INDEX CONCURRENTLY idx_stock_almacen_item ON selemti.stock (almacen_id, item_id)');
-        }
+        // if (! Schema::hasIndex('selemti.stock', ['almacen_id', 'item_id'])) {
+        //     DB::connection('pgsql')->statement('CREATE INDEX CONCURRENTLY idx_stock_almacen_item ON selemti.stock (almacen_id, item_id)');
+        // }
 
         // Index for mov_inv lookups by item, almacen, and reference
         if (! Schema::hasIndex('selemti.mov_inv', ['item_id', 'almacen_id', 'referencia_tipo', 'referencia_id'])) {
@@ -70,19 +71,19 @@ class InventoryOptimizationSeeder extends Seeder
         // Create a kardex view that aggregates movement data efficiently
         DB::connection('pgsql')->statement('
             CREATE OR REPLACE VIEW selemti.vw_kardex_optimized AS
-            SELECT 
+            SELECT
                 mi.item_id,
-                mi.almacen_id,
-                mi.fecha_movimiento,
-                mi.tipo_movimiento,
+                mi.sucursal_id,
+                mi.ts,
+                mi.tipo,
                 mi.cantidad,
                 mi.unidad_medida,
                 mi.usuario_id,
-                mi.referencia_tipo,
-                mi.referencia_id,
+                mi.ref_tipo,
+                mi.ref_id,
                 SUM(mi.cantidad) OVER (
-                    PARTITION BY mi.item_id, mi.almacen_id 
-                    ORDER BY mi.fecha_movimiento, mi.id 
+                    PARTITION BY mi.item_id, mi.sucursal_id
+                    ORDER BY mi.ts, mi.id
                     ROWS UNBOUNDED PRECEDING
                 ) as saldo_acumulado,
                 u.nombre as unidad_nombre,
@@ -90,28 +91,29 @@ class InventoryOptimizationSeeder extends Seeder
                 a.nombre as almacen_nombre
             FROM selemti.mov_inv mi
             LEFT JOIN selemti.items i ON mi.item_id = i.id
-            LEFT JOIN selemti.cat_almacenes a ON mi.almacen_id = a.id
+            LEFT JOIN selemti.cat_almacenes a ON mi.sucursal_id = a.id
             LEFT JOIN selemti.unidades_medida u ON mi.unidad_medida = u.codigo
         ');
 
+        // TODO: this view (vw_stock_resumen_optimized) references table 'stock' which does not exist in BD. Revisar diseño de Inventario.
         // Create an inventory summary view optimized for queries
-        DB::connection('pgsql')->statement('
-            CREATE OR REPLACE VIEW selemti.vw_stock_resumen_optimized AS
-            SELECT 
-                s.item_id,
-                s.almacen_id,
-                s.cantidad_actual,
-                s.fecha_ultima_actualizacion,
-                i.nombre as item_nombre,
-                i.clave as item_sku,
-                i.tipo as item_tipo,
-                a.nombre as almacen_nombre,
-                a.codigo as almacen_codigo,
-                c.nombre as categoria_nombre
-            FROM selemti.stock s
-            LEFT JOIN selemti.items i ON s.item_id = i.id
-            LEFT JOIN selemti.cat_almacenes a ON s.almacen_id = a.id
-            LEFT JOIN selemti.categorias c ON i.categoria_id = c.id
-        ');
+        // DB::connection('pgsql')->statement('
+        //     CREATE OR REPLACE VIEW selemti.vw_stock_resumen_optimized AS
+        //     SELECT
+        //         s.item_id,
+        //         s.almacen_id,
+        //         s.cantidad_actual,
+        //         s.fecha_ultima_actualizacion,
+        //         i.nombre as item_nombre,
+        //         i.clave as item_sku,
+        //         i.tipo as item_tipo,
+        //         a.nombre as almacen_nombre,
+        //         a.codigo as almacen_codigo,
+        //         c.nombre as categoria_nombre
+        //     FROM selemti.stock s
+        //     LEFT JOIN selemti.items i ON s.item_id = i.id
+        //     LEFT JOIN selemti.cat_almacenes a ON s.almacen_id = a.id
+        //     LEFT JOIN selemti.categorias c ON i.categoria_id = c.id
+        // ');
     }
 }

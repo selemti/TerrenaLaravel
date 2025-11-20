@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class MenuItem extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'public.menu_item'; // **IMPORTANTE: Prefijo public.**
 
     protected $primaryKey = 'id';
@@ -15,13 +17,12 @@ class MenuItem extends Model
 
     protected $fillable = [
         'name', 'description', 'price', 'group_id', 'visible', 'recepie', // recepie es la FK a la receta
-        'default_group_id', 'sort_order',
+        'sort_order',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'visible' => 'boolean',
-        'kitchen_display' => 'boolean', // Si existe esta columna
     ];
 
     public function selemtiReceta()

@@ -248,6 +248,7 @@ Route::middleware('auth')->group(function () {
     |========================================================================= */
     Route::get('/recipes', RecipesIndexLW::class)->name('rec.index');
     Route::get('/recipes/editor/{id?}', RecipeEditorLW::class)->name('rec.editor');
+    Route::get('/recipes/{id}/versions', \App\Livewire\Recipes\VersionComparator::class)->name('rec.versions');
 
     /* =========================================================================
     |  KDS / Caja / Reportes / Admin
@@ -280,7 +281,8 @@ Route::middleware('auth')->group(function () {
     Route::prefix('transfers')->group(function () {
         Route::get('/', \App\Livewire\Transfers\Index::class)->name('transfers.index');
         Route::get('/create', TransfersCreate::class)->name('transfers.create');
-        // TODO: agregar rutas dispatch, receive cuando estén listas
+        Route::get('/{id}/dispatch', \App\Livewire\Transfers\TransferDispatch::class)->name('transfers.dispatch');
+        Route::get('/{id}/receive', \App\Livewire\Transfers\TransferReceive::class)->name('transfers.receive');
     });
 
     /* =========================================================================

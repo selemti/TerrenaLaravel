@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class MenuCategory extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'public.menu_category';
 
     protected $primaryKey = 'id';

@@ -7,6 +7,8 @@
   'help' => null,
 ])
 
+@php($errors = $errors ?? new \Illuminate\Support\ViewErrorBag())
+
 <div>
   @if($label)
     <label for="{{ $id }}" class="block text-sm font-medium mb-1">{{ $label }}</label>

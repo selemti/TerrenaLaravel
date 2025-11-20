@@ -1,0 +1,484 @@
+# MATRIZ DE ALINEACIÓN V4.0
+
+**Orquestador**: MAESTRO (Consolidación CLAUDE + QWEN + CODEX + COPILOT)
+**Fecha**: 14 Noviembre 2025
+**Fuente**: FASE1-FASE6 + 4 Orquestadores
+**Estado**: Consolidado v4.0
+
+---
+
+## 1. INTRODUCCIÓN
+
+Esta matriz consolida el estado actual del sistema Terrena POS/ERP a través de los 15 módulos identificados, evaluando su alineación entre documentación, código implementado, base de datos y UI/UX. La información proviene de la fusión del trabajo de 4 agentes de IA, la auditoría completa del sistema (FASE1-FASE6) y la documentación específica de deployment.
+
+### 1.1 Metodología de Evaluación
+
+Cada módulo se evalúa según 4 dimensiones:
+- **Documentación**: Estado actual en docs/V4.0/ (0-100%)
+- **Código**: Implementación en app/, resources/, etc. (0-100%)
+- **Base de Datos**: Tablas, vistas, funciones relacionadas en esquema selemti (0-100%)
+- **UI/UX**: Interfaces, flujos, componentes disponibles (0-100%)
+
+### 1.2 Leyenda de Prioridades
+
+| Prioridad | Color | Criterio |
+|-----------|-------|----------|
+| **P0 - Crítica** | 🔴 | Funcionalidad core, requerida para operación |
+| **P1 - Alta** | 🟡 | Funcionalidad importante, mejora operación |
+| **P2 - Media** | 🟢 | Funcionalidad complementaria o futura |
+
+---
+
+## 2. MÓDULO: INVENTARIO
+
+| Aspecto | Estado | Evidencia | Gap |
+|---------|--------|-----------|-----|
+| **Documentación** | 80% | Inventario/ (Items, Recepciones, Conteos, Transferencias, Mermas) | Ajustes, Kardex incompletos |
+| **Código** | 85% | 12 servicios, 15 modelos, 8 Livewire (inventory/*) | Ajustes parcial, Kardex no documentado |
+| **Base de Datos** | 90% | items, mov_inv, inventory_batch, stock, lotes | vw_kardex_detalle pendiente |
+| **UI/UX** | 80% | 18 vistas Blade, componentes Livewire | Ajustes sin UI, Kardex sin detalle |
+
+**Insights por agente**:
+- [CLAUDE]: Buen soporte para recepciones y conteos
+- [QWEN]: Interacción con Recetas, Producción
+- [CODEX]: 82 tablas huérfanas, integración con POS
+- [COPILOT]: FEFO implementado en vw_stock_por_lote_fefo
+
+**Prioridad**: 🔴 P0
+
+**Deployment Considerations**: 
+- Verificar funcionalidad en entorno producción (http://100.126.124.101/terrena2/)
+- Validar acceso a módulo con diferentes roles
+
+---
+
+## 3. MÓDULO: RECETAS
+
+| Aspecto | Estado | Evidencia | Gap |
+|---------|--------|-----------|-----|
+| **Documentación** | 70% | Recetas/README.md | Versionado, Costeo incompletos |
+| **Código** | 75% | RecetaCab, RecetaDet, RecetaVersion modelos | Costeo sin UI, Versionado sin historial |
+| **Base de Datos** | 85% | receta_cab, receta_det, receta_version, receta_insumo | Sin vistas analíticas |
+| **UI/UX** | 70% | RecipeEditor, RecipesIndex | Costeo sin UI, Versionado sin historial |
+
+**Insights por agente**:
+- [CLAUDE]: Falta sistema de versionado automático
+- [QWEN]: Conexión con Producción y POS fundamental
+- [CODEX]: fn_recipe_cost_at() sin documentar
+- [COPILOT]: Recetas usadas en POS vía pos_map
+
+**Prioridad**: 🔴 P0
+
+**Deployment Considerations**:
+- fn_recipe_cost_at() crítico para operación en producción
+- Requiere vistas específicas en BD para cálculo de costos
+
+---
+
+## 4. MÓDULO: PRODUCCIÓN
+
+| Aspecto | Estado | Evidencia | Gap |
+|---------|--------|-----------|-----|
+| **Documentación** | 55% | Produccion/README.md | Órdenes, Mermas incompletos |
+| **Código** | 60% | ProductionService, production_orders | KPIs, Mermas sin UI completa |
+| **Base de Datos** | 70% | prod_cab, prod_det, production_orders | Sin vistas analíticas |
+| **UI/UX** | 65% | Produccion/Kds/Board | KPIs, Rendimiento sin UI |
+
+**Insights por agente**:
+- [CLAUDE]: KDS implementado pero sin KPIs
+- [QWEN]: Conexión con Inventario y Recetas clave
+- [CODEX]: Falta control de mermas y rendimiento
+- [COPILOT]: Integra con Recetas para explosion/implosion
+
+**Prioridad**: 🟡 P1
+
+**Deployment Considerations**:
+- Validar funcionalidad KDS en entorno de producción
+- Verificar integración con Inventario y Recetas
+
+---
+
+## 5. MÓDULO: PURCHASING
+
+| Aspecto | Estado | Evidencia | Gap |
+|---------|--------|-----------|-----|
+| **Documentación** | 85% | Purchasing/README.md | Replenishment incompleto |
+| **Código** | 85% | PurchasingService, ReceivingService | Motor de reposición sin UI |
+| **Base de Datos** | 90% | purchase_requests, purchase_orders, purchase_suggestions | replenishment_suggestions parcial |
+| **UI/UX** | 80% | Componentes Purchasing/* | Dashboard de reposición sin UI |
+
+**Insights por agente**:
+- [CLAUDE]: Motor de reposición pendiente
+- [QWEN]: Conexión con Inventario y Catálogos
+- [CODEX]: 90 registros en purchase_suggestions
+- [COPILOT]: Replenishment engine con múltiples algoritmos pendientes
+
+**Prioridad**: 🔴 P0
+
+**Deployment Considerations**:
+- Validar motor de reposición con datos históricos
+- Asegurar migraciones completas en producción
+
+---
+
+## 6. MÓDULO: POS
+
+| Aspecto | Estado | Evidencia | Gap |
+|---------|--------|-----------|-----|
+| **Documentación** | 60% | POS/README.md | Consumos incompletos |
+| **Código** | 70% | PosConsumptionService (triplcado), ticket_venta_* | Integración inconsistente |
+| **Base de Datos** | 80% | ticket_venta_cab, ticket_venta_det, pos_map | Sin vistas consolidadas |
+| **UI/UX** | 70% | Parcial en Floreant | No hay UI propia |
+
+**Insights por agente**:
+- [CLAUDE]: Duplicación de PosConsumptionService crítico
+- [QWEN]: Integra con Recetas y Reportes
+- [CODEX]: 3 ubicaciones de PosConsumptionService
+- [COPILOT]: Mapeo productos a recetas via pos_map
+
+**Prioridad**: 🟡 P1
+
+**Deployment Considerations**:
+- Consolidar PosConsumptionService en producción
+- Asegurar que pos_map esté sincronizado
+- fn_expandir_consumo_ticket() funcional en producción
+
+---
+
+## 7. MÓDULO: VENTAS
+
+| Aspecto | Estado | Evidencia | Gap |
+|---------|--------|-----------|-----|
+| **Documentación** | 75% | Reportes/README.md, ventas mencionadas | Ventas como módulo separado |
+| **Código** | 80% | Ventas en Reports/, POS integración | Sin modelo dedicado |
+| **Base de Datos** | 85% | ticket_venta_*, pos_*, sesion_cajon | Sin vistas analíticas |
+| **UI/UX** | 80% | Reportes con ventas | Sin dashboard dedicado |
+
+**Insights por agente**:
+- [CLAUDE]: Debe integrarse con Reportes
+- [QWEN]: Conexión con Caja, Inventario
+- [CODEX]: 150+ vistas de reportes de ventas
+- [COPILOT]: Expansión consumos POS vía fn_expandir_consumo_ticket
+
+**Prioridad**: 🔴 P0
+
+**Deployment Considerations**:
+- Validar expansión de tickets POS en producción
+- Verificar vistas analíticas de ventas
+- fn_expandir_consumo_ticket() debe estar funcional
+
+---
+
+## 8. MÓDULO: CAJA
+
+| Aspecto | Estado | Evidencia | Gap |
+|---------|--------|-----------|-----|
+| **Documentación** | 95% | Caja/HistoricoCortes.md, Caja/REDIRECCION_DETALLE_A_WIZARD.md | Cortes analíticos |
+| **Código** | 95% | 8 controladores Api/Caja/, 12 modelos | UI mejoras UX |
+| **Base de Datos** | 95% | sesion_cajon, precorte, postcorte, formas_pago | Completos |
+| **UI/UX** | 90% | Componentes Caja/* | Loading, notificaciones |
+
+**Insights por agente**:
+- [CLAUDE]: Excelente implementación
+- [QWEN]: Conexión con Finanzas
+- [CODEX]: 200+ registros en sesion_cajon
+- [COPILOT]: Triggers precorte/postcorte funcionando
+
+**Prioridad**: ✅ P0
+
+**Deployment Considerations**:
+- Validar sesiones de caja en producción
+- Verificar triggers precorte/postcorte
+- Asegurar permisos adecuados para cortes
+
+---
+
+## 9. MÓDULO: CAJA CHICA
+
+| Aspecto | Estado | Evidencia | Gap |
+|---------|--------|-----------|-----|
+| **Documentación** | 100% | CajaChica docs en docs/00.history/ | Migrar a Finanzas |
+| **Código** | 100% | CashFundService, 6 modelos, 6 Livewire | Completos |
+| **Base de Datos** | 100% | cash_funds, cash_fund_movements, cash_fund_arqueos | Completos |
+| **UI/UX** | 100% | UI completa y funcional | Completos |
+
+**Insights por agente**:
+- [CLAUDE]: Módulo modelo
+- [QWEN]: Flujo 6 pasos bien implementado
+- [CODEX]: 400+ registros
+- [COPILOT]: 6 componentes Livewire, 3 modelos críticos
+
+**Prioridad**: ✅ P0
+
+**Deployment Considerations**:
+- Validar flujo completo en entorno de producción
+- Verificar funcionamiento de CashFundService
+- Asegurar que las transacciones se registren correctamente
+
+---
+
+## 10. MÓDULO: REPORTES
+
+| Aspecto | Estado | Evidencia | Gap |
+|---------|--------|-----------|-----|
+| **Documentación** | 90% | Reports/README.md | KPIs analíticos |
+| **Código** | 90% | 8 controladores, 12 vistas | KPIs avanzados |
+| **Base de Datos** | 95% | 38 vistas vw_dashboard_* | Completos |
+| **UI/UX** | 90% | Dashboard completo | UX refinada |
+
+**Insights por agente**:
+- [CLAUDE]: Buen soporte analítico
+- [QWEN]: Conexión con todos módulos
+- [CODEX]: 38 vistas de dashboard
+- [COPILOT]: KPIs en tiempo real
+
+**Prioridad**: ✅ P0
+
+**Deployment Considerations**:
+- Validar vistas de dashboard en producción
+- Verificar rendimiento de vistas analíticas
+- Asegurar que los KPIs se actualicen correctamente
+
+---
+
+## 11. MÓDULO: FINANZAS
+
+| Aspecto | Estado | Evidencia | Gap |
+|---------|--------|-----------|-----|
+| **Documentación** | 70% | Finanzas/README.md | CajaChica migrada, Cortes |
+| **Código** | 65% | DailyCloseService, AlertasService | Cortes incompletos |
+| **Base de Datos** | 75% | precorte, postcorte, conciliacion | Completos |
+| **UI/UX** | 70% | Componentes Caja/ | UI refinada |
+
+**Insights por agente**:
+- [CLAUDE]: Conexión con Caja
+- [QWEN]: Cortes diarios
+- [CODEX]: Triggers automáticos
+- [COPILOT]: Daily close automáticos
+
+**Prioridad**: 🟢 P2
+
+**Deployment Considerations**:
+- Validar proceso de cierre diario en producción
+- Verificar triggers automáticos en BD
+- Asegurar que DailyCloseService funcione correctamente
+
+---
+
+## 12. MÓDULO: BASE DE DATOS
+
+| Aspecto | Estado | Evidencia | Gap |
+|---------|--------|-----------|-----|
+| **Documentación** | 75% | Parcial en docs/, sin docs/V4.0/ | Completar en V4.0 |
+| **Código** | 90% | 147 tablas, 38 vistas, 37 funciones | Sin modelo para 82 tablas |
+| **Base de Datos** | 90% | Esquema selemti completo | Completos |
+| **UI/UX** | 0% | Sin UI directa | No aplica |
+
+**Insights por agente**:
+- [CLAUDE]: 12 funciones críticas sin documentar
+- [QWEN]: Dual schema (selemti, public)
+- [CODEX]: 189 archivos huérfanos
+- [COPILOT]: PostgreSQL 9.5, 147 tablas
+
+**Prioridad**: 🔴 P0
+
+**Deployment Considerations**:
+- Asegurar esquema selemti en producción
+- Validar funciones críticas en servidor
+- Verificar acceso a ambos esquemas (selemti, public)
+
+---
+
+## 13. MÓDULO: FRONTEND
+
+| Aspecto | Estado | Evidencia | Gap |
+|---------|--------|-----------|-----|
+| **Documentación** | 75% | Frontend/Componentes.md, Frontend/Layout.md | Gaps UX |
+| **Código** | 80% | 58 componentes Livewire, vistas Blade | UX críticos |
+| **Base de Datos** | 0% | No aplica | No aplica |
+| **UI/UX** | 65% | Score FASE6 6.5/10 | Loading, toasts, confirmación |
+
+**Insights por agente**:
+- [CLAUDE]: Gaps UX críticos identificados
+- [QWEN]: Bootstrap 5, Alpine.js
+- [CODEX]: 40 forms sin loading states
+- [COPILOT]: Patrones inconsistentes
+
+**Prioridad**: 🟡 P1
+
+**Deployment Considerations**:
+- Validar UX en entorno de producción
+- Verificar que assets (CSS/JS) se carguen correctamente
+- Asegurar que RewriteBase esté configurado como /terrena2/
+
+---
+
+## 14. MÓDULO: SEGURIDAD
+
+| Aspecto | Estado | Evidencia | Gap |
+|---------|--------|-----------|-----|
+| **Documentación** | 75% | Sin docs/V4.0 | Crear Seguridad/README.md |
+| **Código** | 80% | Spatie permissions, Policies | UI perms incompleta |
+| **Base de Datos** | 85% | permissions, roles, model_has_* | Completos |
+| **UI/UX** | 60% | Básico en People/Users | UI perms incompleta |
+
+**Insights por agente**:
+- [CLAUDE]: 7 roles identificados
+- [QWEN]: RBAC completo
+- [CODEX]: 45 permisos definidos
+- [COPILOT]: 7 roles con jerarquía
+
+**Prioridad**: 🔴 P0
+
+**Deployment Considerations**:
+- Validar permisos en producción
+- Verificar que las reglas de Spatie funcionen
+- Asegurar que el token de sesión se genere correctamente
+
+---
+
+## 15. MÓDULO: CATÁLOGOS
+
+| Aspecto | Estado | Evidencia | Gap |
+|---------|--------|-----------|-----|
+| **Documentación** | 85% | Parcial documentado | Crear Catalogos/README.md |
+| **Código** | 90% | 6 componentes Livewire, modelos | Completos |
+| **Base de Datos** | 90% | cat_unidades, cat_almacenes, etc. | Completos |
+| **UI/UX** | 90% | UI completa catálogos | Completos |
+
+**Insights por agente**:
+- [CLAUDE]: 6 componentes Livewire
+- [QWEN]: Unidades, almacenes, proveedores, sucursales
+- [CODEX]: 4 modelos principales
+- [COPILOT]: Conversiones UOM implementadas
+
+**Prioridad**: ✅ P0
+
+**Deployment Considerations**:
+- Validar catálogos en producción
+- Verificar conversiones de unidades
+- Asegurar integridad referencial
+
+---
+
+## 16. MÓDULO: TRANSFERENCIAS
+
+| Aspecto | Estado | Evidencia | Gap |
+|---------|--------|-----------|-----|
+| **Documentación** | 60% | Inventario/Transferencias.md parcial | Despacho/recepción incompletos |
+| **Código** | 75% | TransferService completo | UI despacho/recepción |
+| **Base de Datos** | 85% | transfer_cab, transfer_det | Completos |
+| **UI/UX** | 50% | Solo creación, sin despacho/recepción | UI pendiente |
+
+**Insights por agente**:
+- [CLAUDE]: UI solo creación, sin despacho/recepción
+- [QWEN]: 5 estados de transferencia
+- [CODEX]: TransferService funcional
+- [COPILOT]: API parcial, UI incompleta
+
+**Prioridad**: 🟡 P1
+
+**Deployment Considerations**:
+- Validar TransferService en producción
+- Implementar UI de despacho/recepción en servidor
+- Verificar estados de transferencia
+
+---
+
+## 17. DEPLOYMENT Y OPERACIONES
+
+### 17.1 Consideraciones de Despliegue
+
+| Aspecto | Estado | Detalle |
+|---------|--------|---------|
+| **Ambiente Local** | ✅ | Windows + XAMPP, PostgreSQL 9.5, Puerto 5433 |
+| **Ambiente Producción** | ✅ | Ubuntu + Apache, PostgreSQL 14+, Alias `/terrena2` |
+| **URLs de Acceso** | ✅ | http://192.168.1.235/terrena2/, http://100.126.124.101/terrena2/ |
+| **Configuración Apache** | ✅ | VirtualHost con Alias `/terrena2`, RewriteBase `/terrena2/` |
+| **Proceso de Deployment** | ✅ | WinSCP/SFTP, backup antes, permisos post-copias |
+| **Archivos a copiar** | ✅ | app/, resources/, routes/, public/build/, etc. |
+| **Archivos a excluir** | ✅ | .env, vendor/, node_modules/, storage/logs/ |
+
+### 17.2 Checklist de Despliegue
+
+**Pre-deployment**:
+- [ ] Tests ejecutados: `php artisan test`
+- [ ] Código limpio: `./vendor/bin/pint`
+- [ ] Migraciones probadas: `php artisan migrate:status`
+- [ ] Assets compilados: `npm run build`
+- [ ] Cache limpiado: `php artisan *:clear`
+
+**Post-deployment**:
+- [ ] Composer install: `sudo -u www-data composer install --no-dev`
+- [ ] Migraciones: `sudo -u www-data php artisan migrate --force`
+- [ ] Cache: `sudo -u www-data php artisan config:cache`
+- [ ] Permisos storage: `sudo chown -R www-data:www-data storage/`
+
+---
+
+## 18. RESUMEN GENERAL
+
+| Módulo | Documentación | Código | Base de Datos | UI/UX | Promedio | Prioridad |
+|--------|---------------|--------|---------------|-------|----------|-----------|
+| Inventario | 80% | 85% | 90% | 80% | 84% | 🔴 P0 |
+| Recetas | 70% | 75% | 85% | 70% | 75% | 🔴 P0 |
+| Producción | 55% | 60% | 70% | 65% | 63% | 🟡 P1 |
+| Purchasing | 85% | 85% | 90% | 80% | 85% | 🔴 P0 |
+| POS | 60% | 70% | 80% | 70% | 70% | 🟡 P1 |
+| Ventas | 75% | 80% | 85% | 80% | 80% | 🔴 P0 |
+| Caja | 95% | 95% | 95% | 90% | 94% | ✅ P0 |
+| Caja Chica | 100% | 100% | 100% | 100% | 100% | ✅ P0 |
+| Reportes | 90% | 90% | 95% | 90% | 94% | ✅ P0 |
+| Finanzas | 70% | 65% | 75% | 70% | 70% | 🟢 P2 |
+| Base de Datos | 75% | 90% | 90% | 0% | 64% | 🔴 P0 |
+| Frontend | 75% | 80% | 0% | 65% | 55% | 🟡 P1 |
+| Seguridad | 75% | 80% | 85% | 60% | 75% | 🔴 P0 |
+| Catálogos | 85% | 90% | 90% | 90% | 89% | ✅ P0 |
+| Transferencias | 60% | 75% | 85% | 50% | 68% | 🟡 P1 |
+
+**Promedio General**: **76.7%**
+
+---
+
+## 19. TOP 10 GAPS CRÍTICOS
+
+| # | Módulo | Gap | Prioridad | Impacto | Deployment |
+|---|--------|-----|-----------|---------|------------|
+| 1 | Frontend | Forms sin loading states | 🔴 P0 | UX, doble submit | ✅ Requiere RewriteBase /terrena2/ |
+| 2 | Frontend | Notificaciones rotas | 🔴 P0 | UX, feedback | ✅ Validar assets en producción |
+| 3 | Frontend | Confirmaciones delete | 🔴 P0 | Seguridad | ✅ Verificar en entorno producción |
+| 4 | Base de Datos | Funciones sin doc | 🔴 P0 | Operación | 🔴 fn_recipe_cost_at() requerida en producción |
+| 5 | Recetas | Costeo sin UI | 🟡 P1 | Operación | 🟡 fn_recipe_cost_at() debe funcionar en producción |
+| 6 | Producción | KPIs sin UI | 🟡 P1 | Análisis | ✅ Validar en servidor |
+| 7 | POS | Duplicación código | 🔴 P0 | Consistencia | 🔴 Consolidar PosConsumptionService en producción |
+| 8 | Transferencias | UI despacho/recepción | 🟡 P1 | Operación | ✅ Implementar en servidor |
+| 9 | Recetas | Versionado sin UI | 🟡 P1 | Historia | ✅ fn_recipe_cost_at() debe funcionar en producción |
+| 10 | Base de Datos | Tablas sin modelo | 🟡 P1 | Mantenimiento | ✅ Validar esquema en producción |
+
+---
+
+## 20. ROADMAP SUGERIDO (289h / 8 sprints)
+
+| Sprint | Horas | Enfoque | Objetivos | Consideraciones Producción |
+|--------|-------|---------|-----------|-----------------------------|
+| Sprint 1 | 24h | UX Crítico | Forms loading, notificaciones, confirmaciones | Validar en servidor con RewriteBase /terrena2/ |
+| Sprint 2 | 48h | BD Crítico | 12 funciones, vistas pendientes | fn_recipe_cost_at() en producción |
+| Sprint 3 | 48h | Documentación | 15 docs V4.0 completos | Asegurar documentación de deployment |
+| Sprint 4 | 40h | Código | Duplicados, huérfanos | Consolidar servicios duplicados antes de deployment |
+| Sprint 5 | 40h | Funcionalidad | Recetas costeo, Transferencias UI | fn_recipe_cost_at() debe funcionar |
+| Sprint 6 | 40h | Reportes | KPIs analíticos | Validar vistas en producción |
+| Sprint 7 | 24h | Refactor | Duplicados POS, ProductionService | Validar en entorno producción |
+| Sprint 8 | 25h | Tests | Aseguramiento calidad | Validar procesos de deployment |
+| **Total** | **289h** | - | - | - |
+
+---
+
+## 21. REFERENCIAS
+
+- FASE1-FASE6: Auditoría completa del sistema
+- CLAUDE: Contrato original, compendio supremo
+- QWEN: Análisis modular, conexiones
+- CODEX: Radiografía técnica, gaps
+- COPILOT: Stack confirmado, funcionalidades
+- `docs/V4.0/Guia/Deployment.md`: Proceso de deployment
+- `docs/V4.0/Guia/Stack.md`: Stack y convenciones

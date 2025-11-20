@@ -1,0 +1,402 @@
+=== DIAGRAMA ENTIDAD-RELACIÓN - SCHEMA SELEMTI INVENTARIO ===
+Generado: 2025-11-17
+
+================================================================================
+DIAGRAMA ER SIMPLIFICADO
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    MAESTROS - CATÁLOGOS                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌──────────────────────┐   ┌────────────────────────┐         │
+│  │  item_categories     │   │ unidades_medida_legacy │         │
+│  ├──────────────────────┤   ├────────────────────────┤         │
+│  │ id (PK)              │   │ id (PK)                │         │
+│  │ nombre               │   │ codigo (UNIQUE)        │         │
+│  │ slug (UNIQUE)        │   │ nombre                 │         │
+│  │ codigo (UNIQUE)      │   │ tipo                   │         │
+│  │ descripcion          │   │ es_base                │         │
+│  │ activo               │   │ factor_conversion_base │         │
+│  │ prefijo              │   │ decimales              │         │
+│  └──────────────────────┘   └────────────────────────┘         │
+│         △                            △                          │
+│         │ 1:N                        │ 1:N                      │
+│         │ category_id               │ unidad_medida_id         │
+│         │                           │ unidad_compra_id         │
+│         │                           │ unidad_salida_id         │
+│         │                           │                          │
+│  ┌──────┴──────────────────────────┴──────────────────┐        │
+│  │               items (MAESTRO)                       │        │
+│  ├─────────────────────────────────────────────────────┤        │
+│  │ id (PK, varchar)                                    │        │
+│  │ nombre                                              │        │
+│  │ descripcion                                         │        │
+│  │ categoria_id (varchar, legacy)                      │        │
+│  │ category_id (bigint, FK)                            │        │
+│  │ unidad_medida (varchar, legacy)                     │        │
+│  │ unidad_medida_id (integer, FK BASE UOM)             │        │
+│  │ unidad_compra_id (integer, FK)                      │        │
+│  │ unidad_salida_id (integer, FK)                      │        │
+│  │ costo_promedio (numeric)                            │        │
+│  │ perishable (boolean)                                │        │
+│  │ temperatura_min, temperatura_max                    │        │
+│  │ es_producible, es_consumible_operativo, es_empaque │        │
+│  │ activo (boolean)                                    │        │
+│  │ item_code (varchar, UNIQUE)                         │        │
+│  └───────────────────┬─────────────────────────────────┘        │
+│                      │                                           │
+└──────────────────────┼───────────────────────────────────────────┘
+                       │
+       ┌───────────────┴────────────┬──────────────────┐
+       │                            │                  │
+       │ 1:N item_id                │ 1:N item_id      │ 1:N item_id
+       │                            │                  │
+   ┌───▼──────────┐         ┌───────▼────────┐  ┌──────▼──────────┐
+   │    lote      │         │  stock_policy  │  │   conversiones  │
+   ├──────────────┤         ├────────────────┤  │  _unidad_legacy │
+   │ id (PK)      │         │ id (PK)        │  ├─────────────────┤
+   │ item_id (FK) │         │ item_id (FK)   │  │ id (PK)         │
+   │ proveedor_id │         │ sucursal_id    │  │ unidad_origen   │
+   │ codigo       │         │ almacen_id     │  │ unidad_destino  │
+   │ caducidad    │         │ min_qty        │  │ factor_conv.    │
+   │ estado (ENUM)│         │ max_qty        │  │ precision       │
+   │ creado_ts    │         │ reorder_lote   │  │ activo          │
+   │              │         │ activo         │  └─────────────────┘
+   └───┬──────────┘         └────────────────┘
+       │
+       │ 1:N lote_id
+       │
+   ┌───▼──────────────────────────────────────────┐
+   │  KARDEX - MOVIMIENTOS INVENTARIO (mov_inv)   │
+   ├───────────────────────────────────────────────┤
+   │ id (PK, bigint, AUTOINCREMENT)                │
+   │ ts (timestamp, CRITICAL)                      │
+   │ item_id (FK varchar)                          │
+   │ lote_id (FK bigint, opcional)                 │
+   │ cantidad (numeric)                            │
+   │ qty_original (numeric)                        │
+   │ uom_original_id (FK integer)                  │
+   │ costo_unit (numeric)                          │
+   │ tipo (varchar): ENTRADA, SALIDA, AJUSTE       │
+   │ ref_tipo (varchar): RECEPCION, TRANSFER, etc  │
+   │ ref_id (bigint)                               │
+   │ sucursal_id (varchar)                         │
+   │ usuario_id (integer)                          │
+   │                                               │
+   │ ÍNDICES: (item_id,ts), (tipo,ts), (ts,tipo)  │
+   │          (ref_tipo,ref_id), (sucursal_id)    │
+   │                                               │
+   │ USO: Toda operación de inventario genera     │
+   │      una entrada aquí. Es el JOURNAL.        │
+   └───────────────────────────────────────────────┘
+
+================================================================================
+DIAGRAMA DE TRANSACCIONES
+================================================================================
+
+1. RECEPCIÓN (recepcion_cab + recepcion_det)
+   ─────────────────────────────────────────
+
+   recepcion_cab (encabezado)
+   ├─ id (PK)
+   ├─ sucursal_id (FK → cat_sucursales)
+   ├─ proveedor_id
+   ├─ numero_recepcion
+   ├─ ts
+   ├─ usuario_id (FK → users)
+   ├─ almacen_id
+   ├─ estado: BORRADOR → COMPLETA → CERRADA
+   ├─ total_presentaciones
+   ├─ total_canonico
+   ├─ meta (JSONB)
+   ├─ deleted_at (soft delete)
+   └─ 1:N recepcion_det
+
+      recepcion_det (líneas)
+      ├─ id (PK)
+      ├─ recepcion_id (FK)
+      ├─ item_id (FK)
+      ├─ bodega_id (FK → cat_almacenes)
+      ├─ qty (cantidad recibida)
+      ├─ um_id (FK → unidades_medida_legacy)
+      ├─ costo_unit
+      ├─ batch_id (FK → lote, creado aquí)
+      ├─ temperatura
+      ├─ meta (JSONB)
+      └─ deleted_at (soft delete)
+
+   FLUJO:
+   1. Crear recepcion_cab (BORRADOR)
+   2. Agregar recepcion_det
+   3. Crear lote si es nuevo
+   4. → Genera mov_inv (ENTRADA, ref_tipo=RECEPCION, ref_id=recepcion_id)
+   5. Cambiar estado a COMPLETA
+
+   RELACIONES:
+   recepcion_det.batch_id ──→ lote.id
+   recepcion_det.item_id ──→ items.id
+   lote.item_id ──→ items.id
+   mov_inv.ref_id ──→ recepcion_cab.id
+
+
+2. TRANSFERENCIA (transfer_cab + transfer_det)
+   ─────────────────────────────────────────
+
+   transfer_cab
+   ├─ id (PK)
+   ├─ origen_almacen_id (FK → almacen, pero SIN FK EXPLÍCITA)
+   ├─ destino_almacen_id (FK → almacen, pero SIN FK EXPLÍCITA)
+   ├─ estado: CREADA → DESPACHADA → RECIBIDA
+   ├─ creada_por
+   ├─ despachada_por
+   ├─ recibida_por
+   ├─ guia
+   └─ 1:N transfer_det
+
+      transfer_det
+      ├─ id (PK)
+      ├─ transfer_id (FK)
+      ├─ item_id (FK items, pero SIN FK EXPLÍCITA)
+      ├─ cantidad
+      ├─ cantidad_despachada
+      └─ cantidad_recibida
+
+   FLUJO:
+   1. Crear transfer_cab (CREADA)
+   2. Agregar transfer_det (items)
+   3. Despachar → DESPACHADA → mov_inv (SALIDA, ref_tipo=TRANSFER)
+   4. Recibir → RECIBIDA → mov_inv (ENTRADA, ref_tipo=TRANSFER)
+
+   NOTA: FKs para almacenes DEBERÍAN existir pero NO están
+
+
+3. CONTEO FÍSICO (inventory_counts + inventory_count_lines)
+   ──────────────────────────────────────────────────────
+
+   inventory_counts (encabezado)
+   ├─ id (PK)
+   ├─ folio (UNIQUE)
+   ├─ sucursal_id (varchar, SIN FK)
+   ├─ almacen_id (varchar, SIN FK)
+   ├─ programado_para (timestamp with tz)
+   ├─ iniciado_en (timestamp with tz)
+   ├─ cerrado_en (timestamp with tz)
+   ├─ estado: BORRADOR → EN_PROGRESO → COMPLETADO → CERRADO
+   ├─ creado_por
+   ├─ cerrado_por
+   ├─ total_items
+   ├─ total_variacion
+   ├─ meta (JSONB)
+   └─ 1:N inventory_count_lines
+
+      inventory_count_lines
+      ├─ id (PK)
+      ├─ inventory_count_id (FK)
+      ├─ item_id (FK → items)
+      ├─ inventory_batch_id (FK → lote)
+      ├─ qty_teorica (según sistema)
+      ├─ qty_contada (físicamente contada)
+      ├─ qty_variacion (diferencia)
+      ├─ uom
+      ├─ motivo (si hay variación)
+      └─ meta (JSONB)
+
+   FLUJO:
+   1. Crear inventory_counts (BORRADOR)
+   2. Agregar inventory_count_lines (por item/lote)
+   3. Contar físicamente → INICIADO → EN_PROGRESO
+   4. Cálcular variaciones
+   5. Cierre → COMPLETADO
+   6. Generar ajustes → mov_inv (AJUSTE, ref_tipo=CONTEO, ref_id=count_id)
+   7. → CERRADO
+
+   NOTA: Permite conteo por lote específico (para FIFO/LIFO)
+
+================================================================================
+DIAGRAMA DE FLUJO COMPLETO
+================================================================================
+
+                    ┌─────────────────────────────┐
+                    │   PROVEEDOR / ALMACENES    │
+                    └──────────────┬──────────────┘
+                                   │
+                                   │ Recibe mercadería
+                                   ▼
+                    ┌─────────────────────────────┐
+                    │  RECEPCIÓN (recepcion_cab   │
+                    │  + recepcion_det + lote)    │
+                    │  [ESTADO: BORRADOR/COMPLETA]│
+                    └──────────────┬──────────────┘
+                                   │
+                                   │ Aprobación
+                                   ▼
+                    ┌─────────────────────────────┐     ┌──────────────┐
+                    │   KARDEX ENTRADA (mov_inv)  │────▶│   almacén    │
+                    │   tipo=ENTRADA              │     │   inventario │
+                    │   ref_id=recepcion_id       │     └──────────────┘
+                    └──────────────┬──────────────┘
+                                   │
+                    ┌──────────────┴──────────────┐
+                    │                             │
+        ┌───────────▼──────────┐     ┌───────────▼──────────┐
+        │  USO / CONSUMO       │     │  TRANSFERENCIA      │
+        │  POS SYSTEM          │     │  transfer_cab/det   │
+        │  mov_inv: SALIDA     │     │  [origen → destino] │
+        └───────────┬──────────┘     └───────────┬──────────┘
+                    │                             │
+                    │      ┌──────────────────────┘
+                    │      │
+                    │      │ Despacho + Recepción
+                    │      │ mov_inv: SALIDA + ENTRADA
+                    │      │
+                    └──────┴──────────────┬──────────────┐
+                                         │              │
+                          ┌──────────────▼──────────┐   │
+                          │  CONTROL FÍSICO         │   │
+                          │  inventory_counts       │   │
+                          │  inventory_count_lines  │   │
+                          │  [TEORICA vs CONTADA]   │   │
+                          └──────────────┬──────────┘   │
+                                         │              │
+                         ┌───────────────▼──────────┐   │
+                         │  VARIACIONES             │   │
+                         │  qty_variacion != 0      │   │
+                         └───────────────┬──────────┘   │
+                                         │              │
+                         ┌───────────────▼──────────┐   │
+                         │  AJUSTES (mov_inv)       │   │
+                         │  tipo=AJUSTE             │   │
+                         │  ref_tipo=CONTEO         │   │
+                         │  ref_id=inventory_id     │   │
+                         └───────────────┬──────────┘   │
+                                         │              │
+                                         │ Reconcilia  │
+                                         │ inventario  │
+                                         │              │
+                          ┌──────────────▼──────────┐   │
+                          │  SALDO ACTUALIZADO      │   │
+                          │  ∑(mov_inv.cantidad)    │◀──┘
+                          │  para cada item         │
+                          └────────────────────────┘
+
+NOTAS CRÍTICAS:
+- mov_inv es el ÚNICO registro de verdad (source of truth)
+- Cada operación DEBE crear exactamente una entrada en mov_inv
+- Una sola entrada errónea en mov_inv afecta TODOS los balances
+- mov_inv.ts es CRÍTICO para toda query de período
+
+================================================================================
+CONSULTAS DE SOPORTE PARA CADA TABLA
+================================================================================
+
+ITEMS:
+  SELECT COUNT(*) FROM selemti.items WHERE activo = true;
+  SELECT * FROM selemti.items WHERE es_producible = true;
+  SELECT * FROM selemti.items WHERE perishable = true;
+
+LOTES:
+  SELECT * FROM selemti.lote WHERE estado = 'ACTIVO'
+    AND caducidad <= CURRENT_DATE;
+  SELECT DISTINCT item_id FROM selemti.lote WHERE estado = 'ACTIVO';
+
+MOV_INV (KARDEX):
+  SELECT item_id, SUM(cantidad) as saldo FROM selemti.mov_inv
+    GROUP BY item_id;
+  SELECT * FROM selemti.mov_inv WHERE tipo = 'ENTRADA'
+    AND ts >= '2025-01-01';
+  SELECT COUNT(*) FROM selemti.mov_inv;
+
+RECEPCIÓN:
+  SELECT * FROM selemti.recepcion_cab WHERE estado = 'BORRADOR';
+  SELECT r.*, COUNT(d.id) as lineas FROM selemti.recepcion_cab r
+    LEFT JOIN selemti.recepcion_det d ON r.id = d.recepcion_id
+    WHERE r.deleted_at IS NULL
+    GROUP BY r.id;
+
+TRANSFERENCIA:
+  SELECT * FROM selemti.transfer_cab WHERE estado IN ('CREADA', 'DESPACHADA');
+  SELECT t.*, COUNT(d.id) as items FROM selemti.transfer_cab t
+    LEFT JOIN selemti.transfer_det d ON t.id = d.transfer_id
+    GROUP BY t.id;
+
+CONTEO:
+  SELECT * FROM selemti.inventory_counts
+    WHERE estado IN ('BORRADOR', 'EN_PROGRESO');
+  SELECT ic.*, COUNT(icl.id) as lineas, SUM(icl.qty_variacion) as total_var
+    FROM selemti.inventory_counts ic
+    LEFT JOIN selemti.inventory_count_lines icl ON ic.id = icl.inventory_count_id
+    GROUP BY ic.id;
+
+STOCK POLICY:
+  SELECT * FROM selemti.stock_policy WHERE activo = true;
+  SELECT item_id, sucursal_id FROM selemti.stock_policy
+    WHERE min_qty IS NOT NULL;
+
+================================================================================
+MÉTRICAS CLAVE
+================================================================================
+
+Total de tablas: 14
+├─ Maestros: 6 (items, categories, units, conversions, almacen, stock_policy)
+└─ Transaccionales: 8 (mov_inv, lote, recepcion_cab/det, transfer_cab/det,
+                        inventory_counts/count_lines)
+
+PKs: 14 (una por tabla)
+FKs explícitas: 19
+Índices: 66
+Secuencias: 12
+
+Columnas numéricas (NUMERIC): 35+
+Columnas timestamp: 20+
+Campos JSONB: 5
+Enums: 2
+
+Soft deletes: 2 tablas (recepcion_cab, recepcion_det)
+UNIQUEs: 7 (folio, item_code, codigo_categoria, codigo_unidad, etc.)
+
+Relaciones Many-to-Many (implícitas vía mov_inv):
+- items ◇── mov_inv ──▷ lotes
+- items ◇── mov_inv ──▷ sucursales
+- items ◇── mov_inv ──▷ tipos_movimiento
+
+================================================================================
+RECOMENDACIONES DE ÍNDICES ADICIONALES
+================================================================================
+
+CONSIDERAR CREAR:
+1. INDEX en mov_inv.sucursal_id (actualmente NO indexado)
+2. INDEX en lote.proveedor_id (para auditoría por proveedor)
+3. INDEX en recepcion_cab.proveedor_id (para reportes por supplier)
+4. INDEX en mov_inv.usuario_id (para auditoría de usuarios)
+5. COMPOSITE INDEX en (item_id, lote_id) en mov_inv (para FIFO queries)
+
+PARA PERFORMANCE:
+- mov_inv está bien indexada (12 índices)
+- items podría tener un índice en costo_promedio (para reportes ABC)
+- inventory_counts tiene buenos índices
+- transfer_cab podría tener índices en almacen_ids
+
+================================================================================
+CAPACIDAD DE ALMACENAMIENTO ESTIMADA
+================================================================================
+
+mov_inv:
+- Estimado: 10-50 millones de registros en producción
+- Tamaño por fila: ~200 bytes
+- Total estimado: 2-10 GB
+- Crecimiento: ~100k-500k registros/mes
+
+Recomendación: Particionar por fecha (monthly) después de cierto volumen
+
+recepcion_cab + recepcion_det:
+- Estimado: 100k - 1M registros
+- Tamaño: 100-500 MB
+- Crecimiento: ~10k-50k/mes
+
+inventory_counts:
+- Estimado: 10k - 100k registros
+- Tamaño: 10-50 MB
+- Crecimiento: ~1k-5k/mes
+
+================================================================================

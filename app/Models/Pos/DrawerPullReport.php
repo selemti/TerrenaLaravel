@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class DrawerPullReport extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'public.drawer_pull_report';
 
     protected $primaryKey = 'id';

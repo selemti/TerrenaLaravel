@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Terminal extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'public.terminal'; // **IMPORTANTE: Prefijo public.**
 
     protected $primaryKey = 'id';

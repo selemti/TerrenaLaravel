@@ -78,11 +78,11 @@
                                 <label class="form-label">Versión de Receta</label>
                                 <input 
                                     type="number" 
-                                    class="form-control @error('recipe_version_id') is-invalid @enderror" 
-                                    wire:model="recipe_version_id" 
+                                    class="form-control @error('receta_version_id') is-invalid @enderror"
+                                    wire:model="receta_version_id" 
                                     placeholder="ID de versión de receta"
                                 >
-                                @error('recipe_version_id')
+                                @error('receta_version_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>

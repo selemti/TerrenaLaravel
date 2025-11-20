@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class DrawerHistory extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'public.drawer_assigned_history';
 
     protected $primaryKey = 'id';

@@ -29,6 +29,7 @@ class ReplenishmentService
      *                          - sucursal_id: Filtrar por sucursal específica
      *                          - almacen_id: Filtrar por almacén específico
      *                          - dias_analisis: Días hacia atrás para calcular consumo promedio (default: 7)
+     *                          - algoritmo: MIN_MAX|SMA|POS_CONSUMPTION (default: SMA)
      *                          - auto_aprobar: Auto-aprobar sugerencias urgentes (default: false)
      *                          - dry_run: Simular sin guardar (default: false)
      * @return array Resumen de sugerencias generadas
@@ -38,6 +39,7 @@ class ReplenishmentService
         $sucursalId = $options['sucursal_id'] ?? null;
         $almacenId = $options['almacen_id'] ?? null;
         $diasAnalisis = $options['dias_analisis'] ?? 7;
+        $algoritmo = $options['algoritmo'] ?? 'SMA';
         $autoAprobar = $options['auto_aprobar'] ?? false;
         $dryRun = $options['dry_run'] ?? false;
 
@@ -52,8 +54,9 @@ class ReplenishmentService
         ];
 
         // Obtener todas las políticas de stock activas
+        // CORREGIDO: Usar selemti.inv_stock_policy (tabla con datos reales del dataset)
         $query = DB::connection('pgsql')
-            ->table('stock_policy')
+            ->table('selemti.inv_stock_policy')
             ->where('activo', true);
 
         if ($sucursalId) {
@@ -66,21 +69,41 @@ class ReplenishmentService
 
         $policies = $query->get();
 
+        // Telemetría: Log de políticas encontradas
+        \Log::info('[ReplenishmentService] Políticas encontradas', [
+            'total' => $policies->count(),
+            'sucursal_id' => $sucursalId,
+            'almacen_id' => $almacenId,
+            'algoritmo' => $algoritmo,
+            'dias_analisis' => $diasAnalisis,
+        ]);
+
         foreach ($policies as $policy) {
             try {
                 // Consultar stock actual
+                // CORREGIDO: inv_stock_policy NO tiene almacen_id (solo item_id + sucursal_id)
                 $stockActual = $this->obtenerStockActual(
                     $policy->item_id,
                     $policy->sucursal_id,
-                    $policy->almacen_id
+                    null
                 );
+
+                // Telemetría: Log de evaluación de política
+                \Log::info('[ReplenishmentService] Evaluando política', [
+                    'item_id' => $policy->item_id,
+                    'stock_actual' => $stockActual,
+                    'stock_min' => $policy->min_qty,
+                    'stock_max' => $policy->max_qty,
+                    'cumple_condicion' => $stockActual < $policy->min_qty,
+                ]);
 
                 // Si el stock está por debajo del mínimo, generar sugerencia
                 if ($stockActual < $policy->min_qty) {
                     $consumoPromedio = $this->calcularConsumoPromedio(
                         $policy->item_id,
                         $policy->sucursal_id,
-                        $diasAnalisis
+                        $diasAnalisis,
+                        $algoritmo
                     );
 
                     $diasRestantes = $consumoPromedio > 0
@@ -96,7 +119,8 @@ class ReplenishmentService
                     $tipo = $this->determinarTipo($item);
 
                     // Calcular cantidad sugerida
-                    $qtySugerida = $policy->reorder_lote ?? ($policy->max_qty - $stockActual);
+                    // CORREGIDO: inv_stock_policy usa reorder_qty (no reorder_lote)
+                    $qtySugerida = $policy->reorder_qty ?? ($policy->max_qty - $stockActual);
 
                     // Determinar prioridad
                     $prioridad = $this->determinarPrioridad($diasRestantes, $stockActual, $policy->min_qty);
@@ -111,7 +135,7 @@ class ReplenishmentService
                         'origen' => ReplenishmentSuggestion::ORIGEN_AUTO,
                         'item_id' => $policy->item_id,
                         'sucursal_id' => $policy->sucursal_id,
-                        'almacen_id' => $policy->almacen_id,
+                        'almacen_id' => null, // CORREGIDO: inv_stock_policy NO tiene almacen_id
                         'stock_actual' => $stockActual,
                         'stock_min' => $policy->min_qty,
                         'stock_max' => $policy->max_qty,
@@ -322,39 +346,105 @@ class ReplenishmentService
      */
     protected function obtenerStockActual(string $itemId, ?int $sucursalId, ?int $almacenId): float
     {
+        // CORREGIDO: La vista es v_stock_actual (no vw_stock_actual) y NO tiene sucursal_id/almacen_id
+        // Calcular stock desde mov_inv directamente
+        // IMPORTANTE: sucursal_id en mov_inv es VARCHAR (no integer)
         $query = DB::connection('pgsql')
-            ->table('vw_stock_actual')
+            ->table('selemti.mov_inv')
             ->where('item_id', $itemId);
 
         if ($sucursalId) {
-            $query->where('sucursal_id', $sucursalId);
+            // Convertir sucursal_id integer a formato VARCHAR esperado por mov_inv
+            $query->where('sucursal_id', 'SUC-' . $sucursalId);
         }
 
-        if ($almacenId) {
-            $query->where('almacen_id', $almacenId);
-        }
+        // NOTA: mov_inv NO tiene almacen_id en su estructura real
+        // Si se requiere filtrar por almacén, implementar lógica adicional
 
-        $stock = $query->first();
+        $stock = $query->sum('cantidad');
 
-        return $stock->stock_actual ?? 0;
+        return (float) ($stock ?? 0);
     }
 
     /**
      * Calcula el consumo promedio diario basado en movimientos históricos
+     * Soporta 3 algoritmos: MIN_MAX, SMA, POS_CONSUMPTION
+     * 
+     * @param string $itemId
+     * @param int|null $sucursalId
+     * @param int $dias
+     * @param string $algoritmo MIN_MAX|SMA|POS_CONSUMPTION
+     * @return float
      */
-    protected function calcularConsumoPromedio(string $itemId, ?int $sucursalId, int $dias = 7): float
+    protected function calcularConsumoPromedio(
+        string $itemId, 
+        ?int $sucursalId, 
+        int $dias = 7,
+        string $algoritmo = 'SMA'
+    ): float
+    {
+        // MIN_MAX no usa consumo promedio, solo min/max de stock_policy
+        if ($algoritmo === 'MIN_MAX') {
+            return 0.0;
+        }
+
+        $fechaInicio = now()->subDays($dias)->toDateString();
+
+        // SMA: Simple Moving Average basado en mov_inv
+        if ($algoritmo === 'SMA') {
+            // CORREGIDO: mov_inv usa columna 'cantidad' (no 'qty')
+            // IMPORTANTE: sucursal_id en mov_inv es VARCHAR (formato SUC-1, SUC-2, etc)
+            $totalConsumo = (float) DB::connection('pgsql')
+                ->table('selemti.mov_inv')
+                ->where('item_id', $itemId)
+                ->whereIn('tipo', ['SALIDA', 'VENTA', 'PROD_OUT', 'MERMA', 'CONSUMO_POS'])
+                ->when($sucursalId, fn ($q) => $q->where('sucursal_id', 'SUC-' . $sucursalId))
+                ->whereDate('ts', '>=', $fechaInicio)
+                ->sum('cantidad');
+
+            return abs($totalConsumo) / $dias;
+        }
+
+        // POS_CONSUMPTION: Basado en tickets POS expandidos
+        if ($algoritmo === 'POS_CONSUMPTION') {
+            return $this->calcularConsumoPOS($itemId, $sucursalId, $dias);
+        }
+
+        // Default: SMA
+        return $this->calcularConsumoPromedio($itemId, $sucursalId, $dias, 'SMA');
+    }
+
+    /**
+     * Calcula consumo basado en tickets POS históricos expandidos
+     * 
+     * Usa la tabla inv_consumo_pos_det que expande tickets → ingredientes
+     * mediante fn_expandir_consumo_ticket()
+     * 
+     * @param string $itemId
+     * @param int|null $sucursalId
+     * @param int $dias
+     * @return float Consumo promedio diario
+     */
+    protected function calcularConsumoPOS(string $itemId, ?int $sucursalId, int $dias = 7): float
     {
         $fechaInicio = now()->subDays($dias)->toDateString();
 
-        $totalConsumo = (float) DB::connection('pgsql')
-            ->table('mov_inv')
-            ->where('item_id', $itemId)
-            ->where('tipo', 'VENTA') // O tipos negativos: PROD_OUT, MERMA, etc.
-            ->when($sucursalId, fn ($q) => $q->where('sucursal_id', $sucursalId))
-            ->whereDate('ts', '>=', $fechaInicio)
-            ->sum('qty');
+        // CORREGIDO: inv_consumo_pos_det usa mp_id (no item_id) y cantidad (no qty)
+        // inv_consumo_pos usa fecha_proceso (no fecha)
+        $consumoExpandido = (float) DB::connection('pgsql')
+            ->table('selemti.inv_consumo_pos_det as det')
+            ->join('selemti.inv_consumo_pos as cab', 'det.consumo_id', '=', 'cab.id')
+            ->where('det.mp_id', (int) filter_var($itemId, FILTER_SANITIZE_NUMBER_INT)) // mp_id es integer
+            ->when($sucursalId, fn ($q) => $q->where('cab.sucursal_id', $sucursalId))
+            ->whereDate('cab.fecha_proceso', '>=', $fechaInicio)
+            ->sum('det.cantidad');
 
-        return $totalConsumo / $dias;
+        // Si no hay datos en inv_consumo_pos_det, fallback a mov_inv
+        if ($consumoExpandido <= 0) {
+            return $this->calcularConsumoPromedio($itemId, $sucursalId, $dias, 'SMA');
+        }
+
+        return $consumoExpandido / $dias;
     }
 
     /**

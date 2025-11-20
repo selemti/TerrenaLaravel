@@ -218,7 +218,8 @@
   @stack('styles')
 </head>
 <body>
-  <div class="container-fluid p-0 d-flex" style="min-height:100vh">
+  <div class="container-fluid p-0 d-flex flex-column" style="min-height:100vh">
+    <div class="d-flex flex-grow-1">
 
     @auth
     {{-- Sidebar (réplica exacta del layout.php) --}}
@@ -537,22 +538,23 @@
           @yield('content')
         @endisset
       </div>
-
-      {{-- Footer / Status Bar --}}
-      @auth
-      <footer class="status-bar mt-auto">
-        <div class="container-status">
-          <div class="d-flex align-items-center gap-2">
-            <i class="fa-solid fa-store"></i>
-            <span>Sucursal: <strong>PRINCIPAL</strong></span>
-          </div>
-          <div class="ms-auto d-flex align-items-center gap-3">
-            <span id="live-clock-bottom" class="text-secondary">--:--</span>
-          </div>
-        </div>
-      </footer>
-      @endauth
     </main>
+    </div>
+
+    {{-- Footer / Status Bar --}}
+    @auth
+    <footer class="status-bar">
+      <div class="container-status">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-store"></i>
+          <span>Sucursal: <strong>PRINCIPAL</strong></span>
+        </div>
+        <div class="ms-auto d-flex align-items-center gap-3">
+          <span id="live-clock-bottom" class="text-secondary">--:--</span>
+        </div>
+      </div>
+    </footer>
+    @endauth
   </div>
 
   {{-- JS al final (mismo orden que legacy) --}}

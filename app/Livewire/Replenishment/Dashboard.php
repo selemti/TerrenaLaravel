@@ -2,367 +2,369 @@
 
 namespace App\Livewire\Replenishment;
 
-use App\Models\ReplenishmentSuggestion;
-use App\Models\Sucursal;
-use App\Services\Replenishment\ReplenishmentService;
+use App\Models\Catalogs\Sucursal;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Http;
 
 class Dashboard extends Component
 {
     use WithPagination;
 
+    protected $paginationTheme = 'bootstrap';
+
+    public array $suggestions = [];
+
+    public array $stats = [];
+
+    public bool $loading = false;
+
+    public ?string $flashMessage = null;
+
+    public ?string $errorMessage = null;
+
     // Filtros
-    public $tipoFilter = 'all';
+    public string $search = '';
 
-    public $prioridadFilter = 'all';
+    public string $estadoFilter = 'PENDIENTE';
 
-    public $estadoFilter = 'PENDIENTE'; // Por defecto mostrar solo pendientes
+    public string $prioridadFilter = 'all';
 
-    public $sucursalFilter = 'all';
+    public string $sucursalFilter = 'all';
 
-    public $search = '';
+    public string $origenFilter = 'all';
 
-    public $urgenciasOnly = false;
+    public string $fechaDesde = '';
 
-    // Selección múltiple
-    public $selectedIds = [];
+    public string $fechaHasta = '';
 
-    public $selectAll = false;
+    // Modales
+    public bool $showModalAprobar = false;
 
-    // Agrupación
-    public $agruparPorProveedor = false;
+    public bool $showModalRechazar = false;
 
-    // Estado de generación
-    public $generando = false;
+    public bool $showModalConvertir = false;
+
+    public ?int $selectedSuggestionId = null;
+
+    public ?array $selectedSuggestion = null;
+
+    public ?float $qtyAprobada = null;
+
+    public string $motivoRechazo = '';
+
+    public string $tipoConversion = 'purchase_request';
 
     protected $queryString = [
-        'tipoFilter' => ['except' => 'all'],
-        'prioridadFilter' => ['except' => 'all'],
+        'search' => ['except' => ''],
         'estadoFilter' => ['except' => 'PENDIENTE'],
+        'prioridadFilter' => ['except' => 'all'],
         'sucursalFilter' => ['except' => 'all'],
-        'urgenciasOnly' => ['except' => false],
+        'origenFilter' => ['except' => 'all'],
     ];
 
-    public function mount()
+    public function mount(): void
     {
-        // Inicialización si es necesario
+        $this->loadSuggestions();
+        $this->loadStats();
     }
 
-    /**
-     * Genera nuevas sugerencias manualmente
-     */
-    public function generarSugerencias()
+    public function updatingSearch()
     {
-        $this->generando = true;
-
-        try {
-            $service = new ReplenishmentService;
-            $resultado = $service->generateDailySuggestions([
-                'sucursal_id' => $this->sucursalFilter !== 'all' ? $this->sucursalFilter : null,
-            ]);
-
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => "Se generaron {$resultado['total']} sugerencias ({$resultado['urgentes']} urgentes)",
-            ]);
-
-            $this->resetPage();
-
-        } catch (\Exception $e) {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => 'Error al generar sugerencias: '.$e->getMessage(),
-            ]);
-        } finally {
-            $this->generando = false;
-        }
-    }
-
-    /**
-     * Aprobar sugerencia individual
-     */
-    public function aprobar($id)
-    {
-        try {
-            $suggestion = ReplenishmentSuggestion::findOrFail($id);
-            $suggestion->marcarAprobada(auth()->id());
-
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => "Sugerencia {$suggestion->folio} aprobada",
-            ]);
-
-        } catch (\Exception $e) {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => 'Error: '.$e->getMessage(),
-            ]);
-        }
-    }
-
-    /**
-     * Rechazar sugerencia
-     */
-    public function rechazar($id, $motivo = 'Rechazado por gerente')
-    {
-        try {
-            $suggestion = ReplenishmentSuggestion::findOrFail($id);
-            $suggestion->marcarRechazada(auth()->id(), $motivo);
-
-            $this->dispatch('notify', [
-                'type' => 'info',
-                'message' => "Sugerencia {$suggestion->folio} rechazada",
-            ]);
-
-        } catch (\Exception $e) {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => 'Error: '.$e->getMessage(),
-            ]);
-        }
-    }
-
-    /**
-     * Convertir a solicitud de compra
-     */
-    public function convertirACompra($id)
-    {
-        try {
-            $service = new ReplenishmentService;
-            $requestId = $service->convertToPurchaseRequest($id);
-
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => "Solicitud de compra creada (ID: {$requestId})",
-            ]);
-
-            return redirect()->route('purchasing.requests.detail', $requestId);
-
-        } catch (\Exception $e) {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => 'Error: '.$e->getMessage(),
-            ]);
-        }
-    }
-
-    /**
-     * Convertir a orden de producción
-     */
-    public function convertirAProduccion($id)
-    {
-        try {
-            $service = new ReplenishmentService;
-            $resultado = $service->convertToProductionOrder($id);
-
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => "Orden de producción creada (ID: {$resultado['production_order_id']})",
-            ]);
-
-        } catch (\Exception $e) {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => 'Error: '.$e->getMessage(),
-            ]);
-        }
-    }
-
-    /**
-     * Aprobar múltiples sugerencias
-     */
-    public function aprobarSeleccionadas()
-    {
-        if (empty($this->selectedIds)) {
-            $this->dispatch('notify', [
-                'type' => 'warning',
-                'message' => 'No hay sugerencias seleccionadas',
-            ]);
-
-            return;
-        }
-
-        $count = 0;
-        foreach ($this->selectedIds as $id) {
-            try {
-                $suggestion = ReplenishmentSuggestion::find($id);
-                if ($suggestion && $suggestion->puede_aprobarse) {
-                    $suggestion->marcarAprobada(auth()->id());
-                    $count++;
-                }
-            } catch (\Exception $e) {
-                // Continuar con las demás
-            }
-        }
-
-        $this->selectedIds = [];
-        $this->selectAll = false;
-
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => "{$count} sugerencias aprobadas",
-        ]);
-    }
-
-    /**
-     * Convertir seleccionadas a compras
-     */
-    public function convertirSeleccionadasACompra()
-    {
-        if (empty($this->selectedIds)) {
-            $this->dispatch('notify', [
-                'type' => 'warning',
-                'message' => 'No hay sugerencias seleccionadas',
-            ]);
-
-            return;
-        }
-
-        $service = new ReplenishmentService;
-        $count = 0;
-
-        foreach ($this->selectedIds as $id) {
-            try {
-                $suggestion = ReplenishmentSuggestion::find($id);
-                if ($suggestion && $suggestion->tipo === ReplenishmentSuggestion::TIPO_COMPRA) {
-                    $service->convertToPurchaseRequest($id);
-                    $count++;
-                }
-            } catch (\Exception $e) {
-                // Continuar con las demás
-            }
-        }
-
-        $this->selectedIds = [];
-        $this->selectAll = false;
-
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => "{$count} solicitudes de compra creadas",
-        ]);
-    }
-
-    /**
-     * Limpiar filtros
-     */
-    public function limpiarFiltros()
-    {
-        $this->reset(['tipoFilter', 'prioridadFilter', 'estadoFilter', 'sucursalFilter', 'search', 'urgenciasOnly']);
-        $this->estadoFilter = 'PENDIENTE';
         $this->resetPage();
     }
 
-    /**
-     * Toggle selección de todos
-     */
-    public function updatedSelectAll($value)
+    public function updatingEstadoFilter()
     {
-        if ($value) {
-            $this->selectedIds = $this->getSuggestions()->pluck('id')->toArray();
-        } else {
-            $this->selectedIds = [];
+        $this->resetPage();
+    }
+
+    public function updatingPrioridadFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSucursalFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function limpiarFiltros()
+    {
+        $this->reset([
+            'search',
+            'estadoFilter',
+            'prioridadFilter',
+            'sucursalFilter',
+            'origenFilter',
+            'fechaDesde',
+            'fechaHasta',
+        ]);
+        $this->resetPage();
+        $this->loadSuggestions();
+        $this->loadStats();
+    }
+
+    /**
+     * Ejecuta cálculo manual (sincronizado) usando el endpoint API.
+     */
+    public function runCalculation(): void
+    {
+        $this->loading = true;
+        $this->flashMessage = null;
+        $this->errorMessage = null;
+
+        try {
+            $response = Http::post('/api/purchasing/replenishment/calculate', [
+                'async' => false,
+                'dias_analisis' => 7,
+                'auto_aprobar' => false,
+            ]);
+
+            if ($response->successful() && ($response->json('success') ?? false)) {
+                $data = $response->json('data') ?? [];
+                $total = $data['total'] ?? 0;
+                $urgentes = $data['urgentes'] ?? 0;
+                $this->flashMessage = "Cálculo completado: {$total} sugerencias ({$urgentes} urgentes).";
+                $this->loadSuggestions();
+            } else {
+                $this->errorMessage = $response->json('message') ?? 'No se pudo calcular sugerencias.';
+            }
+        } catch (\Throwable $e) {
+            $this->errorMessage = $e->getMessage();
+        } finally {
+            $this->loading = false;
         }
     }
 
     /**
-     * Obtener sugerencias con filtros aplicados
+     * Carga sugerencias desde el endpoint API con filtros.
      */
-    protected function getSuggestions()
+    public function loadSuggestions(): void
     {
-        $query = ReplenishmentSuggestion::with(['item', 'sucursal'])
-            ->orderByRaw("
-                CASE prioridad
-                    WHEN 'URGENTE' THEN 1
-                    WHEN 'ALTA' THEN 2
-                    WHEN 'NORMAL' THEN 3
-                    WHEN 'BAJA' THEN 4
-                END
-            ")
-            ->orderBy('fecha_agotamiento_estimada', 'asc')
-            ->orderBy('created_at', 'desc');
+        $this->loading = true;
+        $this->errorMessage = null;
 
-        // Filtro de búsqueda
-        if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('folio', 'ilike', '%'.$this->search.'%')
-                    ->orWhere('item_id', 'ilike', '%'.$this->search.'%')
-                    ->orWhereHas('item', function ($q2) {
-                        $q2->where('nombre', 'ilike', '%'.$this->search.'%');
-                    });
-            });
+        try {
+            $params = [
+                'per_page' => 15,
+                'order_by' => 'prioridad',
+                'order_dir' => 'asc',
+            ];
+
+            // Aplicar filtros
+            if ($this->estadoFilter !== 'all') {
+                $params['estado'] = $this->estadoFilter;
+            }
+
+            if ($this->prioridadFilter !== 'all') {
+                $params['prioridad'] = $this->prioridadFilter;
+            }
+
+            if ($this->sucursalFilter !== 'all') {
+                $params['sucursal_id'] = $this->sucursalFilter;
+            }
+
+            if ($this->origenFilter !== 'all') {
+                $params['origen'] = $this->origenFilter;
+            }
+
+            if ($this->fechaDesde) {
+                $params['desde'] = $this->fechaDesde;
+            }
+
+            if ($this->fechaHasta) {
+                $params['hasta'] = $this->fechaHasta;
+            }
+
+            if ($this->search) {
+                $params['search'] = $this->search;
+            }
+
+            $response = Http::get('/api/purchasing/replenishment/suggestions', $params);
+
+            if ($response->successful() && ($response->json('success') ?? false)) {
+                $this->suggestions = $response->json('data') ?? [];
+            } else {
+                $this->suggestions = [];
+                $this->errorMessage = $response->json('message') ?? 'No se pudieron cargar sugerencias.';
+            }
+        } catch (\Throwable $e) {
+            $this->suggestions = [];
+            $this->errorMessage = $e->getMessage();
+        } finally {
+            $this->loading = false;
+        }
+    }
+
+    /**
+     * Carga estadísticas desde la API.
+     */
+    public function loadStats(): void
+    {
+        try {
+            // Cargar conteos por estado
+            $estados = ['PENDIENTE', 'APROBADA', 'RECHAZADA', 'CONVERTIDA'];
+            $this->stats = ['total' => 0];
+
+            foreach ($estados as $estado) {
+                $response = Http::get('/api/purchasing/replenishment/suggestions', [
+                    'estado' => $estado,
+                    'per_page' => 1,
+                ]);
+
+                if ($response->successful()) {
+                    $total = $response->json('pagination.total') ?? 0;
+                    $this->stats[strtolower($estado)] = $total;
+                    $this->stats['total'] += $total;
+                }
+            }
+
+            // Contar urgentes (todas las prioridades URGENTE)
+            $response = Http::get('/api/purchasing/replenishment/suggestions', [
+                'prioridad' => 'URGENTE',
+                'per_page' => 1,
+            ]);
+
+            if ($response->successful()) {
+                $this->stats['urgentes'] = $response->json('pagination.total') ?? 0;
+            }
+        } catch (\Throwable $e) {
+            $this->stats = [
+                'total' => 0,
+                'pendiente' => 0,
+                'aprobada' => 0,
+                'rechazada' => 0,
+                'convertida' => 0,
+                'urgentes' => 0,
+            ];
+        }
+    }
+
+    /**
+     * Abrir modal para aprobar sugerencia.
+     */
+    public function abrirModalAprobar(int $id): void
+    {
+        $this->selectedSuggestionId = $id;
+        $this->selectedSuggestion = collect($this->suggestions)->firstWhere('id', $id);
+        $this->qtyAprobada = $this->selectedSuggestion['qty_sugerida'] ?? null;
+        $this->showModalAprobar = true;
+    }
+
+    /**
+     * Aprobar sugerencia.
+     */
+    public function aprobarSugerencia(): void
+    {
+        $this->errorMessage = null;
+
+        try {
+            $response = Http::post("/api/purchasing/replenishment/suggestions/{$this->selectedSuggestionId}/approve", [
+                'qty_aprobada' => $this->qtyAprobada,
+            ]);
+
+            if ($response->successful() && ($response->json('success') ?? false)) {
+                $this->flashMessage = 'Sugerencia aprobada exitosamente.';
+                $this->showModalAprobar = false;
+                $this->loadSuggestions();
+                $this->loadStats();
+            } else {
+                $this->errorMessage = $response->json('message') ?? 'Error al aprobar sugerencia.';
+            }
+        } catch (\Throwable $e) {
+            $this->errorMessage = $e->getMessage();
+        }
+    }
+
+    /**
+     * Abrir modal para rechazar sugerencia.
+     */
+    public function abrirModalRechazar(int $id): void
+    {
+        $this->selectedSuggestionId = $id;
+        $this->selectedSuggestion = collect($this->suggestions)->firstWhere('id', $id);
+        $this->motivoRechazo = '';
+        $this->showModalRechazar = true;
+    }
+
+    /**
+     * Rechazar sugerencia.
+     */
+    public function rechazarSugerencia(): void
+    {
+        $this->errorMessage = null;
+
+        if (empty($this->motivoRechazo)) {
+            $this->errorMessage = 'El motivo de rechazo es requerido.';
+            return;
         }
 
-        // Filtro de tipo
-        if ($this->tipoFilter !== 'all') {
-            $query->where('tipo', $this->tipoFilter);
-        }
+        try {
+            $response = Http::post("/api/purchasing/replenishment/suggestions/{$this->selectedSuggestionId}/reject", [
+                'motivo' => $this->motivoRechazo,
+            ]);
 
-        // Filtro de prioridad
-        if ($this->prioridadFilter !== 'all') {
-            $query->where('prioridad', $this->prioridadFilter);
+            if ($response->successful() && ($response->json('success') ?? false)) {
+                $this->flashMessage = 'Sugerencia rechazada.';
+                $this->showModalRechazar = false;
+                $this->loadSuggestions();
+                $this->loadStats();
+            } else {
+                $this->errorMessage = $response->json('message') ?? 'Error al rechazar sugerencia.';
+            }
+        } catch (\Throwable $e) {
+            $this->errorMessage = $e->getMessage();
         }
+    }
 
-        // Filtro de estado
-        if ($this->estadoFilter !== 'all') {
-            $query->where('estado', $this->estadoFilter);
+    /**
+     * Abrir modal para convertir sugerencia.
+     */
+    public function abrirModalConvertir(int $id): void
+    {
+        $this->selectedSuggestionId = $id;
+        $this->selectedSuggestion = collect($this->suggestions)->firstWhere('id', $id);
+        $this->tipoConversion = 'purchase_request';
+        $this->showModalConvertir = true;
+    }
+
+    /**
+     * Convertir sugerencia a Purchase Request o Production Order.
+     */
+    public function convertirSugerencia(): void
+    {
+        $this->errorMessage = null;
+
+        try {
+            $response = Http::post("/api/purchasing/replenishment/suggestions/{$this->selectedSuggestionId}/convert", [
+                'tipo' => $this->tipoConversion,
+            ]);
+
+            if ($response->successful() && ($response->json('success') ?? false)) {
+                $tipo = $this->tipoConversion === 'purchase_request' ? 'Solicitud de Compra' : 'Orden de Producción';
+                $this->flashMessage = "Sugerencia convertida a {$tipo} exitosamente.";
+                $this->showModalConvertir = false;
+                $this->loadSuggestions();
+                $this->loadStats();
+            } else {
+                $this->errorMessage = $response->json('message') ?? 'Error al convertir sugerencia.';
+            }
+        } catch (\Throwable $e) {
+            $this->errorMessage = $e->getMessage();
         }
-
-        // Filtro de sucursal
-        if ($this->sucursalFilter !== 'all') {
-            $query->where('sucursal_id', $this->sucursalFilter);
-        }
-
-        // Solo urgencias
-        if ($this->urgenciasOnly) {
-            $query->urgentes();
-        }
-
-        return $query;
     }
 
     public function render()
     {
-        try {
-            // Estadísticas globales (sin filtros, para dar contexto general)
-            $stats = [
-                'total' => ReplenishmentSuggestion::count(),
-                'pendientes' => ReplenishmentSuggestion::pendiente()->count(),
-                'urgentes' => ReplenishmentSuggestion::urgentes()->count(),
-                'compras' => ReplenishmentSuggestion::compra()->pendiente()->count(),
-                'producciones' => ReplenishmentSuggestion::produccion()->pendiente()->count(),
-                'convertidas_hoy' => ReplenishmentSuggestion::convertida()
-                    ->whereDate('convertido_en', today())
-                    ->count(),
-            ];
+        $sucursales = Sucursal::orderBy('nombre')->get();
 
-            // Sugerencias con filtros aplicados (para la tabla)
-            $suggestions = $this->getSuggestions()->paginate(20);
-
-            // Sucursales para filtro
-            $sucursales = Sucursal::where('activo', true)->orderBy('nombre')->get();
-
-            return view('livewire.replenishment.dashboard', [
-                'suggestions' => $suggestions,
-                'stats' => $stats,
-                'sucursales' => $sucursales,
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Error en Dashboard render: '.$e->getMessage());
-
-            // Retornar vista con datos vacíos en caso de error
-            return view('livewire.replenishment.dashboard', [
-                'suggestions' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20),
-                'stats' => [
-                    'total' => 0,
-                    'pendientes' => 0,
-                    'urgentes' => 0,
-                    'compras' => 0,
-                    'producciones' => 0,
-                    'convertidas_hoy' => 0,
-                ],
-                'sucursales' => collect([]),
-            ]);
-        }
+        return view('livewire.replenishment.dashboard', [
+            'sucursales' => $sucursales,
+        ])->layout('layouts.terrena', [
+            'active' => 'compras',
+            'title' => 'Replenishment',
+            'pageTitle' => 'Replenishment',
+        ]);
     }
 }

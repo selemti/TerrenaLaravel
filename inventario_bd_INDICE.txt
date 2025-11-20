@@ -1,0 +1,493 @@
+=== DOCUMENTACIÓN COMPLETA - ESTRUCTURA DE INVENTARIO SELEMTI ===
+Generado: 2025-11-17
+Ruta: C:\xampp3\htdocs\TerrenaLaravel\
+
+================================================================================
+ARCHIVOS GENERADOS
+================================================================================
+
+1. inventario_bd_estructura.txt
+   - Estructura básica de las 14 tablas
+   - Listado de columnas, tipos de datos, defaults
+   - Resumen de relaciones
+   - Tipos de datos especializados (ENUM, JSONB)
+   Tamaño: ~9 KB
+
+2. inventario_bd_estructura_completa.txt
+   - Documento COMPLETO con 13 partes
+   - Detalles de PKs, FKs, Índices
+   - Análisis de secuencias
+   - Notas sobre tipos de datos
+   - Análisis de relaciones no explícitas
+   - Patrones de flujo
+   Tamaño: ~50 KB
+
+3. inventario_bd_consultas_recomendadas.sql
+   - 30+ consultas SQL optimizadas
+   - Consultas de items, kardex, recepciones, lotes
+   - Consultas de conteos, transferencias
+   - Consultas de auditoría y análisis
+   - Vista consolidada recomendada
+   Tamaño: ~25 KB
+
+4. inventario_bd_INDICE.txt (este archivo)
+   - Índice y guía de navegación
+   - Resumen de hallazgos
+   - Recomendaciones
+
+================================================================================
+RESUMEN EJECUTIVO
+================================================================================
+
+ESTRUCTURA:
+- 14 tablas en schema selemti
+- 14 claves primarias (una por tabla)
+- 19 foreign keys explícitas
+- 66 índices totales
+- 5 campos JSONB para extensibilidad
+- 2 tipos de datos enum
+- 2 tablas con soft delete
+
+BASES DE DATOS:
+- PostgreSQL 9.5
+- Servidor: localhost:5433
+- BD: pos
+- Schema: selemti (work schema, modificable)
+- Schemas relacionados: public (legacy POS, READ-ONLY)
+
+TOPOLOGÍA DE DATOS:
+
+    MAESTROS
+    ├── items (23 columnas)
+    │   ├── relación con unidades_medida_legacy
+    │   ├── relación con item_categories
+    │   └── relación con lote
+    ├── almacen (4 columnas)
+    ├── unidades_medida_legacy (9 columnas)
+    ├── conversiones_unidad_legacy (8 columnas)
+    ├── item_categories (9 columnas)
+    └── stock_policy (9 columnas)
+
+    TRANSACCIONALES
+    ├── mov_inv (14 columnas) - KARDEX/JOURNAL
+    ├── recepcion_cab (16 columnas) + recepcion_det (14 columnas)
+    ├── transfer_cab (9 columnas) + transfer_det (7 columnas)
+    ├── inventory_counts (16 columnas) + inventory_count_lines (12 columnas)
+    └── lote (7 columnas) - GESTIÓN DE LOTES
+
+FLUJOS PRINCIPALES:
+
+1. ENTRADA DE INVENTARIO:
+   recepcion_cab/det → mov_inv (entrada) + lote
+
+2. MOVIMIENTO INTERNO:
+   transfer_cab/det → mov_inv (salida/entrada)
+
+3. CONSUMO POS:
+   POS system → mov_inv (consumo)
+
+4. AJUSTES POR CONTEO:
+   inventory_counts/lines → mov_inv (ajuste)
+
+5. CONTROL:
+   stock_policy define min/max
+
+================================================================================
+TABLA MAESTRO: ITEMS
+================================================================================
+
+Campos clave:
+- id (varchar): identificador único
+- nombre (varchar): descripción
+- categoria_id (varchar): categoría legacy
+- category_id (bigint): FK a item_categories
+- unidad_medida (varchar): legacy (default 'PZ')
+- unidad_medida_id (integer): FK base UOM
+- unidad_compra_id (integer): FK UOM compra
+- unidad_salida_id (integer): FK UOM salida
+- costo_promedio (numeric): para valuación FIFO
+- perishable (boolean): si es perecedero
+- temperatura_min/max (integer): rangos de almacenamiento
+- es_producible (boolean)
+- es_consumible_operativo (boolean)
+- es_empaque_to_go (boolean)
+
+ISSUE IDENTIFICADO:
+- Duplicidad en categoría: categoria_id (varchar) vs category_id (bigint)
+- Duplicidad en UOM: unidad_medida (varchar) vs unidades_medida_id
+- Recomendación: Consolidad en una sola versión
+
+================================================================================
+TABLA TRANSACCIONAL: MOVIMIENTOS INVENTARIO (mov_inv)
+================================================================================
+
+Es el KARDEX/JOURNAL de toda operación de inventario.
+
+Estructura:
+- id (bigint): autoincrementado (seq: mov_inv_id_seq)
+- ts (timestamp): timestamp del movimiento (CRITICAL for queries)
+- item_id (varchar): FK a items
+- lote_id (integer): FK a lote (batch)
+- cantidad (numeric): cantidad en UOM base
+- qty_original (numeric): cantidad en UOM original
+- uom_original_id (integer): FK unidad origen
+- costo_unit (numeric): costo unitario del movimiento
+- tipo (varchar): ENTRADA, SALIDA, AJUSTE, etc.
+- ref_tipo (varchar): RECEPCION, TRANSFER, CONSUMO, etc.
+- ref_id (bigint): ID de la referencia (receipt ID, transfer ID, etc.)
+- sucursal_id (varchar): sucursal donde ocurrió
+
+Índices Estratégicos:
+- (item_id, ts): buscar movimientos de un item por período
+- (tipo, ts): buscar movimientos por tipo en período
+- (ts, tipo): ordenar por timestamp con filtro
+- (ref_tipo, ref_id): reconciliación de referencias
+
+NOTA: Esta tabla es CRÍTICA para toda la auditoría de inventario.
+Una sola entrada errónea puede afectar balances.
+
+================================================================================
+TABLA DE RECEPCIONES (recepcion_cab + recepcion_det)
+================================================================================
+
+recepcion_cab: Encabezado
+- id (bigint): autoincrementado
+- sucursal_id (bigint): FK a cat_sucursales
+- proveedor_id (integer): de quién proviene
+- oc_ref (text): referencia a orden de compra
+- ts (timestamp): cuándo se recibió
+- usuario_id (bigint): FK quién recibió
+- almacen_id (varchar): dónde se almacena
+- numero_recepcion (varchar): identificador único
+- fecha_recepcion (date): fecha física
+- estado (varchar): BORRADOR, COMPLETA, ANULADA
+- total_presentaciones (numeric): en UOM compra
+- total_canonico (numeric): convertido a UOM base
+- meta (jsonb): datos adicionales
+- deleted_at (timestamp): soft delete
+
+recepcion_det: Líneas
+- id (bigint): autoincrementado
+- recepcion_id (bigint): FK recepcion_cab
+- item_id (varchar): FK items
+- bodega_id (bigint): FK cat_almacenes
+- qty (numeric): cantidad recibida
+- um_id (integer): FK unidades_medida_legacy
+- costo_unit (numeric): precio unitario
+- batch_id (bigint): FK inventory_batch (lote creado)
+- temperatura (numeric): para perecederos
+- doc_url (text): URL del documento
+- meta (jsonb): datos adicionales
+- deleted_at (timestamp): soft delete
+
+FLUJO:
+1. Crear recepcion_cab (estado: BORRADOR)
+2. Agregar recepcion_det (cada línea)
+3. Crear/vincular lote (batch)
+4. Registrar movimiento en mov_inv (ENTRADA)
+5. Cambiar estado a COMPLETA
+
+================================================================================
+TABLA DE CONTEOS (inventory_counts + inventory_count_lines)
+================================================================================
+
+inventory_counts: Encabezado
+- id (bigint): autoincrementado
+- folio (varchar): identificador único del conteo
+- sucursal_id (varchar): dónde se cuenta
+- almacen_id (varchar): almacén específico
+- programado_para (timestamp with tz): cuándo estaba programado
+- iniciado_en (timestamp with tz): cuándo se inició
+- cerrado_en (timestamp with tz): cuándo se cerró
+- estado (varchar): BORRADOR, EN_PROGRESO, COMPLETADO, CERRADO
+- creado_por (bigint): quién creó
+- cerrado_por (bigint): quién cerró
+- total_items (numeric): # items contados
+- total_variacion (numeric): suma de variaciones
+- meta (jsonb): datos adicionales
+
+inventory_count_lines: Líneas
+- id (bigint): autoincrementado
+- inventory_count_id (bigint): FK inventory_counts
+- item_id (varchar): FK items
+- inventory_batch_id (bigint): FK lote específico
+- qty_teorica (numeric): cantidad según sistema
+- qty_contada (numeric): cantidad física
+- qty_variacion (numeric): diferencia (contada - teorica)
+- uom (varchar): unidad usada en conteo
+- motivo (varchar): por qué hay variación
+- meta (jsonb): datos adicionales
+
+ESTADOS:
+- BORRADOR: Se está configurando
+- EN_PROGRESO: Se está realizando el conteo
+- COMPLETADO: Conteo finalizado
+- CERRADO: Se ajustó el inventario
+
+================================================================================
+TABLA DE TRANSFERENCIAS (transfer_cab + transfer_det)
+================================================================================
+
+transfer_cab: Encabezado
+- id (bigint): autoincrementado
+- origen_almacen_id (integer): de dónde sale
+- destino_almacen_id (integer): a dónde va
+- estado (varchar): CREADA, DESPACHADA, RECIBIDA
+- creada_por (integer): quién creó
+- despachada_por (integer): quién despachó
+- recibida_por (integer): quién recibió
+- guia (varchar): referencia a guía de transporte
+
+transfer_det: Líneas
+- id (bigint): autoincrementado
+- transfer_id (bigint): FK transfer_cab
+- item_id (varchar): FK items
+- cantidad (numeric): cantidad a transferir
+- cantidad_despachada (numeric): cuánto se despachó
+- cantidad_recibida (numeric): cuánto se recibió
+
+FLUJO:
+1. Crear transfer_cab (estado: CREADA)
+2. Agregar transfer_det (items)
+3. Despachar: cambiar estado a DESPACHADA
+4. Recibir: cambiar estado a RECIBIDA
+5. Registrar movimientos en mov_inv
+
+NOTA: origen y destino deberían tener FK explícitas a almacen
+
+================================================================================
+GESTIÓN DE LOTES/BATCHES
+================================================================================
+
+Tabla: lote
+- id (bigint): autoincrementado
+- item_id (varchar): FK items
+- proveedor_id (integer): de quién vino
+- codigo (text): número de lote (ej: L20251117-001)
+- caducidad (date): cuándo vence
+- estado (enum): ACTIVO, VENCIDO, PARCIAL_USO
+- creado_ts (timestamp): cuándo se creó
+
+Índices:
+- ix_lote_insumo (item_id): buscar lotes por item
+- ix_lote_cad (caducidad): buscar lotes próximos a vencer
+
+RELACIÓN CON MOVIMIENTOS:
+- mov_inv.lote_id → lote.id
+- Cada movimiento se asocia a un lote específico
+- Permite trazabilidad completa FIFO/LIFO
+
+CONSUMO EN CONTEOS:
+- inventory_count_lines.inventory_batch_id → lote.id
+- Permite contar por lote específico
+
+================================================================================
+CONVERSIONES DE UNIDADES
+================================================================================
+
+Tabla: conversiones_unidad_legacy
+- id (integer): autoincrementado
+- unidad_origen_id (integer): FK unidades_medida_legacy
+- unidad_destino_id (integer): FK unidades_medida_legacy
+- factor_conversion (numeric): 1 unidad origen = X unidades destino
+- formula_directa (text): para cálculos complejos
+- precision_estimada (numeric): tolerancia permitida
+- activo (boolean): si está vigente
+
+ÚNICO: (unidad_origen_id, unidad_destino_id) no puede repetirse
+
+EJEMPLOS:
+- 1 KG = 1000 G
+- 1 CAJA = 12 BOTELLAS
+- 1 FARDO = 50 UNIDADES
+
+USO EN SISTEMA:
+- recepcion_det.qty en um_id se convierte a qty_base usando esta tabla
+- mov_inv registra qty_original (en UOM original) + cantidad (en base)
+
+================================================================================
+POLÍTICAS DE STOCK
+================================================================================
+
+Tabla: stock_policy
+- id (bigint): autoincrementado
+- item_id (text): FK items
+- sucursal_id (text): para qué sucursal
+- almacen_id (text): almacén específico (puede ser NULL para sucursal)
+- min_qty (numeric): cantidad mínima (trigger reorden)
+- max_qty (numeric): cantidad máxima (stock óptimo)
+- reorder_lote (numeric): cuánto pedir cuando llega min
+- activo (boolean): si está vigente
+
+ÚNICO: (item_id, sucursal_id) no puede repetirse
+
+USO:
+- Reportes de "items que necesitan reorden"
+- Validación de limites en recepción
+- Control de excesos
+
+================================================================================
+ÍNDICES CRÍTICOS PARA PERFORMANCE
+================================================================================
+
+mov_inv (12 índices):
+- idx_mov_inv_item_id: queries por item
+- idx_mov_inv_tipo: queries por tipo de movimiento
+- idx_mov_inv_ts: queries por período
+- (item_id, ts): lo más usado
+- (tipo, ts): análisis por tipo
+- (ref_tipo, ref_id): reconciliación
+
+items (8 índices):
+- idx_items_activo: filtrar activos
+- idx_items_categoria_id: por categoría
+- idx_items_unidad_*_id: búsquedas de UOM
+- ux_items_item_code: UNIQUE en item_code
+
+inventory_counts (7 índices):
+- folio: UNIQUE para búsqueda directa
+- estado: filtrar por estado
+- sucursal_id, almacen_id: por ubicación
+- fechas: programado_para, iniciado_en, cerrado_en
+
+================================================================================
+ISSUES Y RECOMENDACIONES
+================================================================================
+
+PROBLEMA 1: Duplicidad en maestros
+- items.categoria_id (varchar) vs items.category_id (bigint)
+- items.unidad_medida (varchar) vs items.unidad_medida_id (integer)
+SOLUCIÓN: Consolidar en una sola versión, deprecar la otra
+
+PROBLEMA 2: FKs faltantes
+- transfer_cab.origen_almacen_id no tiene FK explícita
+- transfer_cab.destino_almacen_id no tiene FK explícita
+- transfer_det.item_id no tiene FK explícita
+- inventory_counts.sucursal_id no tiene FK explícita
+SOLUCIÓN: Agregar FKs para data integrity
+
+PROBLEMA 3: Inconsistencia en timestamps
+- Algunas tablas con "timestamp without time zone"
+- Otras con "timestamp with time zone"
+SOLUCIÓN: Normalizar a tz-aware timestamps
+
+PROBLEMA 4: Referencias externas a otros schemas
+- almacen.sucursal_id → cat_sucursales (otro schema)
+- recepcion_det.bodega_id → cat_almacenes (otro schema)
+- items.unidad_*_id → cat_unidades (pero también existen unidades_medida_legacy)
+SOLUCIÓN: Consolidar o crear FKs entre schemas
+
+PROBLEMA 5: Meta JSONB sin documentación
+- stock_policy.meta parece vacío
+- Otros meta campos no tienen estructura definida
+SOLUCIÓN: Documentar estructura de JSONB esperada
+
+================================================================================
+CONSULTAS FRECUENTES Y SU OPTIMIZACIÓN
+================================================================================
+
+1. "¿Cuál es el stock actual de un item?"
+   SELECT SUM(cantidad) FROM selemti.mov_inv WHERE item_id = ?
+   ÍNDICE USADO: idx_mov_inv_item_id
+
+2. "¿Qué movimientos tuvimos en este período?"
+   SELECT * FROM selemti.mov_inv WHERE ts >= ? AND ts < ?
+   ÍNDICE USADO: idx_mov_inv_ts
+
+3. "¿Qué entradas tuvimos de un item?"
+   SELECT * FROM selemti.mov_inv WHERE item_id = ? AND tipo = 'ENTRADA'
+   ÍNDICE USADO: (item_id, ts) o (tipo, ts)
+
+4. "¿Cuáles son los items con bajo stock?"
+   SELECT i.*, COALESCE(SUM(m.cantidad), 0) as stock
+   FROM selemti.items i
+   LEFT JOIN selemti.mov_inv m ON i.id = m.item_id
+   LEFT JOIN selemti.stock_policy sp ON i.id = sp.item_id
+   WHERE COALESCE(SUM(m.cantidad), 0) < sp.min_qty
+   ÍNDICE USADO: idx_items_activo + idx_mov_inv_item_id
+
+5. "¿Qué lotes están próximos a vencer?"
+   SELECT * FROM selemti.lote
+   WHERE caducidad <= CURRENT_DATE + INTERVAL '30 days'
+   ÍNDICE USADO: ix_lote_cad
+
+================================================================================
+ACCESO A ARCHIVOS
+================================================================================
+
+C:\xampp3\htdocs\TerrenaLaravel\inventario_bd_estructura.txt
+   ↑ Estructura básica (rápida)
+
+C:\xampp3\htdocs\TerrenaLaravel\inventario_bd_estructura_completa.txt
+   ↑ Referencia completa (LIBRO DE REFERENCIA)
+
+C:\xampp3\htdocs\TerrenaLaravel\inventario_bd_consultas_recomendadas.sql
+   ↑ Queries SQL listas para usar
+
+================================================================================
+GUÍA DE USO POR PERSONA
+================================================================================
+
+DESARROLLADOR BACKEND:
+1. Leer inventario_bd_estructura.txt (5 min)
+2. Estudiar inventario_bd_estructura_completa.txt - PARTE 8 (Kardex)
+3. Usar inventario_bd_consultas_recomendadas.sql como referencia
+4. Notar FKs faltantes en PARTE 13
+
+DESARROLLADOR FRONTEND:
+1. Leer inventario_bd_estructura.txt
+2. Estudiar PARTE 9 (Recepciones) y PARTE 10 (Conteos)
+3. Entender PARTE 11 (Stock Policy)
+4. Ver flujos en PARTE 679-684
+
+DUEÑO DE BD (Gemini):
+1. Leer inventario_bd_estructura_completa.txt completamente
+2. Notar PARTE 13 (relaciones faltantes)
+3. Considerar PARTE 514-517 (duplicidades)
+4. Planificar FKs faltantes
+
+DBA/DEVOPS:
+1. Revisar PARTE 5 (Secuencias)
+2. Revisar PARTE 4 (Índices)
+3. Monitorear mov_inv (la más crítica)
+4. Backup strategy: mov_inv primero
+
+================================================================================
+PRÓXIMOS PASOS RECOMENDADOS
+================================================================================
+
+1. INMEDIATO:
+   - Agregar FKs explícitas faltantes (transfer_cab, transfer_det)
+   - Documentar estructura de JSONB en meta fields
+   - Consolidar duplicidades en items (categoria, unidad)
+
+2. CORTO PLAZO (1-2 semanas):
+   - Crear vistas consolidadas (v_inventario_consolidado)
+   - Agregar triggers para validar integridad
+   - Auditoría completa de datos existentes
+
+3. MEDIANO PLAZO (1-2 meses):
+   - Normalizar timestamps (todas con tz)
+   - Migrar de cat_unidades a unidades_medida_legacy
+   - Refactoring de items.categoria_id
+
+4. LARGO PLAZO (trimestre):
+   - Considerar sharding de mov_inv (por fecha/sucursal)
+   - Archive de movimientos históricos
+   - Views materializadas para reportes
+
+================================================================================
+CONTACTO
+================================================================================
+
+Documentación generada automáticamente.
+Para actualizaciones o correcciones, ejecutar:
+
+python3 extract_schema.py --output inventario_bd_estructura.txt
+
+Última revisión: 2025-11-17
+Base de datos: PostgreSQL 9.5
+Schema: selemti
+URL conexión: localhost:5433/pos
+
+================================================================================

@@ -1,0 +1,690 @@
+=== ESTRUCTURA COMPLETA DE INVENTARIO - SCHEMA SELEMTI ===
+Generado: 2025-11-17
+Connection: pos@localhost:5433
+Database: pos
+User: postgres
+================================================================================
+
+PARTE 1: ESTRUCTURAS DE TABLAS
+================================================================================
+
+=== TABLA: items ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | character varying          | NO   |
+nombre                                   | character varying          | NO   |
+descripcion                              | text                       | SI   |
+categoria_id                             | character varying          | NO   |
+unidad_medida                            | character varying          | NO   | 'PZ'::character varying
+perishable                               | boolean                    | SI   | false
+temperatura_min                          | integer                    | SI   |
+temperatura_max                          | integer                    | SI   |
+costo_promedio                           | numeric                    | SI   | 0.00
+activo                                   | boolean                    | SI   | true
+created_at                               | timestamp without time zone| SI   | now()
+updated_at                               | timestamp without time zone| SI   | now()
+unidad_medida_id                         | integer                    | SI   |
+factor_conversion                        | numeric                    | SI   | 1.0
+unidad_compra_id                         | integer                    | SI   |
+factor_compra                            | numeric                    | SI   | 1.0
+tipo                                     | USER-DEFINED               | SI   |
+unidad_salida_id                         | integer                    | SI   |
+category_id                              | bigint                     | SI   |
+item_code                                | character varying          | SI   |
+es_producible                            | boolean                    | NO   | false
+es_consumible_operativo                  | boolean                    | NO   | false
+es_empaque_to_go                         | boolean                    | NO   | false
+
+PK: id
+FKs:
+  - unidad_medida_id -> cat_unidades.id
+  - unidad_compra_id -> cat_unidades.id
+  - unidad_salida_id -> cat_unidades.id
+  - category_id -> item_categories.id
+Indexes:
+  - idx_items_activo
+  - idx_items_activo_categoria
+  - idx_items_categoria_id
+  - idx_items_unidad_compra_id
+  - idx_items_unidad_medida_id
+  - idx_items_unidad_salida_id
+  - ux_items_item_code (UNIQUE)
+
+------------------------------------------------------------------------------------
+
+=== TABLA: mov_inv ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.mov_inv_id_seq'::regclass)
+ts                                       | timestamp without time zone| NO   | now()
+item_id                                  | character varying          | NO   |
+lote_id                                  | integer                    | SI   |
+cantidad                                 | numeric                    | NO   |
+qty_original                             | numeric                    | SI   |
+uom_original_id                          | integer                    | SI   |
+costo_unit                               | numeric                    | SI   | 0
+tipo                                     | character varying          | NO   |
+ref_tipo                                 | character varying          | SI   |
+ref_id                                   | bigint                     | SI   |
+sucursal_id                              | character varying          | SI   |
+usuario_id                               | integer                    | SI   |
+created_at                               | timestamp without time zone| SI   | now()
+
+PK: id
+FKs:
+  - item_id -> items.id
+  - lote_id -> inventory_batch.id
+Indexes:
+  - idx_mov_inv_item_id
+  - idx_mov_inv_item_ts (COMPOSITE: ts, item_id)
+  - idx_mov_inv_tipo
+  - idx_mov_inv_tipo_fecha (COMPOSITE: tipo, ts)
+  - idx_mov_inv_ts
+  - idx_mov_inv_ts_tipo (COMPOSITE: ts, tipo)
+  - ix_mov_item_id
+  - ix_mov_item_ts (COMPOSITE: item_id, ts)
+  - ix_mov_ref (COMPOSITE: ref_tipo, ref_id)
+  - ix_mov_sucursal
+  - ix_mov_tipo
+
+------------------------------------------------------------------------------------
+
+=== TABLA: lote ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.lote_id_seq'::regclass)
+item_id                                  | character varying          | NO   |
+proveedor_id                             | integer                    | SI   |
+codigo                                   | text                       | SI   |
+caducidad                                | date                       | SI   |
+estado                                   | USER-DEFINED               | NO   | 'ACTIVO'::selemti.lote_estado
+creado_ts                                | timestamp without time zone| NO   | now()
+
+PK: id
+FKs:
+  - item_id -> items.id
+Indexes:
+  - ix_lote_cad (caducidad)
+  - ix_lote_insumo (item_id)
+
+------------------------------------------------------------------------------------
+
+=== TABLA: almacen ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | text                       | NO   |
+sucursal_id                              | bigint                     | NO   |
+nombre                                   | text                       | NO   |
+activo                                   | boolean                    | NO   | true
+
+PK: id
+FKs:
+  - sucursal_id -> cat_sucursales.id
+Indexes: None specific to these 4 columns
+
+------------------------------------------------------------------------------------
+
+=== TABLA: unidades_medida_legacy ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | integer                    | NO   | nextval('selemti.unidades_medida_id_seq'::regclass)
+codigo                                   | character varying          | NO   |
+nombre                                   | character varying          | NO   |
+tipo                                     | character varying          | NO   |
+categoria                                | character varying          | SI   |
+es_base                                  | boolean                    | SI   | false
+factor_conversion_base                   | numeric                    | SI   | 1.0
+decimales                                | integer                    | SI   | 2
+created_at                               | timestamp without time zone| SI   | now()
+
+PK: id
+FKs: None
+Indexes:
+  - unidades_medida_codigo_key (UNIQUE)
+
+------------------------------------------------------------------------------------
+
+=== TABLA: recepcion_cab ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.recepcion_cab_id_seq'::regclass)
+sucursal_id                              | bigint                     | NO   |
+proveedor_id                             | integer                    | SI   |
+oc_ref                                   | text                       | SI   |
+ts                                       | timestamp without time zone| NO   | now()
+usuario_id                               | bigint                     | SI   |
+meta                                     | jsonb                      | SI   |
+almacen_id                               | character varying          | SI   |
+numero_recepcion                         | character varying          | SI   |
+fecha_recepcion                          | date                        | SI   |
+estado                                   | character varying          | SI   |
+total_presentaciones                     | numeric                    | SI   |
+total_canonico                           | numeric                    | SI   |
+created_at                               | timestamp without time zone| SI   | now()
+updated_at                               | timestamp without time zone| SI   | now()
+deleted_at                               | timestamp without time zone| SI   |
+
+PK: id
+FKs:
+  - sucursal_id -> cat_sucursales.id
+  - usuario_id -> users.id
+Indexes:
+  - idx_recepcion_cab_deleted_at
+  - selemti_recepcion_cab_almacen_id_index (almacen_id)
+
+------------------------------------------------------------------------------------
+
+=== TABLA: recepcion_det ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.recepcion_det_id_seq'::regclass)
+recepcion_id                             | bigint                     | NO   |
+item_id                                  | character varying          | NO   |
+bodega_id                                | bigint                     | NO   |
+qty                                      | numeric                    | NO   |
+um_id                                    | integer                    | NO   |
+costo_unit                               | numeric                    | NO   |
+batch_id                                 | bigint                     | SI   |
+temperatura                              | numeric                    | SI   |
+doc_url                                  | text                       | SI   |
+meta                                     | jsonb                      | SI   |
+created_at                               | timestamp without time zone| SI   | now()
+updated_at                               | timestamp without time zone| SI   | now()
+deleted_at                               | timestamp without time zone| SI   |
+
+PK: id
+FKs:
+  - recepcion_id -> recepcion_cab.id
+  - item_id -> items.id
+  - bodega_id -> cat_almacenes.id
+  - um_id -> unidades_medida_legacy.id
+  - batch_id -> inventory_batch.id
+Indexes:
+  - idx_recepcion_det_batch_id
+  - idx_recepcion_det_bodega_id
+  - idx_recepcion_det_item_id
+
+------------------------------------------------------------------------------------
+
+=== TABLA: transfer_cab ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.transfer_cab_id_seq'::regclass)
+origen_almacen_id                        | integer                    | NO   |
+destino_almacen_id                       | integer                    | NO   |
+estado                                   | character varying          | NO   | 'CREADA'::character varying
+creada_por                               | integer                    | NO   |
+despachada_por                           | integer                    | SI   |
+recibida_por                             | integer                    | SI   |
+guia                                     | character varying          | SI   |
+created_at                               | timestamp without time zone| SI   | now()
+
+PK: id
+FKs: None explicitly defined (origen_almacen_id, destino_almacen_id should reference almacen)
+Indexes: None specific
+
+------------------------------------------------------------------------------------
+
+=== TABLA: transfer_det ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.transfer_det_id_seq'::regclass)
+transfer_id                              | bigint                     | SI   |
+item_id                                  | character varying          | NO   |
+cantidad                                 | numeric                    | NO   |
+cantidad_despachada                      | numeric                    | SI   |
+cantidad_recibida                        | numeric                    | SI   |
+created_at                               | timestamp without time zone| SI   | now()
+
+PK: id
+FKs:
+  - transfer_id -> transfer_cab.id
+Indexes: None specific
+
+------------------------------------------------------------------------------------
+
+=== TABLA: stock_policy ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.stock_policy_id_seq'::regclass)
+item_id                                  | text                       | NO   |
+sucursal_id                              | text                       | NO   |
+almacen_id                               | text                       | SI   |
+min_qty                                  | numeric                    | NO   | 0
+max_qty                                  | numeric                    | NO   | 0
+reorder_lote                             | numeric                    | SI   |
+activo                                   | boolean                    | NO   | true
+created_at                               | timestamp without time zone| NO   | now()
+
+PK: id
+FKs:
+  - item_id -> items.id
+Indexes:
+  - idx_stock_policy_item_suc (COMPOSITE: item_id, sucursal_id) UNIQUE
+  - ix_sp_item_suc (COMPOSITE: sucursal_id, item_id)
+
+------------------------------------------------------------------------------------
+
+=== TABLA: inventory_counts ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.inventory_counts_id_seq'::regclass)
+folio                                    | character varying          | SI   |
+sucursal_id                              | character varying          | SI   |
+almacen_id                               | character varying          | SI   |
+programado_para                          | timestamp with time zone   | SI   |
+iniciado_en                              | timestamp with time zone   | SI   |
+cerrado_en                               | timestamp with time zone   | SI   |
+estado                                   | character varying          | NO   | 'BORRADOR'::character varying
+creado_por                               | bigint                     | SI   |
+cerrado_por                              | bigint                     | SI   |
+notas                                    | text                       | SI   |
+total_items                              | numeric                    | NO   | '0'::numeric
+total_variacion                          | numeric                    | NO   | '0'::numeric
+meta                                     | jsonb                      | SI   |
+created_at                               | timestamp with time zone   | SI   |
+updated_at                               | timestamp with time zone   | SI   |
+
+PK: id
+FKs: None explicitly defined
+Indexes:
+  - inventory_counts_almacen_id_index (almacen_id)
+  - inventory_counts_cerrado_en_index (cerrado_en)
+  - inventory_counts_estado_index (estado)
+  - inventory_counts_folio_unique (folio) UNIQUE
+  - inventory_counts_programado_para_index (programado_para)
+  - inventory_counts_sucursal_id_index (sucursal_id)
+
+------------------------------------------------------------------------------------
+
+=== TABLA: inventory_count_lines ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.inventory_count_lines_id_seq'::regclass)
+inventory_count_id                       | bigint                     | NO   |
+item_id                                  | character varying          | NO   |
+inventory_batch_id                       | bigint                     | SI   |
+qty_teorica                              | numeric                    | NO   | '0'::numeric
+qty_contada                              | numeric                    | NO   | '0'::numeric
+qty_variacion                            | numeric                    | NO   | '0'::numeric
+uom                                      | character varying          | NO   |
+motivo                                   | character varying          | SI   |
+meta                                     | jsonb                      | SI   |
+created_at                               | timestamp with time zone   | SI   |
+updated_at                               | timestamp with time zone   | SI   |
+
+PK: id
+FKs:
+  - inventory_count_id -> inventory_counts.id
+  - item_id -> items.id
+  - inventory_batch_id -> inventory_batch.id
+Indexes:
+  - inventory_count_lines_inventory_batch_id_index (inventory_batch_id)
+  - inventory_count_lines_inventory_count_id_index (inventory_count_id)
+  - inventory_count_lines_item_id_index (item_id)
+
+------------------------------------------------------------------------------------
+
+=== TABLA: item_categories ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.item_categories_id_seq'::regclass)
+nombre                                   | character varying          | NO   |
+slug                                     | character varying          | SI   |
+codigo                                   | character varying          | SI   |
+descripcion                              | text                       | SI   |
+activo                                   | boolean                    | NO   | true
+prefijo                                  | character varying          | SI   |
+created_at                               | timestamp without time zone| SI   | now()
+updated_at                               | timestamp without time zone| SI   | now()
+
+PK: id
+FKs: None
+Indexes:
+  - item_categories_codigo_key (codigo) UNIQUE
+  - item_categories_slug_key (slug) UNIQUE
+
+------------------------------------------------------------------------------------
+
+=== TABLA: conversiones_unidad_legacy ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | integer                    | NO   | nextval('selemti.conversiones_unidad_id_seq'::regclass)
+unidad_origen_id                         | integer                    | NO   |
+unidad_destino_id                        | integer                    | NO   |
+factor_conversion                        | numeric                    | NO   |
+formula_directa                          | text                       | SI   |
+precision_estimada                       | numeric                    | SI   | 1.0
+activo                                   | boolean                    | SI   | true
+created_at                               | timestamp without time zone| SI   | now()
+
+PK: id
+FKs:
+  - unidad_origen_id -> unidades_medida_legacy.id
+  - unidad_destino_id -> unidades_medida_legacy.id
+Indexes:
+  - conversiones_unidad_unidad_origen_id_unidad_destino_id_key (COMPOSITE: unidad_origen_id, unidad_destino_id) UNIQUE
+
+================================================================================
+
+PARTE 2: RELACIONES (FOREIGN KEYS)
+================================================================================
+
+TABLA                          | COLUMNA                   | REFERENCIAS
+---------------------------------------------------------------------------
+almacen                        | sucursal_id               | cat_sucursales.id
+conversiones_unidad_legacy     | unidad_origen_id          | unidades_medida_legacy.id
+conversiones_unidad_legacy     | unidad_destino_id         | unidades_medida_legacy.id
+items                          | unidad_medida_id          | cat_unidades.id
+items                          | unidad_compra_id          | cat_unidades.id
+items                          | unidad_salida_id          | cat_unidades.id
+items                          | category_id               | item_categories.id
+lote                           | item_id                   | items.id
+mov_inv                        | item_id                   | items.id
+mov_inv                        | lote_id                   | inventory_batch.id
+recepcion_cab                  | sucursal_id               | cat_sucursales.id
+recepcion_cab                  | usuario_id                | users.id
+recepcion_det                  | um_id                     | unidades_medida_legacy.id
+recepcion_det                  | item_id                   | items.id
+recepcion_det                  | batch_id                  | inventory_batch.id
+recepcion_det                  | bodega_id                 | cat_almacenes.id
+recepcion_det                  | recepcion_id              | recepcion_cab.id
+stock_policy                   | item_id                   | items.id
+transfer_det                   | transfer_id               | transfer_cab.id
+
+================================================================================
+
+PARTE 3: NOTAS IMPORTANTES SOBRE TIPOS DE DATOS
+================================================================================
+
+USER-DEFINED TYPES (Enums):
+- items.tipo: tipo_item enum (requires SELECT to see values)
+- lote.estado: lote_estado enum (values: 'ACTIVO', 'VENCIDO', 'PARCIAL_USO')
+
+JSONB COLUMNS (Para almacenar metadatos):
+- recepcion_cab.meta
+- recepcion_det.meta
+- stock_policy.meta (parece no tener contenido)
+- inventory_counts.meta
+- inventory_count_lines.meta
+
+NUMERIC FIELDS (Precisión decimal):
+- items.costo_promedio (numeric, default 0.00)
+- items.factor_conversion (numeric, default 1.0)
+- items.factor_compra (numeric, default 1.0)
+- mov_inv.cantidad (numeric)
+- mov_inv.qty_original (numeric)
+- mov_inv.costo_unit (numeric, default 0)
+- lote.id (bigint)
+- recepcion_cab.total_presentaciones (numeric)
+- recepcion_cab.total_canonico (numeric)
+- recepcion_det.qty (numeric)
+- recepcion_det.costo_unit (numeric)
+- transfer_det.cantidad (numeric)
+- transfer_det.cantidad_despachada (numeric)
+- transfer_det.cantidad_recibida (numeric)
+- stock_policy.min_qty (numeric, default 0)
+- stock_policy.max_qty (numeric, default 0)
+- stock_policy.reorder_lote (numeric)
+- inventory_counts.total_items (numeric, default '0'::numeric)
+- inventory_counts.total_variacion (numeric, default '0'::numeric)
+- inventory_count_lines.qty_teorica (numeric, default '0'::numeric)
+- inventory_count_lines.qty_contada (numeric, default '0'::numeric)
+- inventory_count_lines.qty_variacion (numeric, default '0'::numeric)
+- conversiones_unidad_legacy.factor_conversion (numeric)
+- conversiones_unidad_legacy.precision_estimada (numeric, default 1.0)
+
+TIMESTAMP TYPES:
+- items: created_at, updated_at (timestamp without time zone)
+- mov_inv: ts (timestamp without time zone), created_at (timestamp without time zone)
+- lote: creado_ts (timestamp without time zone)
+- recepcion_cab: ts (timestamp without time zone), created_at, updated_at, deleted_at (soft delete)
+- recepcion_det: created_at, updated_at, deleted_at (soft delete)
+- transfer_cab: created_at (timestamp without time zone)
+- transfer_det: created_at (timestamp without time zone)
+- stock_policy: created_at (timestamp without time zone)
+- inventory_counts: programado_para, iniciado_en, cerrado_en, created_at, updated_at (timestamp WITH time zone)
+- inventory_count_lines: created_at, updated_at (timestamp WITH time zone)
+- unidades_medida_legacy: created_at (timestamp without time zone)
+- item_categories: created_at, updated_at (timestamp without time zone)
+- conversiones_unidad_legacy: created_at (timestamp without time zone)
+
+================================================================================
+
+PARTE 4: ÍNDICES Y OPTIMIZACIONES
+================================================================================
+
+TABLA                    | ÍNDICES ESPECIALES
+---------------------------------------------------------------------------
+items                    | 8 índices (incluyendo UNIQUEs)
+mov_inv                  | 12 índices (muchos composites para queries frecuentes)
+lote                     | 3 índices (caducidad, item_id, pk)
+almacen                  | 1 índice (PK)
+unidades_medida_legacy   | 2 índices (codigo UNIQUE, pk)
+recepcion_cab            | 3 índices (deleted_at para soft delete, almacen_id)
+recepcion_det            | 4 índices (batch_id, bodega_id, item_id, pk)
+transfer_cab             | 1 índice (PK)
+transfer_det             | 1 índice (PK)
+stock_policy             | 4 índices (composite unique, item_suc)
+inventory_counts         | 7 índices (para filtering y lookups)
+inventory_count_lines    | 4 índices (para queries por count, item, batch)
+item_categories          | 3 índices (slug UNIQUE, codigo UNIQUE, pk)
+conversiones_unidad_legacy | 2 índices (composite unique para origen-destino)
+
+PATRONES DE ÍNDICES DETECTADOS:
+- Composite indexes en mov_inv para queries por (tipo, ts) y (item_id, ts)
+- UNIQUE constraints en item_code, folio, slug, codigo, conversiones
+- Soft delete support en recepcion_cab y recepcion_det (deleted_at)
+- Multi-column indexes para stock_policy (item_id + sucursal_id combinación)
+
+================================================================================
+
+PARTE 5: SECUENCIAS (AUTOINCREMENT)
+================================================================================
+
+Tabla                          | Secuencia
+---------------------------------------------------------------------------
+mov_inv                        | selemti.mov_inv_id_seq
+lote                           | selemti.lote_id_seq
+unidades_medida_legacy         | selemti.unidades_medida_id_seq
+recepcion_cab                  | selemti.recepcion_cab_id_seq
+recepcion_det                  | selemti.recepcion_det_id_seq
+transfer_cab                   | selemti.transfer_cab_id_seq
+transfer_det                   | selemti.transfer_det_id_seq
+stock_policy                   | selemti.stock_policy_id_seq
+inventory_counts               | selemti.inventory_counts_id_seq
+inventory_count_lines          | selemti.inventory_count_lines_id_seq
+item_categories                | selemti.item_categories_id_seq
+conversiones_unidad_legacy     | selemti.conversiones_unidad_id_seq
+
+================================================================================
+
+PARTE 6: ANÁLISIS DE TABLAS RELACIONADAS (EXTERNAS A SELEMTI)
+================================================================================
+
+Las siguientes tablas son referenciadas pero NO están en selemti:
+- cat_sucursales (referenced by almacen, recepcion_cab)
+- cat_unidades (referenced by items) - NOTA: Similar a unidades_medida_legacy
+- cat_almacenes (referenced by recepcion_det)
+- users (referenced by recepcion_cab)
+- inventory_batch (referenced by mov_inv, recepcion_det, inventory_count_lines)
+- item_categories (EXIST IN SELEMTI pero items.categoria_id puede también ser varchar)
+
+ISSUE IDENTIFICADO:
+- Hay duplicidad entre unidades_medida_legacy (en selemti) y cat_unidades (fuera de selemti)
+- items.unidad_medida es varchar (parece legacy)
+- items.unidad_medida_id es integer (apunta a cat_unidades o unidades_medida_legacy?)
+- items.unidad_compra_id y items.unidad_salida_id también apuntan a cat_unidades
+
+================================================================================
+
+PARTE 7: CONVERSIONES DE UNIDADES
+================================================================================
+
+La tabla conversiones_unidad_legacy está diseñada para:
+- Convertir entre diferentes unidades de medida
+- Soportar fórmulas directas (para cálculos complejos)
+- Precisión estimada (para validar conversiones)
+- UNIQUE constraint en (unidad_origen_id, unidad_destino_id)
+
+Workflow:
+1. Item tiene múltiples UOMs: unidad_medida_id (base), unidad_compra_id, unidad_salida_id
+2. mov_inv registra cantidad en base UOM y qty_original en UOM original
+3. conversiones_unidad_legacy permite convertir entre cualquier par de UOMs
+
+================================================================================
+
+PARTE 8: KARDEX Y MOVIMIENTOS (mov_inv)
+================================================================================
+
+La tabla mov_inv funciona como kardex/journal de movimientos de inventario:
+
+Campos importantes:
+- ts: timestamp del movimiento (indexed)
+- item_id: qué item se movió (indexed)
+- cantidad: en UOM base
+- qty_original: cantidad en UOM original
+- uom_original_id: qué UOM era la original
+- costo_unit: costo unitario del movimiento
+- tipo: tipo de movimiento (ENTRADA, SALIDA, AJUSTE, etc.)
+- ref_tipo: tipo de referencia (RECEPCION, TRANSFER, CONSUMO, etc.)
+- ref_id: ID de la referencia
+- lote_id: lote/batch asociado
+
+Indexes multi-columna para queries optimizadas:
+- (item_id, ts): buscar movimientos de un item en período
+- (tipo, ts): buscar movimientos por tipo en período
+- (ts, item_id): ordenar por timestamp con filtro de item
+- (ts, tipo): ordenar por timestamp con filtro de tipo
+
+================================================================================
+
+PARTE 9: RECEPCIONES (recepcion_cab + recepcion_det)
+================================================================================
+
+Workflow:
+1. recepcion_cab: encabezado de recepción (quién, cuándo, de quién)
+   - sucursal_id: rama donde se recibe
+   - proveedor_id: de quién viene
+   - oc_ref: referencia a OC
+   - usuario_id: quién recibe
+   - almacen_id: en qué almacén
+   - estado: BORRADOR, COMPLETA, ANULADA
+   - meta: JSON con datos adicionales
+   - Soft delete (deleted_at)
+
+2. recepcion_det: líneas de recepción (qué llega)
+   - item_id: qué item
+   - qty: cantidad recibida
+   - um_id: en qué unidad
+   - costo_unit: precio unitario
+   - batch_id: lote/batch creado
+   - temperatura: para items perecederos
+   - bodega_id: dónde se almacena
+   - Soft delete (deleted_at)
+
+Totales agregados en recepcion_cab:
+- total_presentaciones: qty en UOM de presentación
+- total_canonico: qty convertida a UOM base
+
+================================================================================
+
+PARTE 10: CONTEOS DE INVENTARIO (inventory_counts + inventory_count_lines)
+================================================================================
+
+Workflow:
+1. inventory_counts: encabezado de conteo
+   - folio: identificador único del conteo
+   - estado: BORRADOR, EN_PROGRESO, COMPLETADO, CERRADO
+   - programado_para: cuándo estaba programado
+   - iniciado_en: cuándo se inició el conteo
+   - cerrado_en: cuándo se cerró
+   - creado_por, cerrado_por: quiénes participaron
+   - total_items: # de ítems contados
+   - total_variacion: suma de variaciones
+   - meta: JSON con datos adicionales
+   - Indexes en estado, folio (UNIQUE), fechas
+
+2. inventory_count_lines: líneas de conteo
+   - qty_teorica: cantidad según sistema
+   - qty_contada: cantidad física contada
+   - qty_variacion: diferencia (contada - teorica)
+   - motivo: por qué hay variación
+   - uom: unidad de medida usada en conteo
+   - meta: JSON con datos adicionales
+
+================================================================================
+
+PARTE 11: POLÍTICAS DE STOCK (stock_policy)
+================================================================================
+
+Define límites de inventario por item/sucursal/almacén:
+- min_qty: cantidad mínima (punto de reorden)
+- max_qty: cantidad máxima (stock óptimo)
+- reorder_lote: cantidad a pedir cuando se alcanza min
+- activo: si está vigente
+- UNIQUE constraint en (item_id, sucursal_id)
+
+Permite queries del tipo: "qué items necesitan reorden en esta sucursal?"
+
+================================================================================
+
+PARTE 12: TRANSFERENCIAS (transfer_cab + transfer_det)
+================================================================================
+
+Para mover inventario entre almacenes:
+
+1. transfer_cab: encabezado
+   - origen_almacen_id, destino_almacen_id: de dónde a dónde
+   - estado: CREADA, DESPACHADA, RECIBIDA
+   - creada_por, despachada_por, recibida_por: quiénes participaron
+   - guia: referencia a guía de transporte
+
+2. transfer_det: líneas
+   - item_id: qué se transfiere
+   - cantidad: cuánto
+   - cantidad_despachada: cuánto se despachó
+   - cantidad_recibida: cuánto se recibió
+   - Permite reconciliación en destino
+
+================================================================================
+
+PARTE 13: RELACIONES NO EXPLÍCITAS (Faltantes)
+================================================================================
+
+FKs que DEBERÍAN existir pero NO están definidas explícitamente:
+- transfer_cab.origen_almacen_id -> almacen.id
+- transfer_cab.destino_almacen_id -> almacen.id
+- transfer_det.item_id -> items.id
+- recepcion_det.bodega_id referencia a cat_almacenes, no a almacen
+- mov_inv.sucursal_id: no hay FK definida
+- items.categoria_id: varchar, no numérica (inconsistencia)
+- inventory_counts.sucursal_id: varchar, sin FK
+
+RECOMENDACIÓN: Agregar estas FKs para data integrity.
+
+================================================================================
+
+RESUMEN FINAL
+================================================================================
+
+Total de tablas: 14
+Total de PKs: 14 (una por tabla)
+Total de FKs: 19 (explícitas)
+Total de índices: 66
+Campos JSONB: 5
+Enums/User-Defined Types: 2
+Soft deletes: 2 tablas (recepcion_cab, recepcion_det)
+
+Arquitectura de Flujo:
+1. ENTRADA: recepcion_cab/det -> kardex (mov_inv) + lotes (lote)
+2. MOVIMIENTO: transfer_cab/det -> kardex (mov_inv)
+3. CONSUMO: (por consumo POS) -> kardex (mov_inv)
+4. CONTEO: inventory_counts/lines -> ajustes -> kardex (mov_inv)
+5. STOCK: stock_policy define umbrales
+
+Todas las columnas de cantidad usan NUMERIC para precisión.
+Timestamps varían entre con/sin time zone (inconsistencia menor).
+Meta JSONB fields permiten extensibilidad sin cambios de schema.
+
+================================================================================

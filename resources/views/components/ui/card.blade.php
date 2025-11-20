@@ -4,8 +4,10 @@
     'padding' => 'p-5',  {{-- p-3 | p-5 | p-6 --}}
 ])
 
+@php($cardSlot = $slot ?? '')
+
 <div {{ $attributes->merge(['class' => 'bg-white rounded-lg border border-gray-200 shadow-sm']) }}>
-    @if($title || $slot)
+    @if($title || $cardSlot)
         <div class="border-b border-gray-200 {{ $padding }}">
             @if($title)
                 <h3 class="text-lg font-semibold text-gray-900">{{ $title }}</h3>
@@ -13,7 +15,7 @@
                     <p class="text-sm text-gray-500 mt-1">{{ $subtitle }}</p>
                 @endif
             @endif
-            {{ $slot }}
+            {{ $cardSlot }}
         </div>
     @endif
 

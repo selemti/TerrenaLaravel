@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Transfers;
 
+use App\Models\Inventory\TransferHeader;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -53,7 +54,7 @@ class Index extends Component
                 'almacen_origen' => 'Principal',
                 'almacen_destino' => 'Sucursal Norte',
                 'fecha_solicitada' => now()->addDay()->format('Y-m-d'),
-                'estado' => 'BORRADOR',
+                'estado' => TransferHeader::STATUS_APROBADA,
                 'lineas_count' => 5,
                 'creado_por' => 'Juan Pérez',
                 'created_at' => now()->format('Y-m-d H:i'),
@@ -64,7 +65,7 @@ class Index extends Component
                 'almacen_origen' => 'Principal',
                 'almacen_destino' => 'Sucursal Sur',
                 'fecha_solicitada' => now()->format('Y-m-d'),
-                'estado' => 'DESPACHADA',
+                'estado' => TransferHeader::STATUS_EN_TRANSITO,
                 'lineas_count' => 3,
                 'creado_por' => 'María García',
                 'created_at' => now()->subDay()->format('Y-m-d H:i'),

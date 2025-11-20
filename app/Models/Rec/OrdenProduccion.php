@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class OrdenProduccion extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'selemti.op_produccion_cab';
 
     protected $primaryKey = 'id';

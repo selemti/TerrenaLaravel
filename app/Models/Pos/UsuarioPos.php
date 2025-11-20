@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class UsuarioPos extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'public.users';
 
     protected $primaryKey = 'auto_id'; // Clave primaria es auto_id

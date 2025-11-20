@@ -24,7 +24,7 @@ class PosMap extends Model
         'tipo',
         'plu',
         'receta_id',
-        'recipe_version_id',
+        'receta_version_id',
         'valid_from',
         'valid_to',
         'vigente_desde',

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class MenuModifier extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'public.menu_modifier';
 
     protected $primaryKey = 'id';

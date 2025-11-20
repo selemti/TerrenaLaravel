@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Ticket extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'public.ticket';
 
     protected $primaryKey = 'id';

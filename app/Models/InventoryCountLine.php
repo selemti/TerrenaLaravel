@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Inv\Batch;
 use Illuminate\Database\Eloquent\Model;
 
 class InventoryCountLine extends Model
@@ -9,8 +10,6 @@ class InventoryCountLine extends Model
     protected $connection = 'pgsql';
 
     protected $table = 'selemti.inventory_count_lines';
-
-    protected $guarded = [];
 
     protected $primaryKey = 'id';
 
@@ -23,19 +22,22 @@ class InventoryCountLine extends Model
     protected $fillable = [
         'inventory_count_id',
         'item_id',
+        'inventory_batch_id',
         'qty_teorica',
         'qty_contada',
-        'uom_id',
-        'notas',
-        'created_by',
-        'updated_by',
+        'qty_variacion',
+        'uom',
+        'motivo',
+        'meta',
     ];
 
     protected $casts = [
-        'qty_teorica' => 'decimal:4',
-        'qty_contada' => 'decimal:4',
+        'qty_teorica' => 'decimal:6',
+        'qty_contada' => 'decimal:6',
+        'qty_variacion' => 'decimal:6',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'meta' => 'array',
     ];
 
     public function inventoryCount()
@@ -46,5 +48,10 @@ class InventoryCountLine extends Model
     public function item()
     {
         return $this->belongsTo(Item::class, 'item_id', 'id');
+    }
+
+    public function batch()
+    {
+        return $this->belongsTo(Batch::class, 'inventory_batch_id');
     }
 }

@@ -27,6 +27,7 @@
             <th>Estado</th>
             <th>Fecha</th>
             <th class="text-end">Total (presentación)</th>
+            <th class="text-end">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -37,14 +38,28 @@
               <td>{{ $row->sucursal_nombre ?? '—' }}</td>
               <td>{{ $row->almacen_nombre ?? '—' }}</td>
               <td>
-                <span class="badge bg-success-subtle text-success">{{ $row->estado ?? 'RECIBIDO' }}</span>
+                @php $state = strtoupper($row->estado ?? ''); @endphp
+                @if($state === 'BORRADOR')
+                  <span class="badge bg-secondary-subtle text-secondary">Borrador</span>
+                @elseif($state === 'VALIDADA')
+                  <span class="badge bg-info-subtle text-info">Validada</span>
+                @elseif($state === 'POSTEADA')
+                  <span class="badge bg-success-subtle text-success">Posteada</span>
+                @else
+                  <span class="badge bg-light text-muted">{{ $row->estado ?? '—' }}</span>
+                @endif
               </td>
               <td>{{ $row->fecha_recepcion ? \Carbon\Carbon::parse($row->fecha_recepcion)->format('d/m/Y H:i') : '—' }}</td>
               <td class="text-end">{{ number_format($row->total_presentaciones ?? 0, 2) }}</td>
+              <td class="text-end">
+                <a href="{{ route('inv.receptions.detail', ['id' => $row->id]) }}" class="btn btn-outline-primary btn-sm">
+                  <i class="fa-regular fa-eye"></i>
+                </a>
+              </td>
             </tr>
             @empty
               <tr>
-                <td colspan="7" class="text-center text-muted py-4">Sin recepciones registradas.</td>
+                <td colspan="8" class="text-center text-muted py-4">Sin recepciones registradas.</td>
               </tr>
           @endforelse
         </tbody>

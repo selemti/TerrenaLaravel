@@ -15,7 +15,7 @@ class RecetaRepository
             ->table('selemti.pos_map')
             ->where('pos_code', $posCode)
             ->where('is_active', true)
-            ->value('recipe_version_id');
+            ->value('receta_version_id');
 
         return $result ? (int) $result : null;
     }

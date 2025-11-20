@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\Inventory\StockController;
 use App\Http\Controllers\Api\Inventory\TransferApiController;
 use App\Http\Controllers\Api\Inventory\VendorController;
 use App\Http\Controllers\Api\MeController;
+use App\Http\Controllers\Api\Purchasing\ReplenishmentController;
 use App\Http\Controllers\Api\ReportsController;
 use App\Http\Controllers\Api\Unidades\ConversionController;
 use App\Http\Controllers\Api\Unidades\UnidadController;
@@ -295,6 +296,31 @@ Route::prefix('production')->group(function () {
     Route::post('/batch/{batch_id}/consume', [ProductionController::class, 'consume']);
     Route::post('/batch/{batch_id}/complete', [ProductionController::class, 'complete']);
     Route::post('/batch/{batch_id}/post', [ProductionController::class, 'post']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| MÓDULO: REPLENISHMENT (Motor de Reposición)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('purchasing/replenishment')->middleware(['auth:sanctum'])->group(function () {
+    // Listar sugerencias con filtros
+    Route::get('/suggestions', [ReplenishmentController::class, 'index']);
+    
+    // Ver detalle de una sugerencia
+    Route::get('/suggestions/{id}', [ReplenishmentController::class, 'show']);
+    
+    // Calcular sugerencias manualmente
+    Route::post('/calculate', [ReplenishmentController::class, 'calculate']);
+    
+    // Aprobar sugerencia
+    Route::post('/suggestions/{id}/approve', [ReplenishmentController::class, 'approve']);
+    
+    // Rechazar sugerencia
+    Route::post('/suggestions/{id}/reject', [ReplenishmentController::class, 'reject']);
+    
+    // Convertir sugerencia a PR o PO
+    Route::post('/suggestions/{id}/convert', [ReplenishmentController::class, 'convert']);
 });
 
 // Alertas de costos

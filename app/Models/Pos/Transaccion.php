@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Transaccion extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'public.transactions';
 
     protected $primaryKey = 'id';

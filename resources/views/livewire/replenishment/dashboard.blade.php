@@ -2,29 +2,43 @@
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="mb-1">Pedidos Sugeridos</h2>
-            <p class="text-muted mb-0">Sistema de reposición automática de inventario</p>
+            <h2 class="mb-1">Sugerencias de Replenishment</h2>
+            <p class="text-muted mb-0">Motor automático de sugerencias de reposición (MIN_MAX, SMA, POS)</p>
         </div>
         <div class="d-flex gap-2">
-            <button wire:click="generarSugerencias"
-                    wire:loading.attr="disabled"
-                    class="btn btn-primary">
-                <span wire:loading.remove wire:target="generarSugerencias">
-                    <i class="fa-solid fa-magic me-2"></i>Generar Sugerencias
-                </span>
-                <span wire:loading wire:target="generarSugerencias">
-                    <i class="fa-solid fa-spinner fa-spin me-2"></i>Generando...
-                </span>
+            <button class="btn btn-outline-secondary" wire:click="loadSuggestions" @disabled($loading)>
+                <i class="fa-solid fa-rotate me-1"></i>Refrescar
+            </button>
+            <button class="btn btn-primary" wire:click="runCalculation" @disabled($loading)>
+                @if($loading)
+                    <i class="fa-solid fa-spinner fa-spin me-1"></i>Calculando...
+                @else
+                    <i class="fa-solid fa-gears me-1"></i>Calcular sugerencias
+                @endif
             </button>
         </div>
     </div>
 
+    {{-- Flash Messages --}}
+    @if($flashMessage)
+        <div class="alert alert-success alert-dismissible fade show py-2" role="alert">
+            <i class="fa-solid fa-check-circle me-1"></i>{{ $flashMessage }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if($errorMessage)
+        <div class="alert alert-danger alert-dismissible fade show py-2" role="alert">
+            <i class="fa-solid fa-exclamation-triangle me-1"></i>{{ $errorMessage }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     {{-- Estadísticas --}}
-    <div class="row g-3 mb-4" {{-- wire:poll.30s --}}>
+    <div class="row g-3 mb-4">
         <div class="col-md-2">
-            <div class="card shadow-sm text-center">
+            <div class="card shadow-sm text-center border-secondary">
                 <div class="card-body py-3">
-                    <h4 class="mb-0">{{ $stats['total'] }}</h4>
+                    <h4 class="mb-0 text-secondary">{{ number_format($stats['total'] ?? 0) }}</h4>
                     <small class="text-muted">Total</small>
                 </div>
             </div>
@@ -32,40 +46,40 @@
         <div class="col-md-2">
             <div class="card shadow-sm text-center border-warning">
                 <div class="card-body py-3">
-                    <h4 class="mb-0 text-warning">{{ $stats['pendientes'] }}</h4>
-                    <small class="text-muted">Pendientes</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card shadow-sm text-center border-danger">
-                <div class="card-body py-3">
-                    <h4 class="mb-0 text-danger">{{ $stats['urgentes'] }}</h4>
-                    <small class="text-muted">Urgentes</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card shadow-sm text-center border-info">
-                <div class="card-body py-3">
-                    <h4 class="mb-0 text-info">{{ $stats['compras'] }}</h4>
-                    <small class="text-muted">Compras</small>
+                    <h4 class="mb-0 text-warning">{{ number_format($stats['pendiente'] ?? 0) }}</h4>
+                    <small class="text-muted">Pendiente</small>
                 </div>
             </div>
         </div>
         <div class="col-md-2">
             <div class="card shadow-sm text-center border-success">
                 <div class="card-body py-3">
-                    <h4 class="mb-0 text-success">{{ $stats['producciones'] }}</h4>
-                    <small class="text-muted">Producciones</small>
+                    <h4 class="mb-0 text-success">{{ number_format($stats['aprobada'] ?? 0) }}</h4>
+                    <small class="text-muted">Aprobada</small>
                 </div>
             </div>
         </div>
         <div class="col-md-2">
             <div class="card shadow-sm text-center border-primary">
                 <div class="card-body py-3">
-                    <h4 class="mb-0 text-primary">{{ $stats['convertidas_hoy'] }}</h4>
-                    <small class="text-muted">Convertidas Hoy</small>
+                    <h4 class="mb-0 text-primary">{{ number_format($stats['convertida'] ?? 0) }}</h4>
+                    <small class="text-muted">Convertida</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card shadow-sm text-center border-danger">
+                <div class="card-body py-3">
+                    <h4 class="mb-0 text-danger">{{ number_format($stats['rechazada'] ?? 0) }}</h4>
+                    <small class="text-muted">Rechazada</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card shadow-sm text-center" style="border-left: 4px solid #dc3545;">
+                <div class="card-body py-3">
+                    <h4 class="mb-0 text-danger">{{ number_format($stats['urgentes'] ?? 0) }}</h4>
+                    <small class="text-muted">Urgentes</small>
                 </div>
             </div>
         </div>
@@ -76,21 +90,24 @@
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-3">
-                    <input type="text"
-                           class="form-control"
-                           wire:model.defer="search"
-                           placeholder="Buscar por folio o item...">
+                    <label class="form-label small">Buscar</label>
+                    <input type="text" class="form-control" wire:model.live.debounce.300ms="search"
+                           placeholder="Item ID, motivo...">
                 </div>
                 <div class="col-md-2">
-                    <select class="form-select" wire:model.defer="tipoFilter">
-                        <option value="all">Todos los tipos</option>
-                        <option value="COMPRA">Compras</option>
-                        <option value="PRODUCCION">Producciones</option>
+                    <label class="form-label small">Estado</label>
+                    <select class="form-select" wire:model.live="estadoFilter">
+                        <option value="all">Todos</option>
+                        <option value="PENDIENTE">Pendiente</option>
+                        <option value="APROBADA">Aprobada</option>
+                        <option value="RECHAZADA">Rechazada</option>
+                        <option value="CONVERTIDA">Convertida</option>
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select class="form-select" wire:model.defer="prioridadFilter">
-                        <option value="all">Todas las prioridades</option>
+                    <label class="form-label small">Prioridad</label>
+                    <select class="form-select" wire:model.live="prioridadFilter">
+                        <option value="all">Todas</option>
                         <option value="URGENTE">Urgente</option>
                         <option value="ALTA">Alta</option>
                         <option value="NORMAL">Normal</option>
@@ -98,194 +115,137 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select class="form-select" wire:model.defer="estadoFilter">
-                        <option value="all">Todos los estados</option>
-                        <option value="PENDIENTE">Pendiente</option>
-                        <option value="REVISADA">Revisada</option>
-                        <option value="APROBADA">Aprobada</option>
-                        <option value="CONVERTIDA">Convertida</option>
-                        <option value="RECHAZADA">Rechazada</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select class="form-select" wire:model.defer="sucursalFilter">
-                        <option value="all">Todas las sucursales</option>
+                    <label class="form-label small">Sucursal</label>
+                    <select class="form-select" wire:model.live="sucursalFilter">
+                        <option value="all">Todas</option>
                         @foreach($sucursales as $sucursal)
                             <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-1">
-                    <button class="btn btn-outline-secondary w-100"
-                            wire:click="limpiarFiltros"
-                            title="Limpiar filtros">
-                        <i class="fa-solid fa-filter-circle-xmark"></i>
+                    <label class="form-label small">Origen</label>
+                    <select class="form-select" wire:model.live="origenFilter">
+                        <option value="all">Todos</option>
+                        <option value="MIN_MAX">MIN_MAX</option>
+                        <option value="SMA">SMA</option>
+                        <option value="POS_CONSUMPTION">POS</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" wire:click="limpiarFiltros">
+                        <i class="fa-solid fa-filter-circle-xmark me-1"></i>Limpiar
                     </button>
                 </div>
             </div>
-            <div class="row mt-2">
+            <div class="row g-3 mt-2">
                 <div class="col-md-3">
-                    <div class="form-check">
-                        <input class="form-check-input"
-                               type="checkbox"
-                               wire:model.defer="urgenciasOnly"
-                               id="urgenciasOnly">
-                        <label class="form-check-label" for="urgenciasOnly">
-                            <i class="fa-solid fa-triangle-exclamation text-warning me-1"></i>
-                            Solo urgencias
-                        </label>
-                    </div>
+                    <label class="form-label small">Desde</label>
+                    <input type="date" class="form-control" wire:model.live="fechaDesde">
                 </div>
-                <div class="col-md-2">
-                    <button class="btn btn-primary" wire:click="$refresh">
-                        <i class="fa-solid fa-sync me-1"></i>Aplicar Filtros
-                    </button>
+                <div class="col-md-3">
+                    <label class="form-label small">Hasta</label>
+                    <input type="date" class="form-control" wire:model.live="fechaHasta">
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Acciones múltiples --}}
-    @if(count($selectedIds) > 0)
-    <div class="alert alert-info d-flex justify-content-between align-items-center mb-3">
-        <span>
-            <i class="fa-solid fa-check-circle me-2"></i>
-            <strong>{{ count($selectedIds) }}</strong> sugerencias seleccionadas
-        </span>
-        <div class="btn-group">
-            <button class="btn btn-sm btn-success"
-                    wire:click="aprobarSeleccionadas"
-                    wire:confirm="¿Aprobar {{ count($selectedIds) }} sugerencias?">
-                <i class="fa-solid fa-check me-1"></i>Aprobar Todas
-            </button>
-            <button class="btn btn-sm btn-primary"
-                    wire:click="convertirSeleccionadasACompra"
-                    wire:confirm="¿Convertir {{ count($selectedIds) }} sugerencias a compras?">
-                <i class="fa-solid fa-shopping-cart me-1"></i>Convertir a Compras
-            </button>
-        </div>
-    </div>
-    @endif
-
-    {{-- Tabla de sugerencias --}}
+    {{-- Tabla --}}
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th style="width: 40px;">
-                                <input type="checkbox"
-                                       class="form-check-input"
-                                       wire:model.defer="selectAll">
-                            </th>
-                            <th>Folio</th>
                             <th>Item</th>
-                            <th>Sucursal</th>
-                            <th class="text-center">Tipo</th>
-                            <th class="text-center">Prioridad</th>
-                            <th class="text-end">Stock</th>
-                            <th class="text-end">Sugerida</th>
-                            <th class="text-center">Días Rest.</th>
-                            <th class="text-center">Estado</th>
-                            <th class="text-end">Acciones</th>
+                            <th>Prioridad</th>
+                            <th class="text-end">Stock Actual</th>
+                            <th class="text-end">Stock Min</th>
+                            <th class="text-end">Qty Sugerida</th>
+                            <th>Origen</th>
+                            <th>Motivo</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($suggestions as $suggestion)
-                            <tr class="{{ $suggestion->prioridad === 'URGENTE' ? 'table-danger' : '' }}">
+                        @forelse($suggestions as $row)
+                            <tr>
                                 <td>
-                                    @if($suggestion->puede_aprobarse)
-                                    <input type="checkbox"
-                                           class="form-check-input"
-                                           wire:model.defer="selectedIds"
-                                           value="{{ $suggestion->id }}">
-                                    @endif
+                                    <div class="fw-semibold">{{ $row['item']['nombre'] ?? $row['item_id'] ?? 'N/D' }}</div>
+                                    <div class="text-muted small">{{ $row['item_id'] ?? '' }} • {{ $row['uom'] ?? '' }}</div>
                                 </td>
                                 <td>
-                                    <strong>{{ $suggestion->folio }}</strong>
-                                    <br>
-                                    <small class="text-muted">
-                                        {{ $suggestion->sugerido_en->format('d/m/Y H:i') }}
-                                    </small>
+                                    @php
+                                        $prioridad = $row['prioridad'] ?? 'NORMAL';
+                                        $prioridadClass = match($prioridad) {
+                                            'URGENTE' => 'bg-danger text-white',
+                                            'ALTA' => 'bg-warning text-dark',
+                                            'NORMAL' => 'bg-info text-white',
+                                            'BAJA' => 'bg-secondary text-white',
+                                            default => 'bg-secondary text-white'
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $prioridadClass }}">{{ $prioridad }}</span>
+                                </td>
+                                <td class="text-end">{{ number_format((float)($row['stock_actual'] ?? 0), 2) }}</td>
+                                <td class="text-end">{{ number_format((float)($row['stock_min'] ?? 0), 2) }}</td>
+                                <td class="text-end fw-semibold text-primary">
+                                    {{ number_format((float)($row['qty_sugerida'] ?? 0), 2) }}
                                 </td>
                                 <td>
-                                    <strong>{{ $suggestion->item->item_code ?? $suggestion->item_id }}</strong>
-                                    <br>
-                                    <small class="text-muted">{{ $suggestion->item->nombre ?? '-' }}</small>
+                                    <span class="badge bg-light text-dark border">{{ $row['origen'] ?? '—' }}</span>
+                                </td>
+                                <td class="text-muted small" style="max-width: 250px;">
+                                    {{ $row['motivo'] ?? '—' }}
                                 </td>
                                 <td>
-                                    <small>{{ $suggestion->sucursal->nombre ?? '-' }}</small>
+                                    @php
+                                        $estado = $row['estado'] ?? 'PENDIENTE';
+                                        $estadoClass = match($estado) {
+                                            'PENDIENTE' => 'bg-warning text-dark',
+                                            'APROBADA' => 'bg-success text-white',
+                                            'RECHAZADA' => 'bg-danger text-white',
+                                            'CONVERTIDA' => 'bg-primary text-white',
+                                            default => 'bg-secondary text-white'
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $estadoClass }}">{{ $estado }}</span>
                                 </td>
-                                <td class="text-center">{!! $suggestion->tipo_badge !!}</td>
                                 <td class="text-center">
-                                    {!! $suggestion->urgencia_icono !!}
-                                    {!! $suggestion->prioridad_badge !!}
-                                </td>
-                                <td class="text-end">
-                                    <strong>{{ number_format($suggestion->stock_actual, 2) }}</strong>
-                                    <br>
-                                    <small class="text-muted">
-                                        Min: {{ number_format($suggestion->stock_min, 2) }}
-                                    </small>
-                                </td>
-                                <td class="text-end">
-                                    <strong>{{ number_format($suggestion->qty_sugerida, 2) }}</strong>
-                                    {{ $suggestion->uom }}
-                                </td>
-                                <td class="text-center">
-                                    @if($suggestion->dias_stock_restante !== null)
-                                        <span class="badge {{ $suggestion->dias_stock_restante <= 1 ? 'bg-danger' : ($suggestion->dias_stock_restante <= 3 ? 'bg-warning' : 'bg-secondary') }}">
-                                            {{ $suggestion->dias_stock_restante }} día(s)
-                                        </span>
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
-                                </td>
-                                <td class="text-center">{!! $suggestion->estado_badge !!}</td>
-                                <td class="text-end">
-                                    <div class="btn-group btn-group-sm">
-                                        @if($suggestion->puede_aprobarse)
-                                            <button class="btn btn-outline-success"
-                                                    wire:click="aprobar({{ $suggestion->id }})"
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        @if($row['estado'] === 'PENDIENTE')
+                                            <button class="btn btn-success"
+                                                    wire:click="abrirModalAprobar({{ $row['id'] }})"
                                                     title="Aprobar">
                                                 <i class="fa-solid fa-check"></i>
                                             </button>
-                                            <button class="btn btn-outline-danger"
-                                                    wire:click="$dispatch('openRejectModal', { id: {{ $suggestion->id }} })"
+                                            <button class="btn btn-danger"
+                                                    wire:click="abrirModalRechazar({{ $row['id'] }})"
                                                     title="Rechazar">
                                                 <i class="fa-solid fa-times"></i>
                                             </button>
+                                        @elseif($row['estado'] === 'APROBADA')
+                                            <button class="btn btn-primary"
+                                                    wire:click="abrirModalConvertir({{ $row['id'] }})"
+                                                    title="Convertir">
+                                                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                                            </button>
+                                        @else
+                                            <span class="text-muted small">—</span>
                                         @endif
-
-                                        @if($suggestion->estado === 'APROBADA')
-                                            @if($suggestion->tipo === 'COMPRA')
-                                                <button class="btn btn-outline-primary"
-                                                        wire:click="convertirACompra({{ $suggestion->id }})"
-                                                        title="Convertir a Compra">
-                                                    <i class="fa-solid fa-shopping-cart"></i>
-                                                </button>
-                                            @else
-                                                <button class="btn btn-outline-success"
-                                                        wire:click="convertirAProduccion({{ $suggestion->id }})"
-                                                        title="Convertir a Producción">
-                                                    <i class="fa-solid fa-industry"></i>
-                                                </button>
-                                            @endif
-                                        @endif
-
-                                        <button class="btn btn-outline-info"
-                                                title="Ver detalle">
-                                            <i class="fa-solid fa-eye"></i>
-                                        </button>
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="11" class="text-center py-4 text-muted">
-                                    <i class="fa-solid fa-inbox fa-2x mb-2 d-block"></i>
-                                    No se encontraron sugerencias con los filtros aplicados
+                                <td colspan="9" class="text-center text-muted py-5">
+                                    @if($loading)
+                                        <i class="fa-solid fa-spinner fa-spin me-2"></i>Cargando sugerencias...
+                                    @else
+                                        <i class="fa-solid fa-inbox me-2"></i>No hay sugerencias con los filtros aplicados.
+                                    @endif
                                 </td>
                             </tr>
                         @endforelse
@@ -293,47 +253,139 @@
                 </table>
             </div>
         </div>
-
-        {{-- Paginación --}}
-        @if($suggestions->hasPages())
-            <div class="card-footer">
-                {{ $suggestions->links() }}
-            </div>
-        @endif
     </div>
 
-    {{-- Loading overlay - DESHABILITADO TEMPORALMENTE
-    <div wire:loading.flex
-         wire:target="generarSugerencias,aprobarSeleccionadas,convertirSeleccionadasACompra"
-         class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-         style="background: rgba(0,0,0,0.5); z-index: 9999;">
-        <div class="spinner-border text-light" style="width: 3rem; height: 3rem;" role="status">
-            <span class="visually-hidden">Procesando...</span>
-        </div>
+    {{-- Paginación
+    <div class="mt-3">
+        {{ $suggestions->links() }}
     </div>
     --}}
+
+    {{-- Modal Aprobar --}}
+    @if($showModalAprobar)
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">
+                            <i class="fa-solid fa-check-circle me-2"></i>Aprobar Sugerencia
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" wire:click="$set('showModalAprobar', false)"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if($errorMessage)
+                            <div class="alert alert-danger py-2">{{ $errorMessage }}</div>
+                        @endif
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Item</label>
+                            <div class="text-muted">{{ $selectedSuggestion['item']['nombre'] ?? $selectedSuggestion['item_id'] ?? 'N/D' }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Cantidad Sugerida</label>
+                            <div class="text-muted">{{ number_format((float)($selectedSuggestion['qty_sugerida'] ?? 0), 2) }} {{ $selectedSuggestion['uom'] ?? '' }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Cantidad a Aprobar</label>
+                            <input type="number" class="form-control" wire:model="qtyAprobada"
+                                   step="0.01" min="0" placeholder="Dejar vacío para usar cantidad sugerida">
+                            <small class="text-muted">Puedes modificar la cantidad si es necesario</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="$set('showModalAprobar', false)">
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-success" wire:click="aprobarSugerencia">
+                            <i class="fa-solid fa-check me-1"></i>Aprobar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Modal Rechazar --}}
+    @if($showModalRechazar)
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="fa-solid fa-times-circle me-2"></i>Rechazar Sugerencia
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" wire:click="$set('showModalRechazar', false)"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if($errorMessage)
+                            <div class="alert alert-danger py-2">{{ $errorMessage }}</div>
+                        @endif
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Item</label>
+                            <div class="text-muted">{{ $selectedSuggestion['item']['nombre'] ?? $selectedSuggestion['item_id'] ?? 'N/D' }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Motivo de Rechazo <span class="text-danger">*</span></label>
+                            <textarea class="form-control" wire:model="motivoRechazo" rows="3"
+                                      placeholder="Explica por qué rechazas esta sugerencia..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="$set('showModalRechazar', false)">
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-danger" wire:click="rechazarSugerencia">
+                            <i class="fa-solid fa-times me-1"></i>Rechazar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Modal Convertir --}}
+    @if($showModalConvertir)
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="fa-solid fa-arrow-right-arrow-left me-2"></i>Convertir Sugerencia
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" wire:click="$set('showModalConvertir', false)"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if($errorMessage)
+                            <div class="alert alert-danger py-2">{{ $errorMessage }}</div>
+                        @endif
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Item</label>
+                            <div class="text-muted">{{ $selectedSuggestion['item']['nombre'] ?? $selectedSuggestion['item_id'] ?? 'N/D' }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Cantidad Aprobada</label>
+                            <div class="text-primary fs-5">{{ number_format((float)($selectedSuggestion['qty_aprobada'] ?? 0), 2) }} {{ $selectedSuggestion['uom'] ?? '' }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Convertir a <span class="text-danger">*</span></label>
+                            <select class="form-select" wire:model="tipoConversion">
+                                <option value="purchase_request">Solicitud de Compra (Purchase Request)</option>
+                                <option value="production_order">Orden de Producción (Production Order)</option>
+                            </select>
+                            <small class="text-muted">
+                                Selecciona si esta sugerencia debe generar una compra o producción interna
+                            </small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="$set('showModalConvertir', false)">
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-primary" wire:click="convertirSugerencia">
+                            <i class="fa-solid fa-arrow-right me-1"></i>Convertir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
-
-@push('scripts')
-<script>
-    // Notificaciones
-    document.addEventListener('livewire:init', () => {
-        Livewire.on('notify', (event) => {
-            const data = event[0] || event;
-            const type = data.type || 'info';
-            const message = data.message || 'Operación completada';
-
-            // Aquí puedes usar tu sistema de notificaciones preferido
-            // Por ahora solo console.log, pero puedes integrar toastr, sweetalert, etc.
-            console.log(`[${type.toUpperCase()}] ${message}`);
-
-            // Ejemplo con alert básico (reemplazar con tu librería)
-            if (type === 'error') {
-                alert('❌ ' + message);
-            } else if (type === 'success') {
-                alert('✅ ' + message);
-            }
-        });
-    });
-</script>
-@endpush

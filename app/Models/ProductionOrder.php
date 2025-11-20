@@ -9,7 +9,7 @@ class ProductionOrder extends Model
 {
     protected $connection = 'pgsql';
 
-    protected $table = 'production_orders';
+    protected $table = 'selemti.production_orders';
 
     protected $guarded = [];
 

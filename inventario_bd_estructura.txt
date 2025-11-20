@@ -1,0 +1,282 @@
+=== ESTRUCTURA DE TABLAS INVENTARIO - SCHEMA SELEMTI ===
+Generado: 2025-11-17
+Connection: pos@localhost:5433
+================================================================================
+
+=== TABLA: items ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | character varying          | NO   |
+nombre                                   | character varying          | NO   |
+descripcion                              | text                       | SI   |
+categoria_id                             | character varying          | NO   |
+unidad_medida                            | character varying          | NO   | 'PZ'::character varying
+perishable                               | boolean                    | SI   | false
+temperatura_min                          | integer                    | SI   |
+temperatura_max                          | integer                    | SI   |
+costo_promedio                           | numeric                    | SI   | 0.00
+activo                                   | boolean                    | SI   | true
+created_at                               | timestamp without time zone| SI   | now()
+updated_at                               | timestamp without time zone| SI   | now()
+unidad_medida_id                         | integer                    | SI   |
+factor_conversion                        | numeric                    | SI   | 1.0
+unidad_compra_id                         | integer                    | SI   |
+factor_compra                            | numeric                    | SI   | 1.0
+tipo                                     | USER-DEFINED               | SI   |
+unidad_salida_id                         | integer                    | SI   |
+category_id                              | bigint                     | SI   |
+item_code                                | character varying          | SI   |
+es_producible                            | boolean                    | NO   | false
+es_consumible_operativo                  | boolean                    | NO   | false
+es_empaque_to_go                         | boolean                    | NO   | false
+
+------------------------------------------------------------------------------------
+
+=== TABLA: mov_inv ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.mov_inv_id_seq'::regclass)
+ts                                       | timestamp without time zone| NO   | now()
+item_id                                  | character varying          | NO   |
+lote_id                                  | integer                    | SI   |
+cantidad                                 | numeric                    | NO   |
+qty_original                             | numeric                    | SI   |
+uom_original_id                          | integer                    | SI   |
+costo_unit                               | numeric                    | SI   | 0
+tipo                                     | character varying          | NO   |
+ref_tipo                                 | character varying          | SI   |
+ref_id                                   | bigint                     | SI   |
+sucursal_id                              | character varying          | SI   |
+usuario_id                               | integer                    | SI   |
+created_at                               | timestamp without time zone| SI   | now()
+
+------------------------------------------------------------------------------------
+
+=== TABLA: lote ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.lote_id_seq'::regclass)
+item_id                                  | character varying          | NO   |
+proveedor_id                             | integer                    | SI   |
+codigo                                   | text                       | SI   |
+caducidad                                | date                       | SI   |
+estado                                   | USER-DEFINED               | NO   | 'ACTIVO'::selemti.lote_estado
+creado_ts                                | timestamp without time zone| NO   | now()
+
+------------------------------------------------------------------------------------
+
+=== TABLA: almacen ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | text                       | NO   |
+sucursal_id                              | bigint                     | NO   |
+nombre                                   | text                       | NO   |
+activo                                   | boolean                    | NO   | true
+
+------------------------------------------------------------------------------------
+
+=== TABLA: unidades_medida_legacy ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | integer                    | NO   | nextval('selemti.unidades_medida_id_seq'::regclass)
+codigo                                   | character varying          | NO   |
+nombre                                   | character varying          | NO   |
+tipo                                     | character varying          | NO   |
+categoria                                | character varying          | SI   |
+es_base                                  | boolean                    | SI   | false
+factor_conversion_base                   | numeric                    | SI   | 1.0
+decimales                                | integer                    | SI   | 2
+created_at                               | timestamp without time zone| SI   | now()
+
+------------------------------------------------------------------------------------
+
+=== TABLA: recepcion_cab ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.recepcion_cab_id_seq'::regclass)
+sucursal_id                              | bigint                     | NO   |
+proveedor_id                             | integer                    | SI   |
+oc_ref                                   | text                       | SI   |
+ts                                       | timestamp without time zone| NO   | now()
+usuario_id                               | bigint                     | SI   |
+meta                                     | jsonb                      | SI   |
+almacen_id                               | character varying          | SI   |
+numero_recepcion                         | character varying          | SI   |
+fecha_recepcion                          | date                        | SI   |
+estado                                   | character varying          | SI   |
+total_presentaciones                     | numeric                    | SI   |
+total_canonico                           | numeric                    | SI   |
+created_at                               | timestamp without time zone| SI   | now()
+updated_at                               | timestamp without time zone| SI   | now()
+deleted_at                               | timestamp without time zone| SI   |
+
+------------------------------------------------------------------------------------
+
+=== TABLA: recepcion_det ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.recepcion_det_id_seq'::regclass)
+recepcion_id                             | bigint                     | NO   |
+item_id                                  | character varying          | NO   |
+bodega_id                                | bigint                     | NO   |
+qty                                      | numeric                    | NO   |
+um_id                                    | integer                    | NO   |
+costo_unit                               | numeric                    | NO   |
+batch_id                                 | bigint                     | SI   |
+temperatura                              | numeric                    | SI   |
+doc_url                                  | text                       | SI   |
+meta                                     | jsonb                      | SI   |
+created_at                               | timestamp without time zone| SI   | now()
+updated_at                               | timestamp without time zone| SI   | now()
+deleted_at                               | timestamp without time zone| SI   |
+
+------------------------------------------------------------------------------------
+
+=== TABLA: transfer_cab ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.transfer_cab_id_seq'::regclass)
+origen_almacen_id                        | integer                    | NO   |
+destino_almacen_id                       | integer                    | NO   |
+estado                                   | character varying          | NO   | 'CREADA'::character varying
+creada_por                               | integer                    | NO   |
+despachada_por                           | integer                    | SI   |
+recibida_por                             | integer                    | SI   |
+guia                                     | character varying          | SI   |
+created_at                               | timestamp without time zone| SI   | now()
+
+------------------------------------------------------------------------------------
+
+=== TABLA: transfer_det ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.transfer_det_id_seq'::regclass)
+transfer_id                              | bigint                     | SI   |
+item_id                                  | character varying          | NO   |
+cantidad                                 | numeric                    | NO   |
+cantidad_despachada                      | numeric                    | SI   |
+cantidad_recibida                        | numeric                    | SI   |
+created_at                               | timestamp without time zone| SI   | now()
+
+------------------------------------------------------------------------------------
+
+=== TABLA: stock_policy ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.stock_policy_id_seq'::regclass)
+item_id                                  | text                       | NO   |
+sucursal_id                              | text                       | NO   |
+almacen_id                               | text                       | SI   |
+min_qty                                  | numeric                    | NO   | 0
+max_qty                                  | numeric                    | NO   | 0
+reorder_lote                             | numeric                    | SI   |
+activo                                   | boolean                    | NO   | true
+created_at                               | timestamp without time zone| NO   | now()
+
+------------------------------------------------------------------------------------
+
+=== TABLA: inventory_counts ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.inventory_counts_id_seq'::regclass)
+folio                                    | character varying          | SI   |
+sucursal_id                              | character varying          | SI   |
+almacen_id                               | character varying          | SI   |
+programado_para                          | timestamp with time zone   | SI   |
+iniciado_en                              | timestamp with time zone   | SI   |
+cerrado_en                               | timestamp with time zone   | SI   |
+estado                                   | character varying          | NO   | 'BORRADOR'::character varying
+creado_por                               | bigint                     | SI   |
+cerrado_por                              | bigint                     | SI   |
+notas                                    | text                       | SI   |
+total_items                              | numeric                    | NO   | '0'::numeric
+total_variacion                          | numeric                    | NO   | '0'::numeric
+meta                                     | jsonb                      | SI   |
+created_at                               | timestamp with time zone   | SI   |
+updated_at                               | timestamp with time zone   | SI   |
+
+------------------------------------------------------------------------------------
+
+=== TABLA: inventory_count_lines ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.inventory_count_lines_id_seq'::regclass)
+inventory_count_id                       | bigint                     | NO   |
+item_id                                  | character varying          | NO   |
+inventory_batch_id                       | bigint                     | SI   |
+qty_teorica                              | numeric                    | NO   | '0'::numeric
+qty_contada                              | numeric                    | NO   | '0'::numeric
+qty_variacion                            | numeric                    | NO   | '0'::numeric
+uom                                      | character varying          | NO   |
+motivo                                   | character varying          | SI   |
+meta                                     | jsonb                      | SI   |
+created_at                               | timestamp with time zone   | SI   |
+updated_at                               | timestamp with time zone   | SI   |
+
+------------------------------------------------------------------------------------
+
+=== TABLA: item_categories ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | bigint                     | NO   | nextval('selemti.item_categories_id_seq'::regclass)
+nombre                                   | character varying          | NO   |
+slug                                     | character varying          | SI   |
+codigo                                   | character varying          | SI   |
+descripcion                              | text                       | SI   |
+activo                                   | boolean                    | NO   | true
+prefijo                                  | character varying          | SI   |
+created_at                               | timestamp without time zone| SI   | now()
+updated_at                               | timestamp without time zone| SI   | now()
+
+------------------------------------------------------------------------------------
+
+=== TABLA: conversiones_unidad_legacy ===
+COLUMNA                                  | TIPO                       | NULL | DEFAULT
+------------------------------------------------------------------------------------
+id                                       | integer                    | NO   | nextval('selemti.conversiones_unidad_id_seq'::regclass)
+unidad_origen_id                         | integer                    | NO   |
+unidad_destino_id                        | integer                    | NO   |
+factor_conversion                        | numeric                    | NO   |
+formula_directa                          | text                       | SI   |
+precision_estimada                       | numeric                    | SI   | 1.0
+activo                                   | boolean                    | SI   | true
+created_at                               | timestamp without time zone| SI   | now()
+
+------------------------------------------------------------------------------------
+
+RESUMEN GENERAL:
+- Total de tablas: 14
+- Schema: selemti
+- Base de datos: pos
+- Host: localhost:5433
+- Usuario: postgres
+
+RELACIONES IDENTIFICADAS:
+- items -> unidades_medida_legacy (unidad_medida_id, unidad_compra_id, unidad_salida_id)
+- items -> item_categories (category_id)
+- mov_inv -> items (item_id)
+- mov_inv -> lote (lote_id)
+- mov_inv -> unidades_medida_legacy (uom_original_id)
+- lote -> items (item_id)
+- recepcion_cab -> items (implicit via recepcion_det)
+- recepcion_det -> recepcion_cab (recepcion_id)
+- recepcion_det -> items (item_id)
+- recepcion_det -> unidades_medida_legacy (um_id)
+- recepcion_det -> lote (batch_id)
+- transfer_cab -> almacen (origen_almacen_id, destino_almacen_id)
+- transfer_det -> transfer_cab (transfer_id)
+- transfer_det -> items (item_id)
+- stock_policy -> items (item_id)
+- stock_policy -> almacen (almacen_id)
+- inventory_counts -> almacen (almacen_id)
+- inventory_count_lines -> inventory_counts (inventory_count_id)
+- inventory_count_lines -> items (item_id)
+- inventory_count_lines -> lote (inventory_batch_id)
+- conversiones_unidad_legacy -> unidades_medida_legacy (unidad_origen_id, unidad_destino_id)
+
+TIPOS DE DATOS ESPECIALIZADOS ENCONTRADOS:
+- USER-DEFINED en items.tipo (enum tipo_item)
+- USER-DEFINED en lote.estado (enum lote_estado = 'ACTIVO', 'VENCIDO', 'PARCIAL_USO')
+- JSONB en recepcion_cab.meta, recepcion_det.meta, stock_policy.meta, inventory_counts.meta, inventory_count_lines.meta
+
+================================================================================

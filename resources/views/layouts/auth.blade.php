@@ -37,7 +37,9 @@
         }
 
         .auth-logo {
-            height: 40px;
+            width: 100%;
+            max-width: 420px;
+            height: auto;
             filter: brightness(0) invert(1);
         }
     </style>
