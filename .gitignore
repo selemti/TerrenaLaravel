@@ -25,16 +25,17 @@ Thumbs.db
 *.zip
 *.rar
 DEPLOY_CONSOLIDADO_FULL_PG95-v4-FIXED.sql
-<<<<<<< Updated upstream
 
-# Local AI tooling
+# Local AI tooling (carpetas de trabajo IA)
 .claude/
+.codex/
+.copilot/
+.gemini/
+.qwen/
 *.local.json
 
 # Laravel caches
 bootstrap/cache/*.php
 
+# Temp files
 NUL
-=======
-NUL
->>>>>>> Stashed changes
