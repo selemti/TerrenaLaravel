@@ -1,0 +1,195 @@
+# Compare Export vs Consolidado v3
+- Export: D:/Tavo/2025/UX/BD/Octubre/Local_Recetas_17_10_2025.sql
+- Consolidado: C:\xampp3\htdocs\TerrenaLaravel\scripts/../BD/DEPLOY_CONSOLIDADO_FULL_PG95-v3-20251017-180148.sql
+
+## schema
+- Sin diferencias a favor del export.
+- Sin diferencias a favor del consolidado.
+## type
+- Sin diferencias a favor del export.
+- Sin diferencias a favor del consolidado.
+## table
+- Sin diferencias a favor del export.
+- En consolidado pero NO en export (ok si son nuevos):
+  - selemti.ticket_venta_det
+  - selemti.sucursal
+  - selemti.almacen
+  - selemti.proveedor
+  - selemti.uom_conversion
+  - selemti.usuario
+  - selemti.param_sucursal
+  - selemti.receta_version
+  - selemti.receta_insumo
+  - selemti.lote
+  - selemti.recepcion_det
+  - selemti.traspaso_det
+  - selemti.op_insumo
+  - selemti.op_yield
+  - selemti.hist_cost_insumo
+  - selemti.hist_cost_receta
+  - selemti.precorte_efectivo
+  - selemti.precorte_otros
+  - selemti.auditoria
+  - pc_precorte_cash_count
+  - pc_precorte_payments
+  - pc_precorte_adjustments
+  - pc_precorte_audit
+  - selemti.conversiones_unidad
+  - selemti.modificadores_pos
+  - selemti.recalc_log
+  - selemti.compra
+  - selemti.compra_det
+  - selemti.recepcion
+  - selemti.traspaso
+  - selemti.produccion
+  - selemti.produccion_insumo
+  - selemti.produccion_resultado
+  - selemti.mov_inv
+  - selemti.pos_ingesta
+  - selemti.costo_item
+  - selemti.alert_rule
+  - selemti.alert_cfg
+  - selemti.alert_subscription
+  - selemti.alert_silence
+  - selemti.alert_template
+  - selemti.ui_prefs
+## constraint
+- Sin diferencias a favor del export.
+- En consolidado pero NO en export (ok si son nuevos):
+  - selemti.postcorte::uq_postcorte_sesion_id
+## index
+- Sin diferencias a favor del export.
+- En consolidado pero NO en export (ok si son nuevos):
+  - idx_mov_inv_item_ts::selemti.mov_inv
+  - idx_inventory_batch_item::selemti.inventory_batch
+  - idx_inventory_batch_caducidad::selemti.inventory_batch
+  - idx_receta_version_publicada::selemti.receta_version
+  - idx_ticket_venta_fecha::selemti.ticket_venta_cab
+  - idx_historial_costos_item_fecha::selemti.historial_costos_item
+  - idx_stock_policy_item_suc::selemti.stock_policy
+  - idx_perdida_item_ts::selemti.perdida_log
+  - idx_tickcons_ticket::selemti.ticket_det_consumo
+  - idx_tickcons_lote::selemti.ticket_det_consumo
+  - ix_layer_item_suc::selemti.cost_layer
+  - ix_fp_codigo::selemti.formas_pago
+  - ix_pos_map_plu::selemti.pos_map
+  - ix_lote_insumo::selemti.lote
+  - ix_lote_cad::selemti.lote
+  - ix_mov_ts::selemti.mov_inv
+  - ix_mov_insumo_ts::selemti.mov_inv
+  - ix_mov_ref::selemti.mov_inv
+  - ix_layer_insumo::selemti.cost_layer
+  - ux_hist_cost_insumo::selemti.hist_cost_insumo
+  - ix_hist_cost_receta::selemti.hist_cost_receta
+  - ix_sesion_cajon_terminal::selemti.sesion_cajon
+  - ix_sesion_cajon_cajero::selemti.sesion_cajon
+  - ix_precorte_otros_precorte::selemti.precorte_otros
+  - idx_precorte_sesion_id::selemti.precorte
+  - idx_dah_user_op_time::public.drawer_assigned_history
+  - idx_ticket_close_term_owner::public.ticket
+  - idx_mov_inv_referencia::selemti.mov_inv
+  - idx_mov_inv_batch::selemti.mov_inv
+  - idx_mov_inv_tipo_fecha::selemti.mov_inv
+  - idx_mov_inv_salidas::selemti.mov_inv
+  - idx_inventory_batch_estado::selemti.inventory_batch
+  - idx_inventory_batch_item_estado_caducidad::selemti.inventory_batch
+  - idx_recepcion_det_lote::selemti.recepcion_det
+  - idx_recepcion_det_item::selemti.recepcion_det
+  - idx_recepcion_det_recepcion::selemti.recepcion_det
+  - idx_receta_det_orden::selemti.receta_det
+  - idx_op_produccion_receta::selemti.op_produccion_cab
+  - idx_op_produccion_fecha::selemti.op_produccion_cab
+  - idx_op_produccion_estado::selemti.op_produccion_cab
+  - idx_op_det_op::selemti.op_produccion_det
+  - idx_op_det_item::selemti.op_produccion_det
+  - idx_op_det_batch::selemti.op_produccion_det
+  - idx_ticket_cab_sucursal::selemti.ticket_venta_cab
+  - idx_ticket_cab_estado::selemti.ticket_venta_cab
+  - idx_ticket_cab_pos_id::selemti.ticket_venta_cab
+  - idx_ticket_det_ticket::selemti.ticket_venta_det
+  - idx_ticket_det_item::selemti.ticket_venta_det
+  - idx_ticket_det_estado::selemti.ticket_venta_det
+  - idx_ticket_det_estacion::selemti.ticket_venta_det
+  - idx_kds_ordenes_estacion::selemti.kds_ordenes
+  - idx_kds_ordenes_estado::selemti.kds_ordenes
+  - idx_kds_ordenes_ticket::selemti.kds_ordenes
+  - idx_kds_ordenes_tiempo::selemti.kds_ordenes
+  - idx_caja_movimientos_tipo::selemti.caja_movimientos
+  - idx_caja_movimientos_usuario::selemti.caja_movimientos
+  - idx_caja_cierres_fecha::selemti.caja_cierres
+  - idx_caja_cierres_usuario::selemti.caja_cierres
+  - idx_caja_cierres_estado::selemti.caja_cierres
+  - idx_appcc_registros_punto::selemti.appcc_registros
+  - idx_appcc_registros_cumple::selemti.appcc_registros
+  - idx_appcc_alertas_fecha::selemti.appcc_alertas
+  - idx_appcc_alertas_estado::selemti.appcc_alertas
+  - idx_appcc_alertas_gravedad::selemti.appcc_alertas
+  - idx_audit_log_user_action::selemti.audit_log
+  - idx_audit_log_table_record::selemti.audit_log
+  - idx_receta_cab_nombre::selemti.receta_cab
+  - idx_terrena_session_terminal::terrena_drawer_session
+  - idx_pc_precorte_cashier::pc_precorte
+  - idx_pc_precorte_warnings::pc_precorte
+  - ix_selempos_session_terminal::selempos.selempos_drawer_session
+  - ix_selempos_session_cashier::selempos.selempos_drawer_session
+  - idx_historial_costos_version::selemti.historial_costos_item
+  - ix_compra_vendor::selemti.compra
+  - ix_compra_sucursal::selemti.compra
+  - ix_compra_det_compra::selemti.compra_det
+  - ix_compra_det_item::selemti.compra_det
+  - ix_batch_item::selemti.inventory_batch
+  - ix_recepcion_det_recepcion::selemti.recepcion_det
+  - ix_recepcion_det_item::selemti.recepcion_det
+  - ix_traspaso_origen::selemti.traspaso
+  - ix_traspaso_destino::selemti.traspaso
+  - ix_traspaso_sucursal::selemti.traspaso
+  - ix_traspaso_det_item::selemti.traspaso_det
+  - ix_prod_insumo_item::selemti.produccion_insumo
+  - ix_prod_resultado_item::selemti.produccion_resultado
+  - ix_mov_item_ts::selemti.mov_inv
+  - ix_mov_tipo_ts::selemti.mov_inv
+  - ix_mov_inv_item_loc::selemti.mov_inv
+  - ix_mov_inv_loc_ts::selemti.mov_inv
+  - ix_mov_inv_tipo_itemts::selemti.mov_inv
+  - ix_alert_event_item_ts::selemti.alert_event
+  - uq_alert_template_metric_sev::selemti.alert_template
+  - uq_conv_template_item_vendor_pres::selemti.conversion_template
+  - uq_alert_cfg_metric_null_scope::selemti.alert_cfg
+  - uq_alert_cfg_metric_scope::selemti.alert_cfg
+  - uq_merma_policy_categoria_global::selemti.merma_policy
+  - uq_merma_policy_sucursal_categoria::selemti.merma_policy
+  - uq_ui_prefs_key_global::selemti.ui_prefs
+  - uq_ui_prefs_sucursal_key::selemti.ui_prefs
+## view
+- Sin diferencias a favor del export.
+- En consolidado pero NO en export (ok si son nuevos):
+  - terrena_vw_window_payments
+  - terrena_vw_window_sellers
+  - terrena_vw_window_discounts
+  - terrena_vw_window_payouts
+  - vw_precorte_payments
+  - vw_precorte_discounts
+  - vw_precorte_voids
+  - selemti.vw_conversion_sugerida
+  - selemti.vw_receta_completa
+## function
+- Sin diferencias a favor del export.
+- Sin diferencias a favor del consolidado.
+## trigger
+- Sin diferencias a favor del export.
+- En consolidado pero NO en export (ok si son nuevos):
+  - trg_precorte_efectivo_bi@selemti.precorte_efectivo
+  - trg_selemti_tx_ai_forma_pago@public.transactions
+  - trg_selemti_dah_ai@public.drawer_assigned_history
+  - trg_selemti_terminal_bu_snapshot@public.terminal
+  - trg_selemti_dah_ai_refuerzo@public.drawer_assigned_history
+  - trg_selempos_drawer_assigned_ins@drawer_assigned_history
+  - trg_selempos_drawer_assigned_upd@drawer_assigned_history
+  - trg_kds_notify_kti@public.kitchen_ticket_item
+  - trg_kds_notify_ti@public.ticket_item
+  - trg_assign_daily_folio@public.ticket
+  - trg_recepcion_after_update@selemti.recepcion
+  - trg_pos_ingesta_after_update@selemti.pos_ingesta
+  - trg_recepcion_det_check@selemti.recepcion_det
+  - trg_mov_inv_wac@selemti.mov_inv
+  - trg_compra_state_guard@selemti.compra

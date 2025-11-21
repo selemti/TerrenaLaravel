@@ -705,7 +705,7 @@ Antes de hacer commit de cambios en BD:
 ### Documentación del Proyecto
 - `CLAUDE.md` - Guía para Claude (desarrollo UI)
 - `.gemini/WORK_ASSIGNMENTS.md` - Coordinación entre agentes
-- `docs/CajaChica/FondoCaja/` - Documentación de Caja Chica (~170 páginas)
+- `docs/FondoCaja/` - Documentación de Caja Chica (~170 páginas)
 - `docs/InventoryCounts/` - Documentación de Conteos de Inventario
 
 ### Documentación Externa

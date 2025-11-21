@@ -1,0 +1,38 @@
+﻿# Deploy Consolidado FULL PG95
+- Archivo: DEPLOY_CONSOLIDADO_FULL_PG95-20251017-0953.sql
+- Base: 000.  SISTEMA SELEMTI - ESQUEMA COMPLETO DE BASE DE DATOS- OK.sql
+- Archivos agregados:
+  - 0. Query_Corte_OK.sql
+  - 00_esquema_selemti.sql
+  - 000. deploy_selemti_full.sql
+  - 000. Query Despliegue cortes 05-09-2025.sql
+  - 000. Query_corte_04_09_2025_V2.sql
+  - 01_tablas_maestras.sql
+  - 010.delta_full_plus.sql
+  - 011.delta_merma_desperdicio_porciones.sql
+  - 02_modulo_inventario.sql
+  - 03_modulo_recetas.sql
+  - 04_modulo_ventas.sql
+  - 05_modulo_caja.sql
+  - 06_modulo_appcc.sql
+  - 07_modulo_configuracion.sql
+  - 08_datos_iniciales.sql
+  - 09_indices_optimizacion.sql
+  - corte_auxiliar.sql
+  - DEPLOY_CONSOLIDADO_PG95-20251017-0949.sql
+  - Floreant_Insight_corte_15_09_2025.sql
+  - folio_diario_floreant_optimizado_final_v6_OK_txt.sql
+  - Full_Recetas.sql
+  - Full_Recetas_V2.sql
+  - Local_Recetas_25_09_2025.sql
+  - Local_Recetas_28_09_2025.sql
+  - precorte.sql
+  - Productivo_24_09_2025.sql
+  - selemti_deploy_inventarios_PG95_CONSOLIDADO_FINAL.sql
+  - selemti_hotfix_pg95_v2.sql
+  - selemti_post_hotfix_checks_v2.sql
+  - Triger_corte_final.sql
+  - triger_KDS.sql
+- Parches:
+  - Sustitución de GENERATED ALWAYS AS por columna simple + triggers de subtotal (public y selempos).
+  - search_path y creación condicional de esquema selemti.
