@@ -2,93 +2,86 @@
 
 namespace App\Models\Rec;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * Recipe Cost Snapshot Model
- *
- * Representa snapshots históricos de costos de recetas
- * Tabla: selemti.recipe_cost_history
- */
 class RecipeCostSnapshot extends Model
 {
-    use HasFactory;
+    protected $table = 'selemti.recipe_cost_snapshots';
 
-    protected $table = 'selemti.recipe_cost_history';
+    public const UPDATED_AT = null;
 
-    protected $connection = 'pgsql';
-
-    protected $primaryKey = 'id';
-
-    public $timestamps = false;
+    public const REASON_MANUAL = 'MANUAL';
+    public const REASON_AUTO_THRESHOLD = 'AUTO_THRESHOLD';
+    public const REASON_INGREDIENT_CHANGE = 'INGREDIENT_CHANGE';
+    public const REASON_SCHEDULED = 'SCHEDULED';
 
     protected $fillable = [
         'recipe_id',
-        'recipe_version_id',
-        'snapshot_at',
-        'currency_code',
-        'batch_cost',
-        'portion_cost',
-        'batch_size',
-        'yield_portions',
-        'notes',
-        'created_at',
+        'snapshot_date',
+        'cost_total',
+        'cost_per_portion',
+        'portions',
+        'cost_breakdown',
+        'reason',
+        'created_by_user_id',
     ];
 
     protected $casts = [
-        'recipe_id' => 'integer',
-        'recipe_version_id' => 'integer',
-        'snapshot_at' => 'datetime',
-        'batch_cost' => 'decimal:6',
-        'portion_cost' => 'decimal:6',
-        'batch_size' => 'decimal:6',
-        'yield_portions' => 'decimal:6',
+        'snapshot_date' => 'datetime',
+        'cost_total' => 'decimal:4',
+        'cost_per_portion' => 'decimal:4',
+        'portions' => 'decimal:3',
+        'cost_breakdown' => 'array',
         'created_at' => 'datetime',
     ];
 
-    // Relationships
-
-    public function receta()
+    public function recipe(): BelongsTo
     {
         return $this->belongsTo(Receta::class, 'recipe_id', 'id');
     }
 
-    public function version()
+    public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(RecetaVersion::class, 'recipe_version_id', 'id');
+        return $this->belongsTo(User::class, 'created_by_user_id');
     }
 
-    // Scopes
-
-    public function scopeForRecipe($query, int $recipeId)
+    public function scopeForRecipe(Builder $query, string $recipeId): Builder
     {
         return $query->where('recipe_id', $recipeId);
     }
 
-    public function scopeLatest($query)
+    public function scopeBeforeDate(Builder $query, Carbon $date): Builder
     {
-        return $query->orderBy('snapshot_at', 'desc');
+        return $query->where('snapshot_date', '<=', $date);
     }
 
-    public function scopeBetweenDates($query, string $from, string $to)
+    public function scopeLatestPerRecipe(Builder $query): Builder
     {
-        return $query->whereBetween('snapshot_at', [$from, $to]);
+        return $query->whereIn('id', function ($subquery) {
+            $subquery->selectRaw('MAX(id) as max_id')
+                ->from('selemti.recipe_cost_snapshots')
+                ->groupBy('recipe_id');
+        });
     }
 
-    // Accessors
-
-    public function getCostChangePercentageAttribute(): ?float
+    public static function getForRecipeAtDate(string $recipeId, Carbon $date): ?self
     {
-        $previous = static::forRecipe($this->recipe_id)
-            ->where('snapshot_at', '<', $this->snapshot_at)
-            ->latest()
+        return static::forRecipe($recipeId)
+            ->beforeDate($date)
+            ->orderByDesc('snapshot_date')
+            ->orderByDesc('id')
             ->first();
+    }
 
-        if (! $previous || $previous->portion_cost == 0) {
-            return null;
-        }
-
-        return (($this->portion_cost - $previous->portion_cost) / $previous->portion_cost) * 100;
+    public static function getLatestForRecipe(string $recipeId): ?self
+    {
+        return static::forRecipe($recipeId)
+            ->orderByDesc('snapshot_date')
+            ->orderByDesc('id')
+            ->first();
     }
 }

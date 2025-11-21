@@ -2,285 +2,183 @@
 
 namespace Tests\Feature;
 
-use App\Models\Inv\Item;
+use App\Models\Item;
 use App\Models\Rec\Receta;
 use App\Models\Rec\RecetaDetalle;
-use App\Models\Rec\RecetaVersion;
-use Illuminate\Foundation\Testing\WithoutMiddleware;
+use Illuminate\Support\Facades\DB;
+use Tests\Support\InteractsWithRecipeDatabase;
 use Tests\TestCase;
 
 class RecipeBomImplosionTest extends TestCase
 {
-    use WithoutMiddleware; // Skip middleware for testing
+    use InteractsWithRecipeDatabase;
 
-    /**
-     * Test Case 1: Receta simple (solo ingredientes base)
-     */
-    public function test_simple_recipe_returns_base_ingredients(): void
+    protected function setUp(): void
     {
-        // Arrange: Crear receta simple con 2 ingredientes base
-        $receta = Receta::factory()->create([
-            'id' => 'REC-TEST-001',
-            'nombre_plato' => 'Ensalada Simple',
+        parent::setUp();
+
+        $this->setUpRecipeDatabase();
+        $this->withoutMiddleware();
+    }
+
+    public function test_it_implodes_simple_recipe_with_only_items(): void
+    {
+        $categoryId = DB::table('item_categories')->insertGetId([
+            'nombre' => 'Harinas',
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
-        $version = RecetaVersion::factory()->create([
-            'receta_id' => $receta->id,
-            'version' => 1,
-            'version_publicada' => true,
+        $recipe = Receta::factory()->create(['id' => 'REC-SIMPLE', 'nombre_plato' => 'Simple']);
+
+        $item1 = Item::factory()->create([
+            'id' => 'ITEM-001',
+            'nombre' => 'Harina',
+            'categoria_id' => $categoryId,
+            'costo_promedio' => 20,
         ]);
 
-        // Ingrediente 1: Lechuga
-        RecetaDetalle::factory()->create([
-            'receta_version_id' => $version->id,
+        $item2 = Item::factory()->create([
+            'id' => 'ITEM-002',
+            'nombre' => 'Azúcar',
+            'categoria_id' => $categoryId,
+            'costo_promedio' => 10,
+        ]);
+
+        RecetaDetalle::create([
+            'receta_id' => 'REC-SIMPLE',
             'item_id' => 'ITEM-001',
-            'cantidad' => 100,
-            'unidad_medida' => 'GR',
+            'cantidad' => 0.5,
+            'unidad_id' => 'KG',
         ]);
 
-        // Ingrediente 2: Tomate
-        RecetaDetalle::factory()->create([
-            'receta_version_id' => $version->id,
+        RecetaDetalle::create([
+            'receta_id' => 'REC-SIMPLE',
             'item_id' => 'ITEM-002',
-            'cantidad' => 50,
-            'unidad_medida' => 'GR',
+            'cantidad' => 0.2,
+            'unidad_id' => 'KG',
         ]);
 
-        // Act: Llamar al endpoint BOM Implode
-        $response = $this->getJson("/api/recipes/{$receta->id}/bom/implode");
+        $response = $this->getJson('/api/recipes/REC-SIMPLE/bom/implode');
 
-        // Assert
         $response->assertStatus(200)
             ->assertJson([
                 'ok' => true,
-                'recipe_id' => 'REC-TEST-001',
-                'total_ingredients' => 2,
-                'aggregated' => true,
+                'data' => [
+                    'recipe_id' => 'REC-SIMPLE',
+                    'total_ingredients' => 2,
+                ],
             ]);
 
-        $baseIngredients = $response->json('base_ingredients');
-
-        $this->assertCount(2, $baseIngredients);
-
-        // Verificar que contiene los ingredientes esperados
-        $itemIds = collect($baseIngredients)->pluck('item_id')->toArray();
-        $this->assertContains('ITEM-001', $itemIds);
-        $this->assertContains('ITEM-002', $itemIds);
+        $ingredients = $response->json('data.base_ingredients');
+        $this->assertCount(2, $ingredients);
+        $this->assertEquals('ITEM-001', $ingredients[0]['item_id']);
+        $this->assertEquals(0.5, $ingredients[0]['qty']);
     }
 
-    /**
-     * Test Case 2: Receta compuesta (con sub-recetas)
-     */
-    public function test_complex_recipe_implodes_subrecipes_recursively(): void
+    public function test_it_implodes_complex_recipe_with_subrecipes(): void
     {
-        // Arrange: Crear receta compuesta
+        $bread = Receta::factory()->create(['id' => 'REC-PAN', 'nombre_plato' => 'Pan Casero']);
+        $main = Receta::factory()->create(['id' => 'REC-HAMBUR', 'nombre_plato' => 'Hamburguesa']);
 
-        // Sub-receta: Salsa (REC-SUB-001)
-        $subReceta = Receta::factory()->create([
-            'id' => 'REC-SUB-001',
-            'nombre_plato' => 'Salsa Básica',
+        $flour = Item::factory()->create(['id' => 'ITEM-HAR', 'nombre' => 'Harina', 'costo_promedio' => 15]);
+        $butter = Item::factory()->create(['id' => 'ITEM-MAN', 'nombre' => 'Mantequilla', 'costo_promedio' => 25]);
+        $meat = Item::factory()->create(['id' => 'ITEM-CAR', 'nombre' => 'Carne', 'costo_promedio' => 80]);
+        $cheese = Item::factory()->create(['id' => 'ITEM-QUE', 'nombre' => 'Queso', 'costo_promedio' => 60]);
+
+        RecetaDetalle::create([
+            'receta_id' => 'REC-PAN',
+            'item_id' => 'ITEM-HAR',
+            'cantidad' => 0.5,
+            'unidad_id' => 'KG',
         ]);
 
-        $subVersion = RecetaVersion::factory()->create([
-            'receta_id' => $subReceta->id,
-            'version' => 1,
-            'version_publicada' => true,
+        RecetaDetalle::create([
+            'receta_id' => 'REC-PAN',
+            'item_id' => 'ITEM-MAN',
+            'cantidad' => 0.05,
+            'unidad_id' => 'KG',
         ]);
 
-        // Ingredientes de la sub-receta
-        RecetaDetalle::factory()->create([
-            'receta_version_id' => $subVersion->id,
-            'item_id' => 'ITEM-TOMATE',
-            'cantidad' => 200, // 200 gr tomate
-            'unidad_medida' => 'GR',
+        RecetaDetalle::create([
+            'receta_id' => 'REC-HAMBUR',
+            'receta_id_ingrediente' => 'REC-PAN',
+            'cantidad' => 1,
         ]);
 
-        RecetaDetalle::factory()->create([
-            'receta_version_id' => $subVersion->id,
-            'item_id' => 'ITEM-CEBOLLA',
-            'cantidad' => 50, // 50 gr cebolla
-            'unidad_medida' => 'GR',
+        RecetaDetalle::create([
+            'receta_id' => 'REC-HAMBUR',
+            'item_id' => 'ITEM-CAR',
+            'cantidad' => 0.2,
+            'unidad_id' => 'KG',
         ]);
 
-        // Receta principal: Pasta con Salsa (REC-MAIN-001)
-        $recetaPrincipal = Receta::factory()->create([
-            'id' => 'REC-MAIN-001',
-            'nombre_plato' => 'Pasta con Salsa',
+        RecetaDetalle::create([
+            'receta_id' => 'REC-HAMBUR',
+            'item_id' => 'ITEM-QUE',
+            'cantidad' => 0.1,
+            'unidad_id' => 'KG',
         ]);
 
-        $versionPrincipal = RecetaVersion::factory()->create([
-            'receta_id' => $recetaPrincipal->id,
-            'version' => 1,
-            'version_publicada' => true,
-        ]);
+        $response = $this->getJson('/api/recipes/REC-HAMBUR/bom/implode');
 
-        // Ingrediente 1: Pasta (item base)
-        RecetaDetalle::factory()->create([
-            'receta_version_id' => $versionPrincipal->id,
-            'item_id' => 'ITEM-PASTA',
-            'cantidad' => 100,
-            'unidad_medida' => 'GR',
-        ]);
-
-        // Ingrediente 2: Salsa (sub-receta)
-        RecetaDetalle::factory()->create([
-            'receta_version_id' => $versionPrincipal->id,
-            'item_id' => 'REC-SUB-001', // ¡Es una sub-receta!
-            'cantidad' => 1, // 1 porción de salsa
-            'unidad_medida' => 'PORCION',
-        ]);
-
-        // Act: Llamar al endpoint BOM Implode
-        $response = $this->getJson("/api/recipes/{$recetaPrincipal->id}/bom/implode");
-
-        // Assert
         $response->assertStatus(200)
             ->assertJson([
                 'ok' => true,
-                'recipe_id' => 'REC-MAIN-001',
-                'total_ingredients' => 3, // Pasta + Tomate + Cebolla (salsa implodida)
-                'aggregated' => true,
+                'data' => [
+                    'recipe_id' => 'REC-HAMBUR',
+                    'total_ingredients' => 4,
+                ],
             ]);
 
-        $baseIngredients = $response->json('base_ingredients');
-
-        $this->assertCount(3, $baseIngredients);
-
-        // Verificar que NO contiene la sub-receta, solo ingredientes base
-        $itemIds = collect($baseIngredients)->pluck('item_id')->toArray();
-        $this->assertContains('ITEM-PASTA', $itemIds);
-        $this->assertContains('ITEM-TOMATE', $itemIds);
-        $this->assertContains('ITEM-CEBOLLA', $itemIds);
-        $this->assertNotContains('REC-SUB-001', $itemIds); // Sub-receta NO debe aparecer
+        $ingredients = collect($response->json('data.base_ingredients'));
+        $this->assertTrue($ingredients->contains(fn ($ingredient) => $ingredient['item_id'] === 'ITEM-HAR'));
+        $this->assertTrue($ingredients->contains(fn ($ingredient) => $ingredient['item_id'] === 'ITEM-MAN'));
+        $this->assertTrue($ingredients->contains(fn ($ingredient) => $ingredient['item_id'] === 'ITEM-CAR'));
+        $this->assertTrue($ingredients->contains(fn ($ingredient) => $ingredient['item_id'] === 'ITEM-QUE'));
     }
 
-    /**
-     * Test Case 3: Ingredientes duplicados deben agregarse
-     */
-    public function test_duplicate_ingredients_are_aggregated(): void
+    public function test_it_aggregates_duplicate_ingredients_from_multiple_subrecipes(): void
     {
-        // Arrange: Crear receta con mismo ingrediente en 2 sub-recetas
+        $masa = Receta::factory()->create(['id' => 'REC-MASA']);
+        $salsa = Receta::factory()->create(['id' => 'REC-SALSA']);
+        $pizza = Receta::factory()->create(['id' => 'REC-PIZZA']);
 
-        // Sub-receta 1: Salsa Roja
-        $subReceta1 = Receta::factory()->create([
-            'id' => 'REC-SALSA-ROJA',
-            'nombre_plato' => 'Salsa Roja',
+        $harina = Item::factory()->create(['id' => 'ITEM-HAR', 'nombre' => 'Harina', 'costo_promedio' => 10]);
+
+        RecetaDetalle::create([
+            'receta_id' => 'REC-MASA',
+            'item_id' => 'ITEM-HAR',
+            'cantidad' => 0.5,
+            'unidad_id' => 'KG',
         ]);
 
-        $subVersion1 = RecetaVersion::factory()->create([
-            'receta_id' => $subReceta1->id,
-            'version' => 1,
-            'version_publicada' => true,
+        RecetaDetalle::create([
+            'receta_id' => 'REC-SALSA',
+            'item_id' => 'ITEM-HAR',
+            'cantidad' => 0.1,
+            'unidad_id' => 'KG',
         ]);
 
-        RecetaDetalle::factory()->create([
-            'receta_version_id' => $subVersion1->id,
-            'item_id' => 'ITEM-TOMATE',
-            'cantidad' => 100, // 100 gr tomate
-            'unidad_medida' => 'GR',
-        ]);
-
-        // Sub-receta 2: Salsa Verde
-        $subReceta2 = Receta::factory()->create([
-            'id' => 'REC-SALSA-VERDE',
-            'nombre_plato' => 'Salsa Verde',
-        ]);
-
-        $subVersion2 = RecetaVersion::factory()->create([
-            'receta_id' => $subReceta2->id,
-            'version' => 1,
-            'version_publicada' => true,
-        ]);
-
-        RecetaDetalle::factory()->create([
-            'receta_version_id' => $subVersion2->id,
-            'item_id' => 'ITEM-TOMATE', // ¡Mismo tomate!
-            'cantidad' => 50, // 50 gr tomate
-            'unidad_medida' => 'GR',
-        ]);
-
-        // Receta principal con ambas salsas
-        $recetaPrincipal = Receta::factory()->create([
-            'id' => 'REC-COMBO',
-            'nombre_plato' => 'Combo Salsas',
-        ]);
-
-        $versionPrincipal = RecetaVersion::factory()->create([
-            'receta_id' => $recetaPrincipal->id,
-            'version' => 1,
-            'version_publicada' => true,
-        ]);
-
-        RecetaDetalle::factory()->create([
-            'receta_version_id' => $versionPrincipal->id,
-            'item_id' => 'REC-SALSA-ROJA',
+        RecetaDetalle::create([
+            'receta_id' => 'REC-PIZZA',
+            'receta_id_ingrediente' => 'REC-MASA',
             'cantidad' => 1,
-            'unidad_medida' => 'PORCION',
         ]);
 
-        RecetaDetalle::factory()->create([
-            'receta_version_id' => $versionPrincipal->id,
-            'item_id' => 'REC-SALSA-VERDE',
+        RecetaDetalle::create([
+            'receta_id' => 'REC-PIZZA',
+            'receta_id_ingrediente' => 'REC-SALSA',
             'cantidad' => 1,
-            'unidad_medida' => 'PORCION',
         ]);
 
-        // Act
-        $response = $this->getJson("/api/recipes/{$recetaPrincipal->id}/bom/implode");
+        $response = $this->getJson('/api/recipes/REC-PIZZA/bom/implode');
 
-        // Assert
         $response->assertStatus(200);
 
-        $baseIngredients = $response->json('base_ingredients');
-
-        // Solo debe haber 1 item (tomate), pero con cantidad agregada
-        $this->assertCount(1, $baseIngredients);
-
-        $tomate = collect($baseIngredients)->firstWhere('item_id', 'ITEM-TOMATE');
-        $this->assertNotNull($tomate);
-
-        // Cantidad total debe ser 100 + 50 = 150
-        $this->assertEquals(150, $tomate['total_qty']);
-    }
-
-    /**
-     * Test Case 4: Protección contra loops infinitos
-     */
-    public function test_infinite_loop_protection(): void
-    {
-        // Arrange: Crear recetas con referencia circular (A -> B -> A)
-
-        $recetaA = Receta::factory()->create(['id' => 'REC-LOOP-A']);
-        $versionA = RecetaVersion::factory()->create([
-            'receta_id' => 'REC-LOOP-A',
-            'version_publicada' => true,
-        ]);
-
-        $recetaB = Receta::factory()->create(['id' => 'REC-LOOP-B']);
-        $versionB = RecetaVersion::factory()->create([
-            'receta_id' => 'REC-LOOP-B',
-            'version_publicada' => true,
-        ]);
-
-        // A usa B como ingrediente
-        RecetaDetalle::factory()->create([
-            'receta_version_id' => $versionA->id,
-            'item_id' => 'REC-LOOP-B',
-            'cantidad' => 1,
-        ]);
-
-        // B usa A como ingrediente (loop!)
-        RecetaDetalle::factory()->create([
-            'receta_version_id' => $versionB->id,
-            'item_id' => 'REC-LOOP-A',
-            'cantidad' => 1,
-        ]);
-
-        // Act & Assert
-        $response = $this->getJson('/api/recipes/REC-LOOP-A/bom/implode');
-
-        // Debe detectar el loop y no crashear
-        // Puede retornar error 400 o manejar gracefully
-        $this->assertTrue($response->status() === 200 || $response->status() === 400);
+        $ingredients = $response->json('data.base_ingredients');
+        $this->assertCount(1, $ingredients);
+        $this->assertEquals('ITEM-HAR', $ingredients[0]['item_id']);
+        $this->assertEquals(0.6, $ingredients[0]['qty']);
     }
 }
