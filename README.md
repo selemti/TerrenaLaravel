@@ -1,172 +1,61 @@
-# Terrena POS/ERP v4.0
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-Sistema ERP/POS para restaurantes desarrollado con Laravel 10 + Livewire 3.
-
-## 📋 Características Principales
-
-- **Gestión de Inventario:** Items, recepciones, transferencias, conteos físicos, mermas
-- **Recetas & Costeo:** Editor de recetas, costeo automático, versionado
-- **Producción:** Órdenes de producción, planificación mise en place
-- **Compras:** Solicitudes, POs, motor de replenishment (en desarrollo)
-- **POS & Consumos:** Mapeo POS-Recetas, consumo automático
-- **Caja Chica:** Fondos, movimientos, arqueos
-- **Cortes:** Precorte, postcorte, conciliación
-- **Reportes & KPIs:** Dashboards en tiempo real, ventas, stock valorizado
-
-## 🚀 Inicio Rápido
-
-### Requisitos
-
-- PHP 8.3+
-- PostgreSQL 14+
-- Composer 2
-- Node.js 20+
-- Redis (para colas)
-
-### Instalación Local
-
-```bash
-# Clonar repositorio
-git clone [repo-url]
-cd TerrenaLaravel
-
-# Instalar dependencias
-composer install
-npm install
-
-# Configurar ambiente
-cp .env.example .env
-php artisan key:generate
-
-# Migrar y poblar BD
-php artisan migrate --seed
-
-# Compilar assets
-npm run build
-
-# Ejecutar servidor
-php artisan serve
-npm run dev
-```
-
-**URL Local:** http://localhost/TerrenaLaravel
-
-## 📚 Documentación
-
-### Documentación Principal
-
-Toda la documentación oficial está en `docs/V4.0/`:
-
-- **[Índice General](docs/V4.0/README.md)** - Punto de partida
-- **[Stack & Convenciones](docs/V4.0/Guia/Stack.md)** - Tecnologías y estándares
-- **[🚀 Deployment](docs/V4.0/Guia/Deployment.md)** - **Proceso completo Local→Producción**
-- **[Arquitectura](docs/V4.0/Arquitectura/README.md)** - Stack técnico
-- **[Frontend](docs/V4.0/Frontend/)** - Layout y componentes UI
-
-### Documentación por Módulo
-
-- **[Inventario](docs/V4.0/Inventario/)** - Items, recepciones, transferencias, conteos, mermas
-- **[Recetas](docs/V4.0/Recetas/README.md)** - Editor, costeo, UOM
-- **[Producción](docs/V4.0/Produccion/README.md)** - Órdenes, mise en place
-- **[Compras](docs/V4.0/Purchasing/README.md)** - Solicitudes, POs, replenishment
-- **[POS](docs/V4.0/POS/README.md)** - Mapeo, consumos
-- **[Finanzas](docs/V4.0/Finanzas/README.md)** - Caja chica
-- **[Caja](docs/V4.0/Caja/HistoricoCortes.md)** - Cortes y conciliación
-- **[Reportes](docs/V4.0/Reports/README.md)** - KPIs y dashboards
-
-### Referencias Rápidas
-
-- **[DEPLOYMENT_CHEATSHEET.md](DEPLOYMENT_CHEATSHEET.md)** - Referencia rápida de deployment
-- **[AGENTS.md](AGENTS.md)** - Lineamientos para el equipo
-
-## 🌐 Ambientes
-
-### Desarrollo (Local)
-```
-URL: http://localhost/TerrenaLaravel
-Ruta: C:\xampp3\htdocs\TerrenaLaravel\
-BD: PostgreSQL localhost:5433, esquema selemti
-```
-
-### Producción (Ubuntu Server)
-```
-URLs:
-  - Red Local: http://192.168.1.235/terrena2/
-  - Tailscale: http://100.126.124.101/terrena2/
-Ruta: /var/www/kds/terrenaPos/
-BD: PostgreSQL localhost:5432, esquema selemti
-Usuario SSH: terrena@100.126.124.101
-```
-
-**⚠️ IMPORTANTE:** Antes de actualizar producción, leer **[docs/V4.0/Guia/Deployment.md](docs/V4.0/Guia/Deployment.md)**
-
-## 🛠️ Stack Tecnológico
-
-- **Backend:** Laravel 10, PHP 8.3, PostgreSQL 14+
-- **Frontend:** Livewire 3, Alpine.js, Tailwind CSS
-- **Build:** Vite, Composer, npm
-- **Seguridad:** Sanctum, Spatie Permissions
-- **Colas:** Redis
-- **Servidor:** Apache 2.4 (Ubuntu 22.04)
-
-## 📦 Comandos Útiles
-
-```bash
-# Desarrollo
-composer run dev          # Servidor + Vite + Queue workers
-php artisan serve         # Solo servidor
-npm run dev              # Solo Vite (assets)
-
-# Build producción
-npm run build
-composer install --no-dev --optimize-autoloader
-
-# Cache
-php artisan config:clear
-php artisan cache:clear
-php artisan route:clear
-php artisan view:clear
-
-# Optimizar producción
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-
-# Tests
-php artisan test
-./vendor/bin/pint        # Code style (PSR-12)
-
-# Migraciones
-php artisan migrate
-php artisan migrate:status
-php artisan migrate:rollback
-```
-
-## 🔐 Seguridad
-
-- `.env` **NO** se versiona
-- Permisos manejados con Spatie Laravel Permission
-- API protegida con Sanctum tokens
-- Auditoría de cambios en `audit_log`
-
-## 🤝 Contribuir
-
-1. Leer `docs/V4.0/Guia/Stack.md` para convenciones
-2. Seguir formato de commits: `<type>(<scope>): summary`
-3. Actualizar documentación en `docs/V4.0/` con cada cambio
-4. Ejecutar `./vendor/bin/pint` antes de PR
-5. Incluir tests cuando aplique
-
-## 📞 Soporte
-
-**Documentación completa:** `docs/V4.0/`  
-**Deployment:** `docs/V4.0/Guia/Deployment.md`  
-**Troubleshooting:** Ver sección 7 de Deployment.md
-
----
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
 
 ## About Laravel
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects.
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-**License:** The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
+
+## Learning Laravel
+
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+
+You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+
+If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+
+## Laravel Sponsors
+
+We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+
+### Premium Partners
+
+- **[Vehikl](https://vehikl.com)**
+- **[Tighten Co.](https://tighten.co)**
+- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+- **[64 Robots](https://64robots.com)**
+- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
+- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+- **[Redberry](https://redberry.international/laravel-development)**
+- **[Active Logic](https://activelogic.com)**
+
+## Contributing
+
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+
+## Code of Conduct
+
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+
+## Security Vulnerabilities
+
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+
+## License
+
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

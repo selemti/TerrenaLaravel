@@ -214,7 +214,7 @@
 
 ─ Worked for 3m 48s ──────────────────────────────────────────────────────────────────────────────────
 
-• docs/Planeacion/ROADMAP_ENTERPRISE.md
+• docs/ROADMAP_ENTERPRISE.md
 
   # Roadmap Operativo & Estratégico
   Versión: 2025-10-27
@@ -250,7 +250,7 @@
   - Nada se puede vender en POS si no tiene receta que implosiona hasta insumo inventariable con
   costo.
 
-  docs/Seguridad/AUDIT_LOG_POLICY.md
+  docs/AUDIT_LOG_POLICY.md
 
   # Política de Auditoría y Bitácoras
   Versión: 2025-10-27
@@ -287,7 +287,7 @@
   Ningún sprint puede cerrar endpoints que mueven inventario o disponibilidad sin generar log con los
   campos mínimos definidos arriba.
 
-  docs/Inventario/FORECAST_AND_PRODUMIX_POLICY.md
+  docs/FORECAST_AND_PRODUMIX_POLICY.md
 
   # Política de Forecast y Produmix
   Versión: 2025-10-27
@@ -306,7 +306,7 @@
   ## Corte operativo cocina/barra
   - Inventario inicial + producción declarada − venta POS − merma declarada vs inventario físico
   final.
-  - Diferencia se guarda con `user_id`, `timestamp` y `motivo` (ver `docs/Seguridad/AUDIT_LOG_POLICY.md`).
+  - Diferencia se guarda con `user_id`, `timestamp` y `motivo` (ver `docs/AUDIT_LOG_POLICY.md`).
   - Equivalente a arqueo de caja chica pero para operación de alimentos.
 
   ## Permiso `can_manage_produmix`
@@ -318,7 +318,7 @@
   - `docs/Produccion/PRODUCTION_FLOW.md`
   - `docs/POS/LIVE_AVAILABILITY.md`
 
-  docs/Reports/REPORTING_AND_KPIS.md
+  docs/REPORTING_AND_KPIS.md
 
   # Política de Reportes y KPIs
   Versión: 2025-10-27
@@ -349,9 +349,9 @@
 
   ## Auditoría
   - Cada consulta/exportación debe registrar user_id, timestamp y reporte generado (futuro).
-  - Enlazar con `docs/Seguridad/AUDIT_LOG_POLICY.md`.
+  - Enlazar con `docs/AUDIT_LOG_POLICY.md`.
 
-  docs/Seguridad/SECURITY_AND_ROLES.md
+  docs/SECURITY_AND_ROLES.md
 
   # Seguridad Operativa, Roles y Permisos
   Versión: 2025-10-27
@@ -567,7 +567,7 @@
   - public.* es solo lectura. Ninguna migración puede alterar tablas public.
   - Ningún ajuste de inventario, reproceso de ticket o reversa puede ejecutarse sin:
       - permiso explícito,
-      - registro en log con user_id, timestamp, motivo (ver docs/Seguridad/AUDIT_LOG_POLICY.md).
+      - registro en log con user_id, timestamp, motivo (ver docs/AUDIT_LOG_POLICY.md).
   - Toda receta vendible DEBE estar mapeada en selemti.pos_map.
       - Si no lo está, debe aparecer en el dashboard /pos/dashboard/missing-recipes en rojo.
   - Ninguna descarga de inventario puede ocurrir “directo a mano” sin pasar por un tipo de movimiento
@@ -621,7 +621,7 @@
 
   Este documento define cómo Terrena controla la disponibilidad en vivo de productos POS (Floreant)
   y las intervenciones operativas autorizadas. Se integra con `docs/Produccion/PRODUMIX.md`, `docs/
-  Produccion/PRODUCTION_FLOW.md` y las políticas de seguridad en `docs/Seguridad/SECURITY_AND_ROLES.md`.
+  Produccion/PRODUCTION_FLOW.md` y las políticas de seguridad en `docs/SECURITY_AND_ROLES.md`.
 
   ---
 
@@ -644,7 +644,7 @@
   ---
 
   ## 3. Intervenciones operativas nivel 1
-  *(ver sección 5 de `docs/Seguridad/SECURITY_AND_ROLES.md`)*
+  *(ver sección 5 de `docs/SECURITY_AND_ROLES.md`)*
 
   Estas acciones se disparan principalmente cuando:
   - no se pudo producir el batch planeado por Produmix,
@@ -700,7 +700,7 @@
   | `can_edit_production_order` | Permite a cocina declarar producción y mermas, alimentando
   disponibilidad. | Cocina líder, Chef Ejecutivo |
 
-  > Ver `docs/Seguridad/SECURITY_AND_ROLES.md` para matriz completa de permisos.
+  > Ver `docs/SECURITY_AND_ROLES.md` para matriz completa de permisos.
 
   ---
 
@@ -750,7 +750,7 @@
   ## 10. Referencias cruzadas
   - `docs/Produccion/PRODUMIX.md` – Algoritmo de planificación y permisos `can_manage_produmix`.
   - `docs/Produccion/PRODUCTION_FLOW.md` – Ejecución en cocina, merma y cierre de turno.
-  - `docs/Seguridad/SECURITY_AND_ROLES.md` – Políticas de intervención POS y permisos
+  - `docs/SECURITY_AND_ROLES.md` – Políticas de intervención POS y permisos
   `can_manage_menu_availability`.
   - `docs/Recetas/POS_CONSUMPTION_SERVICE.md` – Implosión y consumo POS.
 

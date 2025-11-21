@@ -24,9 +24,9 @@ Transform TerrenaLaravel from a functional system into an enterprise-grade ERP f
 2. [DONE] Create missing database views for kardex and stock valuation
 3. [DONE] Fix encoding issues in documentation files
 4. [DONE] Organize documentation structure with clear separation of definitions and status tracking
-5. [DONE] Develop reusable Blade components for consistent UI/UX
-6. [DONE] Implement comprehensive testing suite for inventory services
-7. [IN PROGRESS] Complete frontend refinement with improved UX and responsive design
+5. [IN PROGRESS] Develop reusable Blade components for consistent UI/UX
+6. [IN PROGRESS] Implement comprehensive testing suite for inventory services
+7. [TODO] Complete frontend refinement with improved UX and responsive design
 8. [TODO] Optimize database queries and add missing indexes
 9. [TODO] Implement complete audit trail and logging for all inventory operations
 10. [TODO] Create user guides and training materials for each module

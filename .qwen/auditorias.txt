@@ -8,7 +8,7 @@
     3 app/Models/AuditLog.php
     4 database/migrations/2025_10_28_200000_add_indexes_to_audit_log_table.php
     5 database/seeders/PermissionsSeeder.php
-    6 docs/Seguridad/auditoria_operacional.md
+    6 docs/auditoria_operacional.md
     7 resources/views/audit/log-index.blade.php
     8 resources/views/livewire/audit/log-viewer.blade.php
     9 resources/views/layouts/terrena.blade.php
@@ -913,7 +913,7 @@
 
   11. Documentación
 
-  docs/Seguridad/auditoria_operacional.md
+  docs/auditoria_operacional.md
 
      1 # Auditoría Operacional
      2

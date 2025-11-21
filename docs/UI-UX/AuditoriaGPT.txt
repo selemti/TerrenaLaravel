@@ -1,0 +1,322 @@
+Fase 1 — Auditoría UI/UX (qué hay, qué falta y cómo subirlo a nivel ERP comercial)
+A. Hallazgos por módulo (con mejoras accionables)
+
+1) Inventario → Items / Altas
+
+Qué veo: Filtro claro; aviso del flujo CAT-SUB-#####; alta con CAT/SUB/UOM base y mensaje de error genérico (“No se pudo guardar el insumo…”).
+
+Problemas UX:
+
+Error sin detalle (falta de inline-validation y resaltar campo responsable).
+
+No hay autosuggest de nombres normalizados ni preview de código (CAT-SUB-#####) antes de guardar.
+
+UOM base vista bien, pero no se guía al usuario hacia vincular presentaciones (Proveedor-Insumo) tras guardar.
+
+Mejoras (Quick Wins):
+
+Validación inline + toast con motivo (p. ej. “nombre duplicado / UOM requerida”).
+
+Wizard de alta en 2 pasos: (1) Datos maestros, (2) Presentaciones/Proveedor (saltable).
+
+Búsqueda global con SKU, CAT-SUB, alias, proveedor.
+
+Botón “Crear y seguir con presentaciones”.
+
+Implicación técnica: endpoint granular y mensajes de validación del backend; insertar hooks para crear selemti.proveedor_insumo (si el paso 2 se completa).
+
+2) Inventario → Recepciones
+
+Qué veo: Lista vacía; modal “Nueva recepción” con Proveedor/Sucursal/Almacén, línea con Producto, Qty presentación, UOM compra, Pack size, UOM base, Lote, Caducidad, Temp, Evidencia.
+
+Fortalezas: Componentes y campos correctos para FEFO y trazabilidad; estructura alineada a ERP comercial.
+
+Mejoras:
+
+Auto-lookup por código proveedor.
+
+Conversión automática presentación→base con tooltip que muestre el factor aplicado.
+
+Adjuntos múltiples (arrastrar y soltar) y OCR pequeño para leer lote/caducidad (opcional).
+
+Plantillas de recepción frecuentes por proveedor.
+
+Implicación: Asegurar tabla de price snapshot en recepción; auditoría (quién cambió qué); colas para procesar adjuntos/OCR.
+
+3) Inventario → Lotes / Caducidades / Conteos
+
+Qué veo: Vacíos pero ya hay rejillas y filtros; Conteos con tablero y estados; Lotes con tablero por caducidad.
+
+Mejoras:
+
+Vistas de tarjeta con chips de estado (OK, Bajo stock, Por caducar).
+
+Acciones masivas: “Imprimir etiquetas”, “Ajuste”, “Programar conteo”.
+
+Mobile-first para conteo rápido (escanear código, +/- cantidad).
+
+Implicación: Endpoints para bulk actions; soporte de barcode; vistas responsive.
+
+4) Inventario → Transferencias
+
+Qué veo: Listado con estados (Borrador/Despachada), creación con origen/destino, líneas con UOM.
+
+Mejoras:
+
+Flujo 3 pasos: Borrador → Despachada (descuenta origen / prepara recibo) → Recibida (abona destino por lote).
+
+Confirmaciones parciales y discrepancias (corto/exceso).
+
+Botón “Recibir” en destino.
+
+Implicación: Movimientos contables por estado; UI de “reconciliación” simple.
+
+5) Compras → Solicitudes, Órdenes, Reposición
+
+Qué veo: Estructura completa; “Pedidos sugeridos” con filtros y “Generar Sugerencias” (vacío por ahora).
+
+Mejoras clave (comparativo con Odoo/Micros):
+
+Políticas de stock por ítem/sucursal (min/max, seguridad, lead time, consumo promedio).
+
+Motor de sugerencias: métodos (min-max, media móvil, consumo de últimos n días, estacionalidad básica).
+
+Conversión 1-click a Solicitud → Cotización → Orden con tracking.
+
+Simulación de costo antes de ordenar.
+
+Implicación: Necesita tablas: stock_policies, replenishment_runs, replenishment_lines, vendor_pricelist + snapshot de costos.
+
+6) Recetas / Costos
+
+Qué veo: Listado con precio sugerido; editor minimal con ID, PLU, ingredientes, merma; alertas de costo vacío.
+
+Mejoras:
+
+Cost snapshot por versión de receta (auto cuando cambia costo de insumo o presentación).
+
+Rendimientos por preparación y porcionamiento; subrecetas con consumo teórico vs real.
+
+Vista de impacto: “si aumenta 5% la leche, ¿cuánto sube mi plato?”
+
+Implicación: Tablas recipe_versions, recipe_cost_snapshots, yield_profiles; job que recalcula por cambios de costo.
+
+7) Producción (API)
+
+Qué veo: Endpoints plan/consume/complete/post; UI pendiente.
+
+Mejoras:
+
+UI Operativa de producción: planificar por demanda (ventas POS), por stock objetivo o por calendario.
+
+KPI: teorías vs reales, mermas y costo por batch.
+
+Implicación: Pantallas Livewire + colas de posteo; permisos finos (planificar vs postear).
+
+8) Caja Chica / Cortes
+
+Qué veo: Flujo de precorte por denominaciones; panel de cajas con excepciones.
+
+Mejoras:
+
+Reglas de excepción parametrizables (p. ej., descuento > X% requiere autorización).
+
+Checklist de cierre y adjuntos (foto de arqueo).
+
+Implicación: Tabla cash_audit_rules + cash_attachments.
+
+9) Reportes
+
+Qué veo: “Módulo en preparación”, link a dashboard principal (que ya muestra KPIs de ventas).
+
+Mejoras:
+
+Descargas CSV/PDF; programar envíos por correo; favoritos.
+
+Drill-down desde tablero general a origen (orden, lote, receta).
+
+Implicación: Endpoints de export; colas de reportes con expiración.
+
+10) Catálogos
+
+Qué veo: Sucursales, Almacenes, Unidades, Conversiones (¡muy bien el tip de caja de 12!), Proveedores, Políticas.
+
+Mejoras:
+
+Asistente de conversiones (crear par directo e inverso).
+
+Políticas de stock por ítem/sucursal (UI ya prevista).
+
+Bulk import (CSV) con validación.
+
+Implicación: Validadores y colas de importación; logs de auditoría.
+
+11) Personal / Permisos
+
+Qué veo: Catálogo por módulos, plantillas, 45 permisos, 9 módulos, 7 roles.
+
+Mejoras:
+
+Matriz rol × permiso (visual), clonación rápida de roles, sandbox “probar como”.
+
+Auditoría: quién otorgó/quitaron permisos.
+
+Implicación: Middleware “impersonate” + log de cambios.
+
+B. Comparativo “Vista actual vs ERP estándar” (resumen)
+
+Altas de Items: estás al 60%. Falta presentación/proveedor en el mismo flujo, normalización y validación inteligente.
+
+Recepciones: 70%. Campos correctos; falta pricelist snapshot, templates y OCR opcional.
+
+Lotes/Conteos/Transferencias: 60–70%. Falta experiencia mobile y discrepancias.
+
+Compras/Replenishment: 40–50%. UI sólida pero falta motor y políticas.
+
+Recetas/Costos: 50–60%. Falta versionado + snapshots + rendimientos.
+
+Producción: 30–40%. API lista; falta UI operativa.
+
+Caja Chica / Cortes: 70%. Agregar reglas y checklist.
+
+Reportes: 30–40%. Tablero OK; falta export, programaciones y drill-down.
+
+Catálogos/Permisos: 80%. Solo pulir asistentes e importadores, y auditoría.
+
+Fase 2 — Gap técnico (Full-stack) y decisiones de diseño
+Epics técnicos (con tablas/servicios imprescindibles)
+
+Catálogo de insumos + proveedor-presentación
+
+Tablas:
+
+selemti.insumo (maestro), selemti.proveedor_insumo (presentación, UOM_compra, pack, costo, RFC proveedor, SKU proveedor), selemti.insumo_alias.
+
+selemti.uom y selemti.uom_conversion (ya tienes) ⇒ asegurar inversa y precisión decimal.
+
+Servicios: ItemService, VendorItemService, UomService.
+
+Jobs: normalización de nombres, generación CAT-SUB-#####.
+
+Costos & listas
+
+Tablas: vendor_pricelist (por proveedor/fecha), cost_base_history (por insumo/UOM_base), price_snapshot (al recepcionar).
+
+Servicio: CostingService con “costo base” = mejor último costo válido por proveedor preferente (ajustable).
+
+Recepciones (movimientos + FEFO)
+
+Tablas: recepcion_cab, recepcion_det, mov_inventario (tipo: RECV, ADJ, TRANS_OUT/IN, PROD_CONS/POST).
+
+Reglas: estados Pre-validada → Aprobada → Posteada; FEFO para caducidades.
+
+Replenishment
+
+Tablas: stock_policies (min, max, SS, LT, método), replenishment_runs, replenishment_lines.
+
+Servicio: ReplenishmentEngine (métodos: min-max, SMA, consumo POS n días).
+
+Integración POS: lecturas agregadas (solo lectura) para consumo diario.
+
+Recetas & Producción
+
+Tablas: recipe, recipe_version, recipe_ingredient, recipe_cost_snapshot, yield_profile, production_batch, production_consumption, production_output.
+
+Servicios: RecipeService, ProductionService.
+
+Jobs: recalcular costo receta al cambiar costo insumo.
+
+Conteos/Transferencias con discrepancias
+
+Tablas: inventory_count_header/line, transfer_header/line, transfer_discrepancy.
+
+Servicios: CountingService, TransferService.
+
+Reglas: ajustes automáticos según tolerancias.
+
+Reportes/Export/Programaciones
+
+Tablas: report_jobs, scheduled_reports.
+
+Servicio: ReportingService con exporters CSV/PDF.
+
+Seguridad y Auditoría
+
+Tablas: audit_log (objeto, acción, antes/después, user, IP), permission_grants_log.
+
+Middleware impersonate; scopes por sucursal/almacén.
+
+Fase 3 — Plan de ejecución (enfoque “IA-first”, ahorro de tokens)
+Sprint 0 (1–2 días) — Base común
+
+Design System: Tailwind + componentes consistentes (chips, toasts, modals, tablas, vacíos, skeletons).
+
+Mensajería de errores/validación unificada.
+
+Toasts + Loading skeletons + Placeholders (aplícalo global).
+
+Auditoría mínima (log de errores y eventos CRUD).
+
+Sprint 1 — Inventario sólido
+
+Alta de Insumo (wizard 2 pasos) con validación inline y “crear y continuar presentaciones”.
+
+Proveedor-Insumo: CRUD + plantilla rápida desde recepción.
+
+Recepción posteable: estados, snapshot de costo, adjuntos múltiples, tolerancias.
+
+UOM Assistant: creación de conversión inversa automática.
+
+Criterios de aceptación: crear insumo → añadir presentación → recepcionar con conversión automática → ver lote/caducidad → costo base actualizado.
+
+Sprint 2 — Replenishment + Compras
+
+stock_policies UI (mín, máx, SS, LT, método).
+
+Motor min-max/SMA con consumo POS de n días.
+
+Conversiones de sugerencia → Solicitud → Orden (1-click).
+
+Simulador de costo y ruptura de stock (lead time).
+
+Criterios: “Generar Sugerencias” llena grilla con cantidades sugeridas y explica el cálculo.
+
+Sprint 3 — Recetas & Costing Pro
+
+Versionado de receta + snapshot de costo.
+
+Impacto de costo (si sube X insumo).
+
+Alertas de costo con umbral (% Δ).
+
+Criterios: al cambiar costo de insumo, se recalcula y se emite alerta en “Alertas de costo”.
+
+Sprint 4 — Producción (UI)
+
+Planificación por demanda (POS), por objetivo stock, o calendario.
+
+Consumo teórico/real y posteo a inventario.
+
+Mermas y rendimiento por batch.
+
+Sprint 5 — Operación & Reportes
+
+Transferencias con recepción y discrepancias.
+
+Conteos mobile + etiquetas/barcode.
+
+Reportes con export (CSV/PDF) y programaciones.
+
+Backlog de “Quick Wins” (alto impacto/bajo esfuerzo)
+
+Búsqueda global (Ctrl+K) en navbar.
+
+Acciones en lote en todas las tablas.
+
+“Probar como” (impersonate) para roles.
+
+Checklist de cierre de caja + adjuntos.
+
+Tooltips de factor UOM en cada cálculo.
+
+Empty states con CTA (“Crear política”, “Agregar proveedor”, etc.).

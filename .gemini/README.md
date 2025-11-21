@@ -217,7 +217,7 @@ git commit -m "feat(purchasing): UI completa
 
 ### Documentación del Proyecto
 - **CLAUDE.md** - Guía para Claude (desarrollo UI)
-- **docs/CajaChica/FondoCaja/** - Documentación Caja Chica (~170 páginas)
+- **docs/FondoCaja/** - Documentación Caja Chica (~170 páginas)
 - **docs/InventoryCounts/** - Documentación Conteos de Inventario
 
 ### Documentación Externa
