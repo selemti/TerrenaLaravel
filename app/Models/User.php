@@ -20,24 +20,20 @@ class User extends Authenticatable
 
     protected $primaryKey = 'id';
 
-    // La tabla selemti.users usa 'username' y 'password_hash' en lugar de 'name' y 'password'
+    // La tabla selemti.users tiene estructura estándar de Laravel
+    // Columnas reales: id, name, email, password, email_verified_at, remember_token, created_at, updated_at
     protected $fillable = [
-        'username',
-        'password_hash',
+        'name',
         'email',
-        'nombre_completo',
-        'sucursal_id',
-        'activo',
-        'fecha_ultimo_login',
-        'intentos_login',
-        'bloqueado_hasta',
+        'password',
+        'email_verified_at',
     ];
 
     /**
      * The attributes that should be hidden for serialization.
      */
     protected $hidden = [
-        'password_hash',
+        'password',
         'remember_token',
     ];
 
@@ -45,30 +41,10 @@ class User extends Authenticatable
      * Get the attributes that should be cast.
      */
     protected $casts = [
-        'activo' => 'boolean',
-        'fecha_ultimo_login' => 'datetime',
-        'bloqueado_hasta' => 'datetime',
+        'email_verified_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'intentos_login' => 'integer',
     ];
-
-    /**
-     * Get the password for the user.
-     * Laravel espera 'password' pero la tabla usa 'password_hash'
-     */
-    public function getAuthPassword()
-    {
-        return $this->password_hash;
-    }
-
-    /**
-     * Accessor para compatibilidad con código que use 'name'
-     */
-    public function getNameAttribute()
-    {
-        return $this->username ?? $this->nombre_completo;
-    }
 
     public function legacyRoles()
     {

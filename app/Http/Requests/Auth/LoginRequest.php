@@ -123,31 +123,24 @@ class LoginRequest extends FormRequest
             return null;
         }
 
-        $query = User::query();
+        // La tabla selemti.users solo tiene 'email', no 'username'
+        // Si el login no es un email, convertirlo a email agregando @selemti.com
+        $email = filter_var($login, FILTER_VALIDATE_EMAIL)
+            ? $login
+            : $login . '@selemti.com';
 
-        if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
-            $query->whereRaw('LOWER(email) = ?', [Str::lower($login)]);
-        } else {
-            // Buscar por username si no es email
-            $query->whereRaw('LOWER(username) = ?', [Str::lower($login)]);
-        }
-
-        return $query->first();
+        return User::query()
+            ->whereRaw('LOWER(email) = ?', [Str::lower($email)])
+            ->first();
     }
 
     protected function credentialsFor(User $user, string $login, string $password): array
     {
-        $credentials = [
+        // La tabla selemti.users solo tiene 'email', no 'username'
+        // Siempre autenticar por email
+        return [
+            'email' => $user->email,
             'password' => $password,
         ];
-
-        if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
-            $credentials['email'] = $user->email;
-        } else {
-            // Autenticar por username si no es email
-            $credentials['username'] = $user->username;
-        }
-
-        return $credentials;
     }
 }

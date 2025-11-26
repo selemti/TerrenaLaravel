@@ -3,6 +3,7 @@
 namespace App\Services\Inventory;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
@@ -151,9 +152,8 @@ class ReceptionService
             ->where('id', $receptionId)
             ->update([
                 'estado' => self::ESTADO_VALIDADA,
-                // TODO: Agregar cuando existan las columnas:
-                // 'validada_por' => $userId,
-                // 'validada_at' => now(),
+                'validada_por' => $userId,
+                'validada_at' => now(),
                 'updated_at' => now(),
             ]);
     }
@@ -197,22 +197,28 @@ class ReceptionService
             $now = now();
 
             foreach ($lines as $line) {
-                $meta = json_decode($line->meta, true);
-                
-                // Crear lote de inventario
+                $meta = json_decode($line->meta, true) ?? [];
+                $fechaRecepcion = $reception->fecha_recepcion
+                    ? Carbon::parse($reception->fecha_recepcion)->toDateString()
+                    : $now->toDateString();
+                $fechaCaducidad = isset($meta['fecha_caducidad']) && $meta['fecha_caducidad']
+                    ? Carbon::parse($meta['fecha_caducidad'])->toDateString()
+                    : $now->copy()->addYear()->toDateString();
+                $ubicacion = 'UBIC-' . str_pad((string) ($reception->almacen_id ?? 1), 5, '0', STR_PAD_LEFT);
+
+                // Crear lote de inventario alineado a BD real
                 $batchId = DB::table('selemti.inventory_batch')->insertGetId([
                     'item_id' => $line->item_id,
                     'lote_proveedor' => $meta['lote_proveedor'] ?? (string) Str::uuid(),
-                    'cantidad_original' => $line->qty,
-                    'cantidad_actual' => $line->qty,
-                    'uom_base' => $meta['uom_base'] ?? 'UND',
-                    'caducidad' => $meta['fecha_caducidad'] ?? null,
-                    'estado' => 'ACTIVO',
+                    'fecha_recepcion' => $fechaRecepcion,
+                    'fecha_caducidad' => $fechaCaducidad,
                     'temperatura_recepcion' => $line->temperatura,
                     'documento_url' => $line->doc_url,
-                    'sucursal_id' => $reception->sucursal_id,
-                    'almacen_id' => $reception->almacen_id,
-                    'meta' => $line->meta,
+                    'cantidad_original' => $line->qty,
+                    'cantidad_actual' => $line->qty,
+                    'estado' => 'ACTIVO',
+                    'ubicacion_id' => $ubicacion,
+                    'unit_cost' => $line->costo_unit ?? 0,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ]);
@@ -222,23 +228,20 @@ class ReceptionService
                     ->where('id', $line->id)
                     ->update(['batch_id' => $batchId]);
 
-                // Generar movimiento de inventario
+                // Generar movimiento de inventario alineado a mov_inv
+                // NOTE: sucursal_id stores almacen_id (warehouse) for stock tracking at warehouse level
                 DB::table('selemti.mov_inv')->insert([
                     'item_id' => $line->item_id,
-                    'tipo' => 'RECEPCION',
-                    'qty' => $line->qty,
-                    'uom' => $meta['uom_base'] ?? 'UND',
-                    'sucursal_id' => $reception->sucursal_id,
-                    'almacen_id' => $reception->almacen_id,
+                    'tipo' => 'ENTRADA',
+                    'cantidad' => $line->qty,
+                    'costo_unit' => $line->costo_unit ?? 0,
+                    'sucursal_id' => $reception->almacen_id !== null ? (string) $reception->almacen_id : null,
                     'ref_tipo' => 'recepcion',
                     'ref_id' => $receptionId,
-                    'user_id' => $userId,
-                    'batch_id' => $batchId,
+                    'usuario_id' => $userId,
+                    'lote_id' => $batchId,
                     'ts' => $now,
-                    'meta' => json_encode([
-                        'temperatura' => $line->temperatura,
-                        'costo_unit' => $line->costo_unit,
-                    ]),
+                    'created_at' => $now,
                 ]);
             }
 
@@ -247,128 +250,10 @@ class ReceptionService
                 ->where('id', $receptionId)
                 ->update([
                     'estado' => self::ESTADO_POSTEADA,
-                    // TODO: Agregar cuando existan las columnas:
-                    // 'posteada_por' => $userId,
-                    // 'posteada_at' => now(),
+                    'posteada_por' => $userId,
+                    'posteada_at' => $now,
                     'updated_at' => $now,
                 ]);
-        });
-    }
-
-    /**
-     * Método legacy - Crea recepción directamente en estado POSTEADA
-     * 
-     * @deprecated Usar createDraftReception() + validateReception() + postReception()
-     * 
-     * $header = ['supplier_id'=>int,'branch_id'=>?,'warehouse_id'=>?,'user_id'=>int]
-     * $lines = [[
-     *   'item_id'=>int,'qty_pack'=>numeric,'uom_purchase'=>'PZ',
-     *   'pack_size'=>numeric, // ej 12 para caja de 12
-     *   'uom_base'=>'ML|GR|PZ', // canónica del item
-     *   'lot'=>'','exp_date'=>'YYYY-MM-DD','temp'=>numeric,'doc_url'=>string|null
-     * ]]
-     */
-    public function createReception(array $header, array $lines): int
-    {
-        return DB::transaction(function () use ($header, $lines) {
-            $now = now();
-            $numero = $this->buildSequentialNumber();
-
-            $cabecera = [
-                'proveedor_id' => $header['supplier_id'],
-                'sucursal_id' => $header['branch_id'] ?? null,
-                'almacen_id' => $header['warehouse_id'] ?? null,
-                'creado_por' => $header['user_id'] ?? null,
-                'numero_recepcion' => $numero,
-                'fecha_recepcion' => $now,
-                'estado' => 'RECIBIDO',
-                'total_presentaciones' => 0,
-                'total_canonico' => 0,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-
-            $receptionId = (int) DB::table('recepcion_cab')->insertGetId($cabecera);
-
-            $totals = ['presentaciones' => 0.0, 'canonico' => 0.0];
-
-            foreach ($lines as $line) {
-                $qtyPack = (float) ($line['qty_pack'] ?? 0);
-                $packSize = (float) ($line['pack_size'] ?? 1);
-                $qtyCanonical = $qtyPack * ($packSize ?: 1);
-
-                $batchId = (int) DB::table('inventory_batch')->insertGetId([
-                    'item_id' => $line['item_id'],
-                    'lote_proveedor' => $line['lot'] ?: (string) Str::uuid(),
-                    'cantidad_original' => $qtyCanonical,
-                    'cantidad_actual' => $qtyCanonical,
-                    'uom_base' => $line['uom_base'],
-                    'caducidad' => $line['exp_date'] ?? null,
-                    'estado' => 'ACTIVO',
-                    'temperatura_recepcion' => $line['temp'] ?? null,
-                    'documento_url' => $line['doc_url'] ?? null,
-                    'sucursal_id' => $header['branch_id'] ?? null,
-                    'almacen_id' => $header['warehouse_id'] ?? null,
-                    'meta' => json_encode([
-                        'uom_purchase' => $line['uom_purchase'],
-                        'qty_pack' => $qtyPack,
-                        'pack_size' => $packSize,
-                    ]),
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ]);
-
-                DB::table('recepcion_det')->insert([
-                    'recepcion_id' => $receptionId,
-                    'item_id' => $line['item_id'],
-                    'inventory_batch_id' => $batchId,
-                    'lote_proveedor' => $line['lot'] ?: null,
-                    'fecha_caducidad' => $line['exp_date'] ?? null,
-                    'qty_presentacion' => $qtyPack,
-                    'qty_recibida' => $qtyPack,
-                    'pack_size' => $packSize,
-                    'uom_compra' => $line['uom_purchase'],
-                    'qty_canonica' => $qtyCanonical,
-                    'uom_base' => $line['uom_base'],
-                    'precio_unit' => $line['precio_unit'] ?? null,
-                    'temperatura_recepcion' => $line['temp'] ?? null,
-                    'meta' => $line['doc_url'] ? json_encode(['doc_url' => $line['doc_url']]) : null,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ]);
-
-                $movimiento = [
-                    'item_id' => $line['item_id'],
-                    'inventory_batch_id' => $batchId,
-                    'tipo' => 'RECEPCION',
-                    'qty' => $qtyCanonical,
-                    'uom' => $line['uom_base'],
-                    'sucursal_id' => $header['branch_id'] ?? null,
-                    'almacen_id' => $header['warehouse_id'] ?? null,
-                    'ref_tipo' => 'recepcion',
-                    'ref_id' => $receptionId,
-                    'user_id' => $header['user_id'] ?? null,
-                    'ts' => $now,
-                    'meta' => json_encode(['temperatura' => $line['temp'] ?? null]),
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-
-                DB::table('mov_inv')->insert($movimiento);
-
-                $totals['presentaciones'] += $qtyPack;
-                $totals['canonico'] += $qtyCanonical;
-            }
-
-            DB::table('recepcion_cab')
-                ->where('id', $receptionId)
-                ->update([
-                    'total_presentaciones' => $totals['presentaciones'],
-                    'total_canonico' => $totals['canonico'],
-                    'updated_at' => $now,
-                ]);
-
-            return $receptionId;
         });
     }
 

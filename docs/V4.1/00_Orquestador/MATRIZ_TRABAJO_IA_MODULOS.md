@@ -45,8 +45,11 @@ Matriz que determina qué IA es responsable de qué tarea, qué puede ejecutarse
 |---------|----------------|--------|-------------|
 | INV-001-QWEN-BD | QWEN | DONE ✅ | 2025-11-19 |
 | INV-002-AUDIT | CLAUDE | DONE ✅ | 2025-11-20 |
-| INV-002-CODEX-FIX | CODEX | PENDING ⚠️ | - |
+| INV-002-CODEX-FIX | CODEX | DONE ✅ | 2025-11-23 00:52 |
+| INV-003-AUDIT | CLAUDE | DONE ✅ | 2025-11-23 |
+| INV-003-CODEX-FIX | CODEX | PENDING ⚠️ | - |
 | REC-001-AUDIT | CLAUDE | DONE ✅ | 2025-11-19 |
+| INV-001-CODEX-TEST | CODEX | POR_VALIDAR 🟡 | 2025-11-25 01:52 |
 
 ---
 

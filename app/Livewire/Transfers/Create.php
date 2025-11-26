@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Transfers;
 
+use App\Services\Inventory\TransferService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -66,7 +67,7 @@ class Create extends Component
         }
     }
 
-    public function save()
+    public function save(TransferService $service)
     {
         $this->validate($this->rules(), $this->messages());
 
@@ -83,20 +84,30 @@ class Create extends Component
         $this->loading = true;
 
         try {
-            // TODO: conectar con POST /api/transferencias
-            $response = $this->mockCreateTransfer();
+            // Formatear líneas para el servicio (solo item_id y cantidad)
+            $lines = collect($this->lineas)->map(function ($line) {
+                return [
+                    'item_id' => $line['item_id'],
+                    'cantidad' => (float) $line['cantidad'],
+                ];
+            })->toArray();
 
-            if ($response['ok']) {
-                $transferId = $response['data']['id'];
+            $result = $service->createTransfer(
+                fromAlmacenId: (int) $this->form['almacen_origen_id'],
+                toAlmacenId: (int) $this->form['almacen_destino_id'],
+                lines: $lines,
+                userId: auth()->id() ?? 1
+            );
 
-                $this->dispatch('toast',
-                    type: 'success',
-                    body: "Transferencia #{$transferId} creada correctamente"
-                );
+            $transferId = $result['transfer_id'];
 
-                // Redirigir a vista de detalle o listado
-                return redirect()->route('transfers.index');
-            }
+            $this->dispatch('toast',
+                type: 'success',
+                body: "Transferencia #{$transferId} creada en estado SOLICITADA"
+            );
+
+            // Redirigir a vista de detalle
+            return redirect()->route('transfers.detail', ['id' => $transferId]);
         } catch (\Exception $e) {
             $this->dispatch('toast',
                 type: 'error',
@@ -183,30 +194,5 @@ class Create extends Component
         } catch (\Exception $e) {
             $this->items = [];
         }
-    }
-
-    /**
-     * Mock temporal - crear transferencia
-     * TODO: reemplazar con POST /api/transferencias
-     */
-    protected function mockCreateTransfer(): array
-    {
-        $transferId = rand(1000, 9999);
-
-        return [
-            'ok' => true,
-            'data' => [
-                'id' => $transferId,
-                'numero' => 'TRANS-'.str_pad($transferId, 6, '0', STR_PAD_LEFT),
-                'almacen_origen_id' => $this->form['almacen_origen_id'],
-                'almacen_destino_id' => $this->form['almacen_destino_id'],
-                'fecha_solicitada' => $this->form['fecha_solicitada'],
-                'estado' => 'BORRADOR',
-                'lineas' => count($this->lineas),
-                'creado_por' => Auth::id(),
-                'created_at' => now()->toIso8601String(),
-            ],
-            'message' => 'Transferencia creada exitosamente',
-        ];
     }
 }

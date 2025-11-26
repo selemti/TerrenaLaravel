@@ -142,12 +142,13 @@ return new class extends Migration
 
     protected function tableExists(string $table): bool
     {
+        // Compatible con PostgreSQL 9.5 (sin to_regclass)
         $result = DB::connection('pgsql')->selectOne(
-            "SELECT to_regclass('selemti.' || ?) AS regclass",
+            "SELECT 1 FROM information_schema.tables WHERE table_schema IN ('selemti', 'public') AND table_name = ? LIMIT 1",
             [$table]
         );
 
-        return ! empty($result?->regclass);
+        return ! empty($result);
     }
 
     protected function columnExists(string $table, string $column): bool

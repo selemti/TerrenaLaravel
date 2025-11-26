@@ -2,7 +2,7 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\Inv\Movement;
+use App\Models\Inventory\Movement;
 use App\Models\Inventory\TransferHeader;
 use App\Models\Inventory\TransferLine;
 use Illuminate\Support\Facades\DB;
@@ -39,22 +39,18 @@ class TransferService
 
         return DB::transaction(function () use ($fromAlmacenId, $toAlmacenId, $lines, $userId) {
             $header = TransferHeader::create([
-                'origen_almacen_id' => $fromAlmacenId,
-                'destino_almacen_id' => $toAlmacenId,
+                'from_bodega_id' => $fromAlmacenId,
+                'to_bodega_id' => $toAlmacenId,
                 'estado' => TransferHeader::STATUS_SOLICITADA,
-                'creada_por' => $userId,
-                'fecha_solicitada' => now(),
-                'observaciones' => $lines[0]['observaciones'] ?? null,
+                'usuario_id' => $userId,
             ]);
 
             foreach ($lines as $line) {
                 TransferLine::create([
-                    'transfer_id' => $header->id,
+                    'traspaso_id' => $header->id,
                     'item_id' => $line['item_id'],
-                    'cantidad_solicitada' => $line['cantidad'],
-                    'unidad_medida' => $line['unidad_medida'],
-                    'observaciones' => $line['observaciones'] ?? null,
-                    'created_at' => now(),
+                    'qty' => $line['qty_requested'] ?? $line['cantidad'] ?? 0,
+                    'um_id' => 2, // Default L (Litro) - TODO: obtener de item
                 ]);
             }
 
@@ -92,30 +88,30 @@ class TransferService
             // Placeholder: For now, we'll use a different approach to get stock
             $itemIds = $transfer->lineas->pluck('item_id')->toArray();
 
-            // Calculate stock from mov_inv records (this is a simplified approach)
+            // Calculate stock from mov_inv records
             $stocks = DB::connection('pgsql')
                 ->table('selemti.mov_inv')
                 ->select('item_id', DB::raw('SUM(cantidad) as cantidad_actual'))
-                ->where('sucursal_id', $transfer->origen_almacen_id)
+                ->where('sucursal_id', (string) $transfer->from_bodega_id)
                 ->whereIn('item_id', $itemIds)
                 ->groupBy('item_id')
-                ->pluck('cantidad_actual', 'item_id'); // Create a map of [item_id => cantidad_actual]
+                ->pluck('cantidad_actual', 'item_id');
 
             // Validar stock disponible en almacén origen
             foreach ($transfer->lineas as $line) {
-                $stock = $stocks->get($line->item_id, 0); // Get stock for this item, default to 0 if not found
+                $stock = $stocks->get($line->item_id, 0);
 
-                if ($stock < $line->cantidad_solicitada) {
+                if ($stock < $line->qty) {
                     throw new RuntimeException(
-                        "Stock insuficiente para item {$line->item->nombre}. Disponible: {$stock}, Requerido: {$line->cantidad_solicitada}"
+                        "Stock insuficiente para item {$line->item_id}. Disponible: {$stock}, Requerido: {$line->qty}"
                     );
                 }
             }
 
             $transfer->update([
                 'estado' => TransferHeader::STATUS_APROBADA,
-                'aprobada_por' => $userId,
-                'fecha_aprobada' => now(),
+                'validada_por' => $userId,
+                'validada_at' => now(),
             ]);
 
             return [
@@ -150,15 +146,14 @@ class TransferService
             // Actualizar cantidades despachadas (igual a solicitadas por defecto)
             foreach ($transfer->lineas as $line) {
                 $line->update([
-                    'cantidad_despachada' => $line->cantidad_solicitada,
+                    'cantidad_despachada' => $line->cantidad,
                 ]);
             }
 
             $transfer->update([
                 'estado' => TransferHeader::STATUS_EN_TRANSITO,
                 'despachada_por' => $userId,
-                'fecha_despachada' => now(),
-                'numero_guia' => $numeroGuia,
+                'guia' => $numeroGuia,
             ]);
 
             return [
@@ -205,15 +200,12 @@ class TransferService
 
                 $line->update([
                     'cantidad_recibida' => $lineData['cantidad_recibida'],
-                    'observaciones_recepcion' => $lineData['observaciones'] ?? null,
                 ]);
             }
 
             $transfer->update([
                 'estado' => TransferHeader::STATUS_RECIBIDA,
                 'recibida_por' => $userId,
-                'fecha_recibida' => now(),
-                'observaciones_recepcion' => $receivedLines[0]['observaciones_generales'] ?? null,
             ]);
 
             // Calcular varianzas
@@ -254,10 +246,11 @@ class TransferService
         $this->guardPositiveId($userId, 'user');
 
         return DB::transaction(function () use ($transferId, $userId) {
-            $transfer = TransferHeader::with('lineas.item', 'origenAlmacen', 'destinoAlmacen')->findOrFail($transferId);
+            $transfer = TransferHeader::with('lineas')->findOrFail($transferId);
 
-            if (! $transfer->canPost()) {
-                throw new RuntimeException("Transfer must be in RECIBIDA status to be posted. Current: {$transfer->estado}");
+            // Permitir postear desde APROBADA (simplificado, sin paso RECIBIDA)
+            if ($transfer->estado !== TransferHeader::STATUS_APROBADA) {
+                throw new RuntimeException("Transfer must be in APROBADA status to be posted. Current: {$transfer->estado}");
             }
 
             $movimientos = [];
@@ -265,30 +258,26 @@ class TransferService
             foreach ($transfer->lineas as $line) {
                 // Movimiento de SALIDA en almacén origen
                 $movOut = Movement::create([
-                    'sucursal_id' => $transfer->origen_almacen_id,
+                    'sucursal_id' => (string) $transfer->from_bodega_id,
                     'item_id' => $line->item_id,
-                    'tipo' => 'TRASPASO_OUT',
-                    'cantidad' => -abs($line->cantidad_despachada),
-                    'unidad_medida' => $line->unidad_medida,
+                    'tipo' => 'TRASPASO',
+                    'cantidad' => -abs($line->qty),
                     'ts' => now(),
                     'usuario_id' => $userId,
-                    'ref_tipo' => 'TRANSFER',
+                    'ref_tipo' => 'transfer',
                     'ref_id' => $transfer->id,
-                    'observaciones' => "Transferencia #{$transfer->id} a {$transfer->destinoAlmacen->nombre}",
                 ]);
 
                 // Movimiento de ENTRADA en almacén destino
                 $movIn = Movement::create([
-                    'sucursal_id' => $transfer->destino_almacen_id,
+                    'sucursal_id' => (string) $transfer->to_bodega_id,
                     'item_id' => $line->item_id,
-                    'tipo' => 'TRASPASO_IN',
-                    'cantidad' => abs($line->cantidad_recibida),
-                    'unidad_medida' => $line->unidad_medida,
+                    'tipo' => 'TRASPASO',
+                    'cantidad' => abs($line->qty),
                     'ts' => now(),
                     'usuario_id' => $userId,
-                    'ref_tipo' => 'TRANSFER',
+                    'ref_tipo' => 'transfer',
                     'ref_id' => $transfer->id,
-                    'observaciones' => "Transferencia #{$transfer->id} desde {$transfer->origenAlmacen->nombre}",
                 ]);
 
                 $movimientos[] = [
@@ -300,12 +289,12 @@ class TransferService
             $transfer->update([
                 'estado' => TransferHeader::STATUS_POSTEADA,
                 'posteada_por' => $userId,
-                'fecha_posteada' => now(),
+                'posteada_at' => now(),
             ]);
 
             return [
                 'transfer_id' => $transfer->id,
-                'movimientos_generados' => count($movimientos) * 2,
+                'movements_created' => count($movimientos) * 2,
                 'status' => $transfer->estado,
                 'movimientos' => $movimientos,
             ];

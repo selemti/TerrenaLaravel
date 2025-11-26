@@ -80,10 +80,6 @@ class TransferReceive extends Component
             ];
         }
 
-        if (! empty($payload)) {
-            $payload[0]['observaciones_generales'] = $this->observaciones ?: null;
-        }
-
         try {
             $result = $service->receiveTransfer($this->transferId, $payload, auth()->id() ?? 1);
             $this->varianzas = $result['varianzas'] ?? [];

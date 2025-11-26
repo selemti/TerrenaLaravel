@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Inventory;
 
-use App\Services\Inventory\ReceivingService;
 use App\Services\Inventory\ReceptionService;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -13,13 +12,9 @@ class ReceptionDetail extends Component
 
     public string $estado = 'BORRADOR';
 
-    public bool $requiere_aprobacion = false;
-
     public array $lineas = [];
 
     public bool $canValidate = false;
-
-    public bool $canOverride = false;
 
     public bool $canPost = false;
 
@@ -32,13 +27,13 @@ class ReceptionDetail extends Component
      *
      * @param  int|string  $id
      */
-    public function mount($id, ReceivingService $receivingService): void
+    public function mount($id): void
     {
         $this->recepcionId = (int) $id;
-        $this->refreshData($receivingService);
+        $this->refreshData();
     }
 
-    private function refreshData(ReceivingService $receivingService): void
+    private function refreshData(): void
     {
         $this->flashMessage = null;
         $this->errorMessage = null;
@@ -48,7 +43,6 @@ class ReceptionDetail extends Component
                 ? auth()->user()->getAllPermissions()->pluck('name')->toArray()
                 : [];
             $this->canValidate = in_array('inventory.receptions.validate', $perms, true);
-            $this->canOverride = in_array('inventory.receptions.override_tolerance', $perms, true);
             $this->canPost = in_array('inventory.receptions.post', $perms, true);
         }
 
@@ -57,7 +51,6 @@ class ReceptionDetail extends Component
 
             if ($cabecera) {
                 $this->estado = $cabecera->estado ?? $this->estado;
-                $this->requiere_aprobacion = (bool) ($cabecera->requiere_aprobacion ?? false);
 
                 $detalles = DB::table('selemti.recepcion_det as d')
                     ->leftJoin('selemti.items as i', 'i.id', '=', 'd.item_id')
@@ -92,24 +85,13 @@ class ReceptionDetail extends Component
                     ->toArray();
 
                 $this->lineas = $detalles;
-
-                return;
             }
-        } catch (\Throwable $e) {
-            // Si la tabla no existe o no hay datos, usar el servicio de orquestación.
-        }
-
-        try {
-            $data = $receivingService->getReception($this->recepcionId);
-            $this->estado = $data['estado'] ?? $this->estado;
-            $this->requiere_aprobacion = (bool) ($data['requiere_aprobacion'] ?? false);
-            $this->lineas = $data['lineas'] ?? [];
         } catch (\Throwable $e) {
             $this->errorMessage = $e->getMessage();
         }
     }
 
-    public function actionValidate(ReceptionService $service, ReceivingService $receivingService): void
+    public function actionValidate(ReceptionService $service): void
     {
         try {
             $service->validateReception($this->recepcionId, auth()->id() ?? 1);
@@ -118,23 +100,10 @@ class ReceptionDetail extends Component
             $this->errorMessage = $e->getMessage();
         }
 
-        $this->refreshData($receivingService);
+        $this->refreshData();
     }
 
-    public function actionApprove(ReceivingService $receivingService): void
-    {
-        try {
-            $receivingService->approveReception($this->recepcionId, auth()->id() ?? 1);
-            $this->flashMessage = 'Aprobación registrada.';
-            $this->requiere_aprobacion = false;
-        } catch (\Throwable $e) {
-            $this->errorMessage = $e->getMessage();
-        }
-
-        $this->refreshData($receivingService);
-    }
-
-    public function actionPost(ReceptionService $service, ReceivingService $receivingService): void
+    public function actionPost(ReceptionService $service): void
     {
         try {
             $service->postReception($this->recepcionId, auth()->id() ?? 1);
@@ -143,7 +112,7 @@ class ReceptionDetail extends Component
             $this->errorMessage = $e->getMessage();
         }
 
-        $this->refreshData($receivingService);
+        $this->refreshData();
     }
 
     public function render()

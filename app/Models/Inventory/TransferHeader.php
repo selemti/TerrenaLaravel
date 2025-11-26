@@ -15,7 +15,7 @@ class TransferHeader extends Model
 
     protected $connection = 'pgsql';
 
-    protected $table = 'selemti.transfer_cab';
+    protected $table = 'selemti.traspaso_cab';
 
     protected $primaryKey = 'id';
 
@@ -32,62 +32,38 @@ class TransferHeader extends Model
     public const STATUS_CANCELADA = 'CANCELADA';
 
     protected $fillable = [
-        'origen_almacen_id',
-        'destino_almacen_id',
+        'from_bodega_id',
+        'to_bodega_id',
         'estado',
-        'creada_por',
-        'aprobada_por',
-        'despachada_por',
-        'recibida_por',
+        'usuario_id',
+        'validada_por',
         'posteada_por',
-        'numero_guia',
-        'fecha_solicitada',
-        'fecha_aprobada',
-        'fecha_despachada',
-        'fecha_recibida',
-        'fecha_posteada',
-        'observaciones',
-        'observaciones_recepcion',
+        'meta',
     ];
 
     protected $casts = [
-        'fecha_solicitada' => 'datetime',
-        'fecha_aprobada' => 'datetime',
-        'fecha_despachada' => 'datetime',
-        'fecha_recibida' => 'datetime',
-        'fecha_posteada' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
     public function origenAlmacen(): BelongsTo
     {
-        return $this->belongsTo(Almacen::class, 'origen_almacen_id');
+        return $this->belongsTo(Almacen::class, 'from_bodega_id');
     }
 
     public function destinoAlmacen(): BelongsTo
     {
-        return $this->belongsTo(Almacen::class, 'destino_almacen_id');
+        return $this->belongsTo(Almacen::class, 'to_bodega_id');
     }
 
-    public function creadaPor(): BelongsTo
+    public function usuario(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'creada_por');
+        return $this->belongsTo(User::class, 'usuario_id');
     }
 
-    public function aprobadaPor(): BelongsTo
+    public function validadaPor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'aprobada_por');
-    }
-
-    public function despachadaPor(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'despachada_por');
-    }
-
-    public function recibidaPor(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'recibida_por');
+        return $this->belongsTo(User::class, 'validada_por');
     }
 
     public function posteadaPor(): BelongsTo
@@ -97,7 +73,7 @@ class TransferHeader extends Model
 
     public function lineas(): HasMany
     {
-        return $this->hasMany(TransferLine::class, 'transfer_id');
+        return $this->hasMany(TransferLine::class, 'traspaso_id');
     }
 
     public function scopePendientes($query)

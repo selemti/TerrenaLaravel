@@ -10,14 +10,12 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
+        // La tabla selemti.users solo tiene: id, name, email, password, email_verified_at, remember_token, created_at, updated_at
         $user = User::query()->updateOrCreate(
-            ['username' => 'soporte'],
+            ['email' => 'soporte@selemti.com'],
             [
-                'email' => 'soporte@terrena.com',
-                'nombre_completo' => 'Usuario Soporte',
-                'password_hash' => Hash::make('password'), // Cambiar en producción
-                'sucursal_id' => 'SUR',
-                'activo' => true,
+                'name' => 'Usuario Soporte',
+                'password' => Hash::make('soporte'), // Password original del usuario
             ]
         );
 
@@ -28,6 +26,6 @@ class AdminUserSeeder extends Seeder
             $this->command->warn('No se pudieron asignar roles: '.$e->getMessage());
         }
 
-        $this->command->info('Usuario creado: username=soporte / password=password');
+        $this->command->info('Usuario creado: email=soporte@selemti.com / password=soporte');
     }
 }

@@ -281,6 +281,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('transfers')->group(function () {
         Route::get('/', \App\Livewire\Transfers\Index::class)->name('transfers.index');
         Route::get('/create', TransfersCreate::class)->name('transfers.create');
+        Route::get('/{id}/detail', \App\Livewire\Transfers\TransferDetail::class)->name('transfers.detail');
         Route::get('/{id}/dispatch', \App\Livewire\Transfers\TransferDispatch::class)->name('transfers.dispatch');
         Route::get('/{id}/receive', \App\Livewire\Transfers\TransferReceive::class)->name('transfers.receive');
     });

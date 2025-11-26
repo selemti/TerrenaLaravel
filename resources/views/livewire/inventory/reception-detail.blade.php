@@ -3,16 +3,13 @@
         <div>
             <h1 class="h4 mb-0">Recepción #{{ $recepcionId }}</h1>
             <div class="text-muted small">
-                <span class="badge rounded-pill 
+                <span class="badge rounded-pill
                     @if($estado === 'VALIDADA') bg-info text-dark
                     @elseif($estado === 'POSTEADA') bg-success
                     @elseif($estado === 'BORRADOR') bg-secondary
                     @else bg-light text-dark @endif">
                     {{ $estado }}
                 </span>
-                @if($requiere_aprobacion)
-                    <span class="badge bg-warning text-dark ms-2">Requiere aprobación</span>
-                @endif
             </div>
         </div>
         <a href="{{ route('inv.receptions') }}" class="btn btn-outline-secondary btn-sm">
@@ -33,7 +30,7 @@
     @endif
 
     <div class="d-flex flex-wrap gap-2 mb-3">
-        @if($canValidate)
+        @if($canValidate && $estado === 'BORRADOR')
             <button
                 type="button"
                 class="btn btn-primary btn-sm"
@@ -43,17 +40,7 @@
             </button>
         @endif
 
-        @if($canOverride && $requiere_aprobacion)
-            <button
-                type="button"
-                class="btn btn-warning btn-sm"
-                wire:click="actionApprove"
-            >
-                <i class="fa-solid fa-shield-check me-1"></i>Aprobar tolerancia
-            </button>
-        @endif
-
-        @if($canPost)
+        @if($canPost && $estado === 'VALIDADA')
             <button
                 type="button"
                 class="btn btn-success btn-sm"

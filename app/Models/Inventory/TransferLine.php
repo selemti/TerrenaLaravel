@@ -13,34 +13,27 @@ class TransferLine extends Model
 
     protected $connection = 'pgsql';
 
-    protected $table = 'selemti.transfer_det';
+    protected $table = 'selemti.traspaso_det';
 
     protected $primaryKey = 'id';
 
-    public $timestamps = false;
-
     protected $fillable = [
-        'transfer_id',
+        'traspaso_id',
         'item_id',
-        'cantidad_solicitada',
-        'cantidad_despachada',
-        'cantidad_recibida',
-        'unidad_medida',
-        'observaciones',
-        'observaciones_recepcion',
-        'created_at',
+        'qty',
+        'um_id',
+        'batch_id',
     ];
 
     protected $casts = [
-        'cantidad_solicitada' => 'decimal:4',
-        'cantidad_despachada' => 'decimal:4',
-        'cantidad_recibida' => 'decimal:4',
+        'qty' => 'decimal:6',
         'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function header(): BelongsTo
     {
-        return $this->belongsTo(TransferHeader::class, 'transfer_id');
+        return $this->belongsTo(TransferHeader::class, 'traspaso_id');
     }
 
     public function item(): BelongsTo

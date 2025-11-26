@@ -42,10 +42,11 @@ return new class extends Migration
 
     private function tableExists(): bool
     {
+        // Compatible con PostgreSQL 9.5 (sin to_regclass)
         $result = DB::connection('pgsql')->selectOne(
-            "SELECT to_regclass('selemti.inv_stock_policy') AS regclass"
+            "SELECT 1 FROM information_schema.tables WHERE table_schema = 'selemti' AND table_name = 'inv_stock_policy' LIMIT 1"
         );
 
-        return ! empty($result?->regclass);
+        return ! empty($result);
     }
 };

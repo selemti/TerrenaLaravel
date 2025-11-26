@@ -3,6 +3,7 @@
 namespace App\Livewire\Transfers;
 
 use App\Models\Inventory\TransferHeader;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -29,8 +30,37 @@ class Index extends Component
 
     public function render()
     {
-        // TODO: conectar con GET /api/transferencias
-        $transfers = $this->mockTransfers();
+        $query = DB::connection('pgsql')
+            ->table('selemti.transfer_cab as t')
+            ->leftJoin('selemti.cat_almacenes as ao', 'ao.id', '=', 't.origen_almacen_id')
+            ->leftJoin('selemti.cat_almacenes as ad', 'ad.id', '=', 't.destino_almacen_id')
+            ->leftJoin('users as u', 'u.id', '=', 't.creada_por')
+            ->select([
+                't.id',
+                't.estado',
+                'ao.nombre as almacen_origen',
+                'ad.nombre as almacen_destino',
+                't.guia',
+                't.created_at',
+                'u.nombre_completo as creado_por',
+                DB::raw('(SELECT COUNT(*) FROM selemti.transfer_det WHERE transfer_id = t.id) as lineas_count'),
+            ])
+            ->orderBy('t.id', 'desc');
+
+        if ($this->estadoFilter !== 'all') {
+            $query->where('t.estado', $this->estadoFilter);
+        }
+
+        if ($this->search) {
+            $query->where(function ($q) {
+                $q->where(DB::raw('CAST(t.id AS TEXT)'), 'like', "%{$this->search}%")
+                  ->orWhere('t.guia', 'like', "%{$this->search}%")
+                  ->orWhere('ao.nombre', 'like', "%{$this->search}%")
+                  ->orWhere('ad.nombre', 'like', "%{$this->search}%");
+            });
+        }
+
+        $transfers = $query->paginate(20);
 
         return view('livewire.transfers.index', [
             'transfers' => $transfers,
@@ -40,36 +70,5 @@ class Index extends Component
                 'title' => 'Transferencias · Inventario',
                 'pageTitle' => 'Transferencias entre Almacenes',
             ]);
-    }
-
-    /**
-     * Mock temporal
-     */
-    protected function mockTransfers(): array
-    {
-        return [
-            [
-                'id' => 1001,
-                'numero' => 'TRANS-001001',
-                'almacen_origen' => 'Principal',
-                'almacen_destino' => 'Sucursal Norte',
-                'fecha_solicitada' => now()->addDay()->format('Y-m-d'),
-                'estado' => TransferHeader::STATUS_APROBADA,
-                'lineas_count' => 5,
-                'creado_por' => 'Juan Pérez',
-                'created_at' => now()->format('Y-m-d H:i'),
-            ],
-            [
-                'id' => 1000,
-                'numero' => 'TRANS-001000',
-                'almacen_origen' => 'Principal',
-                'almacen_destino' => 'Sucursal Sur',
-                'fecha_solicitada' => now()->format('Y-m-d'),
-                'estado' => TransferHeader::STATUS_EN_TRANSITO,
-                'lineas_count' => 3,
-                'creado_por' => 'María García',
-                'created_at' => now()->subDay()->format('Y-m-d H:i'),
-            ],
-        ];
     }
 }

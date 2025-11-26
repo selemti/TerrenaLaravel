@@ -35,7 +35,7 @@ class TransferDispatch extends Component
 
             if ($transfer) {
                 $this->estado = $transfer->estado;
-                $this->numeroGuia = $transfer->numero_guia ?? '';
+                $this->numeroGuia = $transfer->guia ?? '';
                 $this->lines = $transfer->lineas->map(function ($line) {
                     return [
                         'id' => $line->id,
