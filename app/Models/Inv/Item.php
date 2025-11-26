@@ -21,10 +21,11 @@ class Item extends Model
     public $timestamps = true;
 
     protected $fillable = [
-        'id', 'nombre', 'descripcion', 'categoria_id', 'unidad_medida',
+        'id', 'item_code', 'nombre', 'descripcion', 'categoria_id', 'unidad_medida',
         'perishable', 'temperatura_min', 'temperatura_max', 'costo_promedio',
         'activo', 'unidad_medida_id', 'factor_conversion', 'unidad_compra_id',
-        'factor_compra', 'tipo', 'unidad_salida_id',
+        'factor_compra', 'tipo', 'unidad_salida_id', 'es_producible',
+        'es_consumible_operativo', 'es_empaque_to_go',
     ];
 
     protected $casts = [
@@ -33,6 +34,9 @@ class Item extends Model
         'activo' => 'boolean',
         'factor_conversion' => 'decimal:6',
         'factor_compra' => 'decimal:6',
+        'es_producible' => 'boolean',
+        'es_consumible_operativo' => 'boolean',
+        'es_empaque_to_go' => 'boolean',
     ];
 
     public function uom()

@@ -18,7 +18,7 @@ class Batch extends Model
     protected $fillable = [
         'item_id', 'lote_proveedor', 'fecha_recepcion', 'fecha_caducidad',
         'temperatura_recepcion', 'documento_url', 'cantidad_original',
-        'cantidad_actual', 'estado', 'ubicacion_id',
+        'cantidad_actual', 'unit_cost', 'estado', 'ubicacion_id',
     ];
 
     protected $casts = [
@@ -27,6 +27,7 @@ class Batch extends Model
         'temperatura_recepcion' => 'decimal:2',
         'cantidad_original' => 'decimal:3',
         'cantidad_actual' => 'decimal:3',
+        'unit_cost' => 'decimal:2',
     ];
 
     public function item()
