@@ -9,10 +9,10 @@ Este documento centraliza la documentación del Design System de Terrena POS. Se
 ## Contenido
 1. [Auditoría UI](./01_AUDITORIA_UI.md) - Problemas identificados en la interfaz actual.
 2. [Colores y Variables](./02_COLORES_Y_VARIABLES.md) - Paleta y tokens CSS.
-3. [Componentes](./03_COMPONENTES.md) - Guía de componentes Blade. *(pendiente)*
-4. [Utilidades](./04_UTILIDADES.md) - Clases CSS utilitarias. *(pendiente)*
-5. [Migraciones](./05_MIGRACIONES.md) - Log de vistas migradas. *(pendiente)*
-6. [Ejemplos](./06_EJEMPLOS.md) - Patrones comunes de UI. *(pendiente)*
+3. [Componentes](./03_COMPONENTES.md) - Guía de componentes Blade.
+4. [Utilidades](./04_UTILIDADES.md) - Clases CSS utilitarias.
+5. [Migraciones](./05_MIGRACIONES.md) - Log de vistas migradas.
+6. [Ejemplos](./06_EJEMPLOS.md) - Patrones comunes de UI.
 
 ## Instalación rápida
 Los assets se integrarán en `layouts/terrena.blade.php` usando:
@@ -27,6 +27,6 @@ Los assets se integrarán en `layouts/terrena.blade.php` usando:
 - Tokens de color y espaciado para mantener jerarquía tipográfica y de layout.
 
 ## Próximos pasos
-- Completar auditoría UI y documentar hallazgos.
-- Definir paleta y variables en `design-system.css`.
-- Construir componentes base y migrar vistas prioritarias.
+- Validar vistas migradas en ambiente local (dashboard, inventario).
+- Extender migraciones a transferencias y reportes.
+- Documentar patrones adicionales en ejemplos según nuevas pantallas.

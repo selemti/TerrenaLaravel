@@ -188,6 +188,7 @@ Botón estilizado con variantes sólidas, outline y ghost, compatible con iconos
 | `icon` | string | null | Clase FontAwesome sólida opcional |
 | `iconPosition` | string | 'left' | `left` o `right` |
 | `block` | bool | false | True para ancho completo (`w-100`) |
+| `as` | string | 'button' | `button` (default) o `a` para usar como enlace |
 
 ### Ejemplos de Uso
 
