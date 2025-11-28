@@ -8,8 +8,11 @@
     use Carbon\Carbon;
 
     $branchFilter = $branchFilter ?? [];
+    $terminalFilter = $terminalFilter ?? [];
     $branchColors = $branchColors ?? [];
     $branchLabels = $branchLabels ?? [];
+    $view = $view ?? 'legacy';
+    $groupByDay = $groupByDay ?? false;
 @endphp
 
 @section('content')
@@ -63,8 +66,15 @@
             <form method="GET" action="{{ route('reports.sales.mods.export.pdf') }}" class="d-inline">
                 <input type="hidden" name="start_date" value="{{ $startDate->format('Y-m-d') }}">
                 <input type="hidden" name="end_date" value="{{ $endDate->format('Y-m-d') }}">
+                <input type="hidden" name="view" value="{{ $view }}">
+                @if($groupByDay)
+                    <input type="hidden" name="group_by_day" value="1">
+                @endif
                 @foreach($branchFilter as $value)
                     <input type="hidden" name="branch[]" value="{{ $value }}">
+                @endforeach
+                @foreach($terminalFilter as $value)
+                    <input type="hidden" name="terminal[]" value="{{ $value }}">
                 @endforeach
                 <button type="submit" class="btn btn-outline-danger">
                     <i class="fa-solid fa-file-pdf me-1"></i> PDF
@@ -73,8 +83,15 @@
             <form method="GET" action="{{ route('reports.sales.mods.export.xlsx') }}" class="d-inline">
                 <input type="hidden" name="start_date" value="{{ $startDate->format('Y-m-d') }}">
                 <input type="hidden" name="end_date" value="{{ $endDate->format('Y-m-d') }}">
+                <input type="hidden" name="view" value="{{ $view }}">
+                @if($groupByDay)
+                    <input type="hidden" name="group_by_day" value="1">
+                @endif
                 @foreach($branchFilter as $value)
                     <input type="hidden" name="branch[]" value="{{ $value }}">
+                @endforeach
+                @foreach($terminalFilter as $value)
+                    <input type="hidden" name="terminal[]" value="{{ $value }}">
                 @endforeach
                 <button type="submit" class="btn btn-success">
                     <i class="fa-solid fa-file-excel me-1"></i> Excel
@@ -86,7 +103,7 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <form method="GET" action="{{ route('reports.sales.mods') }}" class="row g-3 align-items-end">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label fw-semibold">Desde</label>
                     <input type="date"
                            name="start_date"
@@ -95,7 +112,7 @@
                            value="{{ request('start_date', $startDate->format('Y-m-d')) }}"
                            required>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label fw-semibold">Hasta</label>
                     <input type="date"
                            name="end_date"
@@ -105,15 +122,48 @@
                            required>
                 </div>
                 <div class="col-md-3">
+                    <label class="form-label fw-semibold">Vista</label>
+                    <select name="view" class="form-select">
+                        <option value="legacy" {{ $view === 'legacy' ? 'selected' : '' }}>Legacy (función original)</option>
+                        <option value="summary_item_mods" {{ $view === 'summary_item_mods' ? 'selected' : '' }}>Resumen Ítems + Mods</option>
+                        <option value="summary_items" {{ $view === 'summary_items' ? 'selected' : '' }}>Resumen por Ítem</option>
+                        <option value="detail" {{ $view === 'detail' ? 'selected' : '' }}>Detalle por Ticket</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <label class="form-label fw-semibold">Sucursales</label>
                     <x-ui.compact-multi-select
                         name="branch[]"
                         :options="$branchOptions"
-                        placeholder="Selecciona sucursales"
+                        placeholder="Todas"
                         search-placeholder="Buscar sucursal"
                         clear-label="Limpiar"
                         done-label="Hecho"
                         empty-message="Sin sucursales disponibles." />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Terminales</label>
+                    <x-ui.compact-multi-select
+                        name="terminal[]"
+                        :options="$terminalOptions"
+                        placeholder="Todas"
+                        search-placeholder="Buscar terminal"
+                        clear-label="Limpiar"
+                        done-label="Hecho"
+                        empty-message="Sin terminales disponibles." />
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <div class="form-check">
+                        <input type="checkbox"
+                               class="form-check-input"
+                               id="group_by_day"
+                               name="group_by_day"
+                               value="1"
+                               {{ $groupByDay ? 'checked' : '' }}>
+                        <label class="form-check-label small" for="group_by_day">
+                            Por día
+                        </label>
+                    </div>
                 </div>
                 <div class="col-12 d-flex flex-wrap gap-2 justify-content-end pt-2">
                     <button type="submit" class="btn btn-primary">
@@ -148,118 +198,48 @@
             <div class="d-flex align-items-center">
                 <i class="fa-solid fa-circle-info fa-2x me-3 text-info"></i>
                 <div>
-                    <h5 class="alert-heading mb-1">Sin combinaciones registradas</h5>
-                    <p class="mb-0">No se detectaron modificadores para el rango seleccionado.</p>
+                    <h5 class="alert-heading mb-1">Sin datos disponibles</h5>
+                    <p class="mb-0">No se encontraron registros para el rango y filtros seleccionados.</p>
                 </div>
             </div>
         </div>
     @else
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <p class="text-muted mb-1 small">Ítems únicos</p>
-                        <h3 class="fw-bold mb-0">{{ $summary['total_items'] }}</h3>
-                        <span class="text-muted small">Productos con modificadores</span>
-                        <div class="text-muted small mt-2">{{ $dayCount === 1 ? '1 día analizado' : $dayCount . ' días en rango' }}</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <p class="text-muted mb-1 small">Modificadores únicos</p>
-                        <h3 class="fw-bold mb-0">{{ $summary['total_modifiers'] }}</h3>
-                        <span class="text-muted small">Extras aplicados</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <p class="text-muted mb-1 small">Monto adicional</p>
-                        <h3 class="fw-bold mb-0">${{ number_format($summary['total_amount'], 2) }}</h3>
-                        <span class="text-muted small">Ingreso extra obtenido</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <p class="text-muted mb-1 small">Promedio por selección</p>
-                        <h3 class="fw-bold mb-0">${{ number_format($summary['avg_amount_per_selection'], 2) }}</h3>
-                        <span class="text-muted small">{{ number_format($summary['total_selections']) }} selecciones</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {{-- KPIs según la vista --}}
+        @if($view === 'summary_items')
+            @include('reports.sales.partials.mods-kpis-items')
+        @elseif($view === 'detail')
+            @include('reports.sales.partials.mods-kpis-detail')
+        @else
+            @include('reports.sales.partials.mods-kpis-modifiers')
+        @endif
 
-        <div class="row g-3 mb-4">
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0 fw-semibold">
-                            <i class="fa-solid fa-star text-warning me-2"></i>
-                            Top modificadores por monto
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <ol class="list-group list-group-numbered list-group-flush">
-                            @forelse($summary['top_modifiers'] as $modifier)
-                                <li class="list-group-item d-flex justify-content-between align-items-start">
-                                    <div class="me-auto">
-                                        <div class="fw-semibold">{{ $modifier['modifier'] }}</div>
-                                        <span class="text-muted small">{{ number_format($modifier['times_selected']) }} selecciones</span>
-                                    </div>
-                                    <span class="badge bg-primary-subtle text-primary">
-                                        ${{ number_format($modifier['amount'], 2) }}
-                                    </span>
-                                </li>
-                            @empty
-                                <li class="list-group-item text-muted">Sin información relevante</li>
-                            @endforelse
-                        </ol>
-                    </div>
-                </div>
+        {{-- Tabla según la vista --}}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="fa-solid fa-table me-2 text-secondary"></i>
+                    @if($view === 'summary_items')
+                        Resumen por Ítem
+                    @elseif($view === 'summary_item_mods')
+                        Resumen Ítems + Modificadores
+                    @elseif($view === 'detail')
+                        Detalle por Ticket
+                    @else
+                        Detalle por ítem y modificador (Legacy)
+                    @endif
+                </h5>
             </div>
-            <div class="col-lg-8">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0 fw-semibold">
-                            <i class="fa-solid fa-table me-2 text-secondary"></i>
-                            Detalle por ítem y modificador
-                        </h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Fecha</th>
-                                        <th>Ítem</th>
-                                        <th>Modificador</th>
-                                        <th class="text-end">Cantidad ítem</th>
-                                        <th class="text-end">Selecciones</th>
-                                        <th class="text-end">Monto extra</th>
-                                        <th>Sucursal</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($rows as $row)
-                                        <tr>
-                                            <td>{{ isset($row->report_date) ? Carbon::parse($row->report_date)->format('d/m/Y') : $startDate->format('d/m/Y') }}</td>
-                                            <td class="fw-semibold">{{ $row->item_name ?? '—' }}</td>
-                                            <td>{{ $row->modifier_name ?? '—' }}</td>
-                                            <td class="text-end">{{ number_format((float) ($row->qty_item ?? 0), 2) }}</td>
-                                            <td class="text-end">{{ number_format((int) ($row->mods_count ?? 0)) }}</td>
-                                            <td class="text-end">${{ number_format((float) ($row->mods_total_amount ?? 0), 2) }}</td>
-                                            <td>{{ $row->branch_key ?? '—' }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    @if($view === 'summary_items')
+                        @include('reports.sales.partials.mods-table-items')
+                    @elseif($view === 'summary_item_mods')
+                        @include('reports.sales.partials.mods-table-item-mods')
+                    @elseif($view === 'detail')
+                        @include('reports.sales.partials.mods-table-detail')
+                    @else
+                        @include('reports.sales.partials.mods-table-legacy')
+                    @endif
                 </div>
             </div>
         </div>

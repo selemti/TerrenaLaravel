@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Reports;
 
 use App\Exports\Reports\SalesModsExport;
+use App\Services\Reports\ItemModsReportService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,12 +16,26 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class SalesModsController extends BaseReportController
 {
+    public function __construct(
+        protected ItemModsReportService $service
+    ) {
+        parent::__construct();
+    }
+
     public function index(Request $request): JsonResponse
     {
-        [$start, $end, $branches] = $this->resolveFilters($request);
+        [$start, $end, $filters] = $this->resolveFilters($request);
 
-        $dataset = $this->applyBranchFilter($this->fetchData($start, $end), $branches);
-        $summary = $this->summarize($dataset);
+        // Usar nuevo servicio si se especifica una vista, caso contrario usar legacy
+        if (isset($filters['view']) && $filters['view'] !== 'legacy') {
+            $dataset = $this->service->fetch($start, $end, $filters);
+            $summary = $this->service->summarize($dataset, $filters['view']);
+        } else {
+            // Mantener comportamiento legacy
+            $branches = $filters['branch_ids'] ?? [];
+            $dataset = $this->applyBranchFilter($this->fetchData($start, $end), $branches);
+            $summary = $this->summarize($dataset);
+        }
 
         return response()->json([
             'success' => true,
@@ -28,10 +43,8 @@ class SalesModsController extends BaseReportController
                 'start' => $start->format('Y-m-d'),
                 'end' => $end->format('Y-m-d'),
             ],
-            'branch' => $this->stringifyFilter($branches),
-            'filters' => [
-                'branches' => $branches,
-            ],
+            'branch' => $this->stringifyFilter($filters['branch_ids'] ?? []),
+            'filters' => $filters,
             'summary' => $summary,
             'data' => $dataset->values(),
             'generated_at' => now('America/Mexico_City')->toIso8601String(),
@@ -40,30 +53,51 @@ class SalesModsController extends BaseReportController
 
     public function show(Request $request): View
     {
-        [$start, $end, $branches] = $this->resolveFilters($request);
+        [$start, $end, $filters] = $this->resolveFilters($request);
 
-        $dataset = $this->fetchData($start, $end);
-        $branchCandidates = $this->extractBranches($dataset);
-        $filtered = $this->applyBranchFilter($dataset, $branches);
-        $summary = $this->summarize($filtered);
+        $view = $filters['view'] ?? 'legacy';
+        $groupByDay = $filters['group_by_day'] ?? false;
+        $branches = $filters['branch_ids'] ?? [];
+        $terminals = $filters['terminal_ids'] ?? [];
+
+        // Usar nuevo servicio si se especifica una vista, caso contrario usar legacy
+        if ($view !== 'legacy') {
+            $dataset = $this->service->fetch($start, $end, $filters);
+            $summary = $this->service->summarize($dataset, $view);
+            $branchCandidates = $this->extractBranchesFromNewData($dataset);
+        } else {
+            // Mantener comportamiento legacy (función actual)
+            $dataset = $this->fetchData($start, $end);
+            $branchCandidates = $this->extractBranches($dataset);
+            $filtered = $this->applyBranchFilter($dataset, $branches);
+            $summary = $this->summarize($filtered);
+            $dataset = $filtered;
+        }
 
         $observedBranches = $branchCandidates
             ->pluck('key')
-            ->merge($filtered->map(fn ($row) => $row->branch_key ?? $row->branch ?? $row->sucursal ?? null))
+            ->merge($dataset->map(fn ($row) => $row->branch_key ?? $row->branch ?? $row->sucursal ?? null))
             ->filter()
             ->all();
 
         [$branchColors, $branchOptions, $branchLabels] = $this->buildBranchContext($observedBranches, $branches);
 
+        // Obtener terminales disponibles para el selector
+        $terminalOptions = $this->getTerminalOptions();
+
         return view('reports.sales.mods', [
             'active' => 'reportes',
+            'view' => $view,
+            'groupByDay' => $groupByDay,
             'startDate' => $start,
             'endDate' => $end,
             'branchFilter' => $branches,
+            'terminalFilter' => $terminals,
             'branchOptions' => $branchOptions,
+            'terminalOptions' => $terminalOptions,
             'branchColors' => $branchColors,
             'branchLabels' => $branchLabels,
-            'rows' => $filtered,
+            'rows' => $dataset,
             'summary' => $summary,
             'generatedAt' => now('America/Mexico_City'),
         ]);
@@ -71,12 +105,20 @@ class SalesModsController extends BaseReportController
 
     public function exportExcel(Request $request): BinaryFileResponse
     {
-        [$start, $end, $branches] = $this->resolveFilters($request);
+        [$start, $end, $filters] = $this->resolveFilters($request);
 
-        $dataset = $this->applyBranchFilter($this->fetchData($start, $end), $branches);
-        $summary = $this->summarize($dataset);
+        $view = $filters['view'] ?? 'legacy';
+        $branches = $filters['branch_ids'] ?? [];
 
-        $export = new SalesModsExport($start, $end, $dataset, $summary, $this->stringifyFilter($branches));
+        if ($view !== 'legacy') {
+            $dataset = $this->service->fetch($start, $end, $filters);
+            $summary = $this->service->summarize($dataset, $view);
+        } else {
+            $dataset = $this->applyBranchFilter($this->fetchData($start, $end), $branches);
+            $summary = $this->summarize($dataset);
+        }
+
+        $export = new SalesModsExport($start, $end, $dataset, $summary, $view, $this->stringifyFilter($branches));
         $filename = sprintf(
             'reporte_items_mods_%s_%s%s.xlsx',
             $start->format('Ymd'),
@@ -91,10 +133,18 @@ class SalesModsController extends BaseReportController
 
     public function exportPdf(Request $request): Response
     {
-        [$start, $end, $branches] = $this->resolveFilters($request);
+        [$start, $end, $filters] = $this->resolveFilters($request);
 
-        $dataset = $this->applyBranchFilter($this->fetchData($start, $end), $branches);
-        $summary = $this->summarize($dataset);
+        $view = $filters['view'] ?? 'legacy';
+        $branches = $filters['branch_ids'] ?? [];
+
+        if ($view !== 'legacy') {
+            $dataset = $this->service->fetch($start, $end, $filters);
+            $summary = $this->service->summarize($dataset, $view);
+        } else {
+            $dataset = $this->applyBranchFilter($this->fetchData($start, $end), $branches);
+            $summary = $this->summarize($dataset);
+        }
 
         $filename = sprintf(
             'reporte_items_mods_%s_%s%s.pdf',
@@ -108,6 +158,7 @@ class SalesModsController extends BaseReportController
         return $this->renderPdf('reports.exports.sales.mods', [
             'startDate' => $start,
             'endDate' => $end,
+            'view' => $view,
             'branch' => $this->stringifyFilter($branches),
             'rows' => $dataset,
             'summary' => $summary,
@@ -118,9 +169,15 @@ class SalesModsController extends BaseReportController
     protected function resolveFilters(Request $request): array
     {
         [$start, $end] = $this->parseDateRange($request);
-        $branches = $this->normalizeFilterList($request->input('branch'), uppercase: true);
 
-        return [$start, $end, $branches];
+        $filters = [
+            'view' => $request->input('view', 'legacy'),
+            'group_by_day' => (bool) $request->input('group_by_day', false),
+            'branch_ids' => $this->normalizeFilterList($request->input('branch'), uppercase: true),
+            'terminal_ids' => $this->normalizeFilterList($request->input('terminal')),
+        ];
+
+        return [$start, $end, $filters];
     }
 
     protected function fetchData(Carbon $start, Carbon $end): Collection
@@ -219,5 +276,52 @@ class SalesModsController extends BaseReportController
             ->unique('key')
             ->sortBy('label')
             ->values();
+    }
+
+    /**
+     * Extrae sucursales de los datos del nuevo servicio
+     */
+    protected function extractBranchesFromNewData(Collection $rows): Collection
+    {
+        return $rows
+            ->map(function (object $row) {
+                $key = $row->sucursal ?? $row->branch_key ?? $row->branch ?? null;
+                $label = $key;
+
+                if ($key === null) {
+                    return null;
+                }
+
+                return [
+                    'key' => strtoupper((string) $key),
+                    'label' => $label !== null ? (string) $label : strtoupper((string) $key),
+                ];
+            })
+            ->filter()
+            ->unique('key')
+            ->sortBy('label')
+            ->values();
+    }
+
+    /**
+     * Obtiene opciones de terminales para el selector
+     */
+    protected function getTerminalOptions(): array
+    {
+        try {
+            $terminals = DB::connection('pgsql')
+                ->table('public.terminal')
+                ->select('id', 'name')
+                ->where('enabled', true)
+                ->orderBy('id')
+                ->get();
+
+            return $terminals->map(fn($t) => [
+                'key' => (string) $t->id,
+                'label' => $t->name ?? "Terminal {$t->id}",
+            ])->toArray();
+        } catch (\Exception $e) {
+            return [];
+        }
     }
 }
