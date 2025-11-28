@@ -4,6 +4,7 @@
     'icon' => null,
     'iconPosition' => 'left', // left, right
     'block' => false,
+    'as' => 'button', // button, a
 ])
 
 @php
@@ -20,14 +21,24 @@ if ($block) {
 }
 @endphp
 
-<button {{ $attributes->merge(['class' => $classes, 'type' => 'button']) }}>
-    @if($icon && $iconPosition === 'left')
-        <i class="fa-solid {{ $icon }} me-2"></i>
-    @endif
-
-    {{ $slot }}
-
-    @if($icon && $iconPosition === 'right')
-        <i class="fa-solid {{ $icon }} ms-2"></i>
-    @endif
-</button>
+@if($as === 'a')
+    <a {{ $attributes->merge(['class' => $classes]) }}>
+        @if($icon && $iconPosition === 'left')
+            <i class="fa-solid {{ $icon }} me-2"></i>
+        @endif
+        {{ $slot }}
+        @if($icon && $iconPosition === 'right')
+            <i class="fa-solid {{ $icon }} ms-2"></i>
+        @endif
+    </a>
+@else
+    <button {{ $attributes->merge(['class' => $classes, 'type' => 'button']) }}>
+        @if($icon && $iconPosition === 'left')
+            <i class="fa-solid {{ $icon }} me-2"></i>
+        @endif
+        {{ $slot }}
+        @if($icon && $iconPosition === 'right')
+            <i class="fa-solid {{ $icon }} ms-2"></i>
+        @endif
+    </button>
+@endif

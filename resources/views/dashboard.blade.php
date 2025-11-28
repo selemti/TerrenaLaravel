@@ -26,33 +26,46 @@
 
   {{-- KPIs (5 columnas en desktop) --}}
   <div class="kpi-grid mb-3">
-    <div class="card-kpi">
-      <h5 class="card-title"><i class="fa-solid fa-sack-dollar"></i> Ventas de hoy</h5>
-      <div class="kpi-value" id="kpi-sales-today">—</div>
-      <div class="text-muted small">Total vendido en el rango seleccionado</div>
-    </div>
-    <div class="card-kpi">
-      <h5 class="card-title"><i class="fa-solid fa-star"></i> Producto estrella</h5>
-      <div class="kpi-value" id="kpi-star-product">—</div>
-      <div class="text-muted small">Ventas: <strong id="kpi-star-sales">—</strong></div>
-    </div>
-    <div class="card-kpi">
-      <h5 class="card-title"><i class="fa-solid fa-tags"></i> Productos vendidos</h5>
-      <div class="kpi-value" id="kpi-items-sold">0</div>
-      <div class="text-muted small">Items vendidos en el rango</div>
-    </div>
-    <div class="card-kpi">
-      <h5 class="card-title"><i class="fa-solid fa-receipt"></i> Ticket promedio</h5>
-      <div class="kpi-value" id="kpi-avg-ticket">—</div>
-      <div class="text-muted small">Promedio por ticket emitido</div>
-    </div>
-    <div class="card-kpi">
-      <h5 class="card-title"><i class="fa-solid fa-bell"></i> Alertas</h5>
-      <div class="kpi-value" id="kpi-alerts">0</div>
-      <div class="text-muted small">
-        <a class="link-more" href="{{ url('/reportes') }}">Ver todas <i class="fa-solid fa-chevron-right"></i></a>
-      </div>
-    </div>
+    <x-kpi-card
+      icon="fa-sack-dollar"
+      label="Ventas de hoy"
+      value="—"
+      helper="Total vendido en el rango seleccionado"
+      variant="primary"
+      id="kpi-sales-today"
+    />
+    <x-kpi-card
+      icon="fa-star"
+      label="Producto estrella"
+      value="—"
+      helper="Ventas: —"
+      variant="secondary"
+      id="kpi-star-product"
+    />
+    <x-kpi-card
+      icon="fa-tags"
+      label="Productos vendidos"
+      value="0"
+      helper="Items vendidos en el rango"
+      variant="success"
+      id="kpi-items-sold"
+    />
+    <x-kpi-card
+      icon="fa-receipt"
+      label="Ticket promedio"
+      value="—"
+      helper="Promedio por ticket emitido"
+      variant="info"
+      id="kpi-avg-ticket"
+    />
+    <x-kpi-card
+      icon="fa-bell"
+      label="Alertas"
+      value="0"
+      helper="Ver todas"
+      variant="warning"
+      id="kpi-alerts"
+    />
   </div>
 
   <div class="row g-3">

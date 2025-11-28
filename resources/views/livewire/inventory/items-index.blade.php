@@ -3,8 +3,8 @@
 
 <div x-data>
     {{-- Filtros --}}
-    <div class="card mb-3">
-        <div class="card-body row g-2 align-items-end">
+    <x-card variant="bordered" class="mb-3">
+        <div class="row g-2 align-items-end">
             <div class="col-md-4">
                 <label class="form-label">Buscar producto / SKU</label>
                 <input type="text" class="form-control" placeholder="Ej. 'Leche 1.5L' o 'SKU-0001'" wire:model.live.debounce.400ms="q">
@@ -35,37 +35,64 @@
                 </select>
             </div>
             <div class="col-md-2 text-end">
-                <button class="btn btn-outline-secondary" wire:click="$refresh">Filtrar</button>
+                <x-button variant="outline" size="sm" icon="fa-rotate-right" wire:click="$refresh">
+                    Filtrar
+                </x-button>
             </div>
         </div>
-    </div>
+    </x-card>
 
     {{-- KPIs --}}
     <div class="row g-3 mb-3">
         <div class="col-md-3">
-            <div class="p-3 border rounded">Ítems distintos<br><span class="fs-4 fw-bold">{{ $itemsDistintos }}</span></div>
+            <x-kpi-card
+                icon="fa-boxes-stacked"
+                label="Ítems distintos"
+                :value="$itemsDistintos"
+                helper="Catálogo"
+                variant="primary"
+            />
         </div>
         <div class="col-md-3">
-            <div class="p-3 border rounded">Valor inventario<br>
-                <span class="fs-4 fw-bold">${{ number_format($valorInventario,2) }}</span></div>
+            <x-kpi-card
+                icon="fa-dollar-sign"
+                label="Valor inventario"
+                :value="'$' . number_format($valorInventario,2)"
+                helper="Total valorizado"
+                variant="success"
+            />
         </div>
         <div class="col-md-3">
-            <div class="p-3 border rounded">Bajo stock<br><span class="fs-4 fw-bold">{{ $bajoStock }}</span></div>
+            <x-kpi-card
+                icon="fa-triangle-exclamation"
+                label="Bajo stock"
+                :value="$bajoStock"
+                helper="Reponer pronto"
+                variant="warning"
+            />
         </div>
         <div class="col-md-3">
-            <div class="p-3 border rounded">Con caducidad &lt; 15 días<br><span class="fs-4 fw-bold">{{ $porVencer }}</span></div>
+            <x-kpi-card
+                icon="fa-hourglass-half"
+                label="Caducan &lt; 15 días"
+                :value="$porVencer"
+                helper="Vigilar lotes"
+                variant="danger"
+            />
         </div>
     </div>
 
     {{-- Tabla --}}
-    <div class="card">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-            <h6 class="mb-0">Catálogo de Items</h6>
-            <a href="{{ route('inventory.items.new') }}" class="btn btn-sm btn-primary">
-                <i class="fa-solid fa-plus me-1"></i> Nuevo Item
-            </a>
-        </div>
-        <div class="card-body table-responsive">
+    <x-card padding="none">
+        <x-slot name="header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Catálogo de Items</h6>
+                <x-button variant="primary" size="sm" icon="fa-plus" as="a" href="{{ route('inventory.items.new') }}">
+                    Nuevo Item
+                </x-button>
+            </div>
+        </x-slot>
+        <div class="table-responsive p-3">
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                 <tr>
@@ -89,24 +116,24 @@
                                 <small class="text-muted fst-italic d-block">{{ Str::limit($r->descripcion, 60) }}</small>
                             @endif
                             @if($r->perishable)
-                                <span class="badge bg-warning text-dark">Perecedero</span>
+                                <x-badge type="warning" pill icon="fa-lemon">Perecedero</x-badge>
                             @endif
                             @if($r->activo)
-                                <span class="badge bg-success">Activo</span>
+                                <x-badge type="success" pill>Activo</x-badge>
                             @else
-                                <span class="badge bg-secondary">Inactivo</span>
+                                <x-badge type="neutral" pill>Inactivo</x-badge>
                             @endif
                         </td>
                         <td>
                             @if($r->categoria_nombre)
-                                <span class="badge bg-info">{{ $r->categoria_nombre }}</span>
+                                <x-badge type="info">{{ $r->categoria_nombre }}</x-badge>
                             @else
                                 <span class="text-muted">{{ $r->categoria_id ?: '—' }}</span>
                             @endif
                         </td>
                         <td>
                             @if($r->udm_base)
-                                <span class="badge bg-primary">{{ $r->udm_base }}</span>
+                                <x-badge type="primary">{{ $r->udm_base }}</x-badge>
                                 @if($r->udm_base_nombre)
                                     <small class="text-muted d-block">{{ $r->udm_base_nombre }}</small>
                                 @endif
@@ -116,10 +143,10 @@
                         </td>
                         <td>
                             @if($r->tipo)
-                                <span class="badge" style="background-color:
-                                    {{ $r->tipo === 'MATERIA_PRIMA' ? '#6c757d' : ($r->tipo === 'ELABORADO' ? '#0d6efd' : '#198754') }}">
-                                    {{ $r->tipo }}
-                                </span>
+                                @php
+                                    $tipoColor = $r->tipo === 'MATERIA_PRIMA' ? 'secondary' : ($r->tipo === 'ELABORADO' ? 'info' : 'success');
+                                @endphp
+                                <x-badge :type="$tipoColor" pill>{{ $r->tipo }}</x-badge>
                             @else
                                 <span class="text-muted">—</span>
                             @endif
@@ -137,9 +164,9 @@
                         </td>
                         <td>
                             @if($r->activo)
-                                <span class="badge bg-success">Activo</span>
+                                <x-badge type="success" pill icon="fa-circle-check">Activo</x-badge>
                             @else
-                                <span class="badge bg-secondary">Inactivo</span>
+                                <x-badge type="neutral" pill>Inactivo</x-badge>
                             @endif
                         </td>
                         <td class="text-end">
@@ -176,7 +203,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </x-card>
 
     {{-- Modal Kardex --}}
     <div class="modal fade @if($showKardex) show d-block @endif" tabindex="-1" style="@if(!$showKardex)display:none;@endif" x-data @keydown.escape.window="$wire.showKardex=false">

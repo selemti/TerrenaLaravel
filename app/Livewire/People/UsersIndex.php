@@ -88,11 +88,9 @@ class UsersIndex extends Component
     protected $paginationTheme = 'bootstrap';
 
     protected array $rules = [
-        'userForm.nombre_completo' => ['required', 'string', 'max:255'],
+        'userForm.name' => ['required', 'string', 'max:255'],
         'userForm.email' => ['required', 'email', 'max:255'],
-        'userForm.username' => ['nullable', 'string', 'max:60'],
         'userForm.password' => ['nullable', 'string', 'min:8', 'confirmed'],
-        'userForm.activo' => ['boolean'],
     ];
 
     public function mount(): void
@@ -107,14 +105,14 @@ class UsersIndex extends Component
     protected function loadUsersList(): void
     {
         $this->usersListData = User::query()
-            ->select('id', 'username', 'nombre_completo', 'email')
+            ->select('id', 'name', 'email')
             ->with(['roles:id,name'])
-            ->orderByRaw("LOWER(COALESCE(nombre_completo, ''))")
+            ->orderByRaw("LOWER(COALESCE(name, ''))")
             ->get()
             ->map(fn ($user) => [
                 'id' => $user->id,
-                'username' => $user->username ?? '-',
-                'name' => $user->nombre_completo ?? '-',
+                'username' => $user->name ?? '-', // Fallback para mostrar en UI
+                'name' => $user->name ?? '-',
                 'email' => $user->email,
                 'roles' => $user->roles->pluck('name')->toArray(),
             ])
@@ -325,12 +323,10 @@ class UsersIndex extends Component
         $user = User::query()->findOrFail($userId);
 
         $this->userForm = [
-            'username' => $user->username,
-            'nombre_completo' => $user->nombre_completo,
+            'name' => $user->name,
             'email' => $user->email,
             'password' => '',
             'password_confirmation' => '',
-            'activo' => (bool) $user->activo,
         ];
 
         $this->editingUser = true;
@@ -355,20 +351,15 @@ class UsersIndex extends Component
         $this->validate($this->rulesWithUniqueness());
 
         $payload = $this->userForm;
-        $payload['nombre_completo'] = trim((string) $payload['nombre_completo']);
+        $payload['name'] = trim((string) $payload['name']);
         $payload['email'] = strtolower(trim((string) $payload['email']));
-        $payload['username'] = $payload['username'] !== null
-            ? Str::lower(Str::of($payload['username'])->trim()->value())
-            : null;
 
         $targetUserId = null;
 
         if ($this->editingUser && $this->editingUserId) {
             $user = User::query()->findOrFail($this->editingUserId);
-            $user->nombre_completo = $payload['nombre_completo'];
+            $user->name = $payload['name'];
             $user->email = $payload['email'];
-            $user->username = $payload['username'] ?: null;
-            $user->activo = (bool) $payload['activo'];
 
             if ($payload['password']) {
                 $user->password_hash = Hash::make($payload['password']);
@@ -382,11 +373,9 @@ class UsersIndex extends Component
             $targetUserId = $user->getKey();
         } else {
             $data = [
-                'nombre_completo' => $payload['nombre_completo'],
+                'name' => $payload['name'],
                 'email' => $payload['email'],
-                'username' => $payload['username'] ?: null,
                 'password_hash' => Hash::make($payload['password']),
-                'activo' => (bool) $payload['activo'],
                 'intentos_login' => 0,
             ];
 
@@ -468,36 +457,8 @@ class UsersIndex extends Component
      */
     public function toggleActive(int $userId): void
     {
-        $this->authorize('people.users.manage');
-
-        $user = User::query()->findOrFail($userId);
-        $user->activo = ! $user->activo;
-        $user->save();
-
-        session()->flash('user-notice', 'Estatus actualizado.');
-        $this->loadUsersList();
-
-        // Auditoría obligatoria de cambios de acceso (política interna SPRINT 2.5)
-        try {
-            $adminId = (int) auth()->id();
-
-            if ($adminId > 0) {
-                app(\App\Services\Audit\AuditLogService::class)->logAction(
-                    userId: $adminId,
-                    accion: $user->activo ? 'USER_ENABLE' : 'USER_DISABLE', // estado FINAL después del cambio
-                    entidad: 'user',
-                    entidadId: (int) $user->getKey(), // usuario afectado
-                    motivo: 'Cambio de estado de cuenta desde panel de administración',
-                    evidenciaUrl: null,
-                    payload: [
-                        'target_user_id' => (int) $user->getKey(),
-                        'new_status' => $user->activo ? 'ENABLED' : 'DISABLED',
-                    ],
-                );
-            }
-        } catch (\Throwable $e) {
-            // No romper la UI si falla la bitácora.
-        }
+        // En la BD actual no existe columna 'activo'. Deshabilitamos toggle para evitar errores.
+        session()->flash('user-notice', 'El estatus de usuario no es editable en esta instancia.');
     }
 
     public function openRoleEditor(int $roleId): void
@@ -554,16 +515,17 @@ class UsersIndex extends Component
 
     public function getUserRecordsProperty()
     {
+        $displayNameExpr = "COALESCE(name, email, '')";
+
         $query = User::query()
             ->with('roles')
-            ->orderBy('nombre_completo');
+            ->orderByRaw("LOWER({$displayNameExpr})");
 
         if ($this->userSearch !== '') {
             $search = Str::lower($this->userSearch);
             $query->where(function ($builder) use ($search) {
                 $builder
-                    ->whereRaw('LOWER(nombre_completo) LIKE ?', ['%'.$search.'%'])
-                    ->orWhereRaw('LOWER(username) LIKE ?', ['%'.$search.'%'])
+                    ->whereRaw("LOWER(COALESCE(name, email, '')) LIKE ?", ['%'.$search.'%'])
                     ->orWhereRaw('LOWER(email) LIKE ?', ['%'.$search.'%']);
             });
         }
@@ -597,7 +559,11 @@ class UsersIndex extends Component
 
     public function getAllUsersForRolesProperty(): Collection
     {
-        return User::query()->orderBy('nombre_completo')->get(['id', 'nombre_completo', 'email']);
+        $displayNameExpr = "COALESCE(name, email, '')";
+
+        return User::query()
+            ->orderByRaw("LOWER({$displayNameExpr})")
+            ->get(['id', 'name', 'email']);
     }
 
     public function getPermissionsMapProperty(): array
@@ -629,12 +595,10 @@ class UsersIndex extends Component
     protected function defaultUserForm(): array
     {
         return [
-            'username' => '',
-            'nombre_completo' => '',
+            'name' => '',
             'email' => '',
             'password' => '',
             'password_confirmation' => '',
-            'activo' => true,
         ];
     }
 
@@ -663,8 +627,8 @@ class UsersIndex extends Component
         $this->editRoles = $this->selectedUserRoles;
 
         $this->selectedUserSummary = [
-            'name' => $user->nombre_completo ?? '—',
-            'username' => $user->username ?? '—',
+            'name' => $user->name ?? '—',
+            'username' => $user->name ?? '—',
             'email' => $user->email ?? '—',
             'roles' => $user->roles->map(function (Role $role) {
                 return [

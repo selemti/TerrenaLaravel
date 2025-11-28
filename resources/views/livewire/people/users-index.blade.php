@@ -29,191 +29,185 @@
     </div>
 
     @if (session()->has('user-notice'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <x-alert type="success" dismissible>
             <i class="fa-solid fa-circle-check me-1"></i>{{ session('user-notice') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-        </div>
+        </x-alert>
     @endif
 
     @if (session()->has('role-notice'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <x-alert type="success" dismissible>
             <i class="fa-solid fa-circle-check me-1"></i>{{ session('role-notice') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-        </div>
+        </x-alert>
     @endif
 
     <div class="tab-content">
         <!-- Tab de Usuarios -->
         <div class="tab-pane fade @if($activeTab === 'users') show active @endif" id="tab-users">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
-                <div class="input-group input-group-sm" style="max-width: 320px;">
-                    <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
-                    <input type="search" class="form-control" placeholder="Buscar por nombre, usuario o correo"
-                           wire:model.debounce.500ms="userSearch">
-                </div>
-                @can('people.users.manage')
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-success" wire:click="openCreateForm">
-                            <i class="fa-solid fa-user-plus me-1"></i>Nuevo usuario
-                        </button>
+            <x-card padding="none">
+                <x-slot name="header">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                        <div class="input-group input-group-sm" style="max-width: 320px;">
+                            <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                            <input type="search" class="form-control" placeholder="Buscar por nombre, usuario o correo"
+                                   wire:model.debounce.500ms="userSearch">
+                        </div>
+                        @can('people.users.manage')
+                            <div class="d-flex gap-2">
+                                <x-button variant="success" size="sm" icon="fa-user-plus" wire:click="openCreateForm">
+                                    Nuevo usuario
+                                </x-button>
+                            </div>
+                        @endcan
                     </div>
-                @endcan
-            </div>
+                </x-slot>
 
-            <div class="table-responsive mb-3">
-                <table class="table table-sm align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th>Usuario</th>
-                            <th>Nombre</th>
-                            <th>Correo</th>
-                            <th>Roles</th>
-                            <th class="text-center">Estatus</th>
-                            <th class="text-end">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($users as $user)
+                <div class="table-responsive p-3">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
                             <tr>
-                                <td>{{ $user->username ?? '—' }}</td>
-                                <td>{{ $user->nombre_completo ?? '—' }}</td>
-                                <td>{{ $user->email ?? '—' }}</td>
-                                <td>
-                                    @if (isset($user->roles) && $user->roles->count() > 0)
-                                        @foreach ($user->roles->take(3) as $role)
-                                            <span class="badge bg-light text-dark">{{ $role->name }}</span>
-                                        @endforeach
-                                        @if ($user->roles->count() > 3)
-                                            <span class="badge bg-secondary">+{{ $user->roles->count() - 3 }}</span>
+                                <th>Usuario</th>
+                                <th>Nombre</th>
+                                <th>Correo</th>
+                                <th>Roles</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($users as $user)
+                                <tr>
+                                    <td>{{ $user->name ?? '—' }}</td>
+                                    <td>{{ $user->name ?? '—' }}</td>
+                                    <td>{{ $user->email ?? '—' }}</td>
+                                    <td>
+                                        @if (isset($user->roles) && $user->roles->count() > 0)
+                                            @foreach ($user->roles->take(3) as $role)
+                                                <x-badge type="neutral">{{ $role->name }}</x-badge>
+                                            @endforeach
+                                            @if ($user->roles->count() > 3)
+                                                <x-badge type="secondary" pill>+{{ $user->roles->count() - 3 }}</x-badge>
+                                            @endif
+                                        @else
+                                            <span class="text-muted">Sin roles</span>
                                         @endif
-                                    @else
-                                        <span class="text-muted">Sin roles</span>
-                                    @endif
-                                </td>
-                                <td class="text-center">
-                                    @if ($user->activo)
-                                        <span class="badge bg-success">Activo</span>
-                                    @else
-                                        <span class="badge bg-secondary">Inactivo</span>
-                                    @endif
-                                </td>
-                                <td class="text-end">
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        @can('people.users.manage')
-                                            <button class="btn btn-outline-secondary" wire:click="openEditForm({{ $user->id }})">
-                                                <i class="fa-solid fa-pen"></i>
-                                            </button>
-                                            <button class="btn btn-outline-{{ $user->activo ? 'warning' : 'success' }}"
-                                                    wire:click="toggleActive({{ $user->id }})">
-                                                <i class="fa-solid fa-power-off"></i>
-                                            </button>
-                                        @endcan
-                                        @can('people.roles.manage')
-                                            <button class="btn btn-outline-primary" title="Asignar plantillas"
-                                                    wire:click="openUserRolesModal({{ $user->id }})">
-                                                <i class="fa-solid fa-user-tag"></i>
-                                            </button>
-                                        @endcan
-                                        @can('people.permissions.manage')
-                                            <button class="btn btn-outline-info" title="Permisos especiales"
-                                                    wire:click="openUserPermissionsModal({{ $user->id }})">
-                                                <i class="fa-solid fa-key"></i>
-                                            </button>
-                                        @endcan
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
-                                    <i class="fa-regular fa-circle-question me-1"></i>No se encontraron usuarios con los filtros actuales.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            @can('people.users.manage')
+                                                <button class="btn btn-outline-secondary" wire:click="openEditForm({{ $user->id }})">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </button>
+                                            @endcan
+                                            @can('people.roles.manage')
+                                                <button class="btn btn-outline-primary" title="Asignar plantillas"
+                                                        wire:click="openUserRolesModal({{ $user->id }})">
+                                                    <i class="fa-solid fa-user-tag"></i>
+                                                </button>
+                                            @endcan
+                                            @can('people.permissions.manage')
+                                                <button class="btn btn-outline-info" title="Permisos especiales"
+                                                        wire:click="openUserPermissionsModal({{ $user->id }})">
+                                                    <i class="fa-solid fa-key"></i>
+                                                </button>
+                                            @endcan
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        <i class="fa-regular fa-circle-question me-1"></i>No se encontraron usuarios con los filtros actuales.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
 
-            <div class="d-flex justify-content-end">
-                {{ $users->links() }}
-            </div>
+                <div class="d-flex justify-content-end px-3 pb-3">
+                    {{ $users->links() }}
+                </div>
+            </x-card>
         </div>
 
         <!-- Tab de Plantillas -->
         <div class="tab-pane fade @if($activeTab === 'roles') show active @endif" id="tab-roles">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
-                @can('people.roles.manage')
-                    <div>
-                        <button class="btn btn-sm btn-success" wire:click="openCreateRoleForm">
-                            <i class="fa-solid fa-plus me-1"></i>Nueva plantilla
-                        </button>
+            <x-card padding="none">
+                <x-slot name="header">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                        @can('people.roles.manage')
+                            <div>
+                                <x-button variant="success" size="sm" icon="fa-plus" wire:click="openCreateRoleForm">
+                                    Nueva plantilla
+                                </x-button>
+                            </div>
+                        @endcan
                     </div>
-                @endcan
-            </div>
+                </x-slot>
 
-            <div class="table-responsive mb-3">
-                <table class="table table-sm align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Descripción</th>
-                            <th class="text-center">Permisos</th>
-                            <th class="text-center">Usuarios</th>
-                            <th class="text-end">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($roles as $role)
+                <div class="table-responsive p-3">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
                             <tr>
-                                <td>
-                                    <div class="fw-bold">{{ $role['display_name'] }}</div>
-                                    <div class="small text-muted">{{ $role['name'] }}</div>
-                                </td>
-                                <td>{{ $role['description'] ?? '—' }}</td>
-                                <td class="text-center">
-                                    <span class="badge bg-primary">{{ $role['permissions_count'] }}</span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-info">{{ $role['users_count'] }}</span>
-                                </td>
-                                <td class="text-end">
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        @can('people.roles.manage')
-                                            <button class="btn btn-outline-secondary" 
-                                                    wire:click="loadRoleForEdit({{ $role['id'] }})">
-                                                <i class="fa-solid fa-pen"></i>
-                                            </button>
-                                            @if ($role['is_super_admin'])
-                                                <button class="btn btn-outline-secondary" disabled title="Sistema">
-                                                    <i class="fa-solid fa-lock"></i>
-                                                </button>
-                                            @else
-                                                <button class="btn btn-outline-warning"
-                                                        wire:click="duplicateRole({{ $role['id'] }})"
-                                                        title="Duplicar plantilla">
-                                                    <i class="fa-solid fa-copy"></i>
-                                                </button>
-                                                <button class="btn btn-outline-danger"
-                                                        wire:click="deleteRole({{ $role['id'] }})"
-                                                        @disabled($role['users_count'] > 0)
-                                                        title="Eliminar plantilla">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                            @endif
-                                        @endcan
-                                    </div>
-                                </td>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th class="text-center">Permisos</th>
+                                <th class="text-center">Usuarios</th>
+                                <th class="text-end">Acciones</th>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="text-center text-muted py-4">
-                                    <i class="fa-regular fa-circle-question me-1"></i>No se encontraron plantillas.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            @forelse ($roles as $role)
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ $role['display_name'] }}</div>
+                                        <div class="small text-muted">{{ $role['name'] }}</div>
+                                    </td>
+                                    <td>{{ $role['description'] ?? '—' }}</td>
+                                    <td class="text-center">
+                                        <x-badge type="primary" pill>{{ $role['permissions_count'] }}</x-badge>
+                                    </td>
+                                    <td class="text-center">
+                                        <x-badge type="info" pill>{{ $role['users_count'] }}</x-badge>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            @can('people.roles.manage')
+                                                <button class="btn btn-outline-secondary" 
+                                                        wire:click="loadRoleForEdit({{ $role['id'] }})">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </button>
+                                                @if ($role['is_super_admin'])
+                                                    <button class="btn btn-outline-secondary" disabled title="Sistema">
+                                                        <i class="fa-solid fa-lock"></i>
+                                                    </button>
+                                                @else
+                                                    <button class="btn btn-outline-warning"
+                                                            wire:click="duplicateRole({{ $role['id'] }})"
+                                                            title="Duplicar plantilla">
+                                                        <i class="fa-solid fa-copy"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-danger"
+                                                            wire:click="deleteRole({{ $role['id'] }})"
+                                                            @disabled($role['users_count'] > 0)
+                                                            title="Eliminar plantilla">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                @endif
+                                            @endcan
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        <i class="fa-regular fa-circle-question me-1"></i>No se encontraron plantillas.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </x-card>
         </div>
 
         <!--
@@ -227,94 +221,83 @@
         <div class="tab-pane fade @if($activeTab === 'permissions') show active @endif" id="tab-permissions">
             <div class="row">
                 <div class="col-12">
-                    <div class="card shadow-sm mb-3">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="card-title mb-0">Catálogo de permisos por módulo</h5>
-                                <div class="d-flex gap-2">
-                                    <button class="btn btn-sm btn-outline-secondary" disabled>
-                                        <i class="fa-solid fa-download me-1"></i>
-                                        Exportar
-                                    </button>
-                                    <!-- TODO: exportar catálogo de permisos a CSV para auditoría externa -->
-                                </div>
-                            </div>
-                            
-                            <!-- Pestañas para módulos de permisos -->
-                            <ul class="nav nav-tabs mb-3" id="permModulesTab" role="tablist">
-                                @foreach($permissionsMap as $module => $modulePerms)
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link {{ $loop->first ? 'active' : '' }}" 
-                                                id="{{ \Illuminate\Support\Str::slug($module) }}-perm-tab" 
-                                                data-bs-toggle="tab" 
-                                                data-bs-target="#{{ \Illuminate\Support\Str::slug($module) }}-perm" 
-                                                type="button" 
-                                                role="tab">
-                                            {{ $module }} 
-                                            <span class="badge bg-secondary ms-1">{{ count($modulePerms) }}</span>
-                                        </button>
-                                    </li>
-                                @endforeach
-                            </ul>
-
-                            <div class="tab-content" id="permModulesTabContent">
-                                @foreach($permissionsMap as $module => $modulePerms)
-                                    <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" 
-                                         id="{{ \Illuminate\Support\Str::slug($module) }}-perm" 
-                                         role="tabpanel">
-                                        <div class="row">
-                                            @forelse($modulePerms as $permMeta)
-                                                @php
-                                                    $permName = $permMeta['perm'];
-                                                    $label = $permMeta['label'];
-                                                    $desc = $permMeta['desc'];
-                                                @endphp
-                                                <div class="col-md-6 mb-2">
-                                                    <div class="card h-100">
-                                                        <div class="card-body p-3">
-                                                            <h6 class="card-title mb-1">{{ $label }}</h6>
-                                                            <p class="card-text small text-muted mb-1">{{ $permName }}</p>
-                                                            <p class="card-text small mb-0">{{ $desc }}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @empty
-                                                <div class="col-12">
-                                                    <p class="text-muted small mb-0">No hay permisos definidos en este módulo.</p>
-                                                </div>
-                                            @endforelse
-                                        </div>
-                                    </div>
-                                @endforeach
+                    <x-card>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Catálogo de permisos por módulo</h5>
+                            <div class="d-flex gap-2">
+                                <x-button variant="outline" size="sm" icon="fa-download" disabled>
+                                    Exportar
+                                </x-button>
+                                <!-- TODO: exportar catálogo de permisos a CSV para auditoría externa -->
                             </div>
                         </div>
-                    </div>
+                        
+                        <!-- Pestañas para módulos de permisos -->
+                        <ul class="nav nav-tabs mb-3" id="permModulesTab" role="tablist">
+                            @foreach($permissionsMap as $module => $modulePerms)
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link {{ $loop->first ? 'active' : '' }}" 
+                                            id="{{ \Illuminate\Support\Str::slug($module) }}-perm-tab" 
+                                            data-bs-toggle="tab" 
+                                            data-bs-target="#{{ \Illuminate\Support\Str::slug($module) }}-perm" 
+                                            type="button" 
+                                            role="tab">
+                                        {{ $module }} 
+                                        <x-badge type="secondary" pill class="ms-1">{{ count($modulePerms) }}</x-badge>
+                                    </button>
+                                </li>
+                            @endforeach
+                        </ul>
+
+                        <div class="tab-content" id="permModulesTabContent">
+                            @foreach($permissionsMap as $module => $modulePerms)
+                                <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" 
+                                     id="{{ \Illuminate\Support\Str::slug($module) }}-perm" 
+                                     role="tabpanel">
+                                    <div class="row">
+                                        @forelse($modulePerms as $permMeta)
+                                            @php
+                                                $permName = $permMeta['perm'];
+                                                $label = $permMeta['label'];
+                                                $desc = $permMeta['desc'];
+                                            @endphp
+                                            <div class="col-md-6 mb-2">
+                                                <x-card class="h-100" padding="sm" variant="bordered">
+                                                    <h6 class="mb-1">{{ $label }}</h6>
+                                                    <p class="small text-muted mb-1">{{ $permName }}</p>
+                                                    <p class="small mb-0">{{ $desc }}</p>
+                                                </x-card>
+                                            </div>
+                                        @empty
+                                            <div class="col-12">
+                                                <p class="text-muted small mb-0">No hay permisos definidos en este módulo.</p>
+                                            </div>
+                                        @endforelse
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </x-card>
                     
                     <!-- Estadísticas de permisos -->
                     <div class="row">
                         <div class="col-md-4">
-                            <div class="card text-bg-light">
-                                <div class="card-body p-3">
-                                    <h6 class="card-title">Total de Permisos</h6>
-                                    <h3 class="card-text">{{ count($permissions->toArray()) }}</h3>
-                                </div>
-                            </div>
+                            <x-card class="text-bg-light" padding="sm">
+                                <h6 class="mb-1">Total de Permisos</h6>
+                                <h3 class="mb-0">{{ count($permissions->toArray()) }}</h3>
+                            </x-card>
                         </div>
                         <div class="col-md-4">
-                            <div class="card text-bg-primary">
-                                <div class="card-body p-3">
-                                    <h6 class="card-title">Módulos</h6>
-                                    <h3 class="card-text">{{ count($permissionsMap) }}</h3>
-                                </div>
-                            </div>
+                            <x-card class="text-bg-primary text-white" padding="sm">
+                                <h6 class="mb-1">Módulos</h6>
+                                <h3 class="mb-0">{{ count($permissionsMap) }}</h3>
+                            </x-card>
                         </div>
                         <div class="col-md-4">
-                            <div class="card text-bg-success">
-                                <div class="card-body p-3">
-                                    <h6 class="card-title">Roles</h6>
-                                    <h3 class="card-text">{{ count($roles) }}</h3>
-                                </div>
-                            </div>
+                            <x-card class="text-bg-success text-white" padding="sm">
+                                <h6 class="mb-1">Roles</h6>
+                                <h3 class="mb-0">{{ count($roles) }}</h3>
+                            </x-card>
                         </div>
                     </div>
                 </div>
@@ -342,20 +325,16 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Nombre completo <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('userForm.nombre_completo') is-invalid @enderror"
-                                       wire:model.defer="userForm.nombre_completo" required>
-                                @error('userForm.nombre_completo')
+                                <input type="text" class="form-control @error('userForm.name') is-invalid @enderror"
+                                       wire:model.defer="userForm.name" required>
+                                @error('userForm.name')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Usuario</label>
-                                <input type="text" class="form-control @error('userForm.username') is-invalid @enderror"
-                                       wire:model.defer="userForm.username" autocomplete="username" @disabled($editingUser)>
-                                @error('userForm.username')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <label class="form-label">Usuario (alias)</label>
+                                <input type="text" class="form-control" value="{{ $userForm['name'] ?? '' }}" disabled>
                             </div>
 
                             <div class="col-md-6">
@@ -365,14 +344,6 @@
                                 @error('userForm.email')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">Estatus</label>
-                                <select class="form-select" wire:model.defer="userForm.activo">
-                                    <option value="1">Activo</option>
-                                    <option value="0">Inactivo</option>
-                                </select>
                             </div>
 
                             <div class="col-md-6">

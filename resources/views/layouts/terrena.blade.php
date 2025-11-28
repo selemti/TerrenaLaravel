@@ -212,6 +212,8 @@
   <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet">
   <link href="{{ asset('assets/fontawesome-free-7.0.1-web/css/all.min.css') }}" rel="stylesheet">
   <link rel="stylesheet" href="{{ asset('assets/css/terrena.css') }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/design-system.css') }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/utilities.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/css/caja.css') }}">
 
   @livewireStyles
