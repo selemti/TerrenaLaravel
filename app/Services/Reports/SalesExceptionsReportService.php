@@ -228,12 +228,12 @@ class SalesExceptionsReportService
             )::numeric(14,2)
         SQL;
 
-        $dateColumn = DB::raw("COALESCE(t.folio_date, t.closing_date::date, t.create_date::date)");
+        $dateColumnExpr = "COALESCE(t.folio_date, t.closing_date::date, t.create_date::date)";
         $query = DB::connection('pgsql')
             ->table('public.ticket as t')
             ->selectRaw("
                 t.id AS ticket_id,
-                {$dateColumn} AS folio_date,
+                {$dateColumnExpr} AS folio_date,
                 UPPER(COALESCE(t.branch_key, 'SIN_SUCURSAL')) AS branch_key,
                 t.terminal_id,
                 COALESCE(t.paid, FALSE) AS paid_flag,
@@ -254,7 +254,7 @@ class SalesExceptionsReportService
                 COALESCE(t.paid_amount, 0)::numeric(14,2) AS paid_amount_flag,
                 {$discountExpression} AS discount_total
             ")
-            ->whereBetween($dateColumn, [
+            ->whereRaw("{$dateColumnExpr} BETWEEN ? AND ?", [
                 $start->toDateString(),
                 $end->toDateString(),
             ]);
