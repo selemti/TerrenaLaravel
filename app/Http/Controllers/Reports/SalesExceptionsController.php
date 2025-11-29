@@ -103,9 +103,7 @@ class SalesExceptionsController extends BaseReportController
             'reporte_excepciones_%s_%s%s.xlsx',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            ! empty($filters['branch_ids'])
-                ? '_'.str_replace(' ', '_', strtolower($this->stringifyFilter($filters['branch_ids'])))
-                : ''
+            $this->buildFilenameSuffix($filters)
         );
 
         return Excel::download($export, $filename);
@@ -120,9 +118,7 @@ class SalesExceptionsController extends BaseReportController
             'reporte_excepciones_%s_%s%s.pdf',
             $start->format('Ymd'),
             $end->format('Ymd'),
-            ! empty($filters['branch_ids'])
-                ? '_'.str_replace(' ', '_', strtolower($this->stringifyFilter($filters['branch_ids'])))
-                : ''
+            $this->buildFilenameSuffix($filters)
         );
 
         return $this->renderPdf('reports.exports.sales.exceptions', [
@@ -172,6 +168,24 @@ class SalesExceptionsController extends BaseReportController
             'summary' => $report['summary'] ?? [],
             'discount_summary' => $this->asCollection($report['discounts']['summary'] ?? []),
         ];
+    }
+
+    protected function buildFilenameSuffix(array $filters): string
+    {
+        $parts = [];
+
+        $branchList = $this->stringifyFilter($filters['branch_ids'] ?? []);
+        $terminalList = $this->stringifyFilter($filters['terminal_ids'] ?? []);
+
+        if (! empty($branchList)) {
+            $parts[] = str_replace(' ', '_', strtolower($branchList));
+        }
+
+        if (! empty($terminalList)) {
+            $parts[] = str_replace(' ', '_', strtolower($terminalList));
+        }
+
+        return empty($parts) ? '' : '_'.implode('_', $parts);
     }
 
     protected function asCollection(mixed $value): Collection

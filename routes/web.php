@@ -411,6 +411,7 @@ Route::middleware('auth')->group(function () {
                 Route::get('/balance', [SalesBalanceController::class, 'show'])->name('reports.sales.balance');
                 Route::get('/balance/export/pdf', [SalesBalanceController::class, 'exportPdf'])->name('reports.sales.balance.export.pdf');
                 Route::get('/exceptions', [SalesExceptionsController::class, 'show'])->name('reports.sales.exceptions');
+                Route::get('/exceptions/export/xlsx', [SalesExceptionsController::class, 'exportExcel'])->name('reports.sales.exceptions.export.xlsx');
                 Route::get('/exceptions/export/pdf', [SalesExceptionsController::class, 'exportPdf'])->name('reports.sales.exceptions.export.pdf');
                 Route::get('/journal', [SalesJournalController::class, 'show'])->name('reports.sales.journal');
                 Route::get('/journal/export/pdf', [SalesJournalController::class, 'exportPdf'])->name('reports.sales.journal.export.pdf');

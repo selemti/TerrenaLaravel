@@ -61,13 +61,16 @@
 ### Filtros Validados
 - [x] Filtro por fecha
 - [x] Procesamiento sin filtros
-- [ ] Filtro por sucursal (pendiente)
-- [ ] Filtro por terminal (pendiente)
+- [x] Filtro por sucursal
+- [x] Filtro por terminal
 
 ### Exports
-- [ ] Excel genera archivo válido (pendiente)
-- [ ] PDF genera archivo válido (pendiente)
-- [ ] Datos coinciden con vista (pendiente)
+- [x] Excel genera archivo válido ✅
+- [x] PDF genera archivo válido ✅
+- [x] Datos coinciden con vista ✅
+
+### Tests
+- [x] Unit tests para `SalesExceptionsReportService` (estructura de fetch, categorización, helpers y resumen de descuentos)
 
 ---
 
