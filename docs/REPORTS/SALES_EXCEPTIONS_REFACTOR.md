@@ -92,6 +92,39 @@
 
 ---
 
+## Rendimiento post-optimización
+
+### Índices creados en producción
+**Fecha de creación**: 29-Nov-2025
+**Índices creados**:
+- ✅ `idx_transactions_ticket_id`
+- ✅ `idx_ticket_discount_ticket_id`
+- ✅ `idx_ticket_item_discount_itemid`
+
+### Métricas de rendimiento (con índices):
+
+#### 1 día (215 tickets):
+- **Tiempo fetch**: 43.93 ms
+- **Tiempo summarize**: 1.21 ms
+- **Tiempo total**: 45.14 ms
+- **Excepciones encontradas**: 9
+
+#### 10 días (2,631 tickets):
+- **Antes**: Timeout (>120 segundos)
+- **Después**: 328.05 ms (0.33 segundos)
+- **Excepciones encontradas**: 60
+- **Impacto total**: $1,841.00
+- **✅ ÉXITO**: Completado en menos de 30 segundos
+
+### Comparativa de mejora
+- **Rendimiento con 10 días**:
+  - Antes: >120 segundos (timeout)
+  - Después: 0.33 segundos
+  - **Mejora**: >99.7% más rápido (360x más rápido)
+- **Validación**: Los índices redujeron el tiempo de procesamiento significativamente más allá de lo estimado (85-90% esperado por QWEN)
+
+---
+
 ## Próximos Pasos
 
 1. Pruebas con rangos de fechas más amplios (optimizar si es necesario)
