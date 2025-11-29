@@ -64,7 +64,7 @@ class SalesExceptionsExportTest extends TestCase
             $rows = collect($export->array());
 
             $this->assertTrue($rows->contains(['Resumen']));
-            $this->assertTrue($rows->contains(fn ($row) => $row[0] === 'Impacto total' && (float) $row[1] === 339.2));
+            $this->assertTrue($rows->contains(fn ($row) => is_array($row) && ($row[0] ?? null) === 'Impacto total' && (float) ($row[1] ?? 0) === 339.2));
             $this->assertTrue($rows->contains(['Detalle por categoría']));
             $this->assertTrue($rows->contains(['Resumen de descuentos']));
 

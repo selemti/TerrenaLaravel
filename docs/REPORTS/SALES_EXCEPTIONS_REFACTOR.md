@@ -71,6 +71,10 @@
 
 ### Tests
 - [x] Unit tests para `SalesExceptionsReportService` (estructura de fetch, categorización, helpers y resumen de descuentos)
+- [x] Feature test `SalesExceptionsExportTest` pasando con dependencias instaladas (Excel/PDF)
+
+### Dependencias de Exports
+- Instaladas: `maatwebsite/excel` (^3.1) y `dompdf/dompdf` (^3.1) para generación de XLSX/PDF en Sales Exceptions
 
 ---
 
@@ -90,8 +94,6 @@
 
 ## Próximos Pasos
 
-1. Probar exports (Excel y PDF)
-2. Validar filtros por sucursal y terminal
-3. Pruebas con rangos de fechas más amplios (optimizar si es necesario)
-4. Documentar casos edge detectados durante pruebas
-5. Crear tests unitarios para el servicio
+1. Pruebas con rangos de fechas más amplios (optimizar si es necesario)
+2. Documentar casos edge detectados durante pruebas
+3. Crear tests unitarios adicionales para descuentos/transactions edge cases
