@@ -1,0 +1,67 @@
+[2025-11-30 00:16:24] === Backup Process Started ===
+[2025-11-30 00:16:24] Timestamp: 2025-11-30_00-16-24
+[2025-11-30 00:16:24] Using PostgreSQL binaries from: C:/Program Files/Odoo 18.0.20250714/PostgreSQL/9.5/bin
+[2025-11-30 00:16:24] Executing daily backup with schemas public and selemti...
+[2025-11-30 00:16:24] Command: "C:/Program Files/Odoo 18.0.20250714/PostgreSQL/9.5/bin/pg_dump.exe" -h localhost -p 5433 -U postgres -d pos --schema=public --schema=selemti -F p -f "C:/xampp3/htdocs/TerrenaLaravel/database/backups/daily/pos_backup_2025-11-30_00-16-24.sql" 2>&1
+[2025-11-30 00:16:24] ❌ Backup FAILED with return code: 1
+[2025-11-30 00:16:24] Command output: El sistema no puede encontrar la ruta especificada.
+[2025-11-30 00:16:24] Attempting fallback backup of public schema only...
+[2025-11-30 00:16:24] ❌ Fallback backup also FAILED
+[2025-11-30 00:16:24] Rotating daily backups (keep last 7)...
+[2025-11-30 00:16:24] Rotating weekly backups (keep last 4)...
+[2025-11-30 00:16:24] === Backup Process Completed ===
+[2025-11-30 00:16:24] Summary: {
+    "timestamp": "2025-11-30_00-16-24",
+    "daily_backup": "pos_backup_2025-11-30_00-16-24.sql",
+    "file_size_mb": 0,
+    "status": "FAILED",
+    "daily_backups_count": 0,
+    "weekly_backups_count": 0
+}
+[2025-11-30 00:20:37] === Backup Process Started ===
+[2025-11-30 00:20:37] Timestamp: 2025-11-30_00-20-37
+[2025-11-30 00:20:37] Using PostgreSQL binaries from: C:\Program Files\Odoo 18.0.20250714\PostgreSQL\9.5\bin
+[2025-11-30 00:20:37] Executing daily backup with schemas public and selemti...
+[2025-11-30 00:20:37] Command: "C:\Program Files\Odoo 18.0.20250714\PostgreSQL\9.5\bin\pg_dump.exe" -h localhost -p 5433 -U postgres -d pos --schema=public --schema=selemti -F p -f "C:\xampp3\htdocs\TerrenaLaravel\database\backups\daily\pos_backup_2025-11-30_00-20-37.sql" 2>&1
+[2025-11-30 00:20:38] ❌ Backup FAILED with return code: 1
+[2025-11-30 00:20:38] Command output: El sistema no puede encontrar la ruta especificada.
+[2025-11-30 00:20:38] Attempting fallback backup of public schema only...
+[2025-11-30 00:20:38] ❌ Fallback backup also FAILED
+[2025-11-30 00:20:38] Fallback output: El sistema no puede encontrar la ruta especificada.
+[2025-11-30 00:20:38] Rotating daily backups (keep last 7)...
+[2025-11-30 00:20:38] Rotating weekly backups (keep last 4)...
+[2025-11-30 00:20:38] === Backup Process Completed ===
+[2025-11-30 00:20:38] Summary: {
+    "timestamp": "2025-11-30_00-20-37",
+    "daily_backup": "pos_backup_2025-11-30_00-20-37.sql",
+    "file_size_mb": 0,
+    "status": "FAILED",
+    "daily_backups_count": 0,
+    "weekly_backups_count": 0
+}
+[2025-11-30 00:22:55] === Backup Process Started ===
+[2025-11-30 00:22:55] Timestamp: 2025-11-30_00-22-55
+[2025-11-30 00:22:55] Executing daily backup with command:
+[2025-11-30 00:22:55] Command: "C:/Program Files/Odoo 18.0.20250714/PostgreSQL/9.5/bin/pg_dump.exe" -h localhost -p 5433 -U postgres -d pos --schema=public --schema=selemti -F p -f "C:/xampp3/htdocs/TerrenaLaravel/database/backups/daily/pos_backup_2025-11-30_00-22-55.sql"
+[2025-11-30 00:22:55] Command output: El sistema no puede encontrar la ruta especificada.
+
+[2025-11-30 00:22:55] File exists: NO
+[2025-11-30 00:22:55] File size: 0 bytes
+[2025-11-30 00:22:55] ❌ Backup FAILED - File not created or empty
+[2025-11-30 00:22:55] Result: El sistema no puede encontrar la ruta especificada.
+
+[2025-11-30 00:22:55] Attempting fallback backup of public schema only...
+[2025-11-30 00:22:55] ❌ Fallback backup also FAILED
+[2025-11-30 00:22:55] Fallback output: El sistema no puede encontrar la ruta especificada.
+
+[2025-11-30 00:22:55] Rotating daily backups (keep last 7)...
+[2025-11-30 00:22:55] Rotating weekly backups (keep last 4)...
+[2025-11-30 00:22:55] === Backup Process Completed ===
+[2025-11-30 00:22:55] Summary: {
+    "timestamp": "2025-11-30_00-22-55",
+    "daily_backup": "pos_backup_2025-11-30_00-22-55.sql",
+    "file_size_mb": 0,
+    "status": "FAILED",
+    "daily_backups_count": 0,
+    "weekly_backups_count": 0
+}

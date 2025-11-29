@@ -14004,7 +14004,7 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
-DROP DATABASE pos;
+-- DROP DATABASE pos; -- COMENTADO POR SEGURIDAD
 --
 -- TOC entry 4145 (class 1262 OID 67811)
 -- Name: pos;
@@ -27482,7 +27482,7 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
-DROP DATABASE pos;
+-- DROP DATABASE pos; -- COMENTADO POR SEGURIDAD
 --
 -- TOC entry 4240 (class 1262 OID 67811)
 -- Name: pos;
@@ -41540,7 +41540,7 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
-DROP DATABASE pos;
+-- DROP DATABASE pos; -- COMENTADO POR SEGURIDAD
 --
 -- TOC entry 3490 (class 1262 OID 35339)
 -- Name: pos;
@@ -60461,7 +60461,7 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
-DROP DATABASE pos;
+-- DROP DATABASE pos; -- COMENTADO POR SEGURIDAD
 --
 -- TOC entry 4145 (class 1262 OID 67811)
 -- Name: pos;
@@ -73905,7 +73905,7 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
-DROP DATABASE pos;
+-- DROP DATABASE pos; -- COMENTADO POR SEGURIDAD
 --
 -- TOC entry 4240 (class 1262 OID 67811)
 -- Name: pos;
@@ -84551,7 +84551,7 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
-DROP DATABASE pos;
+-- DROP DATABASE pos; -- COMENTADO POR SEGURIDAD
 --
 -- TOC entry 3490 (class 1262 OID 35339)
 -- Name: pos;
@@ -94791,7 +94791,7 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
-DROP DATABASE pos;
+-- DROP DATABASE pos; -- COMENTADO POR SEGURIDAD
 --
 -- TOC entry 4145 (class 1262 OID 67811)
 -- Name: pos;
@@ -104989,7 +104989,7 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
-DROP DATABASE pos;
+-- DROP DATABASE pos; -- COMENTADO POR SEGURIDAD
 --
 -- TOC entry 4240 (class 1262 OID 67811)
 -- Name: pos;
@@ -115511,7 +115511,7 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
-DROP DATABASE pos;
+-- DROP DATABASE pos; -- COMENTADO POR SEGURIDAD
 --
 -- TOC entry 3490 (class 1262 OID 35339)
 -- Name: pos;
@@ -127862,7 +127862,7 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
-DROP DATABASE pos;
+-- DROP DATABASE pos; -- COMENTADO POR SEGURIDAD
 --
 -- TOC entry 4145 (class 1262 OID 67811)
 -- Name: pos;
@@ -141336,7 +141336,7 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
-DROP DATABASE pos;
+-- DROP DATABASE pos; -- COMENTADO POR SEGURIDAD
 --
 -- TOC entry 4240 (class 1262 OID 67811)
 -- Name: pos;
@@ -155388,7 +155388,7 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
-DROP DATABASE pos;
+-- DROP DATABASE pos; -- COMENTADO POR SEGURIDAD
 --
 -- TOC entry 3490 (class 1262 OID 35339)
 -- Name: pos;

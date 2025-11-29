@@ -15,7 +15,7 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
 
-DROP DATABASE pos;
+-- DROP DATABASE pos; -- COMENTADO POR SEGURIDAD
 --
 -- TOC entry 3490 (class 1262 OID 35339)
 -- Name: pos; Type: DATABASE; Schema: -; Owner: floreant
