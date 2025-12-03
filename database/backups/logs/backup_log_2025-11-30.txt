@@ -65,3 +65,37 @@
     "daily_backups_count": 0,
     "weekly_backups_count": 0
 }
+[2025-11-30 00:30:00] === Backup Process Started ===
+[2025-11-30 00:30:00] Timestamp: 2025-11-30_00-30-00
+[2025-11-30 00:30:00] ✅ pg_dump executable found: C:\Program Files\Odoo 18.0.20250714\PostgreSQL\bin\pg_dump.exe
+[2025-11-30 00:30:00] Testing database connection...
+[2025-11-30 00:30:00] ❌ Connection test FAILED:  ?column? 
+----------
+        1
+(1 fila)
+
+
+[2025-11-30 00:32:07] === Backup Process Started ===
+[2025-11-30 00:32:07] Timestamp: 2025-11-30_00-32-07
+[2025-11-30 00:32:07] ✅ pg_dump executable found: C:\Program Files\Odoo 18.0.20250714\PostgreSQL\bin\pg_dump.exe
+[2025-11-30 00:32:07] Testing database connection...
+[2025-11-30 00:32:08] ✅ Database connection OK
+[2025-11-30 00:32:08] Executing daily backup with command:
+[2025-11-30 00:32:08] Command: "C:\Program Files\Odoo 18.0.20250714\PostgreSQL\bin\pg_dump.exe" -h localhost -p 5433 -U postgres -d pos --schema=public --schema=selemti -F p -f "C:\xampp3\htdocs\TerrenaLaravel\database\backups\daily\pos_backup_2025-11-30_00-32-07.sql"
+[2025-11-30 00:32:09] Command output: 
+[2025-11-30 00:32:09] File exists: YES
+[2025-11-30 00:32:09] File size: 25762417 bytes
+[2025-11-30 00:32:09] ✅ Daily backup successful: C:\xampp3\htdocs\TerrenaLaravel\database\backups\daily\pos_backup_2025-11-30_00-32-07.sql (24.57 MB)
+[2025-11-30 00:32:09] ✅ Backup validation: Contains both public and selemti schemas
+[2025-11-30 00:32:09] ✅ Weekly backup created: C:\xampp3\htdocs\TerrenaLaravel\database\backups\weekly\pos_weekly_2025-11-30.sql
+[2025-11-30 00:32:09] Rotating daily backups (keep last 7)...
+[2025-11-30 00:32:09] Rotating weekly backups (keep last 4)...
+[2025-11-30 00:32:09] === Backup Process Completed ===
+[2025-11-30 00:32:09] Summary: {
+    "timestamp": "2025-11-30_00-32-07",
+    "daily_backup": "pos_backup_2025-11-30_00-32-07.sql",
+    "file_size_mb": 24.57,
+    "status": "SUCCESS",
+    "daily_backups_count": 1,
+    "weekly_backups_count": 1
+}

@@ -1,18 +1,18 @@
 <?php
 /**
- * Sistema de Backup Automatizado PostgreSQL - Versión con PATH completo y comillas
+ * Sistema de Backup Automatizado PostgreSQL - Ruta corregida y test de conexión mejorado
  */
 
-// Configuración
+// Configuración con la ruta correcta
 $config = [
     'db_host' => 'localhost',
     'db_port' => '5433',
     'db_name' => 'pos',
     'db_user' => 'postgres',
     'db_password' => 'T3rr3n4#p0s',  // Contraseña desde el archivo .env
-    'pg_dump_path' => 'C:/Program Files/Odoo 18.0.20250714/PostgreSQL/9.5/bin/pg_dump.exe',
-    'psql_path' => 'C:/Program Files/Odoo 18.0.20250714/PostgreSQL/9.5/bin/psql.exe',
-    'backup_base_dir' => 'C:/xampp3/htdocs/TerrenaLaravel/database/backups',
+    'pg_dump_path' => 'C:\\Program Files\\Odoo 18.0.20250714\\PostgreSQL\\bin\\pg_dump.exe',
+    'psql_path' => 'C:\\Program Files\\Odoo 18.0.20250714\\PostgreSQL\\bin\\psql.exe',
+    'backup_base_dir' => 'C:\\xampp3\\htdocs\\TerrenaLaravel\\database\\backups',
     'daily_retention' => 7,   // Días
     'weekly_retention' => 4,  // Semanas
     'schemas' => ['public', 'selemti'],
@@ -23,10 +23,10 @@ $date = date('Y-m-d');
 $day_of_week = date('w'); // 0 = Domingo
 
 // Directorios
-$daily_dir = $config['backup_base_dir'] . '/daily';
-$weekly_dir = $config['backup_base_dir'] . '/weekly';
-$log_dir = $config['backup_base_dir'] . '/logs';
-$daily_backup_file = $daily_dir . '/pos_backup_' . $timestamp . '.sql';
+$daily_dir = $config['backup_base_dir'] . '\\daily';
+$weekly_dir = $config['backup_base_dir'] . '\\weekly';
+$log_dir = $config['backup_base_dir'] . '\\logs';
+$daily_backup_file = $daily_dir . '\\pos_backup_' . $timestamp . '.sql';
 
 // Crear directorios si no existen
 foreach ([$daily_dir, $weekly_dir, $log_dir] as $dir) {
@@ -36,7 +36,7 @@ foreach ([$daily_dir, $weekly_dir, $log_dir] as $dir) {
     }
 }
 
-$log_file = $log_dir . '/backup_log_' . $date . '.txt';
+$log_file = $log_dir . '\\backup_log_' . $date . '.txt';
 echo "Logging to: {$log_file}\n";
 
 // Función de logging
@@ -50,33 +50,48 @@ function log_message($message, $log_file) {
 log_message("=== Backup Process Started ===", $log_file);
 log_message("Timestamp: {$timestamp}", $log_file);
 
+// Verificar que pg_dump exista
+if (!file_exists($config['pg_dump_path'])) {
+    log_message("❌ ERROR: pg_dump executable not found at: {$config['pg_dump_path']}", $log_file);
+    exit(1);
+} else {
+    log_message("✅ pg_dump executable found: {$config['pg_dump_path']}", $log_file);
+}
+
 // Establecer la contraseña como variable de entorno
 putenv("PGPASSWORD=" . $config['db_password']);
 
-// Comando para backup con ruta completa protegida
-$pg_dump_path = '"' . $config['pg_dump_path'] . '"';
-$db_host = $config['db_host'];
-$db_port = $config['db_port'];
-$db_user = $config['db_user'];
-$db_name = $config['db_name'];
-$output_file = '"' . $daily_backup_file . '"';
+// Verificar conexión a la base de datos antes de intentar backup
+$conn_cmd = '"'.$config['psql_path'].'" -h '.$config['db_host'].' -p '.$config['db_port'].' -U '.$config['db_user'].' -d '.$config['db_name'].' -t -c "SELECT 1;" 2>nul';
 
-$backup_cmd = "{$pg_dump_path} " .
-    "-h {$db_host} " .
-    "-p {$db_port} " .
-    "-U {$db_user} " .
-    "-d {$db_name} " .
-    "--schema=public " .
-    "--schema=selemti " .
-    "-F p " . // Plain text format
-    "-f {$output_file}";
+log_message("Testing database connection...", $log_file);
+$conn_result = shell_exec($conn_cmd);
+
+// Verificar si la conexión fue exitosa verificando el resultado
+if (trim($conn_result) === '1') {
+    log_message("✅ Database connection OK", $log_file);
+} else {
+    log_message("❌ Connection test FAILED: " . $conn_result, $log_file);
+    exit(1);
+}
+
+// Comando para backup - usando solo el path base sin --dbname para evitar parsing extra
+$backup_cmd = '"'.$config['pg_dump_path'].'" ' .
+    '-h '.$config['db_host'].' ' .
+    '-p '.$config['db_port'].' ' .
+    '-U '.$config['db_user'].' ' .
+    '-d '.$config['db_name'].' ' .
+    '--schema=public ' .
+    '--schema=selemti ' .
+    '-F p ' . // Plain text format
+    '-f "'.$daily_backup_file.'"';
 
 log_message("Executing daily backup with command:", $log_file);
 log_message("Command: {$backup_cmd}", $log_file);
 
-// Ejecutar el comando con shell_exec en vez de exec
+// Ejecutar el comando de backup
 $result = shell_exec($backup_cmd . ' 2>&1');
-$return_code = $result === null ? 1 : 0;
+$return_code = $result !== null ? 0 : 1;
 
 // Verificar si el archivo se creó y tiene contenido
 $file_exists = file_exists($daily_backup_file);
@@ -103,7 +118,7 @@ if ($file_size > 0) {
 
     // Si es domingo, crear backup semanal
     if ($day_of_week == 0) {
-        $weekly_backup_file = $weekly_dir . '/pos_weekly_' . $date . '.sql';
+        $weekly_backup_file = $weekly_dir . '\\pos_weekly_' . $date . '.sql';
         copy($daily_backup_file, $weekly_backup_file);
         log_message("✅ Weekly backup created: {$weekly_backup_file}", $log_file);
     }
@@ -115,14 +130,14 @@ if ($file_size > 0) {
     // Intentar con solo el esquema public como fallback
     log_message("Attempting fallback backup of public schema only...", $log_file);
     
-    $backup_cmd_fallback = "{$pg_dump_path} " .
-        "-h {$db_host} " .
-        "-p {$db_port} " .
-        "-U {$db_user} " .
-        "-d {$db_name} " .
-        "-n public " .
-        "-F p " .
-        "-f {$output_file}";
+    $backup_cmd_fallback = '"'.$config['pg_dump_path'].'" ' .
+        '-h '.$config['db_host'].' ' .
+        '-p '.$config['db_port'].' ' .
+        '-U '.$config['db_user'].' ' .
+        '-d '.$config['db_name'].' ' .
+        '-n public ' .
+        '-F p ' .
+        '-f "'.$daily_backup_file.'"';
     
     $result_fallback = shell_exec($backup_cmd_fallback . ' 2>&1');
     $fallback_file_exists = file_exists($daily_backup_file);
@@ -140,7 +155,7 @@ if ($file_size > 0) {
 
 // Rotación de backups diarios (mantener solo últimos 7)
 log_message("Rotating daily backups (keep last {$config['daily_retention']})...", $log_file);
-$daily_files = glob($daily_dir . '/pos_backup_*.sql');
+$daily_files = glob($daily_dir . '\\pos_backup_*.sql');
 if (count($daily_files) > $config['daily_retention']) {
     usort($daily_files, function($a, $b) {
         return filemtime($a) - filemtime($b);
@@ -155,7 +170,7 @@ if (count($daily_files) > $config['daily_retention']) {
 
 // Rotación de backups semanales (mantener solo últimos 4)
 log_message("Rotating weekly backups (keep last {$config['weekly_retention']})...", $log_file);
-$weekly_files = glob($weekly_dir . '/pos_weekly_*.sql');
+$weekly_files = glob($weekly_dir . '\\pos_weekly_*.sql');
 if (count($weekly_files) > $config['weekly_retention']) {
     usort($weekly_files, function($a, $b) {
         return filemtime($a) - filemtime($b);
@@ -181,8 +196,8 @@ $summary = [
     'daily_backup' => $daily_backup_filename,
     'file_size_mb' => $file_size_mb,
     'status' => $status,
-    'daily_backups_count' => count(glob($daily_dir . '/pos_backup_*.sql')),
-    'weekly_backups_count' => count(glob($weekly_dir . '/pos_weekly_*.sql')),
+    'daily_backups_count' => count(glob($daily_dir . '\\pos_backup_*.sql')),
+    'weekly_backups_count' => count(glob($weekly_dir . '\\pos_weekly_*.sql')),
 ];
 
 log_message("Summary: " . json_encode($summary, JSON_PRETTY_PRINT), $log_file);
