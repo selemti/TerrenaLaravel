@@ -13,6 +13,7 @@
     $branchLabels = $branchLabels ?? [];
     $view = $view ?? 'legacy';
     $groupByDay = $groupByDay ?? false;
+    $includeEmpty = $includeEmpty ?? ($view === 'item_mod_combos');
 @endphp
 
 @section('content')
@@ -76,6 +77,9 @@
                 @foreach($terminalFilter as $value)
                     <input type="hidden" name="terminal[]" value="{{ $value }}">
                 @endforeach
+                @if($includeEmpty)
+                    <input type="hidden" name="include_empty" value="1">
+                @endif
                 <button type="submit" class="btn btn-outline-danger">
                     <i class="fa-solid fa-file-pdf me-1"></i> PDF
                 </button>
@@ -93,6 +97,9 @@
                 @foreach($terminalFilter as $value)
                     <input type="hidden" name="terminal[]" value="{{ $value }}">
                 @endforeach
+                @if($includeEmpty)
+                    <input type="hidden" name="include_empty" value="1">
+                @endif
                 <button type="submit" class="btn btn-success">
                     <i class="fa-solid fa-file-excel me-1"></i> Excel
                 </button>
@@ -127,6 +134,7 @@
                         <option value="legacy" {{ $view === 'legacy' ? 'selected' : '' }}>Legacy (función original)</option>
                         <option value="summary_item_mods" {{ $view === 'summary_item_mods' ? 'selected' : '' }}>Resumen Ítems + Mods</option>
                         <option value="summary_items" {{ $view === 'summary_items' ? 'selected' : '' }}>Resumen por Ítem</option>
+                        <option value="item_mod_combos" {{ $view === 'item_mod_combos' ? 'selected' : '' }}>Combinaciones Ítem + Modificadores</option>
                         <option value="detail" {{ $view === 'detail' ? 'selected' : '' }}>Detalle por Ticket</option>
                     </select>
                 </div>
@@ -152,7 +160,7 @@
                         done-label="Hecho"
                         empty-message="Sin terminales disponibles." />
                 </div>
-                <div class="col-md-1 d-flex align-items-end">
+                <div class="col-12 d-flex flex-wrap gap-4 pt-2">
                     <div class="form-check">
                         <input type="checkbox"
                                class="form-check-input"
@@ -162,6 +170,17 @@
                                {{ $groupByDay ? 'checked' : '' }}>
                         <label class="form-check-label small" for="group_by_day">
                             Por día
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox"
+                               class="form-check-input"
+                               id="include_empty"
+                               name="include_empty"
+                               value="1"
+                               {{ $includeEmpty ? 'checked' : '' }}>
+                        <label class="form-check-label small" for="include_empty">
+                            Incluir ítems sin ventas/mods
                         </label>
                     </div>
                 </div>
@@ -207,6 +226,8 @@
         {{-- KPIs según la vista --}}
         @if($view === 'summary_items')
             @include('reports.sales.partials.mods-kpis-items')
+        @elseif($view === 'item_mod_combos')
+            @include('reports.sales.partials.mods-kpis-combos')
         @elseif($view === 'detail')
             @include('reports.sales.partials.mods-kpis-detail')
         @else
@@ -222,6 +243,8 @@
                         Resumen por Ítem
                     @elseif($view === 'summary_item_mods')
                         Resumen Ítems + Modificadores
+                    @elseif($view === 'item_mod_combos')
+                        Combinaciones Ítem + Modificadores
                     @elseif($view === 'detail')
                         Detalle por Ticket
                     @else
@@ -235,6 +258,8 @@
                         @include('reports.sales.partials.mods-table-items')
                     @elseif($view === 'summary_item_mods')
                         @include('reports.sales.partials.mods-table-item-mods')
+                    @elseif($view === 'item_mod_combos')
+                        @include('reports.sales.partials.mods-table-combos')
                     @elseif($view === 'detail')
                         @include('reports.sales.partials.mods-table-detail')
                     @else

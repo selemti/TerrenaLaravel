@@ -21,10 +21,10 @@ $classes = 'kpi-card kpi-card--' . $variant;
         @endif
     </div>
 
-    <div class="kpi-card__label">{{ $label }}</div>
-    <div class="kpi-card__value">{{ $value }}</div>
+    <div class="kpi-card__label" data-kpi-label>{{ $label }}</div>
+    <div class="kpi-card__value" data-kpi-value>{{ $value }}</div>
 
     @if($helper)
-        <div class="kpi-card__helper text-muted">{{ $helper }}</div>
+        <div class="kpi-card__helper text-muted" data-kpi-helper>{{ $helper }}</div>
     @endif
 </div>

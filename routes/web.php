@@ -14,6 +14,7 @@ use App\Http\Controllers\Reports\SalesJournalController;
 use App\Http\Controllers\Reports\SalesMixController;
 use App\Http\Controllers\Reports\SalesModsController;
 use App\Http\Controllers\Reports\SalesSummaryController;
+use App\Http\Controllers\Reports\ProductsReportController;
 use App\Services\Audit\AuditLogService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -401,7 +402,7 @@ Route::middleware('auth')->group(function () {
                 Route::get('/diagnostics/export/pdf', [SalesDiagController::class, 'exportPdf'])->name('reports.sales.diagnostics.export.pdf');
 
                 Route::get('/mods', [SalesModsController::class, 'show'])->name('reports.sales.mods');
-                Route::get('/mods/export/xlsx', [SalesModsController::class, 'exportExcel'])->name('reports.sales.mods.export.xlsx');
+                      Route::get('/mods/export/xlsx', [SalesModsController::class, 'exportExcel'])->name('reports.sales.mods.export.xlsx');
                 Route::get('/mods/export/pdf', [SalesModsController::class, 'exportPdf'])->name('reports.sales.mods.export.pdf');
 
                 // Nuevos reportes (Jasper equivalents)
@@ -417,6 +418,16 @@ Route::middleware('auth')->group(function () {
                 Route::get('/journal/export/pdf', [SalesJournalController::class, 'exportPdf'])->name('reports.sales.journal.export.pdf');
                 Route::get('/detail', [SalesDetailController::class, 'show'])->name('reports.sales.detail');
                 Route::get('/detail/export/pdf', [SalesDetailController::class, 'exportPdf'])->name('reports.sales.detail.export.pdf');
+
+                // Reporte de Productos
+                Route::get('/products', [ProductsReportController::class, 'index'])->name('reports.products.index');
+                Route::get('/products/api/products', [ProductsReportController::class, 'apiProducts'])->name('reports.products.api.products');
+                Route::get('/products/api/categories', [ProductsReportController::class, 'apiCategories'])->name('reports.products.api.categories');
+                Route::get('/products/api/detailed', [ProductsReportController::class, 'apiDetailed'])->name('reports.products.api.detailed');
+                Route::get('/products/api/daily', [ProductsReportController::class, 'apiDaily'])->name('reports.products.api.daily');
+                Route::get('/products/export/pdf', [ProductsReportController::class, 'exportPdf'])->name('reports.products.export.pdf');
+                Route::get('/products/export/excel', [ProductsReportController::class, 'exportExcel'])->name('reports.products.export.excel');
+                Route::get('/products/export/csv', [ProductsReportController::class, 'exportCsv'])->name('reports.products.export.csv');
             });
 
             Route::get('/menu/usage', [MenuUsageController::class, 'show'])->name('reports.menu.usage');

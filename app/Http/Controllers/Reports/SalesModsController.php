@@ -26,7 +26,6 @@ class SalesModsController extends BaseReportController
     {
         [$start, $end, $filters] = $this->resolveFilters($request);
 
-        // Usar nuevo servicio si se especifica una vista, caso contrario usar legacy
         if (isset($filters['view']) && $filters['view'] !== 'legacy') {
             $dataset = $this->service->fetch($start, $end, $filters);
             $summary = $this->service->summarize($dataset, $filters['view']);
@@ -55,12 +54,11 @@ class SalesModsController extends BaseReportController
     {
         [$start, $end, $filters] = $this->resolveFilters($request);
 
-        $view = $filters['view'] ?? 'legacy';
+        $view = $filters['view'] ?? 'item_mod_combos'; // Por defecto usar vista corregida
         $groupByDay = $filters['group_by_day'] ?? false;
         $branches = $filters['branch_ids'] ?? [];
         $terminals = $filters['terminal_ids'] ?? [];
 
-        // Usar nuevo servicio si se especifica una vista, caso contrario usar legacy
         if ($view !== 'legacy') {
             $dataset = $this->service->fetch($start, $end, $filters);
             $summary = $this->service->summarize($dataset, $view);
@@ -76,7 +74,14 @@ class SalesModsController extends BaseReportController
 
         $observedBranches = $branchCandidates
             ->pluck('key')
-            ->merge($dataset->map(fn ($row) => $row->branch_key ?? $row->branch ?? $row->sucursal ?? null))
+            ->merge($dataset->map(function ($row) {
+                if (is_object($row)) {
+                    return $row->branch_key ?? $row->branch ?? $row->sucursal ?? null;
+                } elseif (is_array($row)) {
+                    return $row['branch_key'] ?? $row['branch'] ?? $row['sucursal'] ?? null;
+                }
+                return null;
+            }))
             ->filter()
             ->all();
 
@@ -99,6 +104,7 @@ class SalesModsController extends BaseReportController
             'branchLabels' => $branchLabels,
             'rows' => $dataset,
             'summary' => $summary,
+            'includeEmpty' => $filters['include_empty'] ?? false,
             'generatedAt' => now('America/Mexico_City'),
         ]);
     }
@@ -107,7 +113,7 @@ class SalesModsController extends BaseReportController
     {
         [$start, $end, $filters] = $this->resolveFilters($request);
 
-        $view = $filters['view'] ?? 'legacy';
+        $view = $filters['view'] ?? 'item_mod_combos'; // Por defecto usar vista corregida
         $branches = $filters['branch_ids'] ?? [];
 
         if ($view !== 'legacy') {
@@ -135,7 +141,7 @@ class SalesModsController extends BaseReportController
     {
         [$start, $end, $filters] = $this->resolveFilters($request);
 
-        $view = $filters['view'] ?? 'legacy';
+        $view = $filters['view'] ?? 'item_mod_combos'; // Por defecto usar vista corregida
         $branches = $filters['branch_ids'] ?? [];
 
         if ($view !== 'legacy') {
@@ -175,7 +181,13 @@ class SalesModsController extends BaseReportController
             'group_by_day' => (bool) $request->input('group_by_day', false),
             'branch_ids' => $this->normalizeFilterList($request->input('branch'), uppercase: true),
             'terminal_ids' => $this->normalizeFilterList($request->input('terminal')),
+            'include_empty' => $request->boolean('include_empty', false),
         ];
+
+        // Para la vista de combinaciones, mostrar ítems sin ventas/mods por defecto
+        if ($filters['view'] === 'item_mod_combos' && $request->missing('include_empty')) {
+            $filters['include_empty'] = true;
+        }
 
         return [$start, $end, $filters];
     }
@@ -259,9 +271,17 @@ class SalesModsController extends BaseReportController
     protected function extractBranches(Collection $rows): Collection
     {
         return $rows
-            ->map(function (object $row) {
-                $key = $row->branch_key ?? $row->branch ?? $row->sucursal ?? null;
-                $label = $row->branch_name ?? $row->branch ?? $row->sucursal ?? $row->branch_key ?? null;
+            ->map(function ($row) {
+                // Handle both object and array formats
+                $key = null;
+                $label = null;
+                if (is_object($row)) {
+                    $key = $row->branch_key ?? $row->branch ?? $row->sucursal ?? null;
+                    $label = $row->branch_name ?? $row->branch ?? $row->sucursal ?? $row->branch_key ?? null;
+                } elseif (is_array($row)) {
+                    $key = $row['branch_key'] ?? $row['branch'] ?? $row['sucursal'] ?? null;
+                    $label = $row['branch_name'] ?? $row['branch'] ?? $row['sucursal'] ?? $row['branch_key'] ?? null;
+                }
 
                 if ($key === null) {
                     return null;
@@ -284,8 +304,14 @@ class SalesModsController extends BaseReportController
     protected function extractBranchesFromNewData(Collection $rows): Collection
     {
         return $rows
-            ->map(function (object $row) {
-                $key = $row->sucursal ?? $row->branch_key ?? $row->branch ?? null;
+            ->map(function ($row) {
+                // Handle both object and array formats
+                $key = null;
+                if (is_object($row)) {
+                    $key = $row->sucursal ?? $row->branch_key ?? $row->branch ?? null;
+                } elseif (is_array($row)) {
+                    $key = $row['sucursal'] ?? $row['branch_key'] ?? $row['branch'] ?? null;
+                }
                 $label = $key;
 
                 if ($key === null) {

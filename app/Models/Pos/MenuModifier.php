@@ -3,6 +3,7 @@
 namespace App\Models\Pos;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MenuModifier extends Model
 {
@@ -25,4 +26,9 @@ class MenuModifier extends Model
         'enable' => 'boolean',
         'fixed_price' => 'boolean',
     ];
+
+    public function modifierGroup(): BelongsTo
+    {
+        return $this->belongsTo(ModifierGroup::class, 'group_id', 'id');
+    }
 }

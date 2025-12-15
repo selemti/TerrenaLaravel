@@ -46,6 +46,7 @@ use Illuminate\Http\Request;
 */
 use Illuminate\Support\Facades\Route;
 
+
 Route::prefix('reports')->group(function () {
     Route::get('/kpis/sucursal', [ReportsController::class, 'kpisSucursalDia']);
     Route::get('/kpis/terminal', [ReportsController::class, 'kpisTerminalDia']);
