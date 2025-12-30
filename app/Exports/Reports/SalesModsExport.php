@@ -47,6 +47,7 @@ class SalesModsExport implements FromArray, ShouldAutoSize, WithTitle
         match ($this->view) {
             'summary_items' => $this->appendSummaryItems($output),
             'summary_item_mods' => $this->appendSummaryItemMods($output),
+            'item_mod_combos' => $this->appendItemModCombos($output),
             'detail' => $this->appendDetail($output),
             default => $this->appendLegacy($output),
         };
@@ -64,6 +65,7 @@ class SalesModsExport implements FromArray, ShouldAutoSize, WithTitle
         return match ($this->view) {
             'summary_items' => 'Resumen por Ítem',
             'summary_item_mods' => 'Resumen Ítems + Modificadores',
+            'item_mod_combos' => 'Combinaciones Ítem + Modificadores',
             'detail' => 'Detalle por Ticket',
             default => 'Legacy',
         };
@@ -83,6 +85,25 @@ class SalesModsExport implements FromArray, ShouldAutoSize, WithTitle
                 round((float) ($row->ingreso_bruto_item ?? 0), 2),
                 round((float) ($row->descuento_item ?? 0), 2),
                 round((float) ($row->ingreso_neto_item ?? 0), 2),
+            ];
+        }
+    }
+
+    protected function appendItemModCombos(array &$output): void
+    {
+        $output[] = ['Categoría', 'Grupo menú', 'Menú Item', 'Combinación', 'Sucursal', 'Mods distintos', 'Unidades', 'Selecciones', 'Monto extra'];
+
+        foreach ($this->rows as $row) {
+            $output[] = [
+                $row->categoria ?? 'N/D',
+                $row->grupo_menu ?? 'N/D',
+                $row->menu_item ?? 'N/D',
+                $row->combo ?? 'N/D',
+                $row->sucursal ?? 'N/D',
+                (int) ($row->mods_distintos ?? 0),
+                (int) ($row->unidades_item ?? 0),
+                (int) ($row->selecciones_modificador ?? 0),
+                round((float) ($row->monto_extra_modificador ?? 0), 2),
             ];
         }
     }
@@ -186,6 +207,12 @@ class SalesModsExport implements FromArray, ShouldAutoSize, WithTitle
             $output[] = ['Tickets únicos', $this->summary['total_tickets'] ?? 0];
             $output[] = ['Total monto extra', round((float) ($this->summary['total_amount'] ?? 0), 2)];
             $output[] = ['Total selecciones', $this->summary['total_selections'] ?? 0];
+        } elseif ($this->view === 'item_mod_combos') {
+            $output[] = ['Combinaciones únicas', $this->summary['total_combos'] ?? 0];
+            $output[] = ['Ítems únicos', $this->summary['total_items'] ?? 0];
+            $output[] = ['Unidades vendidas', $this->summary['total_units'] ?? 0];
+            $output[] = ['Selecciones de modificadores', $this->summary['total_selections'] ?? 0];
+            $output[] = ['Monto extra modificadores', round((float) ($this->summary['total_amount'] ?? 0), 2)];
         } else {
             // summary_item_mods y legacy
             $output[] = ['Ítems únicos', $this->summary['total_items'] ?? 0];

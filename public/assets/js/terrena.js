@@ -220,22 +220,22 @@ window.Terrena.initDashboardCharts = async function (range) {
 
     const totalVentas = totals.venta;
 
-    setText('kpi-sales-today', money(totalVentas));
-    setText('kpi-avg-ticket', money(Number(ticketPromedio.ticket_promedio || 0)));
-    setText('kpi-items-sold', Number(itemsResumen.unidades ?? 0).toLocaleString('es-MX'));
+    setKpiValue('kpi-sales-today', money(totalVentas));
+    setKpiValue('kpi-avg-ticket', money(Number(ticketPromedio.ticket_promedio || 0)));
+    setKpiValue('kpi-items-sold', Number(itemsResumen.unidades ?? 0).toLocaleString('es-MX'));
 
     const topProducts = aggregateTopProducts(ventasTop.data || []);
     const bestProduct = topProducts[0];
     if (bestProduct) {
-      setText('kpi-star-product', bestProduct.descripcion || bestProduct.plu || '—');
-      setText('kpi-star-sales', `${money(Number(bestProduct.venta_total || 0))} · ${formatUnits(bestProduct.unidades)}`);
+      setKpiValue('kpi-star-product', bestProduct.descripcion || bestProduct.plu || '—');
+      setKpiHelper('kpi-star-product', `Ventas: ${money(Number(bestProduct.venta_total || 0))} · ${formatUnits(bestProduct.unidades)}`);
     } else {
-      setText('kpi-star-product', '—');
-      setText('kpi-star-sales', '—');
+      setKpiValue('kpi-star-product', '—');
+      setKpiHelper('kpi-star-product', 'Ventas: —');
     }
 
     const alerts = alertasAnomalias.data || [];
-    setText('kpi-alerts', alerts.length.toLocaleString('es-MX'));
+    setKpiValue('kpi-alerts', alerts.length.toLocaleString('es-MX'));
 
     renderHeaderAlerts(alerts);
     renderKpiRegisters(kpiRows, terminalRows, cajaRows, { fechaObjetivo: hasta, branchLookup, fallbackLatest: false });
@@ -250,12 +250,12 @@ window.Terrena.initDashboardCharts = async function (range) {
   } catch (error) {
     console.error('Error cargando dashboard', error);
     toast('No fue posible obtener los datos del dashboard.', 'danger');
-    setText('kpi-sales-today', '—');
-    setText('kpi-avg-ticket', '—');
-    setText('kpi-items-sold', '—');
-    setText('kpi-star-product', '—');
-    setText('kpi-star-sales', '—');
-    setText('kpi-alerts', '0');
+    setKpiValue('kpi-sales-today', '—');
+    setKpiValue('kpi-avg-ticket', '—');
+    setKpiValue('kpi-items-sold', '—');
+    setKpiValue('kpi-star-product', '—');
+    setKpiHelper('kpi-star-product', '—');
+    setKpiValue('kpi-alerts', '0');
     renderHeaderAlerts([]);
     renderKpiRegisters([], [], []);
     renderBranchSummary([]);
@@ -264,9 +264,25 @@ window.Terrena.initDashboardCharts = async function (range) {
   }
 };
 
-function setText(id, value) {
+function resolveKpiTarget(id, selector = '[data-kpi-value]') {
   const el = document.getElementById(id);
-  if (el) el.textContent = value;
+  if (!el) return null;
+  if (el.matches(selector)) return el;
+  if (el.classList?.contains('kpi-card')) {
+    const target = el.querySelector(selector);
+    if (target) return target;
+  }
+  return el;
+}
+
+function setKpiValue(id, value) {
+  const target = resolveKpiTarget(id, '[data-kpi-value]');
+  if (target) target.textContent = value;
+}
+
+function setKpiHelper(id, value) {
+  const target = resolveKpiTarget(id, '[data-kpi-helper]');
+  if (target) target.textContent = value;
 }
 
 function destroyChart(target) {
@@ -305,33 +321,14 @@ function renderSalesTrendChart(rows, opts = {}) {
   const canvas = document.getElementById('salesTrendChart');
   if (!canvas) return;
 
-  const list = Array.isArray(rows) ? rows.filter(r => r && r.fecha) : [];
-  const totalsByDate = new Map();
-  const ticketsByDate = new Map();
-  list.forEach((row) => {
-    const iso = toISODateOnly(row.fecha);
-    totalsByDate.set(iso, Number(row.venta_total || row.total || 0));
-    ticketsByDate.set(iso, Number(row.tickets || 0));
-  });
+  // Solo graficar días con ventas (> 0) para omitir domingos/festivos sin actividad
+  const list = (Array.isArray(rows) ? rows : [])
+    .filter(r => r && r.fecha && Number(r.venta_total || r.total || 0) > 0)
+    .sort((a, b) => (new Date(a.fecha)).getTime() - (new Date(b.fecha)).getTime());
 
-  const startDate = parseISODate(opts.desde) || parseISODate(list[0]?.fecha);
-  const endDate = parseISODate(opts.hasta) || startDate;
-  const labels = [];
-  const data = [];
-  const tickets = [];
-
-  if (startDate && endDate) {
-    for (let cursor = new Date(startDate); cursor <= endDate; cursor.setDate(cursor.getDate() + 1)) {
-      const iso = toISODate(cursor);
-      labels.push(formatDateLabel(iso));
-      data.push(Number(totalsByDate.get(iso) || 0));
-      tickets.push(Number(ticketsByDate.get(iso) || 0));
-    }
-  } else {
-    labels.push('—');
-    data.push(0);
-    tickets.push(0);
-  }
+  const labels = list.map(row => formatDateLabel(row.fecha));
+  const data = list.map(row => Number(row.venta_total || row.total || 0));
+  const tickets = list.map(row => Number(row.tickets || 0));
 
   destroyChart(canvas);
   const chartLabels = labels.length ? labels : ['—'];

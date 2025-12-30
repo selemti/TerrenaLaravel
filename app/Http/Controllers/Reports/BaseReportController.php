@@ -73,19 +73,25 @@ abstract class BaseReportController extends Controller
             return [$singleDay, $singleDay];
         }
 
-        $start = $startInput
-            ? Carbon::parse($startInput, 'America/Mexico_City')
-            : $this->parseDate($request)->copy();
+        try {
+            $start = $startInput
+                ? Carbon::parse($startInput, 'America/Mexico_City')
+                : $this->parseDate($request)->copy();
 
-        $end = $endInput
-            ? Carbon::parse($endInput, 'America/Mexico_City')
-            : $start->copy();
+            $end = $endInput
+                ? Carbon::parse($endInput, 'America/Mexico_City')
+                : $start->copy();
 
-        if ($end->lt($start)) {
-            [$start, $end] = [$end, $start];
+            if ($end->lt($start)) {
+                [$start, $end] = [$end, $start];
+            }
+
+            return [$start->startOfDay(), $end->endOfDay()];
+        } catch (\Exception $e) {
+            // Fallback to today if parsing fails
+            $today = now()->timezone('America/Mexico_City');
+            return [$today->startOfDay(), $today->endOfDay()];
         }
-
-        return [$start->startOfDay(), $end->startOfDay()];
     }
 
     /**

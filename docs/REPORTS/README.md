@@ -20,12 +20,14 @@ TerrenaLaravel cuenta con **14 controladores de reportes** organizados en:
 
 **Ruta**: `/reports/sales/mods`
 **Estado**: ✅ **Completado y validado** (26-28 Nov 2025)
+**Vista nueva**: `view=item_mod_combos` (agrupa ítem + todos sus modificadores en una sola línea, usando los grupos del catálogo aunque `ticket_item_modifier.group_id` venga nulo).
 
 **Características**:
 - ✅ 3 vistas diferentes:
   - `summary_items`: Resumen por Categoría → Grupo → Ítem
   - `summary_item_mods`: Resumen Ítems + Modificadores ⭐ principal
   - `detail`: Detalle a nivel de ticket
+- ✅ 4ta vista: `item_mod_combos` (combinaciones completas de un ítem con todos sus modificadores seleccionados en el ticket).
 - ✅ Filtros: sucursal, terminal, agrupación por día
 - ✅ Service layer completo (`ItemModsReportService`)
 - ✅ Exportación Excel/PDF

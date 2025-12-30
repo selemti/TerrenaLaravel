@@ -1,0 +1,765 @@
+<?php
+
+namespace App\Services\Reports;
+
+use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Servicio para reporte concentrado de Ítems + Modificadores
+ *
+ * Soporta 3 vistas:
+ * - summary_items: Resumen por Categoría → Grupo → Item
+ * - summary_item_mods: Resumen por Item + Modificador (principal)
+ * - detail: Detalle a nivel de ticket
+ */
+class ItemModsReportService
+{
+    /**
+     * Obtiene datos según la vista solicitada
+     */
+    public function fetch(
+        Carbon $startDate,
+        Carbon $endDate,
+        array $filters = []
+    ): Collection {
+        $view = $filters['view'] ?? 'summary_item_mods';
+        $groupByDay = (bool) ($filters['group_by_day'] ?? false);
+        $branchIds = $filters['branch_ids'] ?? null;
+        $terminalIds = $filters['terminal_ids'] ?? null;
+
+        return match ($view) {
+            'summary_items' => $this->fetchSummaryItems($startDate, $endDate, $branchIds, $terminalIds),
+            'summary_item_mods' => $this->fetchSummaryItemMods($startDate, $endDate, $groupByDay, $branchIds, $terminalIds),
+            'item_mod_combos' => $this->fetchItemModifierCombos(
+                $startDate,
+                $endDate,
+                $branchIds,
+                $terminalIds,
+                (bool) ($filters['include_empty'] ?? false)
+            ),
+            'detail' => $this->fetchDetail($startDate, $endDate, $branchIds, $terminalIds),
+            default => throw new \InvalidArgumentException("Invalid view: {$view}"),
+        };
+    }
+
+    /**
+     * Vista A: Resumen por Ítem (sin modificadores)
+     */
+    protected function fetchSummaryItems(
+        Carbon $start,
+        Carbon $end,
+        ?array $branchIds,
+        ?array $terminalIds
+    ): Collection {
+        $query = DB::connection('pgsql')
+            ->table('public.ticket as t')
+            ->join('public.ticket_item as ti', 'ti.ticket_id', '=', 't.id')
+            ->whereBetween('t.closing_date', [
+                $start->format('Y-m-d 00:00:00'),
+                $end->format('Y-m-d 23:59:59')
+            ])
+            ->where('t.paid', true)
+            ->where('t.voided', false)
+            ->selectRaw("
+                ti.category_name AS categoria,
+                ti.group_name AS grupo_menu,
+                ti.item_name AS menu_item,
+                ti.item_price AS precio_item,
+                SUM(COALESCE(ti.item_count, 0)) AS unidades_vendidas,
+                SUM(ti.total_price) AS ingreso_bruto_item,
+                SUM(COALESCE(ti.discount, 0)) AS descuento_item,
+                SUM(ti.total_price - COALESCE(ti.discount, 0)) AS ingreso_neto_item
+            ")
+            ->groupBy('ti.category_name', 'ti.group_name', 'ti.item_name', 'ti.item_price')
+            ->orderBy('ti.category_name')
+            ->orderBy('ti.group_name')
+            ->orderBy('ti.item_name');
+
+        if ($branchIds && count($branchIds) > 0) {
+            $query->whereIn('t.branch_key', $branchIds);
+        }
+
+        if ($terminalIds && count($terminalIds) > 0) {
+            $query->whereIn('t.terminal_id', $terminalIds);
+        }
+
+        return collect($query->get());
+    }
+
+    /**
+     * Vista B: Resumen Ítems + Modificadores (PRINCIPAL)
+     */
+    protected function fetchSummaryItemMods(
+        Carbon $start,
+        Carbon $end,
+        bool $groupByDay,
+        ?array $branchIds,
+        ?array $terminalIds
+    ): Collection {
+        $dateSelect = $groupByDay
+            ? "t.folio_date AS fecha,"
+            : "";
+
+        $dateGroupBy = $groupByDay
+            ? "t.folio_date,"
+            : "";
+
+        $dateOrderBy = $groupByDay
+            ? "t.folio_date,"
+            : "";
+
+        $query = DB::connection('pgsql')
+            ->table('public.ticket as t')
+            ->join('public.ticket_item as ti', 'ti.ticket_id', '=', 't.id')
+            ->join('public.ticket_item_modifier as tim', 'tim.ticket_item_id', '=', 'ti.id')
+            ->leftJoin('public.menu_modifier as mm', 'mm.id', '=', 'tim.item_id')
+            ->leftJoin('public.menu_modifier_group as mgr', 'mgr.id', '=', DB::raw('COALESCE(tim.group_id, mm.group_id)'))
+            ->whereBetween('t.closing_date', [
+                $start->format('Y-m-d 00:00:00'),
+                $end->format('Y-m-d 23:59:59')
+            ])
+            ->where('t.paid', true)
+            ->where('t.voided', false)
+            // CORRECCIÓN: Eliminado ->whereNotNull('tim.modifier_name') para incluir items sin modificadores
+            ->selectRaw("
+                {$dateSelect}
+                ti.category_name AS categoria,
+                ti.group_name AS grupo_menu,
+                ti.item_name AS menu_item,
+                mgr.name AS grupo_modificador,
+                tim.modifier_name AS modificador,
+                tim.modifier_price AS precio_extra_mod,
+                t.branch_key AS sucursal,
+                t.terminal_id AS terminal,
+                SUM(COALESCE(ti.item_count, 0)) AS unidades_item,
+                SUM(COALESCE(tim.item_count, 0)) AS selecciones_modificador,
+                SUM(COALESCE(tim.modifier_price, 0) * COALESCE(tim.item_count, 0)) AS monto_extra_modificador
+            ")
+            ->groupByRaw("
+                {$dateGroupBy}
+                ti.category_name,
+                ti.group_name,
+                ti.item_name,
+                mgr.name,
+                tim.modifier_name,
+                tim.modifier_price,
+                t.branch_key,
+                t.terminal_id
+            ")
+            ->orderByRaw("{$dateOrderBy} ti.category_name, ti.group_name, ti.item_name, mgr.name, tim.modifier_name");
+
+        if ($branchIds && count($branchIds) > 0) {
+            $query->whereIn('t.branch_key', $branchIds);
+        }
+
+        if ($terminalIds && count($terminalIds) > 0) {
+            $query->whereIn('t.terminal_id', $terminalIds);
+        }
+
+        return collect($query->get());
+    }
+
+    /**
+     * Vista C: Combinaciones de Ítem + Modificadores
+     *
+     * Devuelve cada combinación única de (menú item + lista de modificadores) con sus totales.
+     */
+    protected function fetchItemModifierCombos(
+        Carbon $start,
+        Carbon $end,
+        ?array $branchIds,
+        ?array $terminalIds,
+        bool $includeEmpty = false
+    ): Collection {
+        $groupLookup = $this->getModifierGroupLookup();
+
+        $rows = DB::connection('pgsql')
+            ->table('public.ticket as t')
+            ->join('public.ticket_item as ti', 'ti.ticket_id', '=', 't.id')
+            ->leftJoin('public.ticket_item_modifier as tim', 'tim.ticket_item_id', '=', 'ti.id')
+            ->leftJoin('public.menu_modifier as mm', 'mm.id', '=', 'tim.item_id')
+            ->leftJoin('public.menu_modifier_group as mgr', 'mgr.id', '=', DB::raw('COALESCE(tim.group_id, mm.group_id)'))
+            ->whereBetween('t.closing_date', [
+                $start->format('Y-m-d 00:00:00'),
+                $end->format('Y-m-d 23:59:59')
+            ])
+            ->where('t.paid', true)
+            ->where('t.voided', false)
+            ->selectRaw("
+                t.id AS ticket_id,
+                ti.id AS ticket_item_id,
+                t.folio_date AS fecha,
+                t.branch_key AS sucursal,
+                t.terminal_id AS terminal,
+                ti.category_name AS categoria,
+                ti.group_name AS grupo_menu,
+                ti.item_name AS menu_item,
+                ti.item_id AS menu_item_id,
+                ti.item_price AS precio_item,
+                ti.total_price AS total_linea,
+                ti.total_price_without_modifiers AS total_sin_mods,
+                COALESCE(ti.item_count, 0) AS unidades_item,
+                tim.group_id AS tim_group_id,
+                tim.item_id AS tim_item_id,
+                mgr.name AS grupo_modificador,
+                tim.modifier_name AS modificador,
+                COALESCE(tim.item_count, 0) AS cantidad_modificador,
+                COALESCE(tim.modifier_price, 0) AS precio_modificador
+            ")
+            ->orderBy('t.closing_date')
+            ->orderBy('t.id')
+            ->orderBy('ti.id')
+            ->orderBy('tim.id');
+
+        if ($branchIds && count($branchIds) > 0) {
+            $rows->whereIn('t.branch_key', $branchIds);
+        }
+
+        if ($terminalIds && count($terminalIds) > 0) {
+            $rows->whereIn('t.terminal_id', $terminalIds);
+        }
+
+        $base = collect($rows->get());
+
+        // CORRECCIÓN: Obtener todas las filas individuales primero
+        $allRows = $base->map(function ($row) {
+            return (object) [
+                'ticket_id' => $row->ticket_id,
+                'ticket_item_id' => $row->ticket_item_id,
+                'categoria' => $row->categoria,
+                'grupo_menu' => $row->grupo_menu,
+                'menu_item' => $row->menu_item,
+                'menu_item_id' => $row->menu_item_id,
+                'unidades_item' => (int) ($row->unidades_item ?? 0),
+                'precio_item' => (float) ($row->precio_item ?? 0),
+                'ingreso_total' => (float) ($row->ingreso_total_item ?? 0),
+                'sucursal' => $row->sucursal,
+                'modificador' => $row->modificador,
+                'grupo_modificador' => $row->grupo_modificador,
+                'mod_group' => $row->grupo_modificador ?? 'Sin grupo',
+                'mod_name' => $row->modificador ?? '',
+            ];
+        });
+
+        // Agrupar por ticket_item para reconstruir las combinaciones
+        $byTicketItem = $allRows->groupBy('ticket_item_id');
+
+        // CORRECCIÓN: Crear una fila por cada ticket_item con sus modificadores
+        $processedRows = [];
+        foreach ($byTicketItem as $ticketItemId => $mods) {
+            $first = $mods->first();
+
+            // Obtener modificadores únicos para este ticket_item
+            $modifiers = $mods
+                ->filter(fn ($r) => !empty($r->mod_name))
+                ->map(function ($r) {
+                    return [
+                        'group' => $r->mod_group,
+                        'name' => $r->mod_name,
+                    ];
+                })
+                ->unique(function ($m) {
+                    return strtolower(trim($m['group'])) . '::' . strtolower(trim($m['name']));
+                })
+                ->values();
+
+            // Crear firma única para esta combinación
+            $modsSignature = $modifiers
+                ->map(fn ($m) => strtolower(trim(($m['group'] ?? '') . '::' . ($m['name'] ?? ''))))
+                ->filter()
+                ->sort()
+                ->values()
+                ->all();
+
+            $signature = strtolower(trim((string) ($first->menu_item ?? ''))) . '||' . implode('||', $modsSignature);
+            $comboLabel = $modifiers->isEmpty()
+                ? 'Sin modificadores'
+                : $modifiers
+                    ->map(function ($m) {
+                        $label = $m['name'] ?? '—';
+                        if (!empty($m['group'])) {
+                            $label = "{$m['group']}: {$label}";
+                        }
+                        return $label;
+                    })
+                    ->unique()
+                    ->values()
+                    ->implode(' | ');
+
+            $unidades = (int) ($first->unidades_item ?? 0);
+            $precioBase = (float) ($first->precio_item ?? 0);
+            $ingresoBase = $precioBase * $unidades;
+
+            $processedRows[] = (object) [
+                'signature' => $signature,
+                'categoria' => $first->categoria,
+                'grupo_menu' => $first->grupo_menu,
+                'menu_item' => $first->menu_item,
+                'combo' => $comboLabel,
+                'mods_distintos' => $modifiers->pluck('name')->filter()->unique()->count(),
+                'selecciones_modificador' => $modifiers->count(),
+                'monto_extra_modificador' => 0, // Se calculará después
+                'unidades_item' => $unidades,
+                'precio_item' => $precioBase,
+                'ingreso_total' => $ingresoBase,
+                'tickets' => 1,
+                'sucursal' => $first->sucursal,
+                'mods' => $modifiers,
+            ];
+        }
+
+        // CORRECCIÓN: Ahora tenemos $processedRows con todas las filas procesadas correctamente
+        // Continuar con el flujo existente de agrupación
+
+        $normalizeKey = function ($categoria, $grupo, $item) {
+            $parts = [
+                preg_replace('/\s+/', ' ', strtolower(trim((string) $categoria))),
+                preg_replace('/\s+/', ' ', strtolower(trim((string) $grupo))),
+                preg_replace('/\s+/', ' ', strtolower(trim((string) $item))),
+            ];
+            return implode('|', $parts);
+        };
+
+        // Totales reales por ítem directamente de ticket_item (sin depender de modificadores)
+        $totalsByItem = $includeEmpty
+            ? $this->getBaseItemTotals($start, $end, $branchIds, $terminalIds)->keyBy('key')
+            : collect();
+
+        // Agrupar combos (solo si hay modificadores)
+        $result = collect($processedRows)
+            // CORRECCIÓN: Eliminado el filtro para incluir items sin modificadores
+            // ->filter(fn ($row) => $row['mods_distintos'] > 0 || ($row['selecciones_modificador'] ?? 0) > 0)
+            ->groupBy('signature')
+            ->map(function (Collection $group) {
+                $first = $group->first();
+                $totalUnits = $group->sum('unidades_item');
+                $totalTickets = $group->sum('tickets');
+                $totalModifierAmount = $group->sum('monto_extra_modificador');
+                $totalSelections = $group->sum('selecciones_modificador');
+                $basePrice = $first->precio_item ?? 0;
+                $totalIncome = ($basePrice * $totalUnits) + $totalModifierAmount;
+
+                return (object) [
+                    'categoria' => $first->categoria,
+                    'grupo_menu' => $first->grupo_menu,
+                    'menu_item' => $first->menu_item,
+                    'combo' => $first->combo,
+                    'mods_distintos' => $first->mods_distintos,
+                    'unidades_item' => $totalUnits,
+                    'selecciones_modificador' => $totalSelections,
+                    'monto_extra_modificador' => $totalModifierAmount,
+                    'precio_item' => $basePrice,
+                    'ingreso_total' => $totalIncome,
+                    'tickets' => $totalTickets,
+                    'sucursal' => $first->sucursal,
+                ];
+            })
+            ->values();
+
+        if (!$includeEmpty) {
+            return $result;
+        }
+
+        // CORRECCIÓN: Para combos, necesitamos mantener todas las combinaciones separadas
+        // No usar mapping por item, sino mantener cada combo individual
+
+        // 1) Ítems con ventas pero sin mods
+        $baseItems = $this->getBaseItemTotals($start, $end, $branchIds, $terminalIds);
+        foreach ($baseItems as $baseItem) {
+            // Verificar si ya existe un combo para este item
+            $existingCombo = $result->first(function ($r) use ($baseItem) {
+                return strtolower(trim($r->categoria ?? '')) === strtolower(trim($baseItem->categoria ?? ''))
+                    && strtolower(trim($r->grupo_menu ?? '')) === strtolower(trim($baseItem->grupo_menu ?? ''))
+                    && strtolower(trim($r->menu_item ?? '')) === strtolower(trim($baseItem->menu_item ?? ''));
+            });
+
+            // Si no existe ningún combo para este item, agregar uno sin modificadores
+            if (!$existingCombo) {
+                $result->push((object) [
+                    'categoria' => $baseItem->categoria ?? '',
+                    'grupo_menu' => $baseItem->grupo_menu ?? '',
+                    'menu_item' => $baseItem->menu_item ?? '',
+                    'combo' => 'Sin modificadores',
+                    'mods_distintos' => 0,
+                    'unidades_item' => $baseItem->unidades_item ?? 0,
+                    'selecciones_modificador' => 0,
+                    'monto_extra_modificador' => 0,
+                    'precio_item' => $baseItem->precio_item ?? 0,
+                    'ingreso_total' => $baseItem->ingreso_total ?? 0,
+                    'tickets' => $baseItem->tickets ?? 0,
+                    'sucursal' => $baseItem->sucursal ?? '',
+                ]);
+            }
+        }
+
+        // 2) Catálogo sin ventas - solo para items que no tienen ventas ni combos
+        $catalog = $this->getMenuCatalog();
+        foreach ($catalog as $item) {
+            $existingCombo = $result->first(function ($r) use ($item) {
+                return strtolower(trim($r->categoria ?? '')) === strtolower(trim($item->categoria ?? 'N/D'))
+                    && strtolower(trim($r->grupo_menu ?? '')) === strtolower(trim($item->grupo_menu ?? 'N/D'))
+                    && strtolower(trim($r->menu_item ?? '')) === strtolower(trim($item->menu_item ?? 'N/D'));
+            });
+
+            if (!$existingCombo) {
+                $result->push((object) [
+                    'categoria' => $item->categoria ?? 'N/D',
+                    'grupo_menu' => $item->grupo_menu ?? 'N/D',
+                    'menu_item' => $item->menu_item ?? 'N/D',
+                    'combo' => 'Sin ventas',
+                    'mods_distintos' => 0,
+                    'unidades_item' => 0,
+                    'selecciones_modificador' => 0,
+                    'monto_extra_modificador' => 0,
+                    'precio_item' => (float) ($item->precio_item ?? 0),
+                    'ingreso_total' => 0.0,
+                    'tickets' => 0,
+                    'sucursal' => 'Sin sucursal',
+                ]);
+            }
+        }
+
+        return $result
+            ->sortBy([
+                fn ($row) => $row->categoria ?? 'ZZZ',
+                fn ($row) => $row->grupo_menu ?? 'ZZZ',
+                fn ($row) => $row->menu_item ?? 'ZZZ',
+                fn ($row) => $row->combo ?? '',
+            ])
+            ->values();
+    }
+
+    /**
+     * Vista C: Detalle a nivel de ticket
+     */
+    protected function fetchDetail(
+        Carbon $start,
+        Carbon $end,
+        ?array $branchIds,
+        ?array $terminalIds
+    ): Collection {
+        $query = DB::connection('pgsql')
+            ->table('public.ticket as t')
+            ->join('public.ticket_item as ti', 'ti.ticket_id', '=', 't.id')
+            ->join('public.ticket_item_modifier as tim', 'tim.ticket_item_id', '=', 'ti.id')
+            ->whereBetween('t.closing_date', [
+                $start->format('Y-m-d 00:00:00'),
+                $end->format('Y-m-d 23:59:59')
+            ])
+            ->where('t.paid', true)
+            ->where('t.voided', false)
+            // CORRECCIÓN: Eliminado ->whereNotNull('tim.modifier_name') para incluir items sin modificadores
+            ->selectRaw("
+                t.folio_date AS fecha,
+                ti.item_name AS item,
+                tim.modifier_name AS modificador,
+                COALESCE(ti.item_count, 0) AS cantidad_item,
+                COALESCE(tim.item_count, 0) AS selecciones,
+                COALESCE(tim.modifier_price, 0) * COALESCE(tim.item_count, 0) AS monto_extra,
+                t.branch_key AS sucursal,
+                t.terminal_id AS terminal,
+                t.id AS ticket_id,
+                ti.id AS ticket_item_id
+            ")
+            ->orderByDesc('t.folio_date')
+            ->orderByDesc('t.id')
+            ->orderBy('ti.id')
+            ->orderBy('tim.id');
+
+        if ($branchIds && count($branchIds) > 0) {
+            $query->whereIn('t.branch_key', $branchIds);
+        }
+
+        if ($terminalIds && count($terminalIds) > 0) {
+            $query->whereIn('t.terminal_id', $terminalIds);
+        }
+
+        return collect($query->get());
+    }
+
+    /**
+     * Calcula KPIs según la vista
+     */
+    public function summarize(Collection $data, string $view): array
+    {
+        if ($data->isEmpty()) {
+            return [
+                'total_items' => 0,
+                'total_modifiers' => 0,
+                'total_combinations' => 0,
+                'total_amount' => 0.0,
+                'total_selections' => 0,
+                'avg_amount_per_selection' => 0.0,
+                'top_modifiers' => [],
+                'days' => [],
+            ];
+        }
+
+        return match ($view) {
+            'summary_items' => $this->summarizeItems($data),
+            'summary_item_mods' => $this->summarizeItemMods($data),
+            'item_mod_combos' => $this->summarizeItemModifierCombos($data),
+            'detail' => $this->summarizeDetail($data),
+            default => [],
+        };
+    }
+
+    /**
+     * KPIs para summary_items
+     */
+    protected function summarizeItems(Collection $data): array
+    {
+        return [
+            'total_items' => $data->pluck('menu_item')->filter()->unique()->count(),
+            'total_categories' => $data->pluck('categoria')->filter()->unique()->count(),
+            'total_groups' => $data->pluck('grupo_menu')->filter()->unique()->count(),
+            'total_units' => (int) $data->sum('unidades_vendidas'),
+            'total_gross' => round((float) $data->sum('ingreso_bruto_item'), 2),
+            'total_discount' => round((float) $data->sum('descuento_item'), 2),
+            'total_net' => round((float) $data->sum('ingreso_neto_item'), 2),
+        ];
+    }
+
+    /**
+     * KPIs para summary_item_mods (igual que el reporte actual)
+     */
+    protected function summarizeItemMods(Collection $data): array
+    {
+        $uniqueItems = $data->pluck('menu_item')->filter()->unique()->count();
+        $uniqueModifiers = $data->pluck('modificador')->filter()->unique()->count();
+        $totalCombinations = $data->count();
+
+        $totalAmount = $data->sum(fn($row) => (float) ($row->monto_extra_modificador ?? 0));
+        $totalSelections = $data->sum(fn($row) => (int) ($row->selecciones_modificador ?? 0));
+
+        $avgAmountPerSelection = $totalSelections > 0
+            ? round($totalAmount / $totalSelections, 2)
+            : 0.0;
+
+        $topModifiers = $data
+            ->groupBy(fn($row) => $row->modificador ?? 'Sin nombre')
+            ->map(function (Collection $items, string $name) {
+                return [
+                    'modifier' => $name,
+                    'times_selected' => $items->sum(fn($row) => (int) ($row->selecciones_modificador ?? 0)),
+                    'amount' => round($items->sum(fn($row) => (float) ($row->monto_extra_modificador ?? 0)), 2),
+                ];
+            })
+            ->filter(fn($row) => $row['times_selected'] > 0 || $row['amount'] > 0)
+            ->sortByDesc('amount')
+            ->take(5)
+            ->values()
+            ->toArray();
+
+        $days = $data->pluck('fecha')->filter()->unique()->sort()->values()->all();
+
+        return [
+            'total_items' => $uniqueItems,
+            'total_modifiers' => $uniqueModifiers,
+            'total_combinations' => $totalCombinations,
+            'total_amount' => round($totalAmount, 2),
+            'total_selections' => $totalSelections,
+            'avg_amount_per_selection' => $avgAmountPerSelection,
+            'top_modifiers' => $topModifiers,
+            'days' => $days,
+        ];
+    }
+
+    /**
+     * KPIs para detail
+     */
+    protected function summarizeDetail(Collection $data): array
+    {
+        return [
+            'total_records' => $data->count(),
+            'total_items' => $data->pluck('item')->filter()->unique()->count(),
+            'total_modifiers' => $data->pluck('modificador')->filter()->unique()->count(),
+            'total_tickets' => $data->pluck('ticket_id')->filter()->unique()->count(),
+            'total_amount' => round((float) $data->sum('monto_extra'), 2),
+            'total_selections' => (int) $data->sum('selecciones'),
+            'days' => $data->pluck('fecha')->filter()->unique()->sort()->values()->all(),
+        ];
+    }
+
+    /**
+     * KPIs para combinaciones de ítem + modificadores
+     */
+    protected function summarizeItemModifierCombos(Collection $data): array
+    {
+        return [
+            'total_combos' => $data->count(),
+            'total_items' => $data->pluck('menu_item')->filter()->unique()->count(),
+            'total_units' => (int) $data->sum('unidades_item'),
+            'total_selections' => (int) $data->sum('selecciones_modificador'),
+            'total_amount' => round((float) $data->sum('monto_extra_modificador'), 2),
+        ];
+    }
+
+    /**
+     * Mapa nombre de modificador -> grupo (catálogo) para cuando el group_id llega nulo en tickets.
+     */
+    protected function getModifierGroupLookup(): array
+    {
+        $rows = DB::connection('pgsql')
+            ->table('public.menu_modifier as mm')
+            ->leftJoin('public.menu_modifier_group as mg', 'mg.id', '=', 'mm.group_id')
+            ->select('mm.name', 'mg.name as group_name')
+            ->whereNotNull('mm.name')
+            ->whereNotNull('mg.name')
+            ->get();
+
+        $byModifierName = [];
+        $byModifierId = [];
+        foreach ($rows as $row) {
+            $key = strtolower(trim($row->name));
+            $byModifierName[$key] = $row->group_name;
+        }
+        // Mapear por id -> grupo
+        $rowsId = DB::connection('pgsql')
+            ->table('public.menu_modifier as mm')
+            ->leftJoin('public.menu_modifier_group as mg', 'mg.id', '=', 'mm.group_id')
+            ->select('mm.id', 'mg.name as group_name', 'mg.id as group_id')
+            ->whereNotNull('mg.name')
+            ->whereNotNull('mm.id')
+            ->get();
+        foreach ($rowsId as $row) {
+            $byModifierId[$row->id] = $row->group_name;
+        }
+        $modifierGroupIdByModifierId = [];
+        foreach ($rowsId as $row) {
+            $modifierGroupIdByModifierId[$row->id] = $row->group_id;
+        }
+
+        // Mapa de ítem -> grupos permitidos (para evitar asignar mods de otros grupos al ítem actual)
+        $mig = DB::connection('pgsql')
+            ->table('public.menuitem_modifiergroup as mig')
+            ->leftJoin('public.menu_modifier_group as mg', 'mg.id', '=', 'mig.modifier_group')
+            ->leftJoin('public.menu_item as mi', 'mi.id', '=', 'mig.menuitem_modifiergroup_id')
+            ->select('mi.id as menu_item_id', 'mi.name as menu_item', 'mg.id as group_id', 'mg.name as group_name')
+            ->whereNotNull('mi.id')
+            ->whereNotNull('mg.id')
+            ->get();
+
+        $itemGroups = $mig
+            ->groupBy('menu_item')
+            ->map(function ($rows) {
+                return $rows->pluck('group_name')->filter()->unique()->values()->all();
+            })
+            ->toArray();
+
+        $itemGroupsById = $mig
+            ->groupBy('menu_item_id')
+            ->map(function ($rows) {
+                return $rows->pluck('group_name')->filter()->unique()->values()->all();
+            })
+            ->toArray();
+
+        $itemGroupIdsByItemId = $mig
+            ->groupBy('menu_item_id')
+            ->map(function ($rows) {
+                return $rows->pluck('group_id')->filter()->unique()->values()->all();
+            })
+            ->toArray();
+
+        return [
+            'by_modifier_name' => $byModifierName,
+            'by_modifier_id' => $byModifierId,
+            'by_group_id' => array_column($rowsId->toArray(), 'group_name', 'group_id'),
+            'by_item' => $itemGroups,
+            'by_item_id' => $itemGroupsById,
+            'group_ids_by_item_id' => $itemGroupIdsByItemId,
+            'group_id_by_modifier_id' => $modifierGroupIdByModifierId,
+        ];
+    }
+
+    /**
+     * Catálogo de ítems (categoría + grupo) para mostrar ítems sin ventas/modificadores.
+     */
+    protected function getMenuCatalog(): Collection
+    {
+        return DB::connection('pgsql')
+            ->table('public.menu_item as mi')
+            ->leftJoin('public.menu_group as mg', 'mg.id', '=', 'mi.group_id')
+            ->leftJoin('public.menu_category as mc', 'mc.id', '=', 'mg.category_id')
+            ->selectRaw("
+                mi.id AS menu_item_id,
+                mi.name AS menu_item,
+                COALESCE(mc.name, 'N/D') AS categoria,
+                COALESCE(mg.name, 'N/D') AS grupo_menu,
+                mi.price AS precio_item
+            ")
+            ->where(function ($q) {
+                $q->whereNull('mi.visible')->orWhere('mi.visible', true);
+            })
+            ->get();
+    }
+
+    /**
+     * Totales por ítem directamente de ticket_item (sin depender de modificadores).
+     */
+    protected function getBaseItemTotals(
+        Carbon $start,
+        Carbon $end,
+        ?array $branchIds,
+        ?array $terminalIds
+    ): Collection {
+        $rows = DB::connection('pgsql')
+            ->table('public.ticket as t')
+            ->join('public.ticket_item as ti', 'ti.ticket_id', '=', 't.id')
+            ->whereBetween('t.closing_date', [
+                $start->format('Y-m-d 00:00:00'),
+                $end->format('Y-m-d 23:59:59')
+            ])
+            ->where('t.paid', true)
+            ->where('t.voided', false)
+            ->selectRaw("
+                ti.category_name AS categoria,
+                ti.group_name AS grupo_menu,
+                ti.item_name AS menu_item,
+                SUM(COALESCE(ti.item_count, 0)) AS unidades_item,
+                SUM(ti.total_price) AS ingreso_total,
+                SUM(ti.total_price_without_modifiers) AS ingreso_sin_mods,
+                COUNT(*) AS tickets
+            ")
+            ->groupBy('ti.category_name', 'ti.group_name', 'ti.item_name');
+
+        if ($branchIds && count($branchIds) > 0) {
+            $rows->whereIn('t.branch_key', $branchIds);
+        }
+
+        if ($terminalIds && count($terminalIds) > 0) {
+            $rows->whereIn('t.terminal_id', $terminalIds);
+        }
+
+        return collect($rows->get())->map(function ($row) {
+            $units = (int) ($row->unidades_item ?? 0);
+            $avgPrice = $units > 0
+                ? round((float) ($row->ingreso_sin_mods ?? 0) / $units, 2)
+                : 0.0;
+
+            $normalizeKey = function ($categoria, $grupo, $item) {
+                $parts = [
+                    preg_replace('/\s+/', ' ', strtolower(trim((string) $categoria))),
+                    preg_replace('/\s+/', ' ', strtolower(trim((string) $grupo))),
+                    preg_replace('/\s+/', ' ', strtolower(trim((string) $item))),
+                ];
+                return implode('|', $parts);
+            };
+
+            $row->precio_item = $avgPrice;
+            $row->key = $normalizeKey($row->categoria ?? '', $row->grupo_menu ?? '', $row->menu_item ?? '');
+
+            return $row;
+        });
+    }
+
+    /**
+     * Redondea a 2 decimales
+     */
+    protected function round(float $value): float
+    {
+        return round($value, 2);
+    }
+}
