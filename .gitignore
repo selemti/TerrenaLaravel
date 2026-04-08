@@ -39,3 +39,29 @@ bootstrap/cache/*.php
 
 # Temp files
 NUL
+
+# Dumps y archivos temporales locales
+BD/
+temp_restore*/
+forensic_results.csv
+*.bat
+2025-*.txt
+claude_*.txt
+codex.txt
+QWEN.md
+tmp_*.md
+backup_antes_*.sql
+resources.zip
+docs_V4_1_tree.txt
+
+# Archivos de análisis SQL sueltos en raíz
+query_*.sql
+debug_*.sql
+trigger_*.sql
+vista_*.sql
+sincronizacion_*.sql
+fix_*.sql
+analizar_*.sql
+crear_*.sql
+corregir_*.sql
+inventario_bd_*

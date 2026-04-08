@@ -118,7 +118,8 @@ class SalesModsController extends BaseReportController
 
         if ($view !== 'legacy') {
             $dataset = $this->service->fetch($start, $end, $filters);
-            $summary = $this->service->summarize($dataset, $view);
+            $salesMode = $filters['sales_mode'] ?? $this->service->getSalesMode();
+            $summary = $this->service->summarize($dataset, $view, $salesMode);
         } else {
             $dataset = $this->applyBranchFilter($this->fetchData($start, $end), $branches);
             $summary = $this->summarize($dataset);
@@ -146,7 +147,8 @@ class SalesModsController extends BaseReportController
 
         if ($view !== 'legacy') {
             $dataset = $this->service->fetch($start, $end, $filters);
-            $summary = $this->service->summarize($dataset, $view);
+            $salesMode = $filters['sales_mode'] ?? $this->service->getSalesMode();
+            $summary = $this->service->summarize($dataset, $view, $salesMode);
         } else {
             $dataset = $this->applyBranchFilter($this->fetchData($start, $end), $branches);
             $summary = $this->summarize($dataset);
@@ -176,12 +178,18 @@ class SalesModsController extends BaseReportController
     {
         [$start, $end] = $this->parseDateRange($request);
 
+        // Obtener preferencias del usuario o usar valores por defecto
+        $preferences = $this->getUserPreferences();
+
         $filters = [
             'view' => $request->input('view', 'legacy'),
             'group_by_day' => (bool) $request->input('group_by_day', false),
             'branch_ids' => $this->normalizeFilterList($request->input('branch'), uppercase: true),
             'terminal_ids' => $this->normalizeFilterList($request->input('terminal')),
             'include_empty' => $request->boolean('include_empty', false),
+            'sales_mode' => $request->input('sales_mode', $preferences['sales_mode']),
+            'totals_mode' => $request->input('totals_mode', $preferences['totals_mode']),
+            'include_100_discount' => $request->boolean('include_100_discount', $preferences['include_100_discount']),
         ];
 
         // Para la vista de combinaciones, mostrar ítems sin ventas/mods por defecto
@@ -349,5 +357,113 @@ class SalesModsController extends BaseReportController
         } catch (\Exception $e) {
             return [];
         }
+    }
+
+    /**
+     * Vista mejorada v2.0 para reporte de ítems + modificadores
+     */
+    public function showV2(Request $request): View
+    {
+        [$start, $end, $filters] = $this->resolveFilters($request);
+
+        // Forzar vista v2.0
+        $filters['view'] = 'item_mod_combos';
+        $view = 'item_mod_combos';
+        $groupByDay = $filters['group_by_day'] ?? false;
+        $branches = $filters['branch_ids'] ?? [];
+        $terminals = $filters['terminal_ids'] ?? [];
+        $includeEmpty = $filters['include_empty'] ?? true;
+
+        // Obtener datos usando el servicio existente
+        $dataset = $this->service->fetch($start, $end, $filters);
+        $summary = $this->service->summarize($dataset, $view);
+        $branchCandidates = $this->extractBranchesFromNewData($dataset);
+
+        $observedBranches = $branchCandidates
+            ->pluck('key')
+            ->merge($dataset->map(function ($row) {
+                if (is_object($row)) {
+                    return $row->sucursal ?? $row->branch_key ?? $row->branch ?? null;
+                } elseif (is_array($row)) {
+                    return $row['sucursal'] ?? $row['branch_key'] ?? $row['branch'] ?? null;
+                }
+                return null;
+            })->filter())
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
+        $branchColors = [];
+        $branchLabels = [];
+
+        foreach ($observedBranches as $key => $branchId) {
+            if ($branchId !== null) {
+                $candidate = $branchCandidates->firstWhere('key', $branchId);
+                // Generate color based on branchId since 'color' key doesn't exist in extractBranchesFromNewData
+                $branchColors[$branchId] = '#' . substr(md5($branchId), 0, 6);
+                $branchLabels[$branchId] = $candidate ? $candidate['label'] : "Sucursal {$branchId}";
+            }
+        }
+
+        $branchFilter = $branches;
+        $terminalFilter = $terminals;
+        $generatedAt = now('America/Mexico_City');
+
+        // Build branch options similar to original method
+        $branchOptions = $branchCandidates->map(function ($branch) {
+            return [
+                'key' => $branch['key'],
+                'label' => $branch['label'],
+            ];
+        })->toArray();
+
+        // Get terminal options
+        $terminalOptions = $this->getTerminalOptions();
+
+        return view('reports.sales.mods_v2', [
+            'active' => 'reportes',
+            'startDate' => $start,
+            'endDate' => $end,
+            'view' => $view,
+            'groupByDay' => $groupByDay,
+            'includeEmpty' => $includeEmpty,
+            'rows' => $dataset,
+            'summary' => $summary,
+            'branchFilter' => $branchFilter,
+            'branchOptions' => $branchOptions,
+            'terminalFilter' => $terminalFilter,
+            'terminalOptions' => $terminalOptions,
+            'branchColors' => $branchColors,
+            'branchLabels' => $branchLabels,
+            'generatedAt' => $generatedAt,
+            // Pasar los nuevos controles a la vista
+            'salesMode' => $filters['sales_mode'],
+            'totalsMode' => $filters['totals_mode'],
+            'include100Discount' => $filters['include_100_discount'],
+        ]);
+    }
+
+    /**
+     * Obtiene las preferencias del usuario para el reporte
+     */
+    protected function getUserPreferences(): array
+    {
+        // Por defecto, estas son las preferencias
+        return [
+            'sales_mode' => 'strict', // strict, floreant_jasper, voided_paid_only, floreant_conciliation
+            'totals_mode' => 'items_net_plus_mods_net', // items_net_plus_mods_net, ticket_total, payments_net
+            'include_100_discount' => false,
+        ];
+    }
+
+    /**
+     * Guarda las preferencias del usuario
+     */
+    protected function saveUserPreferences(array $preferences): void
+    {
+        // Aquí se implementaría la persistencia en base de datos o sesión
+        // Por ahora, solo guardar en sesión como ejemplo
+        session(['report_preferences' => $preferences]);
     }
 }

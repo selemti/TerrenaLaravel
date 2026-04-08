@@ -405,6 +405,9 @@ Route::middleware('auth')->group(function () {
                       Route::get('/mods/export/xlsx', [SalesModsController::class, 'exportExcel'])->name('reports.sales.mods.export.xlsx');
                 Route::get('/mods/export/pdf', [SalesModsController::class, 'exportPdf'])->name('reports.sales.mods.export.pdf');
 
+                // Reporte mejorado v2.0
+                Route::get('/mods/v2', [SalesModsController::class, 'showV2'])->name('reports.sales.mods.v2');
+
                 // Nuevos reportes (Jasper equivalents)
                 Route::get('/detail', [SalesDetailController::class, 'show'])->name('reports.sales.detail');
                 Route::get('/summary', [SalesSummaryController::class, 'show'])->name('reports.sales.summary');
