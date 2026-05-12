@@ -1,19 +1,18 @@
 <?php
 
-namespace App\Models\Core; // O App\Models\Inv si lo mueves ahí
+namespace App\Models\Inv;
 
-use App\Models\Inv\Batch;
-use App\Models\Inv\Item;
-use App\Models\Inv\Unidad;
 use Illuminate\Database\Eloquent\Model;
 
 class PerdidaLog extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'selemti.perdida_log';
 
     protected $primaryKey = 'id';
 
-    public $timestamps = false; // Solo usa created_at
+    public $timestamps = false;
 
     protected $fillable = [
         'ts', 'item_id', 'lote_id', 'sucursal_id', 'clase', 'motivo',
@@ -40,6 +39,6 @@ class PerdidaLog extends Model
 
     public function unidadOriginal()
     {
-        return $this->belongsTo(Unidad::class, 'uom_original_id');
+        return $this->belongsTo(\App\Models\Catalogs\Unidad::class, 'uom_original_id');
     }
 }

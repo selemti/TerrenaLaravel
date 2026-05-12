@@ -4,7 +4,7 @@ namespace App\Livewire\Purchasing\Requests;
 
 use App\Models\Catalogs\Proveedor;
 use App\Models\Catalogs\Sucursal;
-use App\Models\Inventory\Item;
+use App\Models\Inv\Item;
 use App\Services\Purchasing\PurchasingService;
 use Livewire\Component;
 use Livewire\WithPagination;

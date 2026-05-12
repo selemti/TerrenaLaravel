@@ -102,7 +102,7 @@ The application is organized into domain modules under `app/Models/`:
   - Handles drawer sessions, pre-closing, post-closing, reconciliation
 
 - **Inv/** - Inventory management
-  - Models: `Item`, `Batch`, `MovimientoInventario`, `Unidad`, `ConversionUnidad`
+  - Models: `Item`, `Batch`, `MovimientoInventario`, `Unidad`, `ConversionUnidad`, `PerdidaLog`
   - Tracks stock levels, lot/batch management, unit conversions
   - Core table: `mov_inv` (kardex/movement log)
 
@@ -114,10 +114,7 @@ The application is organized into domain modules under `app/Models/`:
   - Models: `Ticket`, `TicketItem`, `MenuItem`, `MenuCategory`, `Transaccion`
   - POS transactions, menu items, categories
 
-- **Core/** - Cross-cutting concerns
-  - Models: `Auditoria`, `SesionCaja`, `PreCorte`, `PostCorte`, `UserRole`, `PerdidaLog`
-
-- **Purchasing/** - Procurement management (NEW - Oct 2025)
+- **Purchasing/** - Procurement management
   - Models: `PurchaseRequest`, `PurchaseRequestLine`, `VendorQuote`, `VendorQuoteLine`, `PurchaseOrder`, `PurchaseOrderLine`, `PurchaseDocument`
   - Complete procurement workflow from requisition to order
   - Integrates with `PurchasingService` (backend by Codex)
@@ -263,6 +260,11 @@ url('inventory/items')    // Generates: /TerrenaLaravel/inventory/items
 - `J(JsonResponse, array $data, int $code)` - JSON response shorthand
 - `ver(float $d)` - Variance check for cash reconciliation ('CUADRA', 'A_FAVOR', 'EN_CONTRA')
 
+## Branch Conventions
+
+- Feature branches use the `work/` prefix: e.g., `work/inicio-limpio-abril-2026`
+- Main integration branch: `main`
+
 ## Development Guidelines
 
 ### Model Conventions
@@ -349,6 +351,57 @@ This project uses multiple AI agents for development:
 5. **Schema modifications**: Only `selemti` schema is freely modifiable; `public` requires confirmation
 
 **Reference**: `.gemini/WORK_ASSIGNMENTS.md` tracks ongoing work by each agent
+
+## Development Methodology (Spec-Driven)
+
+This project follows a **spec-driven development** approach. The general standards and cross-agent rules live in `docs/base-standards.md` — that document is the single source of truth for principles that apply to all agents.
+
+### Change Lifecycle
+
+```
+enrich-us          → define the task with full technical detail before coding
+opsx:propose       → generate proposal + design + tasks.md
+opsx:apply         → implement task by task
+adversarial-review → attack the implementation from an adversarial perspective
+commit             → standardized commit + PR
+update-docs        → update affected docs/
+opsx:archive       → archive the change
+```
+
+### Spec-First Rule (Critical)
+
+When a fix or new requirement appears **after** `opsx:apply` and **before** `opsx:archive`, treat it as a spec update — not a quick code fix:
+1. Update the affected OpenSpec artifacts (scenarios, specs, tasks.md) first
+2. Then implement the code
+3. Re-verify against updated artifacts before archiving
+
+### Planning Model
+
+Use **Claude Opus** for planning workflows: `enrich-us`, `opsx:propose`, `superpowers:writing-plans`, `superpowers:brainstorming`.
+
+### Agent Executes Tests — Never Delegates
+
+The AI agent MUST execute all tests itself. Never ask the user to run curl commands, unit tests, or E2E tests. A task is only complete after the agent has:
+1. Run relevant unit tests and verified they pass
+2. Tested endpoints with curl (for API changes)
+3. Verified database state before and after
+4. Restored DB state if test records were created/modified/deleted
+5. Documented the results
+
+See `docs/openspec-tasks-mandatory-steps.md` for the full testing process.
+
+### Available Skills
+
+| Skill | When to use |
+|-------|-------------|
+| `enrich-us` | Before implementing — enrich task with technical detail |
+| `adversarial-review` | After implementing, before archiving a change |
+| `commit` | To create standardized commits and PRs |
+| `code-auditing` | Quality audits, security, technical debt |
+| `explain` | To explain concepts with mental models |
+| `update-docs` | After any change — update affected documentation |
+
+---
 
 ## Common Pitfalls
 

@@ -2,6 +2,7 @@
 
 namespace App\Models\Caja;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,15 +12,15 @@ class SesionCajon extends Model
 
     protected $connection = 'pgsql';
 
-    protected $table = 'sesion_cajon';
+    protected $table = 'selemti.sesion_cajon';
 
-    protected $schema = 'selemti'; // Si usas schema explícito, ajusta en conexión
-
-    public $timestamps = true; // Asumiendo created_at/updated_at mapeados a apertura_ts/cierre_ts
+    public $timestamps = true;
 
     protected $fillable = [
-        'id', 'terminal_id', 'cajero_usuario_id', 'apertura_ts', 'cierre_ts',
-        'estatus', 'opening_float', 'closing_float', 'skipped_precorte',
+        'id', 'terminal_id', 'cajero_usuario_id', 'sucursal',
+        'apertura_ts', 'cierre_ts', 'estatus',
+        'opening_float', 'closing_float', 'skipped_precorte',
+        'dah_evento_id',
     ];
 
     protected $casts = [
@@ -27,6 +28,7 @@ class SesionCajon extends Model
         'cierre_ts' => 'datetime',
         'opening_float' => 'decimal:2',
         'closing_float' => 'decimal:2',
+        'skipped_precorte' => 'boolean',
     ];
 
     public function terminal()
@@ -36,7 +38,7 @@ class SesionCajon extends Model
 
     public function cajero()
     {
-        return $this->belongsTo(User::class, 'cajero_usuario_id', 'auto_id'); // Asumiendo users de Floreant
+        return $this->belongsTo(User::class, 'cajero_usuario_id');
     }
 
     public function precorte()

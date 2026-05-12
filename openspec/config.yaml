@@ -1,0 +1,88 @@
+schema: spec-driven
+
+context: |
+  ## Project: TerrenaLaravel ERP
+  Laravel 12 restaurant management ERP (multi-location) integrating a legacy
+  PostgreSQL 9.5 FloreantPOS database with inventory, recipes, purchasing, and
+  cash-register operations.
+
+  ### Tech Stack
+  - PHP 8.2+ / Laravel 12
+  - Livewire 3.7 (reactive UI components)
+  - Bootstrap 5 + Alpine.js (new UI); some legacy Tailwind CSS 3
+  - PostgreSQL 9.5 (dual-schema) + SQLite (local dev)
+  - JWT auth (tymon/jwt-auth) + Spatie RBAC
+  - Vite for asset bundling
+
+  ### Dual Schema — CRITICAL
+  - `public`  → FloreantPOS (Java POS). READ-ONLY. Never write, alter, or drop.
+  - `selemti` → TerrenaLaravel ERP. Full read/write.
+  All Eloquent models use `protected $connection = 'pgsql'` and
+  `protected $table = 'selemti.table_name'`.
+
+  ### Canonical Model Namespaces
+  - Inventory items  : App\Models\Inv\Item
+  - UOM catalog      : App\Models\Catalogs\Unidad
+  - Cash register    : App\Models\Caja\* (not App\Models\Core\*)
+  - Purchasing       : App\Models\Purchasing\*
+
+  ### UOM Pipeline
+  Three base UOMs: KG, L, PZ. All mov_inv and inventory_batch entries MUST be
+  in base units. Use UomConversionService::resolveToBase() for conversions.
+
+  ### State Machines
+  - Reception:  BORRADOR → VALIDADA → POSTEADA
+  - Transfer:   SOLICITADA → APROBADA → EN_TRANSITO → RECIBIDA → POSTEADA
+  Only POSTEADA state triggers kardex (mov_inv) entries.
+
+  ### API Response Standard
+  All API responses: { ok: bool, data?: any, error?: string, timestamp: ISO8601 }
+  Use response()->json([...]) — never raw echo or dd().
+
+  ### URL Configuration
+  App runs under /TerrenaLaravel subdirectory in XAMPP. Always use named routes
+  or url() helper — never hard-code URLs.
+
+  ### Multi-Agent Roles
+  - Claude Code : UI/UX, Livewire, Blade, frontend
+  - Codex       : Backend services, business logic, migrations
+  - Gemini CLI  : Database ops on selemti schema, query optimization
+
+  ### Design Standards
+  Bootstrap 5 for all new components. Layout: resources/views/layouts/terrena.blade.php
+  (NOT app.blade.php which is legacy Tailwind).
+
+rules:
+  proposal:
+    - Keep proposals under 600 words
+    - Always include a "Non-goals" section
+    - Always specify which agent (Claude/Codex/Gemini) owns each task
+    - Always mention if PostgreSQL migrations are needed (selemti schema only)
+
+  tasks:
+    - Break tasks into chunks of max 2 hours
+    - Each task must specify: file(s) to create/modify, test command to verify
+    - Database tasks must include SQL wrapped in PG 9.5-compatible DO $$ ... $$ blocks
+    - UI tasks must reference the Livewire component and Blade view paths
+
+  spec:
+    - Include acceptance criteria as Given/When/Then scenarios
+    - Always note UOM implications for inventory-related specs
+    - Security specs must reference Spatie permission name (e.g. 'edit-items')
+
+test_commands:
+  unit: php artisan test --testsuite=Unit
+  feature: php artisan test --testsuite=Feature
+  all: composer test
+  lint: ./vendor/bin/pint --test
+  format: ./vendor/bin/pint
+
+branch_conventions:
+  feature: work/{short-description}
+  main: main
+  pr_base: main
+
+commit_conventions:
+  format: conventional-commits
+  types: [feat, fix, refactor, docs, test, chore]
+  scope_examples: [inv, caja, compras, recetas, ui, db, api]
