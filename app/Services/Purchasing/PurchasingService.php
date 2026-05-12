@@ -2,12 +2,15 @@
 
 namespace App\Services\Purchasing;
 
+use App\Exceptions\Purchasing\InvalidPurchasingStateException;
+use App\Exceptions\Purchasing\PurchaseOrderNotFoundException;
+use App\Exceptions\Purchasing\PurchaseRequestNotFoundException;
+use App\ValueObjects\SequentialFolio;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use RuntimeException;
 
 class PurchasingService
 {
@@ -69,7 +72,7 @@ class PurchasingService
         $request = $this->findRequestById($requestId);
 
         if (! $request) {
-            throw new RuntimeException('Solicitud de compra no encontrada');
+            throw new PurchaseRequestNotFoundException('Solicitud de compra no encontrada');
         }
 
         $data = $this->validateQuotePayload($requestId, $payload);
@@ -136,7 +139,7 @@ class PurchasingService
         $quote = $this->findQuoteById($quoteId);
 
         if (! $quote) {
-            throw new RuntimeException('Cotización no encontrada');
+            throw new PurchaseOrderNotFoundException('Cotización no encontrada');
         }
 
         if ($quote['estado'] === 'APROBADA') {
@@ -175,11 +178,11 @@ class PurchasingService
         $quote = $this->findQuoteById($quoteId);
 
         if (! $quote) {
-            throw new RuntimeException('Cotización no encontrada');
+            throw new PurchaseOrderNotFoundException('Cotización no encontrada');
         }
 
         if ($quote['estado'] !== 'APROBADA') {
-            throw new RuntimeException('Solo se pueden generar órdenes desde una cotización aprobada');
+            throw new InvalidPurchasingStateException('Solo se pueden generar órdenes desde una cotización aprobada');
         }
 
         $data = $this->validateOrderPayload($quote, $payload);
@@ -330,7 +333,7 @@ class PurchasingService
                 ->first();
 
             if (! $suggestion) {
-                throw new RuntimeException('Sugerencia no encontrada');
+                throw new PurchaseRequestNotFoundException('Sugerencia no encontrada');
             }
 
             // 2. Traer detalle
@@ -555,27 +558,9 @@ class PurchasingService
         });
     }
 
-    /**
-     * Genera folio incremental con prefijo.
-     * Ej: "REQ-202510-0007"
-     */
     protected function generateFolio(string $prefix, string $table): string
     {
-        $sequence = DB::connection('pgsql')
-            ->table($table)
-            ->select('id')
-            ->orderByDesc('id')
-            ->limit(1)
-            ->value('id');
-
-        $number = ($sequence ?? 0) + 1;
-
-        return sprintf(
-            '%s-%s-%04d',
-            $prefix,
-            CarbonImmutable::now()->format('Ym'),
-            $number
-        );
+        return SequentialFolio::generate($prefix, $table)->toString();
     }
 
     protected function findRequestById(int $requestId): ?array
@@ -658,7 +643,7 @@ class PurchasingService
             ->exists();
 
         if (! $belongs) {
-            throw new RuntimeException('La línea indicada no pertenece a la solicitud.');
+            throw new InvalidPurchasingStateException('La línea indicada no pertenece a la solicitud.');
         }
 
         return $lineId;

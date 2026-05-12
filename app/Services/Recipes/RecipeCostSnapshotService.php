@@ -2,6 +2,7 @@
 
 namespace App\Services\Recipes;
 
+use App\Exceptions\Recetas\RecetaNotFoundException;
 use App\Http\Controllers\Api\Inventory\RecipeCostController;
 use App\Models\Rec\Receta;
 use App\Models\Rec\RecipeCostSnapshot;
@@ -30,7 +31,7 @@ class RecipeCostSnapshotService
             $costData = $this->recipeCostController->calculateCostAtDate($recipeId, $date);
 
             if (! $costData || ! array_key_exists('cost_total', $costData)) {
-                throw new \RuntimeException("No se pudo calcular el costo para la receta {$recipeId}");
+                throw new RecetaNotFoundException("No se pudo calcular el costo para la receta {$recipeId}");
             }
 
             $snapshot = RecipeCostSnapshot::create([

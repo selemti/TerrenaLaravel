@@ -5,10 +5,10 @@ namespace App\Services\Inventory;
 use App\Exceptions\Inventory\InventoryValidationException;
 use App\Exceptions\Inventory\ItemNotFoundException;
 use App\Models\Inv\Item;
+use App\ValueObjects\SequentialFolio;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class InventoryCountService
 {
@@ -198,16 +198,13 @@ class InventoryCountService
 
     protected function nextFolio(?string $branchId = null): string
     {
-        $today = now()->format('Ymd');
-
-        $count = $this->table('inventory_counts')
-            ->when($branchId, fn ($query, $branch) => $query->where('sucursal_id', $branch))
-            ->whereDate('created_at', now()->toDateString())
-            ->count();
-
-        $prefix = $branchId ? Str::upper(Str::slug($branchId, '')) : 'CNT';
-
-        return sprintf('%s-%s-%04d', $prefix, $today, $count + 1);
+        return SequentialFolio::generateForBranch(
+            prefix: 'CNT',
+            table: "{$this->schema}.inventory_counts",
+            branchId: $branchId,
+            branchColumn: 'sucursal_id',
+            connection: $this->connection,
+        )->toString();
     }
 
     protected function createAdjustmentMovement(

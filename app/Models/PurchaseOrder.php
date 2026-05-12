@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Exceptions\Purchasing\InvalidPurchasingStateException;
 use App\Models\Catalogs\Proveedor;
 use App\Models\Catalogs\Sucursal;
 use Illuminate\Database\Eloquent\Model;
@@ -224,6 +225,64 @@ class PurchaseOrder extends Model
             self::ESTADO_CERRADA,
             self::ESTADO_CANCELADA,
         ]);
+    }
+
+    // ==================== STATE MACHINE ====================
+
+    public function canApprove(): bool
+    {
+        return $this->estado === self::ESTADO_BORRADOR;
+    }
+
+    public function canSend(): bool
+    {
+        return $this->estado === self::ESTADO_APROBADA;
+    }
+
+    public function canReceive(): bool
+    {
+        return $this->estado === self::ESTADO_ENVIADA;
+    }
+
+    public function canClose(): bool
+    {
+        return $this->estado === self::ESTADO_RECIBIDA;
+    }
+
+    public function canCancel(): bool
+    {
+        return ! in_array($this->estado, [
+            self::ESTADO_RECIBIDA,
+            self::ESTADO_CERRADA,
+            self::ESTADO_CANCELADA,
+        ]);
+    }
+
+    public function guardCanApprove(): void
+    {
+        if (! $this->canApprove()) {
+            throw new InvalidPurchasingStateException(
+                "No se puede aprobar una OC en estado {$this->estado}."
+            );
+        }
+    }
+
+    public function guardCanSend(): void
+    {
+        if (! $this->canSend()) {
+            throw new InvalidPurchasingStateException(
+                "No se puede enviar al proveedor una OC en estado {$this->estado}."
+            );
+        }
+    }
+
+    public function guardCanReceive(): void
+    {
+        if (! $this->canReceive()) {
+            throw new InvalidPurchasingStateException(
+                "No se puede registrar recepción de una OC en estado {$this->estado}."
+            );
+        }
     }
 
     // ==================== SCOPES ====================

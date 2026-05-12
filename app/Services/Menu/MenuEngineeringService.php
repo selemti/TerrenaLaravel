@@ -2,12 +2,15 @@
 
 namespace App\Services\Menu;
 
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class MenuEngineeringService
 {
+    public function __construct(protected FloreantPosAdapter $posAdapter) {}
+
     /**
      * @param  array<string, mixed>  $filters
      * @return Collection<int, array<string, mixed>>
@@ -49,26 +52,19 @@ class MenuEngineeringService
 
     protected function querySales(CarbonImmutable $start, CarbonImmutable $end, array $filters): Collection
     {
-        $query = DB::connection('pgsql')
-            ->table('public.ticket_item as ti')
-            ->selectRaw('mi.id as menu_item_id, mi.plu, mi.name, mi.category, SUM(ti.item_quantity) as units, SUM(ti.item_subtotal) as net_sales, AVG(ti.item_price) as avg_price')
-            ->join('selemti.menu_item_sync_map as map', 'map.pos_identifier', '=', 'ti.item_id')
-            ->join('selemti.menu_items as mi', 'mi.id', '=', 'map.menu_item_id')
-            ->join('public.ticket as t', 't.id', '=', 'ti.ticket_id')
-            ->whereBetween('t.paid_time', [$start->startOfDay(), $end->endOfDay()])
-            ->where('t.paid', true)
-            ->where('t.voided', false)
-            ->groupBy('mi.id', 'mi.plu', 'mi.name', 'mi.category');
-
+        $adapterFilters = [];
         if ($filters['category'] ?? null) {
-            $query->where('mi.category', $filters['category']);
+            $adapterFilters['category'] = $filters['category'];
         }
-
         if ($filters['sucursal_id'] ?? null) {
-            $query->where('t.terminal_id', $filters['sucursal_id']);
+            $adapterFilters['terminal_id'] = $filters['sucursal_id'];
         }
 
-        return collect($query->get())->map(function ($row) {
+        return $this->posAdapter->getSalesByMenuItemInRange(
+            $start->startOfDay()->toDateTimeString(),
+            $end->endOfDay()->toDateTimeString(),
+            $adapterFilters,
+        )->map(function ($row) {
             $netSales = (float) $row->net_sales;
             $units = (float) $row->units;
             $avgPrice = (float) $row->avg_price;

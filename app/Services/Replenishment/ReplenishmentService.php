@@ -2,13 +2,13 @@
 
 namespace App\Services\Replenishment;
 
+use App\Exceptions\Replenishment\ReplenishmentException;
 use App\Models\Inv\Item;
 use App\Models\ReplenishmentSuggestion;
 use App\Models\StockPolicy;
 use App\Services\Inventory\ProductionService;
 use App\Services\Purchasing\PurchasingService;
 use Illuminate\Support\Facades\DB;
-use InvalidArgumentException;
 
 class ReplenishmentService
 {
@@ -202,11 +202,11 @@ class ReplenishmentService
         $suggestion = ReplenishmentSuggestion::findOrFail($suggestionId);
 
         if (! $suggestion->puede_aprobarse) {
-            throw new InvalidArgumentException('Esta sugerencia no puede ser convertida.');
+            throw new ReplenishmentException('Esta sugerencia no puede ser convertida.');
         }
 
         if ($suggestion->tipo !== ReplenishmentSuggestion::TIPO_COMPRA) {
-            throw new InvalidArgumentException('Esta sugerencia no es de tipo COMPRA.');
+            throw new ReplenishmentException('Esta sugerencia no es de tipo COMPRA.');
         }
 
         $item = $suggestion->item;
@@ -245,11 +245,11 @@ class ReplenishmentService
         $suggestion = ReplenishmentSuggestion::findOrFail($suggestionId);
 
         if (! $suggestion->puede_aprobarse) {
-            throw new InvalidArgumentException('Esta sugerencia no puede ser convertida.');
+            throw new ReplenishmentException('Esta sugerencia no puede ser convertida.');
         }
 
         if ($suggestion->tipo !== ReplenishmentSuggestion::TIPO_PRODUCCION) {
-            throw new InvalidArgumentException('Esta sugerencia no es de tipo PRODUCCION.');
+            throw new ReplenishmentException('Esta sugerencia no es de tipo PRODUCCION.');
         }
 
         $item = $suggestion->item;
@@ -258,7 +258,7 @@ class ReplenishmentService
         $recipeId = $overrides['recipe_id'] ?? $item->recipe_id ?? null;
 
         if (! $recipeId) {
-            throw new InvalidArgumentException('El item no tiene receta asociada.');
+            throw new ReplenishmentException('El item no tiene receta asociada.');
         }
 
         $qty = $overrides['qty'] ?? $suggestion->qty_aprobada ?? $suggestion->qty_sugerida;

@@ -2,15 +2,16 @@
 
 namespace App\Services\Purchasing;
 
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 use App\Services\Inventory\ModifierValidationService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 class DemandCalculationService
 {
     public function __construct(
-        private readonly ModifierValidationService $modifierValidation
+        private readonly ModifierValidationService $modifierValidation,
+        private readonly FloreantPosAdapter $posAdapter,
     ) {}
 
     /**
@@ -29,24 +30,11 @@ class DemandCalculationService
 
         $modifier = $this->modifierValidation->getModifierWithCorrectGroup($modifierId);
 
-        $demand = DB::connection('pgsql')
-            ->table('public.ticket as t')
-            ->join('public.ticket_item as ti', 'ti.ticket_id', '=', 't.id')
-            ->join('public.ticket_item_modifier as tim', 'tim.ticket_item_id', '=', 'ti.id')
-            ->join('public.menu_modifier as mm', 'mm.id', '=', 'tim.item_id')
-            ->where('mm.id', $modifierId)
-            ->whereBetween('t.closing_date', [$startDate, $endDate])
-            ->where('t.paid', true)
-            ->where('t.voided', false)
-            ->selectRaw('
-                SUM(tim.item_count) as total_units,
-                COUNT(DISTINCT t.id) as total_tickets,
-                AVG(tim.item_count) as avg_per_ticket,
-                DATE_TRUNC(\'day\', t.closing_date) as day
-            ')
-            ->groupBy('day')
-            ->orderBy('day')
-            ->get();
+        $demand = $this->posAdapter->getModifierDemandByDateRange(
+            $modifierId,
+            $startDate->toDateTimeString(),
+            $endDate->toDateTimeString()
+        );
 
         return [
             'modifier' => $modifier,

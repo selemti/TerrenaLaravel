@@ -2,11 +2,12 @@
 
 namespace App\Services\Recetas;
 
+use App\Exceptions\Recetas\RecetaNotFoundException;
+use App\Exceptions\Recetas\RecetaVersionException;
 use App\Models\Rec\Receta;
 use App\Models\Rec\RecetaDetalle;
 use App\Models\Rec\RecetaVersion;
 use Illuminate\Support\Facades\DB;
-use InvalidArgumentException;
 
 /**
  * Servicio para gestión de versionado de recetas
@@ -46,7 +47,7 @@ class RecipeVersionService
             // Verificar que la receta existe
             $receta = Receta::find($recetaId);
             if (! $receta) {
-                throw new InvalidArgumentException("Receta {$recetaId} no encontrada");
+                throw new RecetaNotFoundException("Receta {$recetaId} no encontrada");
             }
 
             // Obtener la versión publicada actual (fuente de clonado)
@@ -124,11 +125,11 @@ class RecipeVersionService
             $version = RecetaVersion::find($versionId);
 
             if (! $version) {
-                throw new InvalidArgumentException("Versión {$versionId} no encontrada");
+                throw new RecetaVersionException("Versión {$versionId} no encontrada");
             }
 
             if ($version->version_publicada) {
-                throw new InvalidArgumentException('La versión ya está publicada');
+                throw new RecetaVersionException('La versión ya está publicada');
             }
 
             // Desmarcar cualquier versión publicada anterior de la misma receta
@@ -178,11 +179,11 @@ class RecipeVersionService
         $v2 = RecetaVersion::with('detalles.item')->find($versionId2);
 
         if (! $v1 || ! $v2) {
-            throw new InvalidArgumentException('Una o ambas versiones no existen');
+            throw new RecetaVersionException('Una o ambas versiones no existen');
         }
 
         if ($v1->receta_id !== $v2->receta_id) {
-            throw new InvalidArgumentException('Las versiones no pertenecen a la misma receta');
+            throw new RecetaVersionException('Las versiones no pertenecen a la misma receta');
         }
 
         // Obtener ingredientes indexados por item_id

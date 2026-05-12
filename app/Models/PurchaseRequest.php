@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Exceptions\Purchasing\InvalidPurchasingStateException;
 use App\Models\Catalogs\Sucursal;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -147,6 +148,46 @@ class PurchaseRequest extends Model
     public function getCanCancelAttribute(): bool
     {
         return ! in_array($this->estado, [self::ESTADO_ORDENADA, self::ESTADO_CANCELADA]);
+    }
+
+    // ==================== STATE MACHINE ====================
+
+    public function canSubmitForQuote(): bool
+    {
+        return $this->estado === self::ESTADO_BORRADOR && $this->lines()->exists();
+    }
+
+    public function canApprove(): bool
+    {
+        return $this->estado === self::ESTADO_COTIZADA;
+    }
+
+    public function canConvertToOrder(): bool
+    {
+        return $this->estado === self::ESTADO_APROBADA;
+    }
+
+    public function canCancel(): bool
+    {
+        return ! in_array($this->estado, [self::ESTADO_ORDENADA, self::ESTADO_CANCELADA]);
+    }
+
+    public function guardCanApprove(): void
+    {
+        if (! $this->canApprove()) {
+            throw new InvalidPurchasingStateException(
+                "No se puede aprobar una solicitud en estado {$this->estado}."
+            );
+        }
+    }
+
+    public function guardCanConvertToOrder(): void
+    {
+        if (! $this->canConvertToOrder()) {
+            throw new InvalidPurchasingStateException(
+                "No se puede convertir a orden una solicitud en estado {$this->estado}."
+            );
+        }
     }
 
     // ==================== SCOPES ====================

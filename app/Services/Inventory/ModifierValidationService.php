@@ -2,56 +2,44 @@
 
 namespace App\Services\Inventory;
 
-use Illuminate\Support\Facades\DB;
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 
 /**
- * Utilidades para validar y resolver modificadores usando la relación correcta:
- * ticket_item_modifier.item_id -> menu_modifier.id -> menu_modifier.group_id.
+ * Utilidades para validar y resolver modificadores del POS.
+ * Delegadas al FloreantPosAdapter — no query public.* directamente.
  */
 class ModifierValidationService
 {
-    /**
-     * Obtiene el group_id correcto de un modificador del maestro POS.
-     */
+    public function __construct(protected FloreantPosAdapter $posAdapter) {}
+
     public function getModifierGroup(int $modifierId): ?int
     {
-        return DB::connection('pgsql')
-            ->table('public.menu_modifier')
-            ->where('id', $modifierId)
-            ->value('group_id');
+        return $this->posAdapter->getModifierGroupId($modifierId);
     }
 
-    /**
-     * Verifica si el item corresponde a un modificador registrado.
-     */
     public function isModifier(int $itemId): bool
     {
-        return DB::connection('pgsql')
-            ->table('public.menu_modifier')
-            ->where('id', $itemId)
-            ->exists();
+        return $this->posAdapter->isModifier($itemId);
     }
 
-    /**
-     * Devuelve el modificador con su grupo correcto ya resuelto.
-     */
-    public function getModifierWithCorrectGroup(int $modifierId)
+    public function getModifierWithCorrectGroup(int $modifierId): ?object
     {
-        return DB::connection('pgsql')
-            ->table('public.menu_modifier as mm')
-            ->join('public.menu_modifier_group as mg', 'mg.id', '=', 'mm.group_id')
-            ->where('mm.id', $modifierId)
-            ->select('mm.*', 'mg.name as group_name', 'mg.id as group_id')
-            ->first();
+        $dto = $this->posAdapter->getModifierWithGroup($modifierId);
+
+        if ($dto === null) {
+            return null;
+        }
+
+        return (object) [
+            'id' => $dto->id,
+            'name' => $dto->name,
+            'group_id' => $dto->groupId,
+            'group_name' => $dto->groupName,
+        ];
     }
 
-    /**
-     * Valida que el modificador pertenezca al group_id indicado por el ticket.
-     */
     public function validateModifierConsistency(int $modifierId, int $ticketGroupId): bool
     {
-        $correctGroupId = $this->getModifierGroup($modifierId);
-
-        return $correctGroupId === $ticketGroupId;
+        return $this->posAdapter->getModifierGroupId($modifierId) === $ticketGroupId;
     }
 }

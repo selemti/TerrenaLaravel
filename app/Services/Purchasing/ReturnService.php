@@ -2,8 +2,7 @@
 
 namespace App\Services\Purchasing;
 
-use InvalidArgumentException;
-use RuntimeException;
+use App\Exceptions\Purchasing\InvalidPurchasingStateException;
 
 /**
  * Servicio que gestiona devoluciones a proveedor y su impacto en inventario.
@@ -153,7 +152,7 @@ class ReturnService
     protected function guardPositiveId(int $id, string $label): void
     {
         if ($id <= 0) {
-            throw new InvalidArgumentException(sprintf('The %s id must be greater than zero.', $label));
+            throw new InvalidPurchasingStateException(sprintf('The %s id must be greater than zero.', $label));
         }
     }
 }

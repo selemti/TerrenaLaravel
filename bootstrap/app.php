@@ -1,14 +1,21 @@
 <?php
 
+use App\Exceptions\Caja\InvalidCajaStateException;
 use App\Exceptions\CashFund\CashFundValidationException;
 use App\Exceptions\Domain\DomainException;
 use App\Exceptions\Inventory\InsufficientStockException;
-use App\Exceptions\Inventory\InventoryValidationException;
 use App\Exceptions\Inventory\InvalidInventoryStateException;
+use App\Exceptions\Inventory\InventoryValidationException;
 use App\Exceptions\Inventory\ItemNotFoundException;
+use App\Exceptions\Production\ProductionException;
+use App\Exceptions\Purchasing\InvalidPurchasingStateException;
+use App\Exceptions\Purchasing\PurchaseOrderNotFoundException;
+use App\Exceptions\Purchasing\PurchaseRequestNotFoundException;
+use App\Exceptions\Recetas\RecetaNotFoundException;
+use App\Exceptions\Recetas\RecetaVersionException;
+use App\Exceptions\Replenishment\ReplenishmentException;
 use App\Exceptions\Transfer\InvalidTransferStateException;
 use App\Exceptions\Transfer\TransferNotFoundException;
-use App\Exceptions\Caja\InvalidCajaStateException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -39,16 +46,23 @@ return Application::configure(basePath: dirname(__DIR__))
         // 404 — entity not found
         $exceptions->render(fn (ItemNotFoundException $e) => $jsonDomain($e, 404));
         $exceptions->render(fn (TransferNotFoundException $e) => $jsonDomain($e, 404));
+        $exceptions->render(fn (PurchaseOrderNotFoundException $e) => $jsonDomain($e, 404));
+        $exceptions->render(fn (PurchaseRequestNotFoundException $e) => $jsonDomain($e, 404));
+        $exceptions->render(fn (RecetaNotFoundException $e) => $jsonDomain($e, 404));
 
         // 409 — state machine conflict
         $exceptions->render(fn (InvalidInventoryStateException $e) => $jsonDomain($e, 409));
         $exceptions->render(fn (InvalidTransferStateException $e) => $jsonDomain($e, 409));
         $exceptions->render(fn (InvalidCajaStateException $e) => $jsonDomain($e, 409));
+        $exceptions->render(fn (InvalidPurchasingStateException $e) => $jsonDomain($e, 409));
 
         // 422 — validation / constraint
         $exceptions->render(fn (InventoryValidationException $e) => $jsonDomain($e, 422));
         $exceptions->render(fn (InsufficientStockException $e) => $jsonDomain($e, 422));
         $exceptions->render(fn (CashFundValidationException $e) => $jsonDomain($e, 422));
+        $exceptions->render(fn (ProductionException $e) => $jsonDomain($e, 422));
+        $exceptions->render(fn (ReplenishmentException $e) => $jsonDomain($e, 422));
+        $exceptions->render(fn (RecetaVersionException $e) => $jsonDomain($e, 422));
 
         // 400 — any other domain exception
         $exceptions->render(fn (DomainException $e) => $jsonDomain($e, 400));

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Inventory;
 
+use App\Exceptions\Recetas\RecetaVersionException;
 use App\Http\Controllers\Controller;
 use App\Models\Rec\Receta;
 use App\Services\Costing\RecipeCostingService;
@@ -125,7 +126,7 @@ class RecipeCostController extends Controller
     {
         // Protección contra recursión infinita
         if ($depth > 10) {
-            throw new \RuntimeException('Profundidad máxima de recursión excedida (loop detectado en receta). Max: 10 niveles.');
+            throw new RecetaVersionException('Profundidad máxima de recursión excedida (loop detectado en receta). Max: 10 niveles.');
         }
 
         $ingredients = [];

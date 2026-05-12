@@ -2,6 +2,7 @@
 
 namespace App\Services\Operations;
 
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 use App\Services\Inventory\PosConsumptionService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -21,8 +22,10 @@ class DailyCloseService
 
     protected PosConsumptionService $posConsumptionService;
 
-    public function __construct(PosConsumptionService $posConsumptionService)
-    {
+    public function __construct(
+        PosConsumptionService $posConsumptionService,
+        protected FloreantPosAdapter $posAdapter,
+    ) {
         $this->traceId = uniqid('close_');
         $this->posConsumptionService = $posConsumptionService;
     }
@@ -96,12 +99,9 @@ class DailyCloseService
 
         try {
             // Obtener tickets del día sin registro en inv_consumo_pos
-            $ticketIds = DB::connection($this->connection)
-                ->table('public.tickets as t')
-                ->leftJoin('selemti.inv_consumo_pos as c', 'c.ticket_id', '=', 't.id')
-                ->whereDate('t.creation_date', $this->date->toDateString())
-                ->whereNull('c.ticket_id')
-                ->pluck('t.id');
+            $ticketIds = $this->posAdapter->getUnprocessedTicketIdsByDate(
+                $this->date->toDateString()
+            );
 
             foreach ($ticketIds as $ticketId) {
                 try {

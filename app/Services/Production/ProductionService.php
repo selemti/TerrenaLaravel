@@ -2,8 +2,7 @@
 
 namespace App\Services\Production;
 
-use InvalidArgumentException;
-use RuntimeException;
+use App\Exceptions\Production\ProductionException;
 
 /**
  * Servicio para planear, consumir y postear batches de producción interna.
@@ -48,7 +47,7 @@ class ProductionService
         $this->guardPositiveId($userId, 'user');
 
         if (empty($consumedLines)) {
-            throw new InvalidArgumentException('Consumed ingredient lines required.');
+            throw new ProductionException('Consumed ingredient lines required.');
         }
 
         // TODO: Register insumo consumption, track lots, validate inventory availability.
@@ -75,7 +74,7 @@ class ProductionService
         $this->guardPositiveId($userId, 'user');
 
         if (empty($producedLines)) {
-            throw new InvalidArgumentException('Produced lines are required to complete batch.');
+            throw new ProductionException('Produced lines are required to complete batch.');
         }
 
         // TODO: Persist produced outputs, quality checks, yield metrics.
@@ -121,7 +120,7 @@ class ProductionService
     protected function guardPositiveId(int $id, string $label): void
     {
         if ($id <= 0) {
-            throw new InvalidArgumentException(sprintf('The %s id must be greater than zero.', $label));
+            throw new ProductionException(sprintf('The %s id must be greater than zero.', $label));
         }
     }
 
@@ -133,7 +132,7 @@ class ProductionService
     protected function guardPositiveQty(float $qty): void
     {
         if ($qty <= 0) {
-            throw new InvalidArgumentException('Quantity target must be greater than zero.');
+            throw new ProductionException('Quantity target must be greater than zero.');
         }
     }
 }
