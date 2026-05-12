@@ -1,0 +1,1464 @@
+openapi: 3.1.0
+info:
+  title: TerrenaLaravel ERP API
+  version: "2.0"
+  description: |
+    API REST del ERP TerrenaLaravel para gestión de restaurantes/cafeterías.
+    Integra con FloreantPOS (schema `public`, read-only) y gestiona el ERP propio (schema `selemti`).
+
+servers:
+  - url: http://localhost/TerrenaLaravel/api
+    description: Desarrollo local (XAMPP)
+  - url: http://100.126.124.101/TerrenaLaravel/api
+    description: Producción
+
+components:
+  securitySchemes:
+    sanctum:
+      type: http
+      scheme: bearer
+      bearerFormat: SanctumToken
+      description: Token generado por Laravel Sanctum. Incluir como `Authorization: Bearer <token>`
+
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        data:
+          type: object
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ApiError:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Código de error interno
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+          description: UUID o código string del ítem
+        item_code:
+          type: string
+        nombre:
+          type: string
+        categoria_id:
+          type: string
+        unidad_medida_id:
+          type: integer
+          description: FK a selemti.unidades_medida (UOM base)
+        unidad_compra_id:
+          type: integer
+          description: FK a selemti.unidades_medida (UOM de compra)
+        factor_compra:
+          type: number
+          format: float
+          description: "1 unidad_compra = factor_compra unidades base"
+        costo_promedio:
+          type: number
+          format: float
+        activo:
+          type: boolean
+        tipo:
+          type: string
+          enum: [INSUMO, PRODUCTO, EMPAQUE]
+        es_producible:
+          type: boolean
+        es_consumible_operativo:
+          type: boolean
+
+    Transfer:
+      type: object
+      properties:
+        id:
+          type: integer
+        folio:
+          type: string
+        origen_id:
+          type: string
+        destino_id:
+          type: string
+        estado:
+          type: string
+          enum: [SOLICITADA, APROBADA, EN_TRANSITO, RECIBIDA, POSTEADA]
+        created_at:
+          type: string
+          format: date-time
+
+    Precorte:
+      type: object
+      properties:
+        id:
+          type: integer
+        sesion_id:
+          type: integer
+        status:
+          type: string
+        efectivo_declarado:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+
+    Postcorte:
+      type: object
+      properties:
+        id:
+          type: integer
+        precorte_id:
+          type: integer
+        sistema_efectivo_esperado:
+          type: number
+        diferencia:
+          type: number
+        aprobado_por:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    ProductionBatch:
+      type: object
+      properties:
+        id:
+          type: integer
+        recipe_id:
+          type: string
+        qty_target:
+          type: number
+        status:
+          type: string
+          enum: [PLANNED, IN_PROGRESS, COMPLETED, POSTED]
+
+security:
+  - sanctum: []
+
+tags:
+  - name: Auth
+    description: Autenticación (sin token requerido)
+  - name: Caja
+    description: Módulo de caja — precortes, postcortes, sesiones, conciliación
+  - name: Inventory
+    description: Inventario — ítems, stock, lotes, transferencias, movimientos
+  - name: Production
+    description: Producción interna — batches de mise en place
+  - name: Purchasing
+    description: Compras — recepciones y devoluciones a proveedor
+  - name: Replenishment
+    description: Motor de reposición automática
+  - name: Recipes
+    description: Recetas y costeo BOM
+  - name: Reports
+    description: Reportes y dashboards
+  - name: Catalogs
+    description: Catálogos maestros (almacenes, sucursales, unidades)
+  - name: Unidades
+    description: CRUD de unidades de medida y conversiones
+  - name: People
+    description: Gestión de usuarios y permisos (admin)
+  - name: System
+    description: Health check, ping
+
+paths:
+  # ─────────────────────────────────────────────
+  # SYSTEM
+  # ─────────────────────────────────────────────
+  /ping:
+    get:
+      tags: [System]
+      summary: Health check básico
+      security: []
+      responses:
+        "200":
+          description: Servicio activo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  timestamp: { type: string }
+
+  /health:
+    get:
+      tags: [System]
+      summary: Health check con estado de DB y servicios
+      security: []
+      responses:
+        "200":
+          description: Estado del sistema
+
+  # ─────────────────────────────────────────────
+  # AUTH
+  # ─────────────────────────────────────────────
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Obtener token Sanctum
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Token generado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  token: { type: string }
+                  user: { type: object }
+        "401":
+          description: Credenciales inválidas
+
+  # ─────────────────────────────────────────────
+  # CAJA — PRECORTES
+  # ─────────────────────────────────────────────
+  /caja/precortes/preflight/{sesion_id}:
+    get:
+      tags: [Caja]
+      summary: Verificar tickets abiertos antes de crear precorte
+      parameters:
+        - name: sesion_id
+          in: path
+          required: false
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Estado del preflight (tickets abiertos, alertas)
+
+  /caja/precortes:
+    post:
+      tags: [Caja]
+      summary: Crear precorte
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sesion_id: { type: integer }
+                efectivo_declarado: { type: number }
+      responses:
+        "200":
+          description: Precorte creado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/Precorte" }
+
+  /caja/precortes/{id}:
+    get:
+      tags: [Caja]
+      summary: Obtener precorte por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Detalle del precorte
+
+    post:
+      tags: [Caja]
+      summary: Actualizar precorte
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Precorte actualizado
+
+  /caja/precortes/{id}/totales:
+    get:
+      tags: [Caja]
+      summary: Resumen de totales del precorte
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Totales desglosados por forma de pago
+
+  /caja/precortes/{id}/enviar:
+    post:
+      tags: [Caja]
+      summary: Enviar precorte para aprobación
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Precorte enviado
+
+  /caja/precortes/sesion/{sesion_id}/totales:
+    get:
+      tags: [Caja]
+      summary: Totales de precorte agrupados por sesión
+      parameters:
+        - name: sesion_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Totales por sesión
+
+  # ─────────────────────────────────────────────
+  # CAJA — POSTCORTES
+  # ─────────────────────────────────────────────
+  /caja/postcortes:
+    post:
+      tags: [Caja]
+      summary: Crear postcorte
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                precorte_id: { type: integer }
+      responses:
+        "200":
+          description: Postcorte creado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/Postcorte" }
+
+  /caja/postcortes/pendientes-aprobacion:
+    get:
+      tags: [Caja]
+      summary: Listar postcortes pendientes de aprobación
+      responses:
+        "200":
+          description: Lista de postcortes pendientes
+
+  /caja/postcortes/{id}:
+    get:
+      tags: [Caja]
+      summary: Obtener postcorte por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Detalle del postcorte
+
+  /caja/postcortes/{id}/aprobar:
+    post:
+      tags: [Caja]
+      summary: Aprobar postcorte
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Postcorte aprobado
+
+  /caja/postcortes/{id}/rechazar:
+    post:
+      tags: [Caja]
+      summary: Rechazar postcorte
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Postcorte rechazado
+
+  # ─────────────────────────────────────────────
+  # CAJA — OTROS
+  # ─────────────────────────────────────────────
+  /caja/sesiones/activa:
+    get:
+      tags: [Caja]
+      summary: Obtener sesión de cajón activa
+      responses:
+        "200":
+          description: Sesión activa o null
+
+  /caja/conciliacion/{sesion_id}:
+    get:
+      tags: [Caja]
+      summary: Obtener conciliación de una sesión
+      parameters:
+        - name: sesion_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Datos de conciliación (sistema vs declarado)
+
+  /caja/formas-pago:
+    get:
+      tags: [Caja]
+      summary: Catálogo de formas de pago
+      responses:
+        "200":
+          description: Lista de formas de pago
+
+  /caja/ticket/{id}:
+    get:
+      tags: [Caja]
+      summary: Detalle de un ticket POS
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Detalle del ticket con ítems y modificadores
+
+  # ─────────────────────────────────────────────
+  # INVENTORY — ITEMS
+  # ─────────────────────────────────────────────
+  /inventory/items:
+    get:
+      tags: [Inventory]
+      summary: Listar ítems del catálogo
+      parameters:
+        - name: activo
+          in: query
+          schema: { type: boolean }
+        - name: tipo
+          in: query
+          schema: { type: string, enum: [INSUMO, PRODUCTO, EMPAQUE] }
+      responses:
+        "200":
+          description: Lista de ítems
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/Item" }
+
+    post:
+      tags: [Inventory]
+      summary: Crear ítem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Item" }
+      responses:
+        "201":
+          description: Ítem creado
+
+  /inventory/items/{id}:
+    get:
+      tags: [Inventory]
+      summary: Obtener ítem por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Detalle del ítem
+
+    put:
+      tags: [Inventory]
+      summary: Actualizar ítem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Ítem actualizado
+
+    delete:
+      tags: [Inventory]
+      summary: Eliminar ítem (soft delete)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Ítem eliminado
+
+  /inventory/items/{id}/kardex:
+    get:
+      tags: [Inventory]
+      summary: Movimientos de inventario (kardex) de un ítem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: from
+          in: query
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: Lista de movimientos ordenada por fecha desc
+
+  /inventory/items/{id}/batches:
+    get:
+      tags: [Inventory]
+      summary: Lotes activos de un ítem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista de lotes con cantidad actual
+
+  /inventory/items/{id}/vendors:
+    get:
+      tags: [Inventory]
+      summary: Proveedores asociados a un ítem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista de proveedores con precios
+
+    post:
+      tags: [Inventory]
+      summary: Asociar proveedor a ítem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                vendor_id: { type: integer }
+                vendor_sku: { type: string }
+                lead_time_days: { type: integer }
+      responses:
+        "201":
+          description: Proveedor asociado
+
+  # ─────────────────────────────────────────────
+  # INVENTORY — STOCK
+  # ─────────────────────────────────────────────
+  /inventory/kpis:
+    get:
+      tags: [Inventory]
+      summary: KPIs del módulo de inventario
+      responses:
+        "200":
+          description: Indicadores clave (valor total, ítems bajo mínimo, etc.)
+
+  /inventory/stock:
+    get:
+      tags: [Inventory]
+      summary: Stock actual de un ítem específico
+      parameters:
+        - name: item_id
+          in: query
+          required: true
+          schema: { type: string }
+        - name: almacen_id
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Stock por almacén en unidad base
+
+  /inventory/stock/list:
+    get:
+      tags: [Inventory]
+      summary: Lista completa de stock por ítem/almacén
+      parameters:
+        - name: almacen_id
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista de stock con valores
+
+  /inventory/movements:
+    post:
+      tags: [Inventory]
+      summary: Registrar movimiento manual de inventario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [item_id, tipo, cantidad, uom]
+              properties:
+                item_id: { type: string }
+                tipo:
+                  type: string
+                  enum: [ENTRADA, SALIDA, AJUSTE, TRANSFERENCIA]
+                cantidad: { type: number }
+                uom: { type: string }
+                almacen_id: { type: string }
+                motivo: { type: string }
+      responses:
+        "201":
+          description: Movimiento registrado en kardex
+
+  # ─────────────────────────────────────────────
+  # INVENTORY — TRANSFERS
+  # ─────────────────────────────────────────────
+  /inventory/transfers:
+    get:
+      tags: [Inventory]
+      summary: Listar transferencias entre almacenes
+      parameters:
+        - name: estado
+          in: query
+          schema:
+            type: string
+            enum: [SOLICITADA, APROBADA, EN_TRANSITO, RECIBIDA, POSTEADA]
+      responses:
+        "200":
+          description: Lista de transferencias
+
+    post:
+      tags: [Inventory]
+      summary: Crear solicitud de transferencia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [origen_id, destino_id, lines]
+              properties:
+                origen_id: { type: string }
+                destino_id: { type: string }
+                lines:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      item_id: { type: string }
+                      qty: { type: number }
+                      uom: { type: string }
+      responses:
+        "201":
+          description: Transferencia creada en estado SOLICITADA
+
+  /inventory/transfers/{id}:
+    get:
+      tags: [Inventory]
+      summary: Detalle de una transferencia
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Transferencia con líneas
+
+  /inventory/transfers/{id}/approve:
+    post:
+      tags: [Inventory]
+      summary: Aprobar transferencia (SOLICITADA → APROBADA)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Transferencia aprobada
+        "422":
+          description: Estado inválido para aprobación
+
+  /inventory/transfers/{id}/ship:
+    post:
+      tags: [Inventory]
+      summary: Marcar transferencia en tránsito (APROBADA → EN_TRANSITO)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Transferencia en tránsito
+
+  /inventory/transfers/{id}/receive:
+    post:
+      tags: [Inventory]
+      summary: Registrar recepción (EN_TRANSITO → RECIBIDA)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lines:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      item_id: { type: string }
+                      qty_recibida: { type: number }
+      responses:
+        "200":
+          description: Recepción registrada
+
+  /inventory/transfers/{id}/post:
+    post:
+      tags: [Inventory]
+      summary: Postear transferencia a inventario (RECIBIDA → POSTEADA)
+      description: |
+        Decrementa `inventory_batch` del almacén origen y crea entradas en el destino.
+        Registra movimientos en `mov_inv` con tipo TRANSFERENCIA.
+        Solo posible desde estado RECIBIDA.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Transferencia posteada a inventario
+        "422":
+          description: Stock insuficiente o estado inválido
+
+  # ─────────────────────────────────────────────
+  # PRODUCTION
+  # ─────────────────────────────────────────────
+  /production/batch/plan:
+    post:
+      tags: [Production]
+      summary: Planificar batch de producción
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recipe_id, qty_target]
+              properties:
+                recipe_id: { type: string }
+                qty_target: { type: number }
+      responses:
+        "200":
+          description: Batch planificado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/ProductionBatch" }
+        "422":
+          description: Error al planificar
+
+  /production/batch/{batch_id}/consume:
+    post:
+      tags: [Production]
+      summary: Registrar insumos consumidos en el batch
+      parameters:
+        - name: batch_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lines:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      item_id: { type: string }
+                      qty: { type: number }
+                      uom: { type: string }
+      responses:
+        "200":
+          description: Insumos registrados
+        "422":
+          description: Error de consumo
+
+  /production/batch/{batch_id}/complete:
+    post:
+      tags: [Production]
+      summary: Completar batch — registrar productos obtenidos
+      parameters:
+        - name: batch_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lines:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      item_id: { type: string }
+                      qty: { type: number }
+                      uom: { type: string }
+      responses:
+        "200":
+          description: Batch completado, listo para posteo
+
+  /production/batch/{batch_id}/post:
+    post:
+      tags: [Production]
+      summary: Postear batch a inventario
+      description: Requiere campo `motivo`. Registra en `mov_inv` entradas de productos y salidas de insumos.
+      parameters:
+        - name: batch_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [motivo]
+              properties:
+                motivo: { type: string }
+                evidencia_url: { type: string }
+      responses:
+        "200":
+          description: Batch posteado
+        "422":
+          description: Motivo requerido o error de posteo
+
+  # ─────────────────────────────────────────────
+  # PURCHASING — RECEPTIONS
+  # ─────────────────────────────────────────────
+  /purchasing/receptions/create-from-po/{purchase_order_id}:
+    post:
+      tags: [Purchasing]
+      summary: Crear recepción desde una OC (estado 501 — pendiente implementación)
+      parameters:
+        - name: purchase_order_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "501":
+          description: No implementado aún
+
+  /purchasing/receptions/{recepcion_id}/lines:
+    post:
+      tags: [Purchasing]
+      summary: Definir líneas de recepción (estado 501)
+      parameters:
+        - name: recepcion_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "501":
+          description: No implementado aún
+
+  /purchasing/receptions/{recepcion_id}/validate:
+    post:
+      tags: [Purchasing]
+      summary: Validar recepción (estado 501)
+      parameters:
+        - name: recepcion_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "501":
+          description: No implementado aún
+
+  /purchasing/receptions/{recepcion_id}/post:
+    post:
+      tags: [Purchasing]
+      summary: Postear recepción a inventario (estado 501)
+      parameters:
+        - name: recepcion_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "501":
+          description: No implementado aún
+
+  # ─────────────────────────────────────────────
+  # PURCHASING — RETURNS
+  # ─────────────────────────────────────────────
+  /purchasing/returns/create-from-po/{purchase_order_id}:
+    post:
+      tags: [Purchasing]
+      summary: Crear devolución a proveedor desde una OC
+      parameters:
+        - name: purchase_order_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Devolución creada en borrador
+
+  /purchasing/returns/{return_id}/approve:
+    post:
+      tags: [Purchasing]
+      summary: Aprobar devolución
+      parameters:
+        - name: return_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Devolución aprobada
+
+  /purchasing/returns/{return_id}/ship:
+    post:
+      tags: [Purchasing]
+      summary: Marcar devolución como enviada al proveedor
+      parameters:
+        - name: return_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tracking:
+                  type: object
+                  description: Información de guía de envío
+      responses:
+        "200":
+          description: Devolución en tránsito
+
+  /purchasing/returns/{return_id}/confirm:
+    post:
+      tags: [Purchasing]
+      summary: Confirmar recepción por proveedor
+      parameters:
+        - name: return_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Proveedor confirmó recepción
+
+  /purchasing/returns/{return_id}/post:
+    post:
+      tags: [Purchasing]
+      summary: Postear devolución a inventario (descuenta stock)
+      parameters:
+        - name: return_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Devolución posteada
+
+  /purchasing/returns/{return_id}/credit-note:
+    post:
+      tags: [Purchasing]
+      summary: Adjuntar nota de crédito del proveedor
+      parameters:
+        - name: return_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [folio, monto, fecha]
+              properties:
+                folio: { type: string }
+                monto: { type: number }
+                fecha: { type: string, format: date }
+                observaciones: { type: string }
+      responses:
+        "200":
+          description: Nota de crédito registrada
+
+  # ─────────────────────────────────────────────
+  # REPLENISHMENT
+  # ─────────────────────────────────────────────
+  /purchasing/replenishment/suggestions:
+    get:
+      tags: [Replenishment]
+      summary: Listar sugerencias de reposición
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [PENDING, APPROVED, REJECTED, CONVERTED] }
+        - name: item_id
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista de sugerencias
+
+  /purchasing/replenishment/suggestions/{id}:
+    get:
+      tags: [Replenishment]
+      summary: Detalle de una sugerencia
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Sugerencia con líneas e historial
+
+  /purchasing/replenishment/calculate:
+    post:
+      tags: [Replenishment]
+      summary: Calcular sugerencias manualmente
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                branch_id: { type: string }
+                item_ids:
+                  type: array
+                  items: { type: string }
+      responses:
+        "200":
+          description: Sugerencias calculadas
+
+  /purchasing/replenishment/suggestions/{id}/approve:
+    post:
+      tags: [Replenishment]
+      summary: Aprobar sugerencia de reposición
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Sugerencia aprobada
+
+  /purchasing/replenishment/suggestions/{id}/reject:
+    post:
+      tags: [Replenishment]
+      summary: Rechazar sugerencia
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Sugerencia rechazada
+
+  /purchasing/replenishment/suggestions/{id}/convert:
+    post:
+      tags: [Replenishment]
+      summary: Convertir sugerencia en PR o PO
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [target]
+              properties:
+                target:
+                  type: string
+                  enum: [PR, PO]
+      responses:
+        "200":
+          description: PR o PO creada
+
+  # ─────────────────────────────────────────────
+  # RECIPES
+  # ─────────────────────────────────────────────
+  /recipes/{id}/cost:
+    get:
+      tags: [Recipes]
+      summary: Costo actual de una receta
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Costo total y por porción
+
+  /recipes/{id}/bom/implode:
+    get:
+      tags: [Recipes]
+      summary: BOM Implosion — desglose total de insumos base
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Árbol de ingredientes expandido
+
+  /recipes/{id}/cost/snapshot:
+    post:
+      tags: [Recipes]
+      summary: Crear snapshot de costo en este momento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "201":
+          description: Snapshot creado
+
+  /recipes/{id}/cost/history:
+    get:
+      tags: [Recipes]
+      summary: Historial de snapshots de costo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista de snapshots ordenada por fecha
+
+  /recipes/{id}/cost/compare:
+    get:
+      tags: [Recipes]
+      summary: Comparar dos snapshots de costo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: a
+          in: query
+          required: true
+          schema: { type: integer }
+          description: ID del primer snapshot
+        - name: b
+          in: query
+          required: true
+          schema: { type: integer }
+          description: ID del segundo snapshot
+      responses:
+        "200":
+          description: Diferencias entre snapshots
+
+  # ─────────────────────────────────────────────
+  # REPORTS
+  # ─────────────────────────────────────────────
+  /reports/kpis/sucursal:
+    get:
+      tags: [Reports]
+      summary: KPIs de ventas por sucursal (día actual)
+      parameters:
+        - name: fecha
+          in: query
+          schema: { type: string, format: date }
+        - name: sucursal_id
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: KPIs de ventas (total, ticket promedio, transacciones)
+
+  /reports/ventas/familia:
+    get:
+      tags: [Reports]
+      summary: Ventas por familia/categoría de menú
+      responses:
+        "200":
+          description: Desglose por categoría
+
+  /reports/ventas/hora:
+    get:
+      tags: [Reports]
+      summary: Ventas por hora del día
+      responses:
+        "200":
+          description: Distribución horaria de ventas
+
+  /reports/sales/detail:
+    get:
+      tags: [Reports]
+      summary: Detalle de ventas (equivalente Jasper)
+      parameters:
+        - name: fecha_inicio
+          in: query
+          schema: { type: string, format: date }
+        - name: fecha_fin
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: Detalle de ventas por ticket
+
+  /reports/sales/summary:
+    get:
+      tags: [Reports]
+      summary: Resumen de ventas por período
+      responses:
+        "200":
+          description: Resumen agregado
+
+  /reports/sales/exceptions:
+    get:
+      tags: [Reports]
+      summary: Reporte de excepciones (descuentos, cancelaciones, cortesías)
+      responses:
+        "200":
+          description: Listado de excepciones con usuarios y motivos
+
+  /reports/sales/mix:
+    get:
+      tags: [Reports]
+      summary: Mix de ventas por producto (requiere permission:reports.view)
+      responses:
+        "200":
+          description: Ventas por producto con participación %
+
+  # ─────────────────────────────────────────────
+  # CATALOGS
+  # ─────────────────────────────────────────────
+  /catalogs/almacenes:
+    get:
+      tags: [Catalogs]
+      summary: Listar almacenes
+      responses:
+        "200":
+          description: Lista de almacenes activos
+
+  /catalogs/sucursales:
+    get:
+      tags: [Catalogs]
+      summary: Listar sucursales
+      responses:
+        "200":
+          description: Lista de sucursales
+
+  /catalogs/unidades:
+    get:
+      tags: [Catalogs]
+      summary: Catálogo de unidades de medida
+      responses:
+        "200":
+          description: Lista de UOMs con tipo (masa/volumen/unidad)
+
+  /catalogs/movement-types:
+    get:
+      tags: [Catalogs]
+      summary: Tipos de movimiento de inventario permitidos
+      responses:
+        "200":
+          description: Lista de tipos (ENTRADA, SALIDA, AJUSTE, etc.)
+
+  # ─────────────────────────────────────────────
+  # UNIDADES
+  # ─────────────────────────────────────────────
+  /unidades:
+    get:
+      tags: [Unidades]
+      summary: Listar unidades de medida (CRUD)
+      responses:
+        "200":
+          description: Lista completa de UOMs
+
+    post:
+      tags: [Unidades]
+      summary: Crear unidad de medida
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [clave, nombre, tipo]
+              properties:
+                clave: { type: string, example: "KG" }
+                nombre: { type: string }
+                tipo: { type: string, enum: [masa, volumen, unidad] }
+      responses:
+        "201":
+          description: Unidad creada
+
+  /unidades/conversiones:
+    get:
+      tags: [Unidades]
+      summary: Listar conversiones entre unidades
+      responses:
+        "200":
+          description: Lista de conversiones
+
+    post:
+      tags: [Unidades]
+      summary: Crear conversión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [unidad_origen_id, unidad_destino_id, factor_conversion]
+              properties:
+                unidad_origen_id: { type: integer }
+                unidad_destino_id: { type: integer }
+                factor_conversion: { type: number }
+      responses:
+        "201":
+          description: Conversión creada
+
+  # ─────────────────────────────────────────────
+  # PEOPLE (admin)
+  # ─────────────────────────────────────────────
+  /people/users:
+    get:
+      tags: [People]
+      summary: Listar usuarios ERP (requiere permission:people.users.manage)
+      security:
+        - sanctum: []
+      responses:
+        "200":
+          description: Lista de usuarios con roles
+
+  /people/users/{id}/permissions:
+    get:
+      tags: [People]
+      summary: Ver permisos de un usuario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Permisos actuales del usuario
+
+    post:
+      tags: [People]
+      summary: Actualizar permisos de un usuario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                permissions:
+                  type: array
+                  items: { type: string }
+      responses:
+        "200":
+          description: Permisos actualizados
+
+  /me/permissions:
+    get:
+      tags: [People]
+      summary: Permisos del usuario autenticado
+      responses:
+        "200":
+          description: Lista de permisos propios
