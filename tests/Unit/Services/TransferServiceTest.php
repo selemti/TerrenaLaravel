@@ -9,8 +9,9 @@ use App\Models\User;
 use App\Services\Inventory\TransferService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use InvalidArgumentException;
-use RuntimeException;
+use App\Exceptions\Inventory\InsufficientStockException;
+use App\Exceptions\Inventory\InventoryValidationException;
+use App\Exceptions\Transfer\InvalidTransferStateException;
 use Tests\TestCase;
 
 class TransferServiceTest extends TestCase
@@ -107,7 +108,7 @@ class TransferServiceTest extends TestCase
             ],
         ];
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InventoryValidationException::class);
         $this->expectExceptionMessage('Almacén origen y destino deben ser diferentes.');
 
         $this->transferService->createTransfer(
@@ -120,7 +121,7 @@ class TransferServiceTest extends TestCase
 
     public function test_create_transfer_throws_exception_with_empty_lines(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InventoryValidationException::class);
         $this->expectExceptionMessage('At least one line item is required for a transfer.');
 
         $this->transferService->createTransfer(
@@ -141,7 +142,7 @@ class TransferServiceTest extends TestCase
             ],
         ];
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InventoryValidationException::class);
         $this->expectExceptionMessage('The almacén origen id must be greater than zero.');
 
         $this->transferService->createTransfer(
@@ -202,8 +203,7 @@ class TransferServiceTest extends TestCase
             'created_at' => now(),
         ]);
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Stock insuficiente');
+        $this->expectException(InsufficientStockException::class);
 
         $this->transferService->approveTransfer($transfer->id, $this->user->id);
     }
@@ -226,8 +226,7 @@ class TransferServiceTest extends TestCase
             'created_at' => now(),
         ]);
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Transfer must be in SOLICITADA status to be approved.');
+        $this->expectException(InvalidTransferStateException::class);
 
         $this->transferService->approveTransfer($transfer->id, $this->user->id);
     }
@@ -423,7 +422,7 @@ class TransferServiceTest extends TestCase
 
         $service = new TransferService;
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InventoryValidationException::class);
         $this->expectExceptionMessage('The test id must be greater than zero.');
 
         $method->invoke($service, 0, 'test');
