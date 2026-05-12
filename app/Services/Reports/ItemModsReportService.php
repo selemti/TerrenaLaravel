@@ -61,14 +61,14 @@ class ItemModsReportService
             ->join('public.ticket_item as ti', 'ti.ticket_id', '=', 't.id')
             ->whereBetween('t.closing_date', [
                 $start->format('Y-m-d H:i:s'),
-                $end->format('Y-m-d H:i:s')
+                $end->format('Y-m-d H:i:s'),
             ]);
 
         $this->applySalesModeFilter($query, 't', $salesMode);
 
         if ($salesMode === 'floreant_conciliation') {
             // Modo Conciliación Floreant: usa cálculo base (sin modificadores incluidos)
-            $query->selectRaw("
+            $query->selectRaw('
                 ti.category_name AS categoria,
                 ti.group_name AS grupo_menu,
                 ti.item_name AS menu_item,
@@ -77,14 +77,14 @@ class ItemModsReportService
                 SUM(ti.item_price * COALESCE(ti.item_count, 0)) AS ingreso_bruto_item,
                 0 AS descuento_item,  // Descuentos se calculan en el método summarize
                 SUM(ti.item_price * COALESCE(ti.item_count, 0)) AS ingreso_neto_item
-            ")
-            ->groupBy('ti.category_name', 'ti.group_name', 'ti.item_name', 'ti.item_price')
-            ->orderBy('ti.category_name')
-            ->orderBy('ti.group_name')
-            ->orderBy('ti.item_name');
+            ')
+                ->groupBy('ti.category_name', 'ti.group_name', 'ti.item_name', 'ti.item_price')
+                ->orderBy('ti.category_name')
+                ->orderBy('ti.group_name')
+                ->orderBy('ti.item_name');
         } else {
             // Modo normal: usa total_price que incluye modificadores
-            $query->selectRaw("
+            $query->selectRaw('
                 ti.category_name AS categoria,
                 ti.group_name AS grupo_menu,
                 ti.item_name AS menu_item,
@@ -93,11 +93,11 @@ class ItemModsReportService
                 SUM(ti.total_price) AS ingreso_bruto_item,
                 SUM(COALESCE(ti.discount, 0)) AS descuento_item,
                 SUM(ti.total_price - COALESCE(ti.discount, 0)) AS ingreso_neto_item
-            ")
-            ->groupBy('ti.category_name', 'ti.group_name', 'ti.item_name', 'ti.item_price')
-            ->orderBy('ti.category_name')
-            ->orderBy('ti.group_name')
-            ->orderBy('ti.item_name');
+            ')
+                ->groupBy('ti.category_name', 'ti.group_name', 'ti.item_name', 'ti.item_price')
+                ->orderBy('ti.category_name')
+                ->orderBy('ti.group_name')
+                ->orderBy('ti.item_name');
         }
 
         if ($branchIds && count($branchIds) > 0) {
@@ -123,16 +123,16 @@ class ItemModsReportService
         string $salesMode
     ): Collection {
         $dateSelect = $groupByDay
-            ? "t.folio_date AS fecha,"
-            : "";
+            ? 't.folio_date AS fecha,'
+            : '';
 
         $dateGroupBy = $groupByDay
-            ? "t.folio_date,"
-            : "";
+            ? 't.folio_date,'
+            : '';
 
         $dateOrderBy = $groupByDay
-            ? "t.folio_date,"
-            : "";
+            ? 't.folio_date,'
+            : '';
 
         $query = DB::connection('pgsql')
             ->table('public.ticket as t')
@@ -142,7 +142,7 @@ class ItemModsReportService
             ->leftJoin('public.menu_modifier_group as mgr', 'mgr.id', '=', DB::raw('COALESCE(tim.group_id, mm.group_id)'))
             ->whereBetween('t.closing_date', [
                 $start->format('Y-m-d H:i:s'),
-                $end->format('Y-m-d H:i:s')
+                $end->format('Y-m-d H:i:s'),
             ]);
 
         $this->applySalesModeFilter($query, 't', $salesMode);
@@ -209,7 +209,7 @@ class ItemModsReportService
             ->leftJoin('public.menu_modifier_group as mgr', 'mgr.id', '=', 'mm.group_id')
             ->whereBetween('t.closing_date', [
                 $start->format('Y-m-d H:i:s'),
-                $end->format('Y-m-d H:i:s')
+                $end->format('Y-m-d H:i:s'),
             ]);
 
         $this->applySalesModeFilter($rows, 't', $salesMode);
@@ -292,16 +292,16 @@ class ItemModsReportService
             $first = $mods->first();
 
             // Skip items without modifiers if includeEmpty is false
-            if (!$includeEmpty) {
-                $hasModifiers = $mods->filter(fn ($r) => !empty($r->mod_name))->count() > 0;
-                if (!$hasModifiers) {
+            if (! $includeEmpty) {
+                $hasModifiers = $mods->filter(fn ($r) => ! empty($r->mod_name))->count() > 0;
+                if (! $hasModifiers) {
                     continue;
                 }
             }
 
             // Obtener modificadores únicos para este ticket_item específico
             $modifiers = $mods
-                ->filter(fn ($r) => !empty($r->mod_name))
+                ->filter(fn ($r) => ! empty($r->mod_name))
                 ->map(function ($r) {
                     return [
                         'group' => $r->mod_group,
@@ -309,7 +309,7 @@ class ItemModsReportService
                     ];
                 })
                 ->unique(function ($m) {
-                    return strtolower(trim($m['group'])) . '::' . strtolower(trim($m['name']));
+                    return strtolower(trim($m['group'])).'::'.strtolower(trim($m['name']));
                 })
                 ->values();
 
@@ -318,26 +318,27 @@ class ItemModsReportService
                 ? 'Sin modificadores'
                 : $modifiers
                     ->sortBy(function ($m) {
-                        return ($m['group'] ?? '') . '::' . ($m['name'] ?? '');
+                        return ($m['group'] ?? '').'::'.($m['name'] ?? '');
                     })
                     ->map(function ($m) {
                         $label = $m['name'] ?? '—';
-                        if (!empty($m['group'])) {
+                        if (! empty($m['group'])) {
                             $label = "{$m['group']}: {$label}";
                         }
+
                         return $label;
                     })
                     ->values()
                     ->implode(' · ');
 
             // Crear clave única para esta combinación
-            $comboKey = ($first->categoria ?? '') . '|' .
-                       ($first->grupo_menu ?? '') . '|' .
-                       ($first->menu_item ?? '') . '|' .
+            $comboKey = ($first->categoria ?? '').'|'.
+                       ($first->grupo_menu ?? '').'|'.
+                       ($first->menu_item ?? '').'|'.
                        $comboLabel;
 
             // Inicializar si no existe esta combinación
-            if (!isset($byCombination[$comboKey])) {
+            if (! isset($byCombination[$comboKey])) {
                 $byCombination[$comboKey] = [
                     'categoria' => $first->categoria,
                     'grupo_menu' => $first->grupo_menu,
@@ -364,7 +365,7 @@ class ItemModsReportService
 
             $byCombination[$comboKey]['unidades_item'] += $unidades;
             $byCombination[$comboKey]['tickets'] += 1;
-            if (!empty($first->ticket_id)) {
+            if (! empty($first->ticket_id)) {
                 $byCombination[$comboKey]['ticket_ids'][$first->ticket_id] = true;
             }
             $byCombination[$comboKey]['selecciones_modificador'] += $mods->sum('cantidad_modificador');
@@ -383,7 +384,7 @@ class ItemModsReportService
         foreach ($byCombination as $comboData) {
             // Calcular precio promedio del item base (sin modificadores)
             $precioPromedio = 0.0;
-            if (!empty($comboData['precios_item'])) {
+            if (! empty($comboData['precios_item'])) {
                 $precioPromedio = array_sum($comboData['precios_item']) / count($comboData['precios_item']);
             }
 
@@ -392,7 +393,7 @@ class ItemModsReportService
                 ? $comboData['ingreso_total_con_mods'] / $comboData['unidades_item']
                 : 0.0;
 
-            $ticketsDistinct = !empty($comboData['ticket_ids'])
+            $ticketsDistinct = ! empty($comboData['ticket_ids'])
                 ? count($comboData['ticket_ids'])
                 : $comboData['tickets'];
 
@@ -453,7 +454,7 @@ class ItemModsReportService
         }
 
         // Protección contra null
-        if (!$result) {
+        if (! $result) {
             $result = collect([]);
         }
 
@@ -483,13 +484,13 @@ class ItemModsReportService
             ->join('public.ticket_item_modifier as tim', 'tim.ticket_item_id', '=', 'ti.id')
             ->whereBetween('t.closing_date', [
                 $start->format('Y-m-d H:i:s'),
-                $end->format('Y-m-d H:i:s')
+                $end->format('Y-m-d H:i:s'),
             ]);
 
         $this->applySalesModeFilter($query, 't', $salesMode);
 
         // CORRECCIÓN: Eliminado ->whereNotNull('tim.modifier_name') para incluir items sin modificadores
-        $query->selectRaw("
+        $query->selectRaw('
                 t.folio_date AS fecha,
                 ti.item_name AS item,
                 tim.modifier_name AS modificador,
@@ -500,7 +501,7 @@ class ItemModsReportService
                 t.terminal_id AS terminal,
                 t.id AS ticket_id,
                 ti.id AS ticket_item_id
-            ")
+            ')
             ->orderByDesc('t.folio_date')
             ->orderByDesc('t.id')
             ->orderBy('ti.id')
@@ -560,7 +561,7 @@ class ItemModsReportService
                 ->join('public.ticket as t', 't.id', '=', 'ti.ticket_id')
                 ->whereBetween('t.folio_date', [
                     '2025-12-16 00:00:00',
-                    '2025-12-23 23:59:59' // Ajustar según el período real
+                    '2025-12-23 23:59:59', // Ajustar según el período real
                 ])
                 ->where('t.paid', true)
                 ->where('t.voided', false)
@@ -602,23 +603,23 @@ class ItemModsReportService
         $uniqueModifiers = $data->pluck('modificador')->filter()->unique()->count();
         $totalCombinations = $data->count();
 
-        $totalAmount = $data->sum(fn($row) => (float) ($row->monto_extra_modificador ?? 0));
-        $totalSelections = $data->sum(fn($row) => (int) ($row->selecciones_modificador ?? 0));
+        $totalAmount = $data->sum(fn ($row) => (float) ($row->monto_extra_modificador ?? 0));
+        $totalSelections = $data->sum(fn ($row) => (int) ($row->selecciones_modificador ?? 0));
 
         $avgAmountPerSelection = $totalSelections > 0
             ? round($totalAmount / $totalSelections, 2)
             : 0.0;
 
         $topModifiers = $data
-            ->groupBy(fn($row) => $row->modificador ?? 'Sin nombre')
+            ->groupBy(fn ($row) => $row->modificador ?? 'Sin nombre')
             ->map(function (Collection $items, string $name) {
                 return [
                     'modifier' => $name,
-                    'times_selected' => $items->sum(fn($row) => (int) ($row->selecciones_modificador ?? 0)),
-                    'amount' => round($items->sum(fn($row) => (float) ($row->monto_extra_modificador ?? 0)), 2),
+                    'times_selected' => $items->sum(fn ($row) => (int) ($row->selecciones_modificador ?? 0)),
+                    'amount' => round($items->sum(fn ($row) => (float) ($row->monto_extra_modificador ?? 0)), 2),
                 ];
             })
-            ->filter(fn($row) => $row['times_selected'] > 0 || $row['amount'] > 0)
+            ->filter(fn ($row) => $row['times_selected'] > 0 || $row['amount'] > 0)
             ->sortByDesc('amount')
             ->take(5)
             ->values()
@@ -654,7 +655,6 @@ class ItemModsReportService
         ];
     }
 
-    
     /**
      * KPIs para combinaciones de ítem + modificadores
      */
@@ -672,7 +672,7 @@ class ItemModsReportService
                 ->join('public.ticket as t', 't.id', '=', 'ti.ticket_id')
                 ->whereBetween('t.folio_date', [
                     '2025-12-16 00:00:00',
-                    '2025-12-23 23:59:59' // Ajustar según el período real
+                    '2025-12-23 23:59:59', // Ajustar según el período real
                 ])
                 ->where('t.paid', true)
                 ->where('t.voided', false)
@@ -865,12 +865,12 @@ class ItemModsReportService
             ->join('public.ticket_item as ti', 'ti.ticket_id', '=', 't.id')
             ->whereBetween('t.closing_date', [
                 $start->format('Y-m-d H:i:s'),
-                $end->format('Y-m-d H:i:s')
+                $end->format('Y-m-d H:i:s'),
             ]);
 
         $this->applySalesModeFilter($rows, 't', $salesMode);
 
-        $rows->selectRaw("
+        $rows->selectRaw('
                 ti.category_name AS categoria,
                 ti.group_name AS grupo_menu,
                 ti.item_name AS menu_item,
@@ -878,7 +878,7 @@ class ItemModsReportService
                 SUM(ti.total_price) AS ingreso_total,
                 SUM(ti.total_price_without_modifiers) AS ingreso_sin_mods,
                 COUNT(*) AS tickets
-            ")
+            ')
             ->groupBy('ti.category_name', 'ti.group_name', 'ti.item_name');
 
         if ($branchIds && count($branchIds) > 0) {
@@ -901,6 +901,7 @@ class ItemModsReportService
                     preg_replace('/\s+/', ' ', strtolower(trim((string) $grupo))),
                     preg_replace('/\s+/', ' ', strtolower(trim((string) $item))),
                 ];
+
                 return implode('|', $parts);
             };
 
@@ -929,13 +930,14 @@ class ItemModsReportService
     {
         $inconsistencies = $data->filter(function ($row) {
             // Para productos catalogados (menu_item_id > 0): verificar si el grupo en el combo es correcto
-            if (($row->menu_item_id ?? 0) > 0 && !empty($row->combo)) {
+            if (($row->menu_item_id ?? 0) > 0 && ! empty($row->combo)) {
                 // El combo debería usar el grupo correcto del menu_modifier
                 $expectedGroupName = $this->getGroupNameByModifierName($row->modifier);
                 $currentGroupName = $this->extractGroupNameFromCombo($row->combo);
 
                 return $expectedGroupName && $currentGroupName && $expectedGroupName !== $currentGroupName;
             }
+
             return false;
         });
 
@@ -951,7 +953,9 @@ class ItemModsReportService
      */
     protected function getGroupNameByModifierName(?string $modifierName): ?string
     {
-        if (empty($modifierName)) return null;
+        if (empty($modifierName)) {
+            return null;
+        }
 
         return DB::connection('pgsql')
             ->table('public.menu_modifier mm')
@@ -965,10 +969,13 @@ class ItemModsReportService
      */
     protected function extractGroupNameFromCombo(?string $combo): ?string
     {
-        if (empty($combo) || $combo === 'Sin modificadores') return null;
+        if (empty($combo) || $combo === 'Sin modificadores') {
+            return null;
+        }
 
         // Formato esperado: "Grupo: Modificador"
         $parts = explode(':', $combo, 2);
+
         return trim($parts[0] ?? '');
     }
 
@@ -992,7 +999,7 @@ class ItemModsReportService
             ->leftJoin('public.ticket_item_modifier AS tim', 'tim.ticket_item_id', '=', 'ti.id')
             ->whereBetween('t.closing_date', [
                 $start->format('Y-m-d H:i:s'),
-                $end->format('Y-m-d H:i:s')
+                $end->format('Y-m-d H:i:s'),
             ]);
 
         $this->applySalesModeFilter($query, 't', $salesMode);
@@ -1035,7 +1042,7 @@ class ItemModsReportService
                     && ($r->combo === 'Sin modificadores' || $r->combo === 'Sin ventas');
             });
 
-            if (!$exists) {
+            if (! $exists) {
                 $result->push((object) [
                     'categoria' => $item->categoria ?? 'N/D',
                     'grupo_menu' => $item->grupo_menu ?? 'N/D',

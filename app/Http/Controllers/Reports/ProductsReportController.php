@@ -5,11 +5,9 @@ namespace App\Http\Controllers\Reports;
 use App\Services\Reports\ProductsReportService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
-use Symfony\Component\HttpFoundation\StreamedCsvResponse;
-use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProductsReportController extends BaseReportController
 {
@@ -85,14 +83,14 @@ class ProductsReportController extends BaseReportController
                 'ok' => true,
                 'data' => $data,
                 'summary' => $summary,
-                'timestamp' => now()->toIso8601String()
+                'timestamp' => now()->toIso8601String(),
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'ok' => false,
                 'error' => 'Error al obtener datos de productos',
                 'message' => $e->getMessage(),
-                'timestamp' => now()->toIso8601String()
+                'timestamp' => now()->toIso8601String(),
             ], 500);
         }
     }
@@ -112,14 +110,14 @@ class ProductsReportController extends BaseReportController
                 'ok' => true,
                 'data' => $data,
                 'summary' => $summary,
-                'timestamp' => now()->toIso8601String()
+                'timestamp' => now()->toIso8601String(),
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'ok' => false,
                 'error' => 'Error al obtener datos por categoría',
                 'message' => $e->getMessage(),
-                'timestamp' => now()->toIso8601String()
+                'timestamp' => now()->toIso8601String(),
             ], 500);
         }
     }
@@ -139,14 +137,14 @@ class ProductsReportController extends BaseReportController
                 'ok' => true,
                 'data' => $data,
                 'summary' => $summary,
-                'timestamp' => now()->toIso8601String()
+                'timestamp' => now()->toIso8601String(),
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'ok' => false,
                 'error' => 'Error al obtener productos detallados',
                 'message' => $e->getMessage(),
-                'timestamp' => now()->toIso8601String()
+                'timestamp' => now()->toIso8601String(),
             ], 500);
         }
     }
@@ -165,14 +163,14 @@ class ProductsReportController extends BaseReportController
                 'ok' => true,
                 'data' => $data,
                 'count' => $data->count(),
-                'timestamp' => now()->toIso8601String()
+                'timestamp' => now()->toIso8601String(),
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'ok' => false,
                 'error' => 'Error al obtener datos diarios',
                 'message' => $e->getMessage(),
-                'timestamp' => now()->toIso8601String()
+                'timestamp' => now()->toIso8601String(),
             ], 500);
         }
     }
@@ -189,7 +187,7 @@ class ProductsReportController extends BaseReportController
             $data = $this->service->fetchProductsByMonth($start, $end, $branches, $terminals, $groupBy);
             $summary = $this->service->getSummary($data);
 
-            $filename = 'productos_vendidos_' . $start->format('Y-m-d') . '_a_' . $end->format('Y-m-d') . '.pdf';
+            $filename = 'productos_vendidos_'.$start->format('Y-m-d').'_a_'.$end->format('Y-m-d').'.pdf';
 
             return $this->renderPdf('reports.products.pdf', [
                 'title' => 'Reporte de Productos Vendidos',
@@ -205,7 +203,7 @@ class ProductsReportController extends BaseReportController
             return response()->json([
                 'ok' => false,
                 'error' => 'Error al generar PDF',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -222,12 +220,12 @@ class ProductsReportController extends BaseReportController
             $data = $this->service->fetchProductsByMonth($start, $end, $branches, $terminals, $groupBy);
             $summary = $this->service->getSummary($data);
 
-            return Excel::download(new ProductsExport($data, $summary, $groupBy), 'productos_vendidos_' . $start->format('Y-m-d') . '_a_' . $end->format('Y-m-d') . '.xlsx');
+            return Excel::download(new ProductsExport($data, $summary, $groupBy), 'productos_vendidos_'.$start->format('Y-m-d').'_a_'.$end->format('Y-m-d').'.xlsx');
         } catch (\Exception $e) {
             return response()->json([
                 'ok' => false,
                 'error' => 'Error al generar Excel',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -245,10 +243,10 @@ class ProductsReportController extends BaseReportController
 
             $headers = [
                 'Content-Type' => 'text/csv',
-                'Content-Disposition' => 'attachment; filename="productos_vendidos_' . $start->format('Y-m-d') . '.csv"',
+                'Content-Disposition' => 'attachment; filename="productos_vendidos_'.$start->format('Y-m-d').'.csv"',
             ];
 
-            $callback = function() use ($data) {
+            $callback = function () use ($data) {
                 $file = fopen('php://output', 'w');
                 // Cabecera CSV
                 fputcsv($file, ['Mes', 'Año', 'Unidades', 'Ingreso Total', 'Tickets', 'Productos Únicos']);
@@ -260,7 +258,7 @@ class ProductsReportController extends BaseReportController
                         $row->unidades_vendidas,
                         $row->ingreso_total_formateado,
                         $row->tickets_totales,
-                        $row->productos_unicos ?? 0
+                        $row->productos_unicos ?? 0,
                     ]);
                 }
                 fclose($file);
@@ -271,7 +269,7 @@ class ProductsReportController extends BaseReportController
             return response()->json([
                 'ok' => false,
                 'error' => 'Error al generar CSV',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -317,7 +315,7 @@ class ProductsReportController extends BaseReportController
                 'ingresos' => (float) ($query->ingresos ?? 0),
                 'tickets' => (int) ($query->tickets ?? 0),
                 'productos_unicos' => (int) ($query->productos_unicos ?? 0),
-                'ingresos_formateado' => '$' . number_format($query->ingresos ?? 0, 2),
+                'ingresos_formateado' => '$'.number_format($query->ingresos ?? 0, 2),
             ];
         } catch (\Exception $e) {
             return [
@@ -360,7 +358,9 @@ class ProductsReportController extends BaseReportController
 class ProductsExport implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings
 {
     protected $data;
+
     protected array $summary;
+
     protected string $groupBy;
 
     public function __construct($data, array $summary, string $groupBy = 'month')

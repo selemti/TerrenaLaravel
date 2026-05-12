@@ -4,7 +4,7 @@ namespace Tests\Unit\Inventory;
 
 use App\Services\Inventory\ProductionService;
 use Illuminate\Support\Carbon;
-use InvalidArgumentException;
+use App\Exceptions\Inventory\InventoryValidationException;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -14,7 +14,7 @@ class ProductionServiceTest extends TestCase
     {
         $service = new ProductionService;
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InventoryValidationException::class);
         $this->invokeNormalizeInput($service, ['qty' => 1, 'uom' => 'KG']);
     }
 
@@ -39,7 +39,7 @@ class ProductionServiceTest extends TestCase
     {
         $service = new ProductionService;
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InventoryValidationException::class);
         $this->invokeNormalizeOutput($service, ['item_id' => 1, 'uom' => 'PZA', 'qty' => 0], []);
     }
 
@@ -47,7 +47,7 @@ class ProductionServiceTest extends TestCase
     {
         $service = new ProductionService;
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InventoryValidationException::class);
         $this->invokeNormalizeWaste($service, ['item_id' => 1, 'qty' => 1], []);
     }
 

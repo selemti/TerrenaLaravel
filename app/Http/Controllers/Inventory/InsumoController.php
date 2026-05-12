@@ -14,8 +14,7 @@ class InsumoController extends Controller
     public function __construct(
         private readonly InsumoCodeService $codeService,
         private AuditLogService $auditLogService
-    )
-    {
+    ) {
         $this->middleware(['auth', 'permission:inventory.items.manage']);
     }
 
@@ -29,14 +28,14 @@ class InsumoController extends Controller
         // TODO: evaluar autorización granular adicional si se requiere endurecer más adelante.
 
         $validated = $request->validate([
-            'categoria_codigo'    => ['required', 'string', 'max:4'],
+            'categoria_codigo' => ['required', 'string', 'max:4'],
             'subcategoria_codigo' => ['required', 'string', 'max:6'],
-            'nombre'              => ['required', 'string', 'max:255'],
-            'um_id'               => ['required', 'integer'],
-            'sku'                 => ['nullable', 'string', 'max:120'],
-            'perecible'           => ['sometimes', 'boolean'],
-            'merma_pct'           => ['sometimes', 'numeric', 'between:0,100'],
-            'meta'                => ['sometimes', 'array'],
+            'nombre' => ['required', 'string', 'max:255'],
+            'um_id' => ['required', 'integer'],
+            'sku' => ['nullable', 'string', 'max:120'],
+            'perecible' => ['sometimes', 'boolean'],
+            'merma_pct' => ['sometimes', 'numeric', 'between:0,100'],
+            'meta' => ['sometimes', 'array'],
         ]);
 
         $codes = $this->codeService->generateCode(
@@ -51,17 +50,17 @@ class InsumoController extends Controller
 
         // TODO: Esta tabla vive realmente en el esquema selemti. Ajustar conexión/schema en prod si es necesario.
         $id = DB::table('insumo')->insertGetId([
-            'codigo'              => $codes['codigo'],
-            'categoria_codigo'    => $codes['categoria'],
+            'codigo' => $codes['codigo'],
+            'categoria_codigo' => $codes['categoria'],
             'subcategoria_codigo' => $codes['subcategoria'],
-            'consecutivo'         => $codes['consecutivo'],
-            'nombre'              => $validated['nombre'],
-            'um_id'               => $validated['um_id'],
-            'sku'                 => $validated['sku'] ?? null,
-            'perecible'           => $validated['perecible'] ?? false,
-            'merma_pct'           => $validated['merma_pct'] ?? 0,
-            'activo'              => true,
-            'meta'                => $meta,
+            'consecutivo' => $codes['consecutivo'],
+            'nombre' => $validated['nombre'],
+            'um_id' => $validated['um_id'],
+            'sku' => $validated['sku'] ?? null,
+            'perecible' => $validated['perecible'] ?? false,
+            'merma_pct' => $validated['merma_pct'] ?? 0,
+            'activo' => true,
+            'meta' => $meta,
         ]);
 
         // Registrar auditoría de creación de insumo
@@ -76,8 +75,8 @@ class InsumoController extends Controller
         );
 
         return response()->json([
-            'ok'     => true,
-            'id'     => $id,
+            'ok' => true,
+            'id' => $id,
             'codigo' => $codes['codigo'],
         ], 201);
     }
@@ -86,7 +85,7 @@ class InsumoController extends Controller
     {
         // TODO: implementar carga masiva (CSV/Excel) reutilizando InsumoCodeService para cada fila.
         return response()->json([
-            'ok'      => false,
+            'ok' => false,
             'message' => 'bulkImport pendiente de implementación.',
         ], 501);
     }

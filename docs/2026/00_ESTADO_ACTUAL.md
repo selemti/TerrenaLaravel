@@ -31,7 +31,7 @@ TerrenaLaravel es un ERP para gestión de cafeterías/restaurantes que integra:
 | Módulo | API | UI (Livewire) | Servicio | Estado |
 |--------|-----|--------------|---------|--------|
 | **Caja / Precorte** | ✅ 18 endpoints | ✅ integrado | ✅ completo | Funcional — bug descuentos pendiente |
-| **Postcorte / Conciliación** | ✅ 7 endpoints | ⚠️ parcial | ✅ completo | Trigger NULL en totales |
+| **Postcorte / Conciliación** | ✅ 7 endpoints | ⚠️ parcial | ✅ completo | Funcional |
 | **Inventario / Stock** | ✅ 27 endpoints | ✅ 10 componentes | ✅ completo | Funcional |
 | **Conteo Físico** | ✅ integrado | ✅ 5 componentes | ✅ completo | Funcional |
 | **Compras / OC** | ✅ 11 endpoints | ✅ 5 componentes | ✅ completo | Funcional |
@@ -57,11 +57,9 @@ TerrenaLaravel es un ERP para gestión de cafeterías/restaurantes que integra:
 - **Fix:** Usar `ticket.getTotalDiscount()` — ya almacenado correctamente en `public.ticket.total_discount`
 - **Impacto:** Cortes de caja no cuadran
 
-### 2. Postcorte con Campos NULL
-- **Tabla:** `selemti.postcorte`
-- **Campos afectados:** `total_ventas_brutas`, `total_descuentos_drawer`, `total_descuentos_reales`
-- **Causa:** Trigger `fn_postcorte_after_insert` no está calculando los valores
-- **Impacto:** Conciliación incompleta
+### 2. Divergencia de Esquema en Postcorte (RESUELTO: FASE 3 Completada)
+- **Estado:** Resuelto (Abril 2026).
+- **Contexto Histórico:** Un bot anterior inyectó un modelo extendido falso con columnas analíticas huérfanas (`total_ventas_brutas`, etc). Esto causó colapsos nulos. Ya fue revertido y homologado al contrato canónico de Producción.
 
 ### 3. Auth Deshabilitado en APIs de Caja
 - **Ruta:** `/api/caja/*`
@@ -86,8 +84,9 @@ TerrenaLaravel es un ERP para gestión de cafeterías/restaurantes que integra:
 
 - Schema `public` (Floreant): solo lectura desde Laravel
 - Schema `selemti` (ERP): lectura/escritura completa
-- Sincronización: `PosConsumptionService` consume tickets de Floreant → actualiza stock `selemti`
+- Sincronización: `PosConsumptionService` consume tickets de Floreant → actualiza stock `selemti` (ítems genéricos)
 - Mapeo de items POS → insumos: vía tabla `selemti.pos_item_mapping`
+- Relación de Compras: ítems genéricos asociados a presentaciones comerciales vía `selemti.insumo_proveedor_presentacion`
 
 ---
 

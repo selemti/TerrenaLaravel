@@ -15,8 +15,11 @@ class RecipeCostSnapshot extends Model
     public const UPDATED_AT = null;
 
     public const REASON_MANUAL = 'MANUAL';
+
     public const REASON_AUTO_THRESHOLD = 'AUTO_THRESHOLD';
+
     public const REASON_INGREDIENT_CHANGE = 'INGREDIENT_CHANGE';
+
     public const REASON_SCHEDULED = 'SCHEDULED';
 
     protected $fillable = [

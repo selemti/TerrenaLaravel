@@ -12,12 +12,9 @@
 - **Causa:** `discount.getValue()` retorna el porcentaje, no el monto. Usar `ticket.getTotalDiscount()`
 - **Impacto:** Cortes de caja no cuadran, reportes gerenciales incorrectos
 
-### BUG-02: Postcorte — Campos NULL
-- **Prioridad:** 🔴 CRÍTICO
-- **Tabla:** `selemti.postcorte`
-- **Campos:** `total_ventas_brutas`, `total_descuentos_drawer`, `total_descuentos_reales`
-- **Causa:** Trigger `fn_postcorte_after_insert` no calcula los valores
-- **Impacto:** Conciliación incompleta, imposible cuadrar cortes
+### BUG-02: [RESUELTO] Postcorte — Campos NULL / Esquema Expandido
+- **Estado:** ✅ RESUELTO (Abril 2026)
+- **Resolución:** El bug no era lógico; era una divergencia de esquema. Se neutralizó el "injerto" huérfano local de columnas de descuentos que no existían en PRD. Local fue revertido a la versión canónica y segura de Producción, solucionando radicalmente la aparición persistente de totales matemáticos ficticios.
 
 ### BUG-03: Auth deshabilitado en `/api/caja/*`
 - **Prioridad:** 🔴 CRÍTICO (seguridad)
@@ -25,19 +22,34 @@
 - **Causa:** Middleware `auth:sanctum` removido durante desarrollo
 - **Fix:** Reactivar antes de producción
 
+### BUG-04: Origen Fragmentado de Descuentos (Heredado de Floreant POS)
+- **Prioridad:** 🔴 CRÍTICO (Pendiente de arquitectura de solución)
+- **Contexto Operativo:** El sistema transaccional legacy (Floreant POS) no posee un registro atomizado, centralizado y unificado para el procesamiento de descuentos, dificultando la migración del dato exacto.
+- **Análisis de Origen (Floreant POS):**
+  - `ticket`: Expone el campo `total_discount`, teóricamente cubriendo el nivel cabecera.
+  - `ticket_item`: Almacena transacciones a nivel artículo, que pueden tener inyecciones de descuento individuales.
+  - `transactions`: Entidad financiera final que registra pagos y anulaciones, pero cuyo monto cobrado ya viene mutado sin especificar qué remanente fue descuento.
+- **Inconsistencias Posibles (Riesgo de Duplicación):**
+  - Combinaciones asimétricas de `ticket_discount` y `ticket_item_discount` originan que, si se suman ambos arbitrariamente, el descuento total reportado dobletee o triplique matemáticamente al descuento real percibido.
+- **Mapeo a TerrenaLaravel:**
+  - El ecosistema de base de datos (`selemti.precorte` / `postcorte`) confía ciegamente en funciones totalizadoras para obtener ventas netas. No hay actualmente un pipeline oficial que desentramparice la herencia fragmentaria de Floreant.
+- **Carencia de Fuente Única Confiable (Single Source of Truth):**
+  - No hay pivote canónico de descuentos. El valor final depende empíricamente de si en la UI del POS de Java el cajero oprimió "Descuento al Ticket" vs "Descuento al Ítem". Toda agregación global en Postgres conlleva un riesgo de descarte o sobre-suma.
+- **Impacto Sistémico:**
+  - **Caja:** Genera incertidumbre sobre el cálculo neto al finalizar el turno operativo de la terminal.
+  - **Postcorte:** Impide reportar montos brutos y descuentos tabulados sin romper la ecuación principal.
+  - **Conciliación:** Induce severas variaciones al balancear el saldo final efectivo de base de datos contra el `drawer_pull_report` original sellado por la aplicación Java.
+- **Memoria Técnica (Intento Previo):**
+  - Hubo un intento de resolución artificial originado por implementaciones automatizadas e inconsistentes (IA). Intentó crear un pipeline de vistas complejas (`vw_descuentos_reales`) y alteró el DDL de `postcorte` inyectando 7 columnas ficticias (`total_ventas_brutas`, `calidad_reporte_descuentos`, etc). 
+  - Fue un rótundo **experimento fallido**, operando como un parche fantasma *sin Interfaz de Usuario (UI)* y *sin contrato funcional canónico*. Terminó forzando un bug matemático de ceros absolutos por colisión de modelo y ha sido completamente revertido de los repositorios a su fuente pura.
+
 ---
 
 ## Funcionalidades Faltantes
 
-### FEAT-01: UI del Módulo de Producción
-- **Prioridad:** 🟡 ALTA
-- **Estado:** API completa (`/api/production/batch/*`), sin frontend
-- **Necesario:** 4 componentes Livewire:
-  - `ProductionOrdersIndex` — lista de órdenes
-  - `ProductionOrderCreate` — crear/planear lote
-  - `ProductionOrderDetail` — ver detalle
-  - `ProductionOrderCapture` — capturar producción real
-- **Carpeta destino:** `app/Livewire/Production/`
+### FEAT-01: [RESUELTO] UI del Módulo de Producción
+- **Estado:** ✅ RESUELTO (Abril 2026)
+- **Implementación:** Se completaron los 4 componentes Livewire (`OrdersIndex`, `OrderCreate`, `OrderDetail`, `OrderCapture`). El módulo es 100% operativo tanto en API como en Web UI.
 
 ### FEAT-02: UI de Kardex
 - **Prioridad:** 🟡 ALTA
@@ -68,12 +80,9 @@
 - `app/Models/Caja/SesionCajon.php` vs `app/Models/Core/SesionCaja.php`
 - **Acción:** Consolidar en los namespaces nuevos, deprecar los de `Inv/` y `Core/`
 
-### DEBT-02: PosConsumptionService en 3 Namespaces
-- **Prioridad:** 🟢 BAJA
-- `Services/Pos/PosConsumptionService.php` (461L — principal)
-- `Services/Inventory/PosConsumptionService.php` (51L — thin wrapper)
-- `Services/Operations/PosConsumptionService.php` (107L — wrapper de operaciones)
-- **Acción:** Consolidar en uno solo, eliminar wrappers redundantes
+### DEBT-02: [EN PROCESO] PosConsumptionService
+- **Estado:** 🟠 REFACTORIZADO (v2.5)
+- **Acción:** El núcleo lógico ha sido mudado a `selemti.fn_expandir_consumo_ticket` (v2.5) para recursividad. Falta consolidar los wrappers de PHP para apuntar exclusivamente a la nueva función de BD y eliminar el código legacy redundante.
 
 ### DEBT-03: Modelos de Compras en Raíz y Subcarpeta
 - `app/Models/PurchaseOrder.php` (raíz) vs `app/Models/Purchasing/PurchaseRequest.php` (subcarpeta)

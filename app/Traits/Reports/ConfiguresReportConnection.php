@@ -52,10 +52,34 @@ trait ConfiguresReportConnection
     }
 
     /**
+     * Determina si se debe usar el modelo financiero canónico (SSOT via transactions)
+     * Activado vía query param 'mode=canon' o configuración global.
+     */
+    protected function isCanonMode(): bool
+    {
+        return request()->query('mode') === 'canon'
+            || config('finance.use_canon_mode', false);
+    }
+
+    /**
      * Calcula neto de ticket
+     * AS-IS (Legacy): Resta aritmética de total_price - total_discount.
+     * TO-BE (Canon): Suma de transacciones liquidadas (Fuente de Verdad Monetaria).
      */
     protected function getTicketNetAmount(): string
     {
+        if ($this->isCanonMode()) {
+            return "COALESCE((
+                SELECT SUM(tx.amount) 
+                FROM public.transactions tx 
+                WHERE tx.ticket_id = t.id 
+                  AND (tx.voided = FALSE OR tx.voided IS NULL)
+                  AND tx.transaction_type IN ('CREDIT', 'DEBIT') 
+                  AND tx.payment_type NOT IN ('REFUND', 'VOID_TRANS', 'REFUND_CARD')
+                  AND tx.amount > 0
+            ), 0)";
+        }
+
         return '(t.total_price - COALESCE(t.total_discount, 0))';
     }
 }

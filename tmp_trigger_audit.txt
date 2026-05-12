@@ -1,0 +1,21 @@
+                       pg_get_functiondef                       
+----------------------------------------------------------------
+ CREATE OR REPLACE FUNCTION selemti.fn_postcorte_after_insert()+
+  RETURNS trigger                                              +
+  LANGUAGE plpgsql                                             +
+ AS $function$                                                 +
+ BEGIN                                                         +
+   UPDATE selemti.sesion_cajon                                 +
+   SET estatus = 'CERRADA',                                    +
+       cierre_ts = COALESCE(cierre_ts, now())                  +
+   WHERE id = NEW.sesion_id;                                   +
+   RETURN NEW;                                                 +
+ END;                                                          +
+ $function$                                                    +
+ 
+(1 row)
+
+ pg_get_functiondef 
+--------------------
+(0 rows)
+

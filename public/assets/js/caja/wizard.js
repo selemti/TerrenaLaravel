@@ -429,12 +429,12 @@ export async function sincronizarPOS(auto=false){
   els.bannerFaltaCorte?.classList.add('d-none');
   if (els.concGrid) els.concGrid.innerHTML = '<div class="text-muted small">Sincronizando con POS…</div>';
 
-  // Por default, no dejamos avanzar
+  // Por default, no dejamos avanzar hasta confirmar el estado del DPR
   if (els.btnIrPostcorte) els.btnIrPostcorte.disabled = true;
 
   const j = await GET_SOFT(api.precorte_totales(state.precorteId));
 
-  // Si no hay DPR: mostramos banner y (si existe) botÃ³n "Sincronizar POS"
+  // Error de red o error inesperado del servidor (no relacionado con DPR faltante)
   if (!j?.ok){
     els.bannerFaltaCorte?.classList.remove('d-none');
     if (els.btnSincronizarPOS) els.btnSincronizarPOS.classList.remove('d-none');
@@ -450,9 +450,30 @@ export async function sincronizarPOS(auto=false){
     return;
   }
 
-  // Con DPR: ocultamos â€œSincronizar POSâ€ y habilitamos â€œIr a Postcorteâ€
-  if (els.btnSincronizarPOS) els.btnSincronizarPOS.classList.add('d-none');
-  if (els.btnIrPostcorte)    els.btnIrPostcorte.disabled = false;
+  // has_pos_cut=false: el DPR existe pero cayó fuera de la ventana de la sesión
+  // (corte realizado fuera de tiempo). Se permite continuar con advertencia visible;
+  // los totales del sistema provienen de public.transactions en lugar del DPR.
+  if (j.has_pos_cut === false) {
+    if (els.bannerFaltaCorte) {
+      els.bannerFaltaCorte.classList.remove('d-none');
+      els.bannerFaltaCorte.classList.remove('alert-danger');
+      els.bannerFaltaCorte.classList.add('alert-warning');
+      els.bannerFaltaCorte.innerHTML =
+        '<i class="bi bi-exclamation-triangle-fill me-1"></i>' +
+        '<strong>Corte sin Drawer Pull Report.</strong> ' +
+        'No se encontró el DPR en Floreant POS para esta sesión. ' +
+        'Los totales del sistema se calcularon desde las transacciones. ' +
+        'Este corte quedará registrado como <em>realizado fuera de tiempo</em>.';
+    }
+    // Ocultar 'Sincronizar POS': ya no tiene sentido reintentar
+    if (els.btnSincronizarPOS) els.btnSincronizarPOS.classList.add('d-none');
+  } else {
+    // DPR normal: ocultar botón 'Sincronizar POS'
+    if (els.btnSincronizarPOS) els.btnSincronizarPOS.classList.add('d-none');
+  }
+
+  // En ambos casos (con o sin DPR) habilitar "Ir a Postcorte"
+  if (els.btnIrPostcorte) els.btnIrPostcorte.disabled = false;
 
   const d = j.data || {};
   renderConciliacion(d, j);

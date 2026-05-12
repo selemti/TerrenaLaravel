@@ -1,0 +1,1 @@
+{"nodes": [{"id": "caja_chica_lifecycle_md", "label": "Ciclo de Vida Caja Chica", "file_type": "document", "source_file": "docs/CAJA_CHICA_LIFECYCLE.md"}], "edges": [{"source": "caja_chica_lifecycle_md", "target": "selemti_schema", "relation": "references", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "docs/CAJA_CHICA_LIFECYCLE.md"}], "hyperedges": []}

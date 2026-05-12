@@ -1,0 +1,92 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared("
+            CREATE OR REPLACE FUNCTION selemti.fn_postcorte_after_insert()
+            RETURNS trigger
+            LANGUAGE plpgsql
+            AS $$
+            DECLARE
+                v_apertura_ts timestamp with time zone;
+                v_cierre_ts timestamp with time zone;
+                v_terminal_id int;
+                v_ventas_brutas numeric(12,2) := 0;
+                v_descuentos numeric(12,2) := 0;
+                v_ventas_netas numeric(12,2) := 0;
+            BEGIN
+                -- 1. Obtener datos de la sesion
+                SELECT apertura_ts, cierre_ts, terminal_id 
+                INTO v_apertura_ts, v_cierre_ts, v_terminal_id
+                FROM selemti.sesion_cajon
+                WHERE id = NEW.sesion_id;
+            
+                -- Si no hay cierre, usar now()
+                IF v_cierre_ts IS NULL THEN
+                    v_cierre_ts := now();
+                END IF;
+            
+                -- 2. Actualizar sesion_cajon
+                UPDATE selemti.sesion_cajon
+                SET estatus = 'CERRADA',
+                    cierre_ts = v_cierre_ts
+                WHERE id = NEW.sesion_id;
+            
+                -- 3. Sumar tickets en ventana extendida
+                SELECT 
+                    COALESCE(SUM(sub_total), 0),
+                    COALESCE(SUM(total_discount), 0),
+                    COALESCE(SUM(total_price), 0)
+                INTO 
+                    v_ventas_brutas, 
+                    v_descuentos, 
+                    v_ventas_netas
+                FROM public.ticket
+                WHERE terminal_id = v_terminal_id
+                  AND create_date >= (v_apertura_ts - interval '1 hour') -- para posibles aperturas
+                  AND create_date <= (v_cierre_ts + interval '2 hours')
+                  AND voided = false;
+            
+                -- 4. Actualizar totales del postcorte
+                UPDATE selemti.postcorte
+                SET total_ventas_brutas = v_ventas_brutas,
+                    total_descuentos_reales = v_descuentos,
+                    total_ventas_netas = v_ventas_netas
+                WHERE id = NEW.id;
+            
+                RETURN NEW;
+            END;
+            $$;
+        ");
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        \Illuminate\Support\Facades\DB::unprepared("
+            CREATE OR REPLACE FUNCTION selemti.fn_postcorte_after_insert()
+            RETURNS trigger
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+              UPDATE selemti.sesion_cajon
+              SET estatus = 'CERRADA',
+                  cierre_ts = COALESCE(cierre_ts, now())
+              WHERE id = NEW.sesion_id;
+              RETURN NEW;
+            END;
+            $$;
+        ");
+    }
+};

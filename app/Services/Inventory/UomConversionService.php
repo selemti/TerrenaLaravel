@@ -328,7 +328,7 @@ class UomConversionService
      */
     public function resolveToBase(float $qty, ?string $fromClave, \App\Models\Inv\Item $item): float
     {
-        $baseClave   = $item->uom?->clave;
+        $baseClave = $item->uom?->clave;
         $compraClave = $item->uomCompra?->clave;
 
         // Ya está en base

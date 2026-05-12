@@ -1,0 +1,1 @@
+{"nodes": [], "edges": [{"source": "selemti_approvals", "target": "selemti_cash_fund", "relation": "implements", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "docs/FASE3_APROBACIONES.md", "source_location": null, "weight": 1.0}], "hyperedges": []}

@@ -1,0 +1,50 @@
+                                                             pg_get_viewdef                                                             
+----------------------------------------------------------------------------------------------------------------------------------------
+  SELECT pc.id,                                                                                                                        +
+     pc.sesion_id,                                                                                                                     +
+     sc.terminal_id,                                                                                                                   +
+     sc.apertura_ts,                                                                                                                   +
+     sc.cierre_ts,                                                                                                                     +
+     pc.sistema_efectivo_esperado,                                                                                                     +
+     pc.declarado_efectivo,                                                                                                            +
+     pc.diferencia_efectivo,                                                                                                           +
+     pc.veredicto_efectivo,                                                                                                            +
+     pc.sistema_tarjetas,                                                                                                              +
+     pc.declarado_tarjetas,                                                                                                            +
+     pc.diferencia_tarjetas,                                                                                                           +
+     pc.veredicto_tarjetas,                                                                                                            +
+     pc.sistema_transferencias,                                                                                                        +
+     pc.declarado_transferencias,                                                                                                      +
+     pc.diferencia_transferencias,                                                                                                     +
+     pc.veredicto_transferencias,                                                                                                      +
+     pc.total_ventas_brutas,                                                                                                           +
+     pc.total_ventas_netas,                                                                                                            +
+     pc.total_descuentos_drawer,                                                                                                       +
+     pc.total_descuentos_reales,                                                                                                       +
+     pc.diferencia_descuentos,                                                                                                         +
+     pc.porcentaje_error_descuentos,                                                                                                   +
+     pc.calidad_reporte_descuentos,                                                                                                    +
+         CASE                                                                                                                          +
+             WHEN pc.total_ventas_brutas > 0::numeric THEN round(pc.total_descuentos_drawer / pc.total_ventas_brutas * 100::numeric, 2)+
+             ELSE 0::numeric                                                                                                           +
+         END AS porcentaje_descuentos_drawer_sobre_ventas,                                                                             +
+         CASE                                                                                                                          +
+             WHEN pc.total_ventas_brutas > 0::numeric THEN round(pc.total_descuentos_reales / pc.total_ventas_brutas * 100::numeric, 2)+
+             ELSE 0::numeric                                                                                                           +
+         END AS porcentaje_descuentos_reales_sobre_ventas,                                                                             +
+         CASE                                                                                                                          +
+             WHEN pc.calidad_reporte_descuentos = ANY (ARRAY['EXCELENTE'::text, 'BUENO'::text]) THEN 'VERDE'::text                     +
+             WHEN pc.calidad_reporte_descuentos = 'ACEPTABLE'::text THEN 'AMARILLO'::text                                              +
+             ELSE 'ROJO'::text                                                                                                         +
+         END AS nivel_alerta_descuentos,                                                                                               +
+     pc.validado,                                                                                                                      +
+     pc.validado_por,                                                                                                                  +
+     pc.validado_en,                                                                                                                   +
+     pc.creado_en,                                                                                                                     +
+     pc.creado_por,                                                                                                                    +
+     pc.notas                                                                                                                          +
+    FROM selemti.postcorte pc                                                                                                          +
+      JOIN selemti.sesion_cajon sc ON pc.sesion_id = sc.id                                                                             +
+   ORDER BY pc.creado_en DESC;
+(1 row)
+

@@ -12,15 +12,15 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Job para calcular sugerencias de replenishment automáticamente
- * 
+ *
  * Este job debe ejecutarse diariamente (configurado en Kernel.php)
  * y genera sugerencias de compra/producción basadas en políticas de stock.
- * 
+ *
  * Algoritmos implementados:
  * - Min-Max: Basado en stock_policy (min/max por ítem/almacén)
  * - SMA: Simple Moving Average (promedio móvil de consumo)
  * - POS Consumption: Basado en tickets históricos expandidos
- * 
+ *
  * @see ReplenishmentService
  * @see \App\Console\Kernel::schedule() para configuración del cron
  */
@@ -44,7 +44,7 @@ class CalculateReplenishmentSuggestions implements ShouldQueue
     /**
      * Create a new job instance.
      *
-     * @param array $options Opciones de ejecución
+     * @param  array  $options  Opciones de ejecución
      */
     public function __construct(array $options = [])
     {
@@ -54,14 +54,11 @@ class CalculateReplenishmentSuggestions implements ShouldQueue
 
     /**
      * Execute the job.
-     *
-     * @param ReplenishmentService $service
-     * @return void
      */
     public function handle(ReplenishmentService $service): void
     {
         $startTime = microtime(true);
-        
+
         Log::info('🔄 Iniciando cálculo de sugerencias de replenishment', [
             'options' => $this->options,
             'timestamp' => now()->toDateTimeString(),
@@ -91,7 +88,7 @@ class CalculateReplenishmentSuggestions implements ShouldQueue
             ]);
 
             // Si hubo errores, registrarlos detalladamente
-            if (!empty($resultado['errors'])) {
+            if (! empty($resultado['errors'])) {
                 Log::warning('⚠️ Errores durante generación de sugerencias', [
                     'errors' => $resultado['errors'],
                 ]);
@@ -99,7 +96,7 @@ class CalculateReplenishmentSuggestions implements ShouldQueue
 
         } catch (\Exception $e) {
             $duration = round(microtime(true) - $startTime, 2);
-            
+
             Log::error('❌ Error al calcular sugerencias de replenishment', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -113,9 +110,6 @@ class CalculateReplenishmentSuggestions implements ShouldQueue
 
     /**
      * Handle a job failure.
-     *
-     * @param  \Throwable  $exception
-     * @return void
      */
     public function failed(\Throwable $exception): void
     {

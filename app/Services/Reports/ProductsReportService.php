@@ -23,7 +23,7 @@ class ProductsReportService
             ->join('public.ticket_item AS ti', 'ti.ticket_id', '=', 't.id')
             ->whereBetween('t.folio_date', [
                 $start->format('Y-m-d 00:00:00'),
-                $end->format('Y-m-d 23:59:59')
+                $end->format('Y-m-d 23:59:59'),
             ])
             ->where('t.paid', '=', true)
             ->where('t.voided', '=', false)
@@ -75,7 +75,8 @@ class ProductsReportService
             ->map(function ($row) {
                 $row->mes_formateado = $this->formatMonth($row->numero_mes, $row->anio);
                 $row->precio_promedio_formateado = number_format($row->precio_promedio, 2);
-                $row->ingreso_total_formateado = '$' . number_format($row->ingreso_total, 2);
+                $row->ingreso_total_formateado = '$'.number_format($row->ingreso_total, 2);
+
                 return $row;
             });
 
@@ -88,7 +89,7 @@ class ProductsReportService
     protected function groupByCategory($query, Carbon $start, Carbon $end): Collection
     {
         $results = $query
-            ->selectRaw("
+            ->selectRaw('
                 ti.category_name AS categoria,
                 COUNT(DISTINCT t.id) AS tickets_totales,
                 SUM(ti.item_count) AS unidades_vendidas,
@@ -96,14 +97,15 @@ class ProductsReportService
                 ROUND(SUM(ti.total_price)::numeric, 2) AS ingreso_total_redondeado,
                 AVG(ti.item_price) AS precio_promedio,
                 COUNT(DISTINCT ti.item_name) AS productos_unicos
-            ")
+            ')
             ->groupBy('ti.category_name')
             ->orderBy('ingreso_total', 'desc')
             ->get();
 
         return $results->map(function ($row) {
-            $row->ingreso_total_formateado = '$' . number_format($row->ingreso_total, 2);
-            $row->precio_promedio_formateado = '$' . number_format($row->precio_promedio, 2);
+            $row->ingreso_total_formateado = '$'.number_format($row->ingreso_total, 2);
+            $row->precio_promedio_formateado = '$'.number_format($row->precio_promedio, 2);
+
             return $row;
         });
     }
@@ -114,7 +116,7 @@ class ProductsReportService
     protected function groupByProduct($query): Collection
     {
         return $query
-            ->selectRaw("
+            ->selectRaw('
                 ti.category_name AS categoria,
                 ti.group_name AS grupo_menu,
                 ti.item_name AS producto,
@@ -125,15 +127,16 @@ class ProductsReportService
                 AVG(ti.item_price) AS precio_promedio,
                 MIN(ti.item_price) AS precio_minimo,
                 MAX(ti.item_price) AS precio_maximo
-            ")
+            ')
             ->groupBy('ti.category_name', 'ti.group_name', 'ti.item_name')
             ->orderBy('ingreso_total', 'desc')
             ->get()
             ->map(function ($row) {
-                $row->ingreso_total_formateado = '$' . number_format($row->ingreso_total, 2);
-                $row->precio_promedio_formateado = '$' . number_format($row->precio_promedio, 2);
-                $row->precio_minimo_formateado = '$' . number_format($row->precio_minimo, 2);
-                $row->precio_maximo_formateado = '$' . number_format($row->precio_maximo, 2);
+                $row->ingreso_total_formateado = '$'.number_format($row->ingreso_total, 2);
+                $row->precio_promedio_formateado = '$'.number_format($row->precio_promedio, 2);
+                $row->precio_minimo_formateado = '$'.number_format($row->precio_minimo, 2);
+                $row->precio_maximo_formateado = '$'.number_format($row->precio_maximo, 2);
+
                 return $row;
             });
     }
@@ -152,7 +155,7 @@ class ProductsReportService
             ->join('public.ticket_item AS ti', 'ti.ticket_id', '=', 't.id')
             ->whereBetween('t.folio_date', [
                 $start->format('Y-m-d'),
-                $end->format('Y-m-d')
+                $end->format('Y-m-d'),
             ])
             ->where('t.paid', '=', true)
             ->where('t.voided', '=', false)
@@ -208,13 +211,27 @@ class ProductsReportService
     /**
      * Obtiene totales detallados usando metodología JasperReports (MenuItems vs Modifiers)
      */
+    /**
+     * Determina si se debe usar el modelo financiero canónico
+     */
+    protected function isCanonMode(): bool
+    {
+        return request()->query('mode') === 'canon'
+            || config('finance.use_canon_mode', false);
+    }
+
+    /**
+     * Obtiene totales detallados usando metodología JasperReports vs Canon SSOT
+     */
     public function getJasperReportsTotals(Carbon $start, Carbon $end, ?array $branchIds = null, ?array $terminalIds = null): array
     {
+        $isCanon = $this->isCanonMode();
+
         $query = DB::connection('pgsql')
             ->table('public.ticket AS t')
             ->whereBetween('t.folio_date', [
                 $start->format('Y-m-d 00:00:00'),
-                $end->format('Y-m-d 23:59:59')
+                $end->format('Y-m-d 23:59:59'),
             ])
             ->where('t.paid', '=', true)
             ->where('t.voided', '=', false);
@@ -227,25 +244,39 @@ class ProductsReportService
             $query->whereIn('t.terminal_id', $terminalIds);
         }
 
-        // Obtener totales de MenuItems (ticket_item) - Metodología JasperReports
-        $menuItemsQuery = clone $query;
-        $menuItemsTotals = $menuItemsQuery
+        // 1. Metodología Canon (SSOT via Transactions)
+        $canonTotals = DB::connection('pgsql')
+            ->table('public.transactions as tx')
+            ->join('public.ticket as t', 't.id', '=', 'tx.ticket_id')
+            ->whereBetween('t.folio_date', [
+                $start->format('Y-m-d 00:00:00'),
+                $end->format('Y-m-d 23:59:59'),
+            ])
+            ->where(function ($q) {
+                $q->where('tx.voided', false)->orWhereNull('tx.voided');
+            })
+            ->whereIn(DB::raw('UPPER(COALESCE(tx.transaction_type, \'\'))'), ['CREDIT', 'DEBIT'])
+            ->whereNotIn(DB::raw('UPPER(COALESCE(tx.payment_type, \'\'))'), ['REFUND', 'VOID_TRANS', 'REFUND_CARD'])
+            ->where('tx.amount', '>', 0)
+            ->selectRaw('SUM(tx.amount) as canon_neto, COUNT(DISTINCT t.id) as canon_tickets')
+            ->first();
+
+        // 2. Metodología Legacy (ticket_item sum)
+        $menuItemsTotals = (clone $query)
             ->join('public.ticket_item AS ti', 'ti.ticket_id', '=', 't.id')
             ->whereNotNull('ti.item_name')
             ->selectRaw('
                 SUM(ti.total_price) as items_neto,
                 SUM(CASE WHEN ti.discount > 0 THEN ti.discount ELSE 0 END) as descuentos_items,
-                SUM(COALESCE(ti.tax_amount, 0)) as impuestos_items,
                 COUNT(DISTINCT t.id) as total_tickets
             ')
             ->first();
 
-        // Obtener totales excluyendo tickets con descuento 100% (metodología JasperReports)
-        $menuItemsExcluding100Query = clone $query;
-        $menuItemsExcluding100 = $menuItemsExcluding100Query
+        // 3. Metodología JasperReports (Excluyendo 100%) - PARCHE DETECTADO
+        $menuItemsExcluding100 = (clone $query)
             ->join('public.ticket_item AS ti', 'ti.ticket_id', '=', 't.id')
             ->whereNotNull('ti.item_name')
-            ->where('t.total_price', '>', 0)  // Excluir tickets con descuento 100%
+            ->where('t.total_price', '>', 0)
             ->selectRaw('
                 SUM(ti.total_price) as items_neto_excluding_100,
                 SUM(CASE WHEN ti.discount > 0 THEN ti.discount ELSE 0 END) as descuentos_excluding_100,
@@ -253,83 +284,37 @@ class ProductsReportService
             ')
             ->first();
 
-        // Obtener totales de Modifiers (ticket_item_modifier)
-        $modifiersQuery = clone $query;
-        $modifiersTotals = $modifiersQuery
+        $totalModificadores = (clone $query)
             ->join('public.ticket_item AS ti', 'ti.ticket_id', '=', 't.id')
             ->join('public.ticket_item_modifier AS tim', 'tim.ticket_item_id', '=', 'ti.id')
-            ->selectRaw('
-                SUM(COALESCE(tim.total_price, 0)) as total_modificadores
-            ')
-            ->first();
+            ->sum(DB::raw('COALESCE(tim.total_price, 0)'));
 
-        // Calcular totales usando ambas metodologías
-        $itemsNetoTodos = $menuItemsTotals->items_neto ?? 0;
-        $itemsNetoExcluding100 = $menuItemsExcluding100->items_neto_excluding_100 ?? 0;
-        $descuentosTodos = $menuItemsTotals->descuentos_items ?? 0;
-        $descuentosExcluding100 = $menuItemsExcluding100->descuentos_excluding_100 ?? 0;
-        $totalModificadores = $modifiersTotals->total_modificadores ?? 0;
-        $totalTickets = $menuItemsTotals->total_tickets ?? 0;
-        $ticketsExcluding100 = $menuItemsExcluding100->tickets_excluding_100 ?? 0;
+        $res = [
+            'is_canon_mode' => $isCanon,
+            'items_neto_todos' => (float) ($menuItemsTotals->items_neto ?? 0),
+            'descuentos_todos' => (float) ($menuItemsTotals->descuentos_items ?? 0),
+            'total_tickets_todos' => (int) ($menuItemsTotals->total_tickets ?? 0),
 
-        // Cálculos para JasperReports (basado en análisis)
-        $jasperItemsGross = 42926.50;  // Del PDF del usuario
-        $jasperDiscounts = 345.20;     // Confirmado en BD
-        $jasperModifiers = 1283.00;    // Confirmado en BD
-        $jasperNetSales = 42581.30;    // Del PDF del usuario
-        $jasperGrandTotal = 43864.30;  // Del PDF del usuario
+            'items_neto_excluding100' => (float) ($menuItemsExcluding100->items_neto_excluding_100 ?? 0),
+            'descuentos_excluding100' => (float) ($menuItemsExcluding100->descuentos_excluding_100 ?? 0),
+            'tickets_excluding100' => (int) ($menuItemsExcluding100->tickets_excluding_100 ?? 0),
 
-        // Nuestros cálculos refinados
-        $grossTotalExcluding100 = $itemsNetoExcluding100 + $descuentosExcluding100;
-        $netSalesExcluding100 = $itemsNetoExcluding100;
-        $grandTotalExcluding100 = $itemsNetoExcluding100 + $totalModificadores;
-
-        return [
-            // Totales BD completa
-            'items_neto_todos' => (float) $itemsNetoTodos,
-            'descuentos_todos' => (float) $descuentosTodos,
-            'total_tickets_todos' => (int) $totalTickets,
-
-            // Totales excluyendo tickets con descuento 100%
-            'items_neto_excluding100' => (float) $itemsNetoExcluding100,
-            'descuentos_excluding100' => (float) $descuentosExcluding100,
-            'gross_total_excluding100' => (float) $grossTotalExcluding100,
-            'net_sales_excluding100' => (float) $netSalesExcluding100,
-            'tickets_excluding100' => (int) $ticketsExcluding100,
-
-            // Modificadores (mismo para ambos)
             'modificadores_total' => (float) $totalModificadores,
-
-            // Grand Totals
-            'gran_total_bd_todos' => (float) ($itemsNetoTodos + $totalModificadores),
-            'gran_total_excluding100' => (float) $grandTotalExcluding100,
-
-            // Referencia JasperReports
-            'items_jasper_gross' => (float) $jasperItemsGross,
-            'descuentos_jasper' => (float) $jasperDiscounts,
-            'net_sales_jasper' => (float) $jasperNetSales,
-            'gran_total_jasper' => (float) $jasperGrandTotal,
-
-            // Formateados para vista
-            'items_neto_todos_formateado' => '$' . number_format($itemsNetoTodos, 2),
-            'items_neto_excluding100_formateado' => '$' . number_format($itemsNetoExcluding100, 2),
-            'gross_total_excluding100_formateado' => '$' . number_format($grossTotalExcluding100, 2),
-            'net_sales_excluding100_formateado' => '$' . number_format($netSalesExcluding100, 2),
-            'modificadores_formateado' => '$' . number_format($totalModificadores, 2),
-            'gran_total_excluding100_formateado' => '$' . number_format($grandTotalExcluding100, 2),
-            'descuentos_excluding100_formateado' => '$' . number_format($descuentosExcluding100, 2),
-
-            // JasperReports formateados
-            'items_jasper_formateado' => '$' . number_format($jasperItemsGross, 2),
-            'net_sales_jasper_formateado' => '$' . number_format($jasperNetSales, 2),
-            'gran_total_jasper_formateado' => '$' . number_format($jasperGrandTotal, 2),
-
-            // Diferencias
-            'diferencia_items' => (float) ($itemsNetoExcluding100 - $jasperItemsGross),
-            'diferencia_net_sales' => (float) ($netSalesExcluding100 - $jasperNetSales),
-
-            'nota_metodologia' => 'BD completa: $' . number_format($itemsNetoTodos, 2) . ' | Excluyendo 100%: $' . number_format($itemsNetoExcluding100, 2) . ' | JasperReports: $42,926.50'
+            'canon_neto' => (float) ($canonTotals->canon_neto ?? 0),
+            'canon_tickets' => (int) ($canonTotals->canon_tickets ?? 0),
         ];
+
+        // Resolviendo "Net Sales" dinámicos
+        $res['net_sales_current'] = $isCanon ? $res['canon_neto'] : $res['items_neto_todos'];
+        $res['gran_total_current'] = $res['net_sales_current'] + $res['modificadores_total'];
+
+        // Mantener compatibilidad con keys previos para la vista
+        $res['items_neto_todos_formateado'] = '$'.number_format($res['items_neto_todos'], 2);
+        $res['net_sales_jasper_formateado'] = '$'.number_format($res['net_sales_current'], 2);
+        $res['gran_total_jasper_formateado'] = '$'.number_format($res['gran_total_current'], 2);
+        $res['nota_metodologia'] = $isCanon ? 'Modo CANON (SSOT Transactions)' : 'Modo LEGACY (Arithmética vulnerable)';
+
+        return $res;
     }
 
     /**
@@ -340,10 +325,10 @@ class ProductsReportService
         $meses = [
             1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
             5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
-            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre',
         ];
 
-        return $meses[$month] ?? 'Mes ' . $month . ' ' . $year;
+        return $meses[$month] ?? 'Mes '.$month.' '.$year;
     }
 
     /**
@@ -356,7 +341,7 @@ class ProductsReportService
             ->join('public.ticket_item AS ti', 'ti.ticket_id', '=', 't.id')
             ->whereBetween('t.folio_date', [
                 $start->format('Y-m-d 00:00:00'),
-                $end->format('Y-m-d 23:59:59')
+                $end->format('Y-m-d 23:59:59'),
             ])
             ->where('t.paid', '=', true)
             ->where('t.voided', '=', false)

@@ -1,3 +1,8 @@
+> [!CAUTION]
+> **ESTADO HISTÓRICO / CONTAMINADO**
+> Esta documentación fue generada por un agente IA previo (Diciembre 2025) y asume como verdaderas múltiples columnas de métricas de descuentos que **nunca existieron en Producción** (`vw_descuentos_reales`, `calidad_reporte_descuentos`, etc). 
+> **Todo el modelo analítico aquí expuesto fue REVERTIDO en Abril 2026 por ser una falsa hipótesis causal del bug de 0.00**. No tomar este texto como canon técnico sin previa auditoría de esquema.
+
 # 🚀 Implementación de Soluciones - Guía Paso a Paso
 
 ## 📋 Overview

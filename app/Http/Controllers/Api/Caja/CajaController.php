@@ -3,12 +3,29 @@
 namespace App\Http\Controllers\Api\Caja;
 
 use App\Http\Controllers\Controller;
+use App\Services\Finance\SalesResolutionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CajaController extends Controller
 {
+    private $salesService;
+
+    public function __construct(SalesResolutionService $salesService)
+    {
+        $this->salesService = $salesService;
+    }
+
+    /**
+     * Determina si se debe usar el modelo financiero canónico
+     */
+    protected function isCanonMode(): bool
+    {
+        return request()->query('mode') === 'canon'
+            || config('finance.use_canon_mode', false);
+    }
+
     public function index(Request $request)
     {
         $date = $request->query('date', Carbon::today()->format('Y-m-d'));  // Fecha por default
@@ -323,11 +340,24 @@ class CajaController extends Controller
             $results = DB::connection('pgsql')->select($sql, [$date, $date, $date, $date, $date]);
 
             return collect($results)->map(function ($row) {
+                $monto = (float) ($row->monto ?? 0);
+                $razon = $row->razon;
+
+                // Si es Modo Canon y es un Descuento, resolvemos vía Service (Saneamiento BUG-04)
+                if ($row->tipo === 'Descuento' && $this->isCanonMode()) {
+                    $resolution = $this->salesService->resolveNetLiquidation($row->ticket_internal_id);
+                    $monto = $resolution['resolved_discount'];
+
+                    if ($resolution['is_normalized']) {
+                        $razon = 'Canon: '.$razon;
+                    }
+                }
+
                 return [
                     'ticket_internal_id' => $row->ticket_internal_id,
                     'ticket_id' => $row->ticket_id ?? $row->ticket_internal_id,
                     'tipo' => $row->tipo,
-                    'monto' => (float) ($row->monto ?? 0),
+                    'monto' => $monto,
                     'hora' => $row->fecha ? \Carbon\Carbon::parse($row->fecha)->format('h:i A') : '–',
                     'terminal_id' => $row->terminal_id,
                     'terminal' => $row->terminal,
@@ -400,9 +430,13 @@ class CajaController extends Controller
                     'daily_folio' => $ticket->daily_folio,
                     'create_date' => $ticket->create_date,
                     'sub_total' => (float) ($ticket->sub_total ?? 0),
-                    'total_discount' => (float) ($ticket->total_discount ?? 0),
+                    'total_discount' => $this->isCanonMode()
+                        ? $this->salesService->resolveNetLiquidation($ticket->id)['resolved_discount']
+                        : (float) ($ticket->total_discount ?? 0),
                     'total_tax' => (float) ($ticket->total_tax ?? 0),
-                    'total_price' => (float) ($ticket->total_price ?? 0),
+                    'total_price' => $this->isCanonMode()
+                        ? $this->salesService->resolveNetLiquidation($ticket->id)['net_liquidation']
+                        : (float) ($ticket->total_price ?? 0),
                     'voided' => (bool) $ticket->voided,
                     'void_reason' => $ticket->void_reason,
                     'terminal' => $ticket->terminal,

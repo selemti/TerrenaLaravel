@@ -41,7 +41,8 @@ class Kernel extends ConsoleKernel
             foreach ($dangerous as $cmd) {
                 Artisan::command($cmd, function () use ($cmd) {
                     $this->error("🚫 COMANDO BLOQUEADO EN PRODUCCIÓN: {$cmd}");
-                    $this->error("Usa un procedimiento aprobado por el DBA / Gustavo.");
+                    $this->error('Usa un procedimiento aprobado por el DBA / Gustavo.');
+
                     return 1;
                 });
             }

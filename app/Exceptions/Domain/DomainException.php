@@ -14,6 +14,7 @@ abstract class DomainException extends \RuntimeException
     public function withContext(array $context): static
     {
         $this->context = array_merge($this->context, $context);
+
         return $this;
     }
 

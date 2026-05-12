@@ -65,3 +65,8 @@ analizar_*.sql
 crear_*.sql
 corregir_*.sql
 inventario_bd_*
+
+# Graphify
+graphify-out/cache/
+graphify-out/manifest.json
+graphify-out/cost.json

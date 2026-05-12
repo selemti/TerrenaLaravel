@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\File;
 /**
  * Comando para verificar consistencia entre BD y código
  * Detecta MISMATCH y columnas FANTASMA
- * 
+ *
  * Uso: php artisan check:db-code-consistency
  */
 class CheckDbCodeConsistency extends Command
@@ -21,8 +21,11 @@ class CheckDbCodeConsistency extends Command
     protected $description = 'Verifica consistencia entre BD real y mapeo documentado de campos';
 
     private $errors = [];
+
     private $warnings = [];
+
     private $checked = 0;
+
     private $mapFilePath = 'docs/V4.0/Code/BD_CODIGO_MAPA_CAMPOS_ALL_VERIFICADO.md';
 
     public function handle()
@@ -34,8 +37,9 @@ class CheckDbCodeConsistency extends Command
 
         // Verificar que existe el archivo de mapeo
         $fullPath = base_path($this->mapFilePath);
-        if (!File::exists($fullPath)) {
+        if (! File::exists($fullPath)) {
             $this->error("❌ No se encontró el archivo de mapeo: {$this->mapFilePath}");
+
             return 1;
         }
 
@@ -48,10 +52,11 @@ class CheckDbCodeConsistency extends Command
 
         if (empty($rows)) {
             $this->error('❌ No se pudieron parsear filas del archivo de mapeo');
+
             return 1;
         }
 
-        $this->info("📊 Total de filas a verificar: " . count($rows));
+        $this->info('📊 Total de filas a verificar: '.count($rows));
         $this->newLine();
 
         // Obtener todas las tablas y columnas de la BD
@@ -80,7 +85,7 @@ class CheckDbCodeConsistency extends Command
 
         foreach ($lines as $line) {
             $line = trim($line);
-            
+
             if (empty($line) || strpos($line, '#') === 0) {
                 continue;
             }
@@ -91,13 +96,14 @@ class CheckDbCodeConsistency extends Command
 
             // Es una línea de tabla
             $cells = array_map('trim', explode('|', $line));
-            $cells = array_filter($cells, fn($c) => $c !== '');
+            $cells = array_filter($cells, fn ($c) => $c !== '');
             $cells = array_values($cells);
 
             // Detectar headers
             if (empty($headers)) {
                 $headers = $cells;
                 $inTable = true;
+
                 continue;
             }
 
@@ -140,10 +146,10 @@ class CheckDbCodeConsistency extends Command
             $tableName = $table->table_name;
             $columnName = $table->column_name;
 
-            if (!isset($schema[$schemaName])) {
+            if (! isset($schema[$schemaName])) {
                 $schema[$schemaName] = [];
             }
-            if (!isset($schema[$schemaName][$tableName])) {
+            if (! isset($schema[$schemaName][$tableName])) {
                 $schema[$schemaName][$tableName] = [];
             }
             $schema[$schemaName][$tableName][] = $columnName;
@@ -169,21 +175,21 @@ class CheckDbCodeConsistency extends Command
         }
 
         // Verificar existencia real en BD
-        $existsInDb = isset($dbSchema[$schema][$table]) 
+        $existsInDb = isset($dbSchema[$schema][$table])
                       && in_array($column, $dbSchema[$schema][$table]);
 
         // Casos de error:
-        
+
         // 1. El mapeo dice que existe en BD pero no está
-        if ($existeEnBd === 'SI' && !$existsInDb) {
+        if ($existeEnBd === 'SI' && ! $existsInDb) {
             $this->errors[] = [
                 'tipo' => 'BD_FALTANTE',
                 'esquema' => $schema,
                 'tabla' => $table,
                 'columna' => $column,
-                'mensaje' => "Mapeo indica que existe en BD pero NO se encontró en BD real",
+                'mensaje' => 'Mapeo indica que existe en BD pero NO se encontró en BD real',
                 'estado_bd' => $estadoBd,
-                'decision' => $decisionFinal
+                'decision' => $decisionFinal,
             ];
         }
 
@@ -194,9 +200,9 @@ class CheckDbCodeConsistency extends Command
                 'esquema' => $schema,
                 'tabla' => $table,
                 'columna' => $column,
-                'mensaje' => "Mapeo indica NO_EXISTE pero la columna SÍ está en BD real",
+                'mensaje' => 'Mapeo indica NO_EXISTE pero la columna SÍ está en BD real',
                 'estado_bd' => $estadoBd,
-                'decision' => $decisionFinal
+                'decision' => $decisionFinal,
             ];
         }
 
@@ -208,15 +214,15 @@ class CheckDbCodeConsistency extends Command
                     'esquema' => $schema,
                     'tabla' => $table,
                     'columna' => $column,
-                    'mensaje' => "Marcado CONFIABLE con estado NO_EXISTE pero la columna existe en BD",
+                    'mensaje' => 'Marcado CONFIABLE con estado NO_EXISTE pero la columna existe en BD',
                     'estado_bd' => $estadoBd,
-                    'decision' => $decisionFinal
+                    'decision' => $decisionFinal,
                 ];
             }
         }
 
         // Mostrar verbose si se solicita
-        if ($this->option('verbose') && !$this->option('only-errors')) {
+        if ($this->option('verbose') && ! $this->option('only-errors')) {
             $status = $existsInDb ? '✓' : '✗';
             $this->line("  {$status} {$schema}.{$table}.{$column}");
         }
@@ -231,17 +237,18 @@ class CheckDbCodeConsistency extends Command
         $this->newLine();
 
         $this->info("✓ Filas verificadas: {$this->checked}");
-        $this->info("✗ Errores encontrados: " . count($this->errors));
-        $this->info("⚠ Advertencias: " . count($this->warnings));
+        $this->info('✗ Errores encontrados: '.count($this->errors));
+        $this->info('⚠ Advertencias: '.count($this->warnings));
         $this->newLine();
 
         if (empty($this->errors) && empty($this->warnings)) {
             $this->info('🎉 ¡TODO OK! No se encontraron inconsistencias.');
+
             return;
         }
 
         // Mostrar errores
-        if (!empty($this->errors)) {
+        if (! empty($this->errors)) {
             $this->error('═══════════════════════════════════════════════════════');
             $this->error('  ❌ ERRORES CRÍTICOS');
             $this->error('═══════════════════════════════════════════════════════');
@@ -256,7 +263,7 @@ class CheckDbCodeConsistency extends Command
         }
 
         // Mostrar advertencias
-        if (!empty($this->warnings) && !$this->option('only-errors')) {
+        if (! empty($this->warnings) && ! $this->option('only-errors')) {
             $this->warn('═══════════════════════════════════════════════════════');
             $this->warn('  ⚠ ADVERTENCIAS');
             $this->warn('═══════════════════════════════════════════════════════');
@@ -274,8 +281,8 @@ class CheckDbCodeConsistency extends Command
         $this->info('═══════════════════════════════════════════════════════');
         $this->info('  RESUMEN');
         $this->info('═══════════════════════════════════════════════════════');
-        
-        if (!empty($this->errors)) {
+
+        if (! empty($this->errors)) {
             $this->error('⚠ Se encontraron inconsistencias que requieren atención.');
             $this->error('  Actualiza el archivo de mapeo o corrige la BD.');
         } else {

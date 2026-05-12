@@ -95,4 +95,4 @@ Usado principalmente por las tablets POS para autenticarse contra la API.
 2. Tokens Sanctum tienen expiración configurada en `config/sanctum.php`
 3. CORS configurado en `config/cors.php` — revisar origins permitidos en producción
 4. Passwords hasheados con bcrypt (Laravel default)
-5. Rate limiting no configurado explícitamente — considerar para producción
+5. **AUDITORÍA FISCAL**: El log de consumo recursivo en `selemti.inv_consumo_pos_det` es la evidencia legal para mermas masivas; no debe permitir borrados incluso por el rol `admin`.

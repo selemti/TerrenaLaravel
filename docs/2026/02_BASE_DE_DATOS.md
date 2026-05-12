@@ -22,7 +22,7 @@ Tablas clave que consume el ERP:
 | `ticket` | Comandas/órdenes completadas | PosConsumptionService, reportes |
 | `ticket_item` | Líneas de cada comanda | Consumo de insumos |
 | `ticket_item_modifier` | Modificadores aplicados | Reportes de mods |
-| `transactions` | Pagos por forma de pago | Precorte, conciliación |
+| `transactions` | Pagos por forma de pago | Precorte, [SSOT Doc 07](file:///C:/xampp3/htdocs/TerrenaLaravel/docs/2026/07_SSOT_VENTAS_Y_DESCUENTOS.md) |
 | `drawer_assigned_history` | Asignación de cajones a terminales | Sesión de cajón |
 | `coupon_and_discount` | Descuentos configurados (% o monto) | Reportes descuentos ⚠️ |
 | `menu_item` | Catálogo de productos POS | Mapeo → insumos |
@@ -42,22 +42,21 @@ Todas las tablas del ERP Laravel. Prefijadas con `selemti.` en producción.
 ### Módulo de Caja
 
 | Tabla | Descripción | Columnas Clave |
-|-------|------------|---------------|
-| `sesion_cajon` | Sesión de caja activa | `terminal_id`, `apertura_en`, `cierre_en`, `fondo_apertura` |
-| `precorte` | Resumen previo al corte | `sesion_id`, `total_sistema`, `total_declarado`, `status` |
-| `postcorte` | Corte oficial con diferencias | `precorte_id`, `total_ventas_brutas`⚠️, `total_descuentos_drawer`⚠️, `aprobado_por` |
-| `formas_pago` | Catálogo de formas de pago | `codigo`, `payment_type`, `custom_name` |
+| `postcorte` | Corte oficial con diferencias | `precorte_id`, `sistema_efectivo_esperado`, `aprobado_por` |
 
-**⚠️ Bug activo:** `postcorte.total_ventas_brutas`, `total_descuentos_drawer`, `total_descuentos_reales` siempre NULL — trigger roto.
+**Nota de Integridad:** Se purgó exitosamente un experimento de IA de 2026 que intentó añadir columnas de 'total_ventas_brutas'. El esquema vigente es canónico y está sincronizado con Producción al cien por ciento.
 
 ### Módulo de Inventario
 
 | Tabla | Descripción | Columnas Clave |
 |-------|------------|---------------|
-| `items` | Maestro de insumos | `id (varchar)`, `nombre`, `categoria_id`, `unidad_medida_id`, `costo_promedio`, `tipo` |
+| `items` | Maestro de insumos (Genéricos) | `id (varchar)`, `nombre`, `categoria_id`, `unidad_medida_id`, `costo_promedio`, `tipo` |
+| `insumo_proveedor_presentacion` | Relación ítem-prov-marca | `item_id`, `proveedor_id`, `uom_compra_id`, `factor_a_base`, `precio_compra` |
 | `inventory_batch` | Lotes de inventario | `item_id`, `lote_proveedor`, `fecha_caducidad`, `cantidad_actual`, `ubicacion_id` |
 | `cost_layer` | Capas de costo FIFO/WAC | `item_id`, `batch_id`, `qty_in`, `qty_left`, `unit_cost` |
-| `item_vendor` | Proveedor-ítem-presentación | `item_id`, `vendor_id`, `presentacion`, `factor_a_canonica`, `costo_ultimo` |
+| `item_vendor` | Gestión de SKUs/Lead Times | `item_id`, `vendor_id`, `vendor_sku`, `lead_time_days` |
+| `inv_consumo_pos_det`| Auditoría de consumo modular | `ticket_id`, `mp_id`, `qty`, `uom_id` |
+| `inv_consumo_pos_log`| Trazabilidad recursiva | `ticket_id`, `motor_version`, `timestamp` |
 | `historial_costos_item` | Histórico de costos WAC/PEPS | `item_id`, `costo_wac`, `costo_peps`, `valid_from`, `valid_to` |
 
 ### Módulo de Compras
@@ -126,21 +125,21 @@ Todas las tablas del ERP Laravel. Prefijadas con `selemti.` en producción.
 
 ```
 sucursal ──< almacen ──< inventory_batch ──< cost_layer
-                              │
-items ──────────────────────-─┤
+                               │
+items (Genérico) ────────────-─┤
   │                            │
-  ├──< item_vendor             │
-  │     └── proveedor          │
+  ├──< insumo_prov_presentación (Marca/Compra)
+  │     └── proveedor
   │                            │
   └──< receta_detalle          │
         └── recetas            │
               └── receta_version
                     └── historial_costos_receta
 
-ticket (public.*) ──> PosConsumptionService ──> inventory_batch (decrementa qty)
+```
+ticket (public.*) ──> fn_expandir_consumo_ticket (v2.5) ──> inv_consumo_pos_det (ver [Doc 24](file:///C:/xampp3/htdocs/TerrenaLaravel/docs/2026/24_MOTOR_DE_CONSUMO_RECURSIVO.md))
 
 sesion_cajon ──> precorte ──> postcorte
-```
 
 ---
 

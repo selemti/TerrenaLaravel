@@ -355,7 +355,7 @@ class ReplenishmentService
 
         if ($sucursalId) {
             // Convertir sucursal_id integer a formato VARCHAR esperado por mov_inv
-            $query->where('sucursal_id', 'SUC-' . $sucursalId);
+            $query->where('sucursal_id', 'SUC-'.$sucursalId);
         }
 
         // NOTA: mov_inv NO tiene almacen_id en su estructura real
@@ -369,20 +369,15 @@ class ReplenishmentService
     /**
      * Calcula el consumo promedio diario basado en movimientos históricos
      * Soporta 3 algoritmos: MIN_MAX, SMA, POS_CONSUMPTION
-     * 
-     * @param string $itemId
-     * @param int|null $sucursalId
-     * @param int $dias
-     * @param string $algoritmo MIN_MAX|SMA|POS_CONSUMPTION
-     * @return float
+     *
+     * @param  string  $algoritmo  MIN_MAX|SMA|POS_CONSUMPTION
      */
     protected function calcularConsumoPromedio(
-        string $itemId, 
-        ?int $sucursalId, 
+        string $itemId,
+        ?int $sucursalId,
         int $dias = 7,
         string $algoritmo = 'SMA'
-    ): float
-    {
+    ): float {
         // MIN_MAX no usa consumo promedio, solo min/max de stock_policy
         if ($algoritmo === 'MIN_MAX') {
             return 0.0;
@@ -398,7 +393,7 @@ class ReplenishmentService
                 ->table('selemti.mov_inv')
                 ->where('item_id', $itemId)
                 ->whereIn('tipo', ['SALIDA', 'VENTA', 'PROD_OUT', 'MERMA', 'CONSUMO_POS'])
-                ->when($sucursalId, fn ($q) => $q->where('sucursal_id', 'SUC-' . $sucursalId))
+                ->when($sucursalId, fn ($q) => $q->where('sucursal_id', 'SUC-'.$sucursalId))
                 ->whereDate('ts', '>=', $fechaInicio)
                 ->sum('cantidad');
 
@@ -416,13 +411,10 @@ class ReplenishmentService
 
     /**
      * Calcula consumo basado en tickets POS históricos expandidos
-     * 
+     *
      * Usa la tabla inv_consumo_pos_det que expande tickets → ingredientes
      * mediante fn_expandir_consumo_ticket()
-     * 
-     * @param string $itemId
-     * @param int|null $sucursalId
-     * @param int $dias
+     *
      * @return float Consumo promedio diario
      */
     protected function calcularConsumoPOS(string $itemId, ?int $sucursalId, int $dias = 7): float

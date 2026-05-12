@@ -3,7 +3,7 @@
 namespace Tests\Unit\Inventory;
 
 use App\Services\Inventory\InventoryCountService;
-use InvalidArgumentException;
+use App\Exceptions\Inventory\InventoryValidationException;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -13,7 +13,7 @@ class InventoryCountServiceTest extends TestCase
     {
         $service = new InventoryCountService;
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InventoryValidationException::class);
 
         $this->invokeNormalizeLine($service, [
             'expected_qty' => 2,

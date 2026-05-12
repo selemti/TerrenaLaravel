@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\SessionApiTokenController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Reports\MenuUsageController;
+use App\Http\Controllers\Reports\ProductsReportController;
 use App\Http\Controllers\Reports\SalesBalanceController;
 use App\Http\Controllers\Reports\SalesDetailController;
 use App\Http\Controllers\Reports\SalesDiagController;
@@ -14,7 +15,6 @@ use App\Http\Controllers\Reports\SalesJournalController;
 use App\Http\Controllers\Reports\SalesMixController;
 use App\Http\Controllers\Reports\SalesModsController;
 use App\Http\Controllers\Reports\SalesSummaryController;
-use App\Http\Controllers\Reports\ProductsReportController;
 use App\Services\Audit\AuditLogService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -402,7 +402,7 @@ Route::middleware('auth')->group(function () {
                 Route::get('/diagnostics/export/pdf', [SalesDiagController::class, 'exportPdf'])->name('reports.sales.diagnostics.export.pdf');
 
                 Route::get('/mods', [SalesModsController::class, 'show'])->name('reports.sales.mods');
-                      Route::get('/mods/export/xlsx', [SalesModsController::class, 'exportExcel'])->name('reports.sales.mods.export.xlsx');
+                Route::get('/mods/export/xlsx', [SalesModsController::class, 'exportExcel'])->name('reports.sales.mods.export.xlsx');
                 Route::get('/mods/export/pdf', [SalesModsController::class, 'exportPdf'])->name('reports.sales.mods.export.pdf');
 
                 // Reporte mejorado v2.0

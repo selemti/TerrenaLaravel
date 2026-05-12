@@ -90,6 +90,7 @@ abstract class BaseReportController extends Controller
         } catch (\Exception $e) {
             // Fallback to today if parsing fails
             $today = now()->timezone('America/Mexico_City');
+
             return [$today->startOfDay(), $today->endOfDay()];
         }
     }

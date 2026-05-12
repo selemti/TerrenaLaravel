@@ -114,7 +114,17 @@ class SalesExceptionsReportService
             $discountTotal = (float) ($row->discount_total ?? 0);
             $grossTotal = (float) ($row->gross_total ?? 0);
             $netRaw = (float) ($row->net_total_raw ?? 0);
-            $netTotal = $netRaw !== 0.0 ? $netRaw : $this->round($grossTotal - $discountTotal);
+
+            // Flag de Modo Canon (vía filtros o global)
+            $isCanon = (bool) ($filters['is_canon'] ?? (request()->query('mode') === 'canon' || config('finance.use_canon_mode', false)));
+
+            if ($isCanon) {
+                // Modo Canon: El neto analítico es la liquidación efectiva (SSOT)
+                $netTotal = $this->round($paymentTotal + $paymentAdjustmentTotal);
+            } else {
+                // Modo Legacy: Aritmética vulnerable a corrupción de total_discount (BUG-04)
+                $netTotal = $netRaw !== 0.0 ? $netRaw : $this->round($grossTotal - $discountTotal);
+            }
 
             return [
                 'ticket_id' => $ticketId,
@@ -204,7 +214,7 @@ class SalesExceptionsReportService
 
     protected function fetchTickets(Carbon $start, Carbon $end, array $branches, array $terminals): Collection
     {
-        $discountExpression = <<<SQL
+        $discountExpression = <<<'SQL'
             GREATEST(
                 0,
                 LEAST(
@@ -228,7 +238,7 @@ class SalesExceptionsReportService
             )::numeric(14,2)
         SQL;
 
-        $dateColumnExpr = "COALESCE(t.folio_date, t.closing_date::date, t.create_date::date)";
+        $dateColumnExpr = 'COALESCE(t.folio_date, t.closing_date::date, t.create_date::date)';
         $query = DB::connection('pgsql')
             ->table('public.ticket as t')
             ->selectRaw("
@@ -323,7 +333,7 @@ class SalesExceptionsReportService
                     END
                 )::numeric(14,2) AS void_total
             ")
-            ->selectRaw("
+            ->selectRaw('
                 SUM(
                     CASE
                         WHEN COALESCE(tx.voided, FALSE) = FALSE
@@ -331,8 +341,8 @@ class SalesExceptionsReportService
                         ELSE 0
                     END
                 )::numeric(14,2) AS recorded_total
-            ")
-            ->selectRaw("SUM(CASE WHEN COALESCE(tx.voided, FALSE) = FALSE THEN 1 ELSE 0 END) AS tx_count")
+            ')
+            ->selectRaw('SUM(CASE WHEN COALESCE(tx.voided, FALSE) = FALSE THEN 1 ELSE 0 END) AS tx_count')
             ->selectRaw("
                 SUM(
                     CASE

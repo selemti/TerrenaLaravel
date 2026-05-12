@@ -3,9 +3,9 @@
 namespace App\Livewire\Replenishment;
 
 use App\Models\Catalogs\Sucursal;
+use Illuminate\Support\Facades\Http;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\Http;
 
 class Dashboard extends Component
 {
@@ -297,6 +297,7 @@ class Dashboard extends Component
 
         if (empty($this->motivoRechazo)) {
             $this->errorMessage = 'El motivo de rechazo es requerido.';
+
             return;
         }
 

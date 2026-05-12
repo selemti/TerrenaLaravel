@@ -4,7 +4,7 @@ namespace Tests\Unit\Services;
 
 use App\Services\Inventory\UomConversionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use InvalidArgumentException;
+use App\Exceptions\Inventory\InventoryValidationException;
 use Tests\TestCase;
 
 class UomConversionServiceTest extends TestCase
@@ -30,7 +30,7 @@ class UomConversionServiceTest extends TestCase
 
     public function test_convert_invalid_base_unit(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InventoryValidationException::class);
         $this->expectExceptionMessage('Unidad base no válida');
 
         $this->uomConversionService->convert(1, 'INVALID', 'G', 1);
@@ -38,7 +38,7 @@ class UomConversionServiceTest extends TestCase
 
     public function test_convert_invalid_target_unit(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InventoryValidationException::class);
         $this->expectExceptionMessage('Unidad destino no válida');
 
         $this->uomConversionService->convert(1, 'KG', 'INVALID', 1);
@@ -62,7 +62,7 @@ class UomConversionServiceTest extends TestCase
 
     public function test_calculate_conversion_factor_invalid_units(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InventoryValidationException::class);
         $this->expectExceptionMessage('Unidad origen no válida');
 
         $this->uomConversionService->calculateConversionFactor('INVALID', 'G');

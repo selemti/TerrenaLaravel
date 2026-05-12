@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 class Movimiento extends Model
 {
     protected $connection = 'pgsql';
+
     protected $table = 'selemti.mov_inv';
 
     public $timestamps = false;

@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\Operations\PosConsumptionService;
+use App\Services\Inventory\PosConsumptionService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;

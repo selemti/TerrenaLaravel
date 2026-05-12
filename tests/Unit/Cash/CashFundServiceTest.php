@@ -3,7 +3,7 @@
 namespace Tests\Unit\Cash;
 
 use App\Services\Cash\CashFundService;
-use InvalidArgumentException;
+use App\Exceptions\CashFund\CashFundValidationException;
 use PHPUnit\Framework\TestCase;
 
 class CashFundServiceTest extends TestCase
@@ -12,7 +12,7 @@ class CashFundServiceTest extends TestCase
     {
         $service = new CashFundService;
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(CashFundValidationException::class);
         $this->invokeMethod($service, 'normalizeOpening', [[]]);
     }
 
@@ -20,7 +20,7 @@ class CashFundServiceTest extends TestCase
     {
         $service = new CashFundService;
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(CashFundValidationException::class);
         $this->invokeMethod($service, 'normalizeMovement', [[
             'monto' => 0,
         ]]);

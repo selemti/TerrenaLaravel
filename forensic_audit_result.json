@@ -1,0 +1,418 @@
+{
+    "items": [
+        {
+            "id": "ACEITE-NUT-01",
+            "nombre": "Aceite de Soya Nutrioli"
+        },
+        {
+            "id": "ACEITE-NUTRIOLI-01",
+            "nombre": "Aceite de Soya Nutrioli"
+        },
+        {
+            "id": "LECHE-MEM-01",
+            "nombre": "Leche Deslactosada Member's Mark"
+        },
+        {
+            "id": "LECHE-MEMBERS-01",
+            "nombre": "Leche Deslactosada Member's Mark"
+        },
+        {
+            "id": "LECHE-NUT-01",
+            "nombre": "Producto L\u00e1cteo Nutri Deslactosada"
+        },
+        {
+            "id": "LECHE-NUTRI-01",
+            "nombre": "Producto L\u00e1cteo Nutri Deslactosada"
+        }
+    ],
+    "mov_inv": [
+        {
+            "id": 1,
+            "ts": "2026-04-11 01:10:39.03172",
+            "item_id": "LECHE-MEMBERS-01",
+            "lote_id": 1,
+            "cantidad": "5.000000",
+            "qty_original": null,
+            "uom_original_id": null,
+            "costo_unit": "220.000000",
+            "tipo": "ENTRADA",
+            "ref_tipo": "recepcion",
+            "ref_id": 4,
+            "sucursal_id": "4",
+            "usuario_id": 1,
+            "created_at": "2026-04-11 01:10:39.03172"
+        },
+        {
+            "id": 2,
+            "ts": "2026-04-11 00:19:25",
+            "item_id": "LECHE-MEMBERS-01",
+            "lote_id": null,
+            "cantidad": "-1.000000",
+            "qty_original": null,
+            "uom_original_id": null,
+            "costo_unit": "0.000000",
+            "tipo": "TRASPASO",
+            "ref_tipo": "transfer",
+            "ref_id": 3,
+            "sucursal_id": "4",
+            "usuario_id": 1,
+            "created_at": "2026-04-11 01:19:25.667894"
+        },
+        {
+            "id": 3,
+            "ts": "2026-04-11 00:19:25",
+            "item_id": "LECHE-MEMBERS-01",
+            "lote_id": null,
+            "cantidad": "1.000000",
+            "qty_original": null,
+            "uom_original_id": null,
+            "costo_unit": "0.000000",
+            "tipo": "TRASPASO",
+            "ref_tipo": "transfer",
+            "ref_id": 3,
+            "sucursal_id": "5",
+            "usuario_id": 1,
+            "created_at": "2026-04-11 01:19:25.667894"
+        },
+        {
+            "id": 4,
+            "ts": "2026-04-11 00:20:14",
+            "item_id": "LECHE-MEMBERS-01",
+            "lote_id": 1,
+            "cantidad": "-2.000000",
+            "qty_original": null,
+            "uom_original_id": null,
+            "costo_unit": "0.000000",
+            "tipo": "TRASPASO",
+            "ref_tipo": "traspaso",
+            "ref_id": 4,
+            "sucursal_id": "4",
+            "usuario_id": 1,
+            "created_at": "2026-04-11 01:20:14.20127"
+        },
+        {
+            "id": 5,
+            "ts": "2026-04-11 00:20:14",
+            "item_id": "LECHE-MEMBERS-01",
+            "lote_id": null,
+            "cantidad": "2.000000",
+            "qty_original": null,
+            "uom_original_id": null,
+            "costo_unit": "0.000000",
+            "tipo": "TRASPASO",
+            "ref_tipo": "traspaso",
+            "ref_id": 4,
+            "sucursal_id": "5",
+            "usuario_id": 1,
+            "created_at": "2026-04-11 01:20:14.20127"
+        },
+        {
+            "id": 6,
+            "ts": "2026-04-11 00:36:41",
+            "item_id": "LECHE-MEMBERS-01",
+            "lote_id": 2,
+            "cantidad": "24.000000",
+            "qty_original": "2.000000",
+            "uom_original_id": 12,
+            "costo_unit": "220.000000",
+            "tipo": "ENTRADA",
+            "ref_tipo": "recepcion",
+            "ref_id": 5,
+            "sucursal_id": "4",
+            "usuario_id": 1,
+            "created_at": "2026-04-11 00:36:41"
+        },
+        {
+            "id": 7,
+            "ts": "2026-04-11 00:44:05",
+            "item_id": "LECHE-MEMBERS-01",
+            "lote_id": 2,
+            "cantidad": "-3.000000",
+            "qty_original": "-3.000000",
+            "uom_original_id": 2,
+            "costo_unit": "0.000000",
+            "tipo": "TRASPASO",
+            "ref_tipo": "traspaso",
+            "ref_id": 6,
+            "sucursal_id": "4",
+            "usuario_id": 1,
+            "created_at": "2026-04-11 01:44:05.627933"
+        },
+        {
+            "id": 8,
+            "ts": "2026-04-11 00:44:05",
+            "item_id": "LECHE-MEMBERS-01",
+            "lote_id": null,
+            "cantidad": "3.000000",
+            "qty_original": "3.000000",
+            "uom_original_id": 2,
+            "costo_unit": "0.000000",
+            "tipo": "TRASPASO",
+            "ref_tipo": "traspaso",
+            "ref_id": 6,
+            "sucursal_id": "5",
+            "usuario_id": 1,
+            "created_at": "2026-04-11 01:44:05.627933"
+        },
+        {
+            "id": 9,
+            "ts": "2026-04-11 00:44:05",
+            "item_id": "LECHE-MEMBERS-01",
+            "lote_id": 2,
+            "cantidad": "-1.000000",
+            "qty_original": "-1.000000",
+            "uom_original_id": 12,
+            "costo_unit": "0.000000",
+            "tipo": "TRASPASO",
+            "ref_tipo": "traspaso",
+            "ref_id": 7,
+            "sucursal_id": "4",
+            "usuario_id": 1,
+            "created_at": "2026-04-11 01:44:05.650997"
+        },
+        {
+            "id": 10,
+            "ts": "2026-04-11 00:44:05",
+            "item_id": "LECHE-MEMBERS-01",
+            "lote_id": null,
+            "cantidad": "1.000000",
+            "qty_original": "1.000000",
+            "uom_original_id": 12,
+            "costo_unit": "0.000000",
+            "tipo": "TRASPASO",
+            "ref_tipo": "traspaso",
+            "ref_id": 7,
+            "sucursal_id": "5",
+            "usuario_id": 1,
+            "created_at": "2026-04-11 01:44:05.650997"
+        },
+        {
+            "id": 11,
+            "ts": "2026-04-11 00:45:27",
+            "item_id": "LECHE-MEMBERS-01",
+            "lote_id": 2,
+            "cantidad": "-5.000000",
+            "qty_original": "-5.000000",
+            "uom_original_id": 2,
+            "costo_unit": "0.000000",
+            "tipo": "TRASPASO",
+            "ref_tipo": "traspaso",
+            "ref_id": 8,
+            "sucursal_id": "4",
+            "usuario_id": 1,
+            "created_at": "2026-04-11 01:45:27.004537"
+        },
+        {
+            "id": 12,
+            "ts": "2026-04-11 00:45:27",
+            "item_id": "LECHE-MEMBERS-01",
+            "lote_id": null,
+            "cantidad": "5.000000",
+            "qty_original": "5.000000",
+            "uom_original_id": 2,
+            "costo_unit": "0.000000",
+            "tipo": "TRASPASO",
+            "ref_tipo": "traspaso",
+            "ref_id": 8,
+            "sucursal_id": "5",
+            "usuario_id": 1,
+            "created_at": "2026-04-11 01:45:27.004537"
+        },
+        {
+            "id": 13,
+            "ts": "2026-04-11 00:45:27",
+            "item_id": "LECHE-MEMBERS-01",
+            "lote_id": 2,
+            "cantidad": "-12.000000",
+            "qty_original": "-1.000000",
+            "uom_original_id": 12,
+            "costo_unit": "0.000000",
+            "tipo": "TRASPASO",
+            "ref_tipo": "traspaso",
+            "ref_id": 9,
+            "sucursal_id": "4",
+            "usuario_id": 1,
+            "created_at": "2026-04-11 01:45:27.023389"
+        },
+        {
+            "id": 14,
+            "ts": "2026-04-11 00:45:27",
+            "item_id": "LECHE-MEMBERS-01",
+            "lote_id": null,
+            "cantidad": "12.000000",
+            "qty_original": "1.000000",
+            "uom_original_id": 12,
+            "costo_unit": "0.000000",
+            "tipo": "TRASPASO",
+            "ref_tipo": "traspaso",
+            "ref_id": 9,
+            "sucursal_id": "5",
+            "usuario_id": 1,
+            "created_at": "2026-04-11 01:45:27.023389"
+        }
+    ],
+    "recepcion": [
+        {
+            "id": 2,
+            "recepcion_id": 4,
+            "item_id": "LECHE-MEMBERS-01",
+            "bodega_id": 4,
+            "qty": "5.000000",
+            "um_id": 2,
+            "costo_unit": "220.000000",
+            "batch_id": null,
+            "temperatura": null,
+            "doc_url": null,
+            "meta": "{\"qty_pack\": 5, \"pack_size\": 1, \"uom_purchase\": \"CAJA\", \"lote_proveedor\": \"LOT-SIM-001\", \"fecha_caducidad\": \"2026-12-31\"}",
+            "created_at": "2026-04-11 01:10:38.972593",
+            "updated_at": "2026-04-11 01:10:38.972593",
+            "deleted_at": null
+        },
+        {
+            "id": 3,
+            "recepcion_id": 5,
+            "item_id": "LECHE-MEMBERS-01",
+            "bodega_id": 4,
+            "qty": "24.000000",
+            "um_id": 1,
+            "costo_unit": "220.000000",
+            "batch_id": 2,
+            "temperatura": null,
+            "doc_url": null,
+            "meta": "{\"qty_pack\": 2, \"uom_base\": \"L\", \"pack_size\": 12, \"uom_purchase\": \"CAJA\", \"lote_proveedor\": \"LOT-UOM-001\", \"fecha_caducidad\": \"2026-12-31\"}",
+            "created_at": "2026-04-11 00:36:41",
+            "updated_at": "2026-04-11 01:36:41.599205",
+            "deleted_at": null
+        }
+    ],
+    "fks": [
+        {
+            "table_name": "cost_layer",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "hist_cost_insumo",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "historial_costos_item",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "insumo_presentacion",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "insumo_proveedor_presentacion",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "inv_stock_policy",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "inventory_batch",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "inventory_snapshot",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "item_vendor",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "lote",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "merma",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "mov_inv",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "op_insumo",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "perdida_log",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "purchase_suggestion_lines",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "recepcion_det",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "receta_det",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "receta_insumo",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "stock_policy",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "ticket_det_consumo",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        },
+        {
+            "table_name": "traspaso_det",
+            "column_name": "item_id",
+            "foreign_table_name": "items"
+        }
+    ],
+    "fk_counts": {
+        "cost_layer": 0,
+        "hist_cost_insumo": 0,
+        "historial_costos_item": 0,
+        "insumo_presentacion": 0,
+        "insumo_proveedor_presentacion": 0,
+        "inv_stock_policy": 0,
+        "inventory_batch": 2,
+        "inventory_snapshot": 0,
+        "item_vendor": 0,
+        "lote": 0,
+        "merma": 0,
+        "mov_inv": 14,
+        "op_insumo": 0,
+        "perdida_log": 0,
+        "purchase_suggestion_lines": 0,
+        "recepcion_det": 2,
+        "receta_det": 0,
+        "receta_insumo": 0,
+        "stock_policy": 0,
+        "ticket_det_consumo": 0,
+        "traspaso_det": 8
+    }
+}

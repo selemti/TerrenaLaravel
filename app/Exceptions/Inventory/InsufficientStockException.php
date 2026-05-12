@@ -19,6 +19,7 @@ class InsufficientStockException extends InventoryException
             'requested' => $requested,
             'available' => $available,
         ];
+
         return $e;
     }
 }

@@ -13,6 +13,7 @@ class ItemNotFoundException extends InventoryException
     {
         $e = new static("Item '{$itemId}' not found.");
         $e->context = ['item_id' => $itemId];
+
         return $e;
     }
 
@@ -20,6 +21,7 @@ class ItemNotFoundException extends InventoryException
     {
         $e = new static("Reception '{$receptionId}' not found.");
         $e->context = ['reception_id' => $receptionId];
+
         return $e;
     }
 }

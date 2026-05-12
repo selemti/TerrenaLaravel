@@ -77,8 +77,8 @@ Base URL: `http://localhost:8000/api`
 
 | Método | Ruta | Descripción |
 |--------|------|------------|
-| GET | `/api/recipes/{id}/cost` | Costo actual de receta |
-| GET | `/api/recipes/{id}/bom/implode` | BOM desplegado |
+| GET | `/api/recipes/{id}/cost` | Costo actual (Recursivo via [Doc 24](file:///C:/xampp3/htdocs/TerrenaLaravel/docs/2026/24_MOTOR_DE_CONSUMO_RECURSIVO.md)) |
+| GET | `/api/recipes/{id}/bom/implode` | BOM desplegado (Flat tree) |
 | POST | `/api/recipes/{id}/cost/snapshot` | Guardar snapshot de costo |
 | GET | `/api/recipes/{id}/cost/history` | Histórico de costos |
 | GET | `/api/recipes/{id}/cost/compare` | Comparar versiones |

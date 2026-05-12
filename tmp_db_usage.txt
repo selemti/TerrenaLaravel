@@ -1,0 +1,70 @@
+          table_name           | active_rows | total_inserts | total_updates 
+-------------------------------+-------------+---------------+---------------
+ recipe_cost_snapshots         |           0 |             0 |             0
+ cat_sucursales                |           0 |             0 |             0
+ receta                        |           0 |             0 |             0
+ ticket_venta_det              |           0 |             0 |             0
+ item_category_counters        |           0 |             0 |             0
+ hist_cost_insumo              |           0 |             0 |             0
+ inventory_batch               |           0 |             0 |             0
+ receta_cab                    |           0 |             0 |             0
+ production_orders             |           0 |             0 |             0
+ purchase_suggestion_lines     |           0 |             0 |             0
+ purchase_order_lines          |           0 |             0 |             0
+ precorte_efectivo             |           0 |             0 |             0
+ mov_inv                       |           0 |             0 |             0
+ op_yield                      |           0 |             0 |             0
+ recepcion_det                 |           0 |             0 |             0
+ cat_uom_conversion            |           0 |             0 |             0
+ pos_map                       |           0 |             0 |             0
+ receta_version                |           0 |             0 |             0
+ roles                         |           0 |             0 |             0
+ insumo_proveedor_presentacion |           0 |             0 |             0
+ inventory_wastes              |           0 |             0 |             0
+ recepcion_adjuntos            |           0 |             0 |             0
+ historial_costos_receta       |           0 |             0 |             0
+ role_has_permissions          |           0 |             0 |             0
+ alert_rules                   |           0 |             0 |             0
+ traspaso_det                  |           0 |             0 |             0
+ user_roles                    |           0 |             0 |             0
+ param_sucursal                |           0 |             0 |             0
+ recalc_log                    |           0 |             0 |             0
+ menu_engineering_snapshots    |           0 |             0 |             0
+ proveedor                     |           0 |             0 |             0
+ unidades_medida_legacy        |           0 |             0 |             0
+ conciliacion                  |           0 |             0 |             0
+ personal_access_tokens        |           0 |             0 |             0
+ receta_insumo                 |           0 |             0 |             0
+ cash_fund_arqueos             |           0 |             0 |             0
+ migrations                    |           0 |             0 |             0
+ item_vendor_prices            |           0 |             0 |             0
+ production_order_inputs       |           0 |             0 |             0
+ jobs                          |           0 |             0 |             0
+(40 rows)
+
+          table_name           |                  trigger_name                   
+-------------------------------+-------------------------------------------------
+ hist_cost_insumo              | update_hist_cost_insumo_updated_at
+ insumo_presentacion           | update_insumo_presentacion_updated_at
+ insumo_proveedor_presentacion | update_insumo_proveedor_presentacion_updated_at
+ insumo_proveedor_presentacion | trg_ipp_set_timestamp
+ inventory_snapshot            | trg_invshot_biur
+ inventory_snapshot            | trg_invshot_biur
+ item_categories               | trg_item_categories_autocode
+ item_vendor_prices            | trg_ivp_after_insert
+ item_vendor_prices            | trg_ivp_close_prev
+ items                         | trg_items_assign_code
+ merma                         | update_merma_updated_at
+ op_cab                        | update_op_cab_updated_at
+ op_insumo                     | update_op_insumo_updated_at
+ postcorte                     | trg_postcorte_after_insert
+ precorte                      | trg_precorte_after_update_aprobado
+ precorte                      | trg_precorte_after_insert
+ precorte_efectivo             | trg_precorte_efectivo_bi
+ precorte_efectivo             | trg_precorte_efectivo_bi
+ recepcion_cab                 | update_recepcion_cab_updated_at
+ recepcion_det                 | update_recepcion_det_updated_at
+ traspaso_cab                  | update_traspaso_cab_updated_at
+ traspaso_det                  | update_traspaso_det_updated_at
+(22 rows)
+

@@ -20,7 +20,7 @@ class VersionActivator extends Component
 
     public bool $loading = false;
 
-    public function mount(?string $recipeId = null, RecipeVersionService $service): void
+    public function mount(?string $recipeId, RecipeVersionService $service): void
     {
         $this->recipeId = $recipeId ? strtoupper($recipeId) : '';
 

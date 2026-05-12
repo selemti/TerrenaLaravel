@@ -137,6 +137,19 @@ Password: Floreant123!
 
 ---
 
+## Soberanía de Datos (SSOT)
+
+Para mantener la integridad del sistema, se deben respetar los siguientes "Single Source of Truth":
+
+| Entidad | Tabla SSOT | Regla de Oro |
+| :--- | :--- | :--- |
+| **Inventario / Recetas** | `selemti.items` | Solo nombres genéricos (v1.0), sin marcas. UOM Base. |
+| **Abastecimiento** | `insumo_proveedor_presentacion` | Aquí reside la marca, el proveedor y el factor de compra. |
+| **Ventas ERP** | `selemti.transacciones` | Espejo consolidado de `public.transactions`. |
+| **Consumo Teórico** | `inv_consumo_pos_det` | Resultado final del motor recursivo (Doc 24). |
+
+---
+
 ## Comandos Útiles
 
 ```bash
@@ -183,7 +196,7 @@ Este proyecto es desarrollado por múltiples IAs coordinadas:
 | Vite no carga assets | Verificar que `npm run dev` está corriendo y `VITE_DEV_SERVER_URL` en .env |
 | Queue jobs no se procesan | Verificar que `queue:listen` está corriendo |
 | Error de permisos RBAC | `php artisan permission:cache-reset` |
-| PG 9.5 no soporta función | Buscar alternativa compatible (no usar JSONB avanzado, CTEs recursivos tienen limitaciones) |
+| PG 9.5 no soporta función | Buscar alternativa compatible (no usar JSONB avanzado, CTEs recursivos requieren optimización [Doc 24](file:///C:/xampp3/htdocs/TerrenaLaravel/docs/2026/24_MOTOR_DE_CONSUMO_RECURSIVO.md)) |
 
 ---
 

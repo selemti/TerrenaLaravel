@@ -127,7 +127,7 @@ class LoginRequest extends FormRequest
         // Si el login no es un email, convertirlo a email agregando @selemti.com
         $email = filter_var($login, FILTER_VALIDATE_EMAIL)
             ? $login
-            : $login . '@selemti.com';
+            : $login.'@selemti.com';
 
         return User::query()
             ->whereRaw('LOWER(email) = ?', [Str::lower($email)])

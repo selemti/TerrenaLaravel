@@ -19,6 +19,7 @@ class InvalidCajaStateException extends CajaException
             'current_state' => $current,
             'expected_state' => $expected,
         ];
+
         return $e;
     }
 }

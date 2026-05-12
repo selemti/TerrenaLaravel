@@ -3,8 +3,8 @@
 namespace App\Services\Recipes;
 
 use App\Http\Controllers\Api\Inventory\RecipeCostController;
-use App\Models\Rec\RecipeCostSnapshot;
 use App\Models\Rec\Receta;
+use App\Models\Rec\RecipeCostSnapshot;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -14,9 +14,7 @@ class RecipeCostSnapshotService
 {
     public const COST_CHANGE_THRESHOLD = 0.02;
 
-    public function __construct(private readonly RecipeCostController $recipeCostController)
-    {
-    }
+    public function __construct(private readonly RecipeCostController $recipeCostController) {}
 
     public function createSnapshot(
         string $recipeId,

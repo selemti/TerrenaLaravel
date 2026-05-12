@@ -1,0 +1,1 @@
+{"nodes": [], "edges": [{"source": "selemti_items", "target": "selemti_cat_unidades", "relation": "references", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "docs/00.history/BD/ajustes_codigo_post_migracion.md"}], "hyperedges": []}

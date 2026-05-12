@@ -3,7 +3,6 @@
 namespace App\Livewire\Transfers;
 
 use App\Services\Inventory\TransferService;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 

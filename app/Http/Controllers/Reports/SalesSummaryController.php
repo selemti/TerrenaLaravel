@@ -350,43 +350,52 @@ class SalesSummaryController extends BaseReportController
                 SELECT folio_date, branch_key FROM refunds
                 UNION
                 SELECT folio_date, branch_key FROM voids
+            ),
+            result_calculation AS (
+                SELECT
+                    k.folio_date,
+                    k.branch_key,
+                    COALESCE(vs.tickets, 0)::bigint AS tickets,
+                    ROUND(COALESCE(vs.bruto, 0) + COALESCE(vd.void_amount, 0), 2) AS bruto,
+                    ROUND(COALESCE(vs.descuento, 0), 2) AS descuento,
+                    ROUND(COALESCE(r.refund_amount, 0) + COALESCE(vd.void_amount, 0), 2) AS anulaciones,
+                    ROUND(
+                        COALESCE(p.gross_payments, 0) - COALESCE(r.refund_amount, 0),
+                        2
+                    ) AS pagos_netos,
+                    ROUND(
+                        COALESCE(vs.bruto, 0) + COALESCE(vd.void_amount, 0)
+                        - COALESCE(vs.descuento, 0)
+                        - (COALESCE(r.refund_amount, 0) + COALESCE(vd.void_amount, 0)),
+                        2
+                    ) AS neto_legacy,
+                    COALESCE(t.terminales, '') AS terminales,
+                    COALESCE(ex.total_exceptions, 0)::bigint AS exceptions_count,
+                    COALESCE(ex.exception_codes, '') AS exception_codes,
+                    ROUND(COALESCE(vs.propina, 0), 2) AS propina,
+                    ROUND(COALESCE(vs.cargo_servicio, 0), 2) AS cargo_servicio
+                FROM keys k
+                LEFT JOIN valid_summary vs
+                  ON vs.folio_date = k.folio_date AND vs.branch_key = k.branch_key
+                LEFT JOIN refunds r
+                  ON r.folio_date = k.folio_date AND r.branch_key = k.branch_key
+                LEFT JOIN voids vd
+                  ON vd.folio_date = k.folio_date AND vd.branch_key = k.branch_key
+                LEFT JOIN payments p
+                  ON p.folio_date = k.folio_date AND p.branch_key = k.branch_key
+                LEFT JOIN terminals t
+                  ON t.folio_date = k.folio_date AND t.branch_key = k.branch_key
+                LEFT JOIN exceptions ex
+                  ON ex.folio_date = k.folio_date AND ex.branch_key = k.branch_key
             )
             SELECT
-                k.folio_date,
-                k.branch_key,
-                COALESCE(vs.tickets, 0)::bigint AS tickets,
-                ROUND(COALESCE(vs.bruto, 0) + COALESCE(vd.void_amount, 0), 2) AS bruto,
-                ROUND(COALESCE(vs.descuento, 0), 2) AS descuento,
-            ROUND(COALESCE(r.refund_amount, 0) + COALESCE(vd.void_amount, 0), 2) AS anulaciones,
-                ROUND(
-                    COALESCE(vs.bruto, 0) + COALESCE(vd.void_amount, 0)
-                    - COALESCE(vs.descuento, 0)
-                    - (COALESCE(r.refund_amount, 0) + COALESCE(vd.void_amount, 0)),
-                    2
-                ) AS neto,
-                ROUND(
-                    COALESCE(p.gross_payments, 0) - COALESCE(r.refund_amount, 0),
-                    2
-                ) AS pagos_netos,
-                COALESCE(t.terminales, '') AS terminales,
-                COALESCE(ex.total_exceptions, 0)::bigint AS exceptions_count,
-                COALESCE(ex.exception_codes, '') AS exception_codes,
-                ROUND(COALESCE(vs.propina, 0), 2) AS propina,
-                ROUND(COALESCE(vs.cargo_servicio, 0), 2) AS cargo_servicio
-            FROM keys k
-            LEFT JOIN valid_summary vs
-              ON vs.folio_date = k.folio_date AND vs.branch_key = k.branch_key
-            LEFT JOIN refunds r
-              ON r.folio_date = k.folio_date AND r.branch_key = k.branch_key
-            LEFT JOIN voids vd
-              ON vd.folio_date = k.folio_date AND vd.branch_key = k.branch_key
-            LEFT JOIN payments p
-              ON p.folio_date = k.folio_date AND p.branch_key = k.branch_key
-            LEFT JOIN terminals t
-              ON t.folio_date = k.folio_date AND t.branch_key = k.branch_key
-            LEFT JOIN exceptions ex
-              ON ex.folio_date = k.folio_date AND ex.branch_key = k.branch_key
-            ORDER BY k.folio_date, k.branch_key;
+                *,
+                CASE 
+                    WHEN ? = 1 THEN pagos_netos 
+                    ELSE neto_legacy 
+                END AS neto
+            FROM result_calculation
+            ORDER BY folio_date, branch_key;
         SQL;
 
         $rows = $this->executeWithTimeout($sql, [
@@ -394,6 +403,7 @@ class SalesSummaryController extends BaseReportController
             $end->toDateString(),
             $this->stringifyFilter($branches),
             $this->stringifyFilter($terminals),
+            $this->isCanonMode() ? 1 : 0,
         ]);
 
         return collect($rows)->map(function (object $row): array {

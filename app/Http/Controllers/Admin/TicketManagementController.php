@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\Finance\SalesResolutionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-
 /**
  * Controlador para Gestión de Tickets Problemáticos
  *
@@ -16,11 +15,25 @@ use Illuminate\Support\Facades\Log;
  * - Abiertos vacíos
  * - Pagados sin cierre
  */
+use Illuminate\Support\Facades\Log;
+
 class TicketManagementController extends Controller
 {
-    public function __construct()
+    private $salesService;
+
+    public function __construct(SalesResolutionService $salesService)
     {
         $this->middleware(['auth', 'permission:admin.access']);
+        $this->salesService = $salesService;
+    }
+
+    /**
+     * Determina si se debe usar el modelo financiero canónico
+     */
+    protected function isCanonMode(): bool
+    {
+        return request()->query('mode') === 'canon'
+            || config('finance.use_canon_mode', false);
     }
 
     /**
@@ -79,7 +92,15 @@ class TicketManagementController extends Controller
      */
     private function hasFullDiscount($ticketId): bool
     {
-        // Primero verificamos si el ticket tiene monto total 0
+        // Modo Canon: Certificación vía SSOT (Transactions)
+        if ($this->isCanonMode()) {
+            $resolution = $this->salesService->resolveNetLiquidation($ticketId);
+
+            // Si el neto liquidado es 0 y se resolvió algún descuento (o subtotal es 0), es full discount
+            return $resolution['net_liquidation'] <= 0.001;
+        }
+
+        // Modo Legacy: Arithmética vulnerable (BUG-04)
         $ticket = DB::connection('pgsql')
             ->table('ticket')
             ->where('id', $ticketId)
@@ -90,12 +111,10 @@ class TicketManagementController extends Controller
             return false;
         }
 
-        // Si el total_price es 0 y el total_discount es igual al sub_total (o al total original), es un descuento del 100%
         if ($ticket->total_price == 0 && $ticket->sub_total > 0 && $ticket->total_discount >= $ticket->sub_total) {
             return true;
         }
 
-        // Verificar también si la suma de los descuentos en items iguala o supera el subtotal
         $itemDiscountTotal = DB::connection('pgsql')
             ->table('ticket_item as ti')
             ->join('ticket_item_discount as tid', 'ti.id', '=', 'tid.ticket_itemid')

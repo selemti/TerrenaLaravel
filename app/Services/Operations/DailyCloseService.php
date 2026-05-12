@@ -2,6 +2,7 @@
 
 namespace App\Services\Operations;
 
+use App\Services\Inventory\PosConsumptionService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -87,6 +88,47 @@ class DailyCloseService
         return Cache::lock($key, 82800)->get();
     }
 
+    protected function processTheoreticalConsumption(): array
+    {
+        $this->log('info', 'step_process_consumption', ['status' => 'started']);
+
+        $ticketsProcessed = 0;
+
+        try {
+            // Obtener tickets del día sin registro en inv_consumo_pos
+            $ticketIds = DB::connection($this->connection)
+                ->table('public.tickets as t')
+                ->leftJoin('selemti.inv_consumo_pos as c', 'c.ticket_id', '=', 't.id')
+                ->whereDate('t.creation_date', $this->date->toDateString())
+                ->whereNull('c.ticket_id')
+                ->pluck('t.id');
+
+            foreach ($ticketIds as $ticketId) {
+                try {
+                    $this->posConsumptionService->expandTicket((int) $ticketId);
+                    $this->posConsumptionService->confirmTicket((int) $ticketId);
+                    $ticketsProcessed++;
+                } catch (Throwable $e) {
+                    $this->log('warning', 'step_process_consumption', [
+                        'ticket_id' => $ticketId,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        } catch (Throwable $e) {
+            $this->log('error', 'step_process_consumption', ['error' => $e->getMessage()]);
+
+            return ['status' => false, 'tickets_processed' => $ticketsProcessed];
+        }
+
+        $this->log('info', 'step_process_consumption', [
+            'status' => 'completed',
+            'tickets_processed' => $ticketsProcessed,
+        ]);
+
+        return ['status' => true, 'tickets_processed' => $ticketsProcessed];
+    }
+
     protected function checkPosSync(): bool
     {
         $this->log('info', 'step_check_pos_sync', ['status' => 'started']);
@@ -114,10 +156,10 @@ class DailyCloseService
             ->whereDate('fecha_recepcion', $this->date->toDateString())
             ->where('status', '!=', 'POSTED')->count();
 
-        $pendingTransfers = DB::connection($this->connection)->table('selemti.transferencias')
-            ->where(fn ($q) => $q->where('origen_id', $this->branchId)->orWhere('destino_id', $this->branchId))
-            ->whereDate('fecha_transferencia', $this->date->toDateString())
-            ->where('status', '!=', 'APPLIED')->count();
+        $pendingTransfers = DB::connection($this->connection)->table('selemti.traspaso_cab')
+            ->where(fn ($q) => $q->where('from_bodega_id', $this->branchId)->orWhere('to_bodega_id', $this->branchId))
+            ->whereDate('created_at', $this->date->toDateString())
+            ->whereIn('estado', ['SOLICITADA', 'APROBADA', 'EN_TRANSITO'])->count();
 
         if ($pendingReceptions > 0 || $pendingTransfers > 0) {
             $hasPending = true;

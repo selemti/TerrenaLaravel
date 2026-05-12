@@ -1,0 +1,124 @@
+                                                Table "selemti.postcorte"
+           Column            |           Type           |                           Modifiers                            
+-----------------------------+--------------------------+----------------------------------------------------------------
+ id                          | bigint                   | not null default nextval('selemti.postcorte_id_seq'::regclass)
+ sesion_id                   | bigint                   | not null
+ sistema_efectivo_esperado   | numeric(12,2)            | not null default 0
+ declarado_efectivo          | numeric(12,2)            | not null default 0
+ diferencia_efectivo         | numeric(12,2)            | not null default 0
+ veredicto_efectivo          | text                     | not null default 'CUADRA'::text
+ sistema_tarjetas            | numeric(12,2)            | not null default 0
+ declarado_tarjetas          | numeric(12,2)            | not null default 0
+ diferencia_tarjetas         | numeric(12,2)            | not null default 0
+ veredicto_tarjetas          | text                     | not null default 'CUADRA'::text
+ creado_en                   | timestamp with time zone | not null default now()
+ creado_por                  | integer                  | 
+ notas                       | text                     | 
+ sistema_transferencias      | numeric(12,2)            | not null default 0
+ declarado_transferencias    | numeric(12,2)            | not null default 0
+ diferencia_transferencias   | numeric(12,2)            | not null default 0
+ veredicto_transferencias    | text                     | not null default 'CUADRA'::text
+ validado                    | boolean                  | not null default false
+ validado_por                | integer                  | 
+ validado_en                 | timestamp with time zone | 
+ requiere_aprobacion         | boolean                  | default false
+ aprobado_por                | integer                  | 
+ aprobado_en                 | timestamp with time zone | 
+ motivo_irregular            | text                     | 
+ rechazado                   | boolean                  | default false
+ motivo_rechazo              | text                     | 
+ total_ventas_brutas         | numeric(12,2)            | not null default 0
+ total_ventas_netas          | numeric(12,2)            | not null default 0
+ total_descuentos_drawer     | numeric(12,2)            | not null default 0
+ total_descuentos_reales     | numeric(12,2)            | not null default 0
+ diferencia_descuentos       | numeric(12,2)            | not null default 0
+ porcentaje_error_descuentos | numeric(5,2)             | not null default 0
+ calidad_reporte_descuentos  | text                     | not null default 'SIN_DATOS'::text
+Indexes:
+    "postcorte_pkey" PRIMARY KEY, btree (id)
+    "uq_postcorte_sesion_id" UNIQUE CONSTRAINT, btree (sesion_id)
+    "idx_postcorte_requiere_aprobacion" btree (requiere_aprobacion) WHERE requiere_aprobacion = true
+    "idx_postcorte_sesion_id" btree (sesion_id)
+Check constraints:
+    "postcorte_calidad_reporte_descuentos_check" CHECK (calidad_reporte_descuentos = ANY (ARRAY['SIN_DATOS'::text, 'EXCELENTE'::text, 'BUENO'::text, 'ACEPTABLE'::text, 'REVISAR'::text, 'CRITICO'::text]))
+    "postcorte_veredicto_efectivo_check" CHECK (veredicto_efectivo = ANY (ARRAY['CUADRA'::text, 'A_FAVOR'::text, 'EN_CONTRA'::text]))
+    "postcorte_veredicto_tarjetas_check" CHECK (veredicto_tarjetas = ANY (ARRAY['CUADRA'::text, 'A_FAVOR'::text, 'EN_CONTRA'::text]))
+    "postcorte_veredicto_transfer_check" CHECK (veredicto_transferencias = ANY (ARRAY['CUADRA'::text, 'A_FAVOR'::text, 'EN_CONTRA'::text]))
+Foreign-key constraints:
+    "postcorte_aprobado_por_fkey" FOREIGN KEY (aprobado_por) REFERENCES selemti.users(id)
+    "postcorte_sesion_id_fkey" FOREIGN KEY (sesion_id) REFERENCES selemti.sesion_cajon(id) ON DELETE CASCADE
+Referenced by:
+    TABLE "selemti.alertas_cortes" CONSTRAINT "alertas_cortes_postcorte_id_fkey" FOREIGN KEY (postcorte_id) REFERENCES selemti.postcorte(id) ON DELETE CASCADE
+    TABLE "selemti.conciliacion" CONSTRAINT "conciliacion_postcorte_id_fkey" FOREIGN KEY (postcorte_id) REFERENCES selemti.postcorte(id) ON DELETE CASCADE
+Triggers:
+    trg_postcorte_after_insert AFTER INSERT ON selemti.postcorte FOR EACH ROW EXECUTE PROCEDURE selemti.fn_postcorte_after_insert()
+
+                                           Table "selemti.precorte"
+       Column       |           Type           |                           Modifiers                           
+--------------------+--------------------------+---------------------------------------------------------------
+ id                 | bigint                   | not null default nextval('selemti.precorte_id_seq'::regclass)
+ sesion_id          | bigint                   | not null
+ declarado_efectivo | numeric(12,2)            | not null default 0
+ declarado_otros    | numeric(12,2)            | not null default 0
+ estatus            | text                     | not null default 'PENDIENTE'::text
+ creado_en          | timestamp with time zone | not null default now()
+ creado_por         | integer                  | 
+ ip_cliente         | inet                     | 
+ notas              | text                     | 
+Indexes:
+    "precorte_pkey" PRIMARY KEY, btree (id)
+    "uq_precorte_sesion_id" UNIQUE CONSTRAINT, btree (sesion_id)
+    "idx_precorte_sesion_id" btree (sesion_id)
+    "precorte_sesion_id_idx" btree (sesion_id)
+Check constraints:
+    "precorte_estatus_check" CHECK (estatus = ANY (ARRAY['PENDIENTE'::text, 'ENVIADO'::text, 'APROBADO'::text, 'RECHAZADO'::text]))
+Foreign-key constraints:
+    "precorte_sesion_id_fkey" FOREIGN KEY (sesion_id) REFERENCES selemti.sesion_cajon(id) ON DELETE CASCADE
+Referenced by:
+    TABLE "selemti.precorte_efectivo" CONSTRAINT "precorte_efectivo_precorte_id_fkey" FOREIGN KEY (precorte_id) REFERENCES selemti.precorte(id) ON DELETE CASCADE
+    TABLE "selemti.precorte_otros" CONSTRAINT "precorte_otros_precorte_id_fkey" FOREIGN KEY (precorte_id) REFERENCES selemti.precorte(id) ON DELETE CASCADE
+Triggers:
+    trg_precorte_after_insert AFTER INSERT ON selemti.precorte FOR EACH ROW EXECUTE PROCEDURE selemti.fn_precorte_after_insert()
+    trg_precorte_after_update_aprobado AFTER UPDATE ON selemti.precorte FOR EACH ROW WHEN (new.estatus = 'APROBADO'::text AND old.estatus IS DISTINCT FROM 'APROBADO'::text) EXECUTE PROCEDURE selemti.fn_precorte_after_update_aprobado()
+
+                                           Table "selemti.sesion_cajon"
+      Column       |           Type           |                             Modifiers                             
+-------------------+--------------------------+-------------------------------------------------------------------
+ id                | bigint                   | not null default nextval('selemti.sesion_cajon_id_seq'::regclass)
+ sucursal          | text                     | 
+ terminal_id       | integer                  | not null
+ terminal_nombre   | text                     | 
+ cajero_usuario_id | integer                  | not null
+ apertura_ts       | timestamp with time zone | not null default now()
+ cierre_ts         | timestamp with time zone | 
+ estatus           | text                     | not null default 'ACTIVA'::text
+ opening_float     | numeric(12,2)            | not null default 0
+ closing_float     | numeric(12,2)            | 
+ dah_evento_id     | integer                  | 
+ skipped_precorte  | boolean                  | not null default false
+Indexes:
+    "sesion_cajon_pkey" PRIMARY KEY, btree (id)
+    "sesion_cajon_terminal_id_cajero_usuario_id_apertura_ts_key" UNIQUE CONSTRAINT, btree (terminal_id, cajero_usuario_id, apertura_ts)
+    "idx_sesion_cajon_terminal_apertura" btree (terminal_id, apertura_ts)
+    "ix_sesion_cajon_cajero" btree (cajero_usuario_id, apertura_ts)
+    "ix_sesion_cajon_terminal" btree (terminal_id, apertura_ts)
+Check constraints:
+    "sesion_cajon_estatus_check" CHECK (estatus = ANY (ARRAY['ACTIVA'::text, 'LISTO_PARA_CORTE'::text, 'EN_CORTE'::text, 'CERRADA'::text]))
+Referenced by:
+    TABLE "selemti.alertas_cortes" CONSTRAINT "alertas_cortes_sesion_id_fkey" FOREIGN KEY (sesion_id) REFERENCES selemti.sesion_cajon(id) ON DELETE CASCADE
+    TABLE "selemti.postcorte" CONSTRAINT "postcorte_sesion_id_fkey" FOREIGN KEY (sesion_id) REFERENCES selemti.sesion_cajon(id) ON DELETE CASCADE
+    TABLE "selemti.precorte" CONSTRAINT "precorte_sesion_id_fkey" FOREIGN KEY (sesion_id) REFERENCES selemti.sesion_cajon(id) ON DELETE CASCADE
+
+            tgname             |                                                                                                 pg_get_triggerdef                                                                                                  
+-------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ trg_postcorte_after_insert    | CREATE TRIGGER trg_postcorte_after_insert AFTER INSERT ON selemti.postcorte FOR EACH ROW EXECUTE PROCEDURE selemti.fn_postcorte_after_insert()
+ RI_ConstraintTrigger_a_478412 | CREATE CONSTRAINT TRIGGER "RI_ConstraintTrigger_a_478412" AFTER DELETE ON selemti.postcorte FROM selemti.alertas_cortes NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE PROCEDURE "RI_FKey_cascade_del"()
+ RI_ConstraintTrigger_a_478413 | CREATE CONSTRAINT TRIGGER "RI_ConstraintTrigger_a_478413" AFTER UPDATE ON selemti.postcorte FROM selemti.alertas_cortes NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE PROCEDURE "RI_FKey_noaction_upd"()
+ RI_ConstraintTrigger_a_478507 | CREATE CONSTRAINT TRIGGER "RI_ConstraintTrigger_a_478507" AFTER DELETE ON selemti.postcorte FROM selemti.conciliacion NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE PROCEDURE "RI_FKey_cascade_del"()
+ RI_ConstraintTrigger_a_478508 | CREATE CONSTRAINT TRIGGER "RI_ConstraintTrigger_a_478508" AFTER UPDATE ON selemti.postcorte FROM selemti.conciliacion NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE PROCEDURE "RI_FKey_noaction_upd"()
+ RI_ConstraintTrigger_c_478844 | CREATE CONSTRAINT TRIGGER "RI_ConstraintTrigger_c_478844" AFTER INSERT ON selemti.postcorte FROM selemti.users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE PROCEDURE "RI_FKey_check_ins"()
+ RI_ConstraintTrigger_c_478845 | CREATE CONSTRAINT TRIGGER "RI_ConstraintTrigger_c_478845" AFTER UPDATE ON selemti.postcorte FROM selemti.users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE PROCEDURE "RI_FKey_check_upd"()
+ RI_ConstraintTrigger_c_478849 | CREATE CONSTRAINT TRIGGER "RI_ConstraintTrigger_c_478849" AFTER INSERT ON selemti.postcorte FROM selemti.sesion_cajon NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE PROCEDURE "RI_FKey_check_ins"()
+ RI_ConstraintTrigger_c_478850 | CREATE CONSTRAINT TRIGGER "RI_ConstraintTrigger_c_478850" AFTER UPDATE ON selemti.postcorte FROM selemti.sesion_cajon NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE PROCEDURE "RI_FKey_check_upd"()
+(9 rows)
+

@@ -5,39 +5,41 @@ namespace App\Services\Inventory;
 use App\Exceptions\Inventory\InvalidInventoryStateException;
 use App\Exceptions\Inventory\ItemNotFoundException;
 use App\Models\Inv\Item;
-use App\Services\Inventory\UomConversionService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
  * Servicio para gestión de recepciones de inventario
- * 
+ *
  * Implementa:
  * - Creación de recepciones en estado BORRADOR
  * - State machine: BORRADOR → VALIDADA → POSTEADA
  * - Posteo a inventario (mov_inv)
- * 
+ *
  * @version 2.0 - Sprint 1 (INV-002)
  */
 class ReceptionService
 {
     // Estados de recepción
     const ESTADO_BORRADOR = 'BORRADOR';
+
     const ESTADO_VALIDADA = 'VALIDADA';
+
     const ESTADO_POSTEADA = 'POSTEADA';
+
     const ESTADO_CANCELADA = 'CANCELADA';
 
     /**
      * Crea una recepción en estado BORRADOR (editable, no afecta inventario)
-     * 
+     *
      * $header = [
      *   'supplier_id' => int,
      *   'branch_id' => int|null,
      *   'warehouse_id' => int|null,
      *   'user_id' => int
      * ]
-     * 
+     *
      * $lines = [[
      *   'item_id' => string,
      *   'qty_pack' => numeric,
@@ -50,9 +52,9 @@ class ReceptionService
      *   'temp' => numeric|null,
      *   'doc_url' => string|null
      * ]]
-     * 
-     * @param array $header Datos del encabezado
-     * @param array $lines Líneas de detalle
+     *
+     * @param  array  $header  Datos del encabezado
+     * @param  array  $lines  Líneas de detalle
      * @return int ID de la recepción creada
      */
     public function createDraftReception(array $header, array $lines): int
@@ -126,22 +128,22 @@ class ReceptionService
 
     /**
      * Valida una recepción (BORRADOR → VALIDADA)
-     * 
+     *
      * Una recepción validada NO es editable y NO afecta inventario aún.
      * Requiere permiso 'recepciones.validar'
-     * 
+     *
      * TODO: Agregar columnas validada_por, validada_at en migraciones (INV-002-QWEN-BD)
-     * 
-     * @param int $receptionId ID de la recepción
-     * @param int $userId ID del usuario que valida
-     * @return void
+     *
+     * @param  int  $receptionId  ID de la recepción
+     * @param  int  $userId  ID del usuario que valida
+     *
      * @throws InvalidArgumentException Si la recepción no está en BORRADOR
      */
     public function validateReception(int $receptionId, int $userId): void
     {
         $reception = DB::table('selemti.recepcion_cab')->where('id', $receptionId)->first();
 
-        if (!$reception) {
+        if (! $reception) {
             throw ItemNotFoundException::reception($receptionId);
         }
 
@@ -161,18 +163,18 @@ class ReceptionService
 
     /**
      * Postea una recepción al inventario (VALIDADA → POSTEADA)
-     * 
+     *
      * Flujo:
      * 1. Verifica que esté en estado VALIDADA
      * 2. Crea lotes (inventory_batch) por cada línea
      * 3. Genera movimientos en mov_inv tipo RECEPCION
      * 4. Marca recepción como POSTEADA (irreversible)
-     * 
+     *
      * TODO: Agregar columnas posteada_por, posteada_at en migraciones (INV-002-QWEN-BD)
-     * 
-     * @param int $receptionId ID de la recepción
-     * @param int $userId ID del usuario que postea
-     * @return void
+     *
+     * @param  int  $receptionId  ID de la recepción
+     * @param  int  $userId  ID del usuario que postea
+     *
      * @throws InvalidArgumentException Si la recepción no está en VALIDADA
      */
     public function postReception(int $receptionId, int $userId): void
@@ -180,7 +182,7 @@ class ReceptionService
         DB::transaction(function () use ($receptionId, $userId) {
             $reception = DB::table('selemti.recepcion_cab')->where('id', $receptionId)->first();
 
-            if (!$reception) {
+            if (! $reception) {
                 throw ItemNotFoundException::reception($receptionId);
             }
 
@@ -205,7 +207,7 @@ class ReceptionService
                 $fechaCaducidad = isset($meta['fecha_caducidad']) && $meta['fecha_caducidad']
                     ? Carbon::parse($meta['fecha_caducidad'])->toDateString()
                     : $now->copy()->addYear()->toDateString();
-                $ubicacion = 'UBIC-' . str_pad((string) ($reception->almacen_id ?? 1), 5, '0', STR_PAD_LEFT);
+                $ubicacion = 'UBIC-'.str_pad((string) ($reception->almacen_id ?? 1), 5, '0', STR_PAD_LEFT);
 
                 // Resolver cantidad a unidades base del item
                 $item = Item::with(['uom', 'uomCompra'])->find($line->item_id);
@@ -217,7 +219,7 @@ class ReceptionService
                     : $line->qty;
 
                 $uomBaseClave = $item?->uom?->clave ?? ($meta['uom_base'] ?? 'PZ');
-                $uomCompraId  = $item?->unidad_compra_id;
+                $uomCompraId = $item?->unidad_compra_id;
 
                 // Crear lote de inventario en unidades base
                 $batchId = DB::table('selemti.inventory_batch')->insertGetId([
@@ -273,9 +275,7 @@ class ReceptionService
 
     /**
      * Genera número secuencial para recepciones
-     * Formato: RC-YYYYMMDD-#### 
-     * 
-     * @return string
+     * Formato: RC-YYYYMMDD-####
      */
     protected function buildSequentialNumber(): string
     {

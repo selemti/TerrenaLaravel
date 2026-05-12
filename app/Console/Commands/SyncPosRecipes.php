@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\DB;
 
 class SyncPosRecipes extends Command
 {
-    protected $signature = 'recipes:sync-pos {--modifiers : Sincroniza también los modificadores del POS como sub-recetas placeholder} {--dry-run : Muestra acciones sin aplicar cambios}';
+    protected $signature = 'recipes:sync-pos {--modifiers : DEPRECADO. Solo actualiza metadatos de modificadores existentes} {--dry-run : Muestra acciones sin aplicar cambios}';
 
-    protected $description = 'Sincroniza productos de Floreant POS con el catálogo de recetas (receta_cab, receta_version y placeholders para modificadores).';
+    protected $description = 'Sincroniza metadatos básicos de Floreant POS contra recetas PREVIAMENTE vinculadas. Ya no crea recetas nuevas de forma automática.';
 
     public function handle(): int
     {
@@ -18,7 +18,7 @@ class SyncPosRecipes extends Command
 
         $conn = $this->resolvePosConnection();
 
-        $this->info(($dry ? '[DRY RUN] ' : '').'Sincronizando productos del POS...');
+        $this->info(($dry ? '[DRY RUN] ' : '').'Sincronizando metadatos ERP <-> POS (Modo Estructural Asistido)...');
 
         $items = $conn->table('public.menu_item as mi')
             ->leftJoin('public.menu_group as mg', 'mi.group_id', '=', 'mg.id')
@@ -26,62 +26,34 @@ class SyncPosRecipes extends Command
             ->orderBy('mi.id')
             ->get();
 
-        $createdRecipes = 0;
-        $createdVersions = 0;
         $updatedRecipes = 0;
+        $unlinkedPosItems = 0;
 
         foreach ($items as $item) {
-            $recipeId = sprintf('REC-%05d', $item->id);
+            $posIdStr = (string) $item->id;
             $attributes = [
-                'nombre_plato' => $item->name,
-                'codigo_plato_pos' => (string) $item->id,
+                // 'nombre_plato' => $item->name, // DESACTIVADO: Respetar soberanía del chef sobre el nombre
                 'categoria_plato' => $item->group_name ?? null,
                 'precio_venta_sugerido' => $item->price ?? 0,
             ];
 
-            $exists = DB::table('selemti.receta_cab')->where('id', $recipeId)->first();
+            // Validar si EXISTE un vínculo manual asistido ya creado
+            $exists = DB::table('selemti.receta_cab')->where('codigo_plato_pos', $posIdStr)->first();
+
             if ($exists) {
                 $updatedRecipes++;
                 if (! $dry) {
-                    DB::table('selemti.receta_cab')->where('id', $recipeId)->update($attributes + ['updated_at' => now()]);
+                    DB::table('selemti.receta_cab')->where('id', $exists->id)->update($attributes + ['updated_at' => now()]);
                 }
             } else {
-                $createdRecipes++;
-                if (! $dry) {
-                    DB::table('selemti.receta_cab')->insert($attributes + [
-                        'id' => $recipeId,
-                        'porciones_standard' => 1,
-                        'costo_standard_porcion' => 0,
-                        'activo' => true,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-            }
-
-            $versionExists = DB::table('selemti.receta_version')
-                ->where('receta_id', $recipeId)
-                ->where('version', 1)
-                ->exists();
-
-            if (! $versionExists) {
-                $createdVersions++;
-                if (! $dry) {
-                    DB::table('selemti.receta_version')->insert([
-                        'receta_id' => $recipeId,
-                        'version' => 1,
-                        'descripcion_cambios' => 'Versión generada automáticamente desde Floreant POS',
-                        'fecha_efectiva' => now()->toDateString(),
-                        'version_publicada' => false,
-                        'created_at' => now(),
-                    ]);
-                }
+                // El item de POS no tiene receta en ERP. No se crea cascarón automático.
+                $unlinkedPosItems++;
             }
         }
 
-        $this->info("Recetas nuevas: {$createdRecipes}");
-        $this->info("Recetas actualizadas: {$updatedRecipes}");
-        $this->info("Versiones iniciales creadas: {$createdVersions}");
+        $this->warn('Aviso: El comando ya no crea cascarones ciegos. Use la interfaz POS Link para vincular.');
+        $this->info("Recetas vinculadas actualizadas: {$updatedRecipes}");
+        $this->comment("Platillos POS sin receta vinculada (Bandeja Pendientes): {$unlinkedPosItems}");
 
         if ($withModifiers) {
             $this->syncModifiers($dry, $conn);
@@ -92,7 +64,7 @@ class SyncPosRecipes extends Command
 
     protected function syncModifiers(bool $dry, $conn): void
     {
-        $this->info(($dry ? '[DRY RUN] ' : '').'Sincronizando modificadores del POS...');
+        $this->info(($dry ? '[DRY RUN] ' : '').'Actualizando metadatos de modificadores vinculados...');
 
         $modifiers = $conn->table('public.menu_modifier as mm')
             ->leftJoin('public.menu_modifier_group as mg', 'mm.group_id', '=', 'mg.id')
@@ -100,63 +72,32 @@ class SyncPosRecipes extends Command
             ->orderBy('mm.id')
             ->get();
 
-        $createdMods = 0;
-        $createdModRecipes = 0;
+        $updatedMods = 0;
+        $unlinkedMods = 0;
 
         foreach ($modifiers as $mod) {
             $modCode = sprintf('MOD-%05d', $mod->id);
-            $recipeId = sprintf('REC-MOD-%05d', $mod->id);
 
-            $recipeExists = DB::table('selemti.receta_cab')->where('id', $recipeId)->exists();
-            if (! $recipeExists) {
-                $createdModRecipes++;
-                if (! $dry) {
-                    DB::table('selemti.receta_cab')->insert([
-                        'id' => $recipeId,
-                        'nombre_plato' => $mod->group_name ? $mod->group_name.' · '.$mod->name : $mod->name,
-                        'codigo_plato_pos' => $modCode,
-                        'categoria_plato' => $mod->group_name,
-                        'porciones_standard' => 1,
-                        'costo_standard_porcion' => 0,
-                        'precio_venta_sugerido' => $mod->price ?? 0,
-                        'activo' => true,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-
-                    DB::table('selemti.receta_version')->insert([
-                        'receta_id' => $recipeId,
-                        'version' => 1,
-                        'descripcion_cambios' => 'Placeholder auto-generado para modificador POS',
-                        'fecha_efectiva' => now()->toDateString(),
-                        'version_publicada' => false,
-                        'created_at' => now(),
-                    ]);
-                }
-            }
-
+            // Solo actualiza modificadores POS explícitamente guardados
             $exists = DB::table('selemti.modificadores_pos')->where('codigo_pos', $modCode)->first();
-            if (! $exists) {
-                $createdMods++;
-            }
-            if (! $dry) {
-                DB::table('selemti.modificadores_pos')->updateOrInsert(
-                    ['codigo_pos' => $modCode],
-                    [
-                        'nombre' => $mod->name,
-                        'tipo' => 'AGREGADO',
-                        'precio_extra' => $mod->price ?? 0,
-                        'receta_modificador_id' => $recipeId,
-                        'activo' => true,
-                    ]
-                );
+
+            if ($exists) {
+                $updatedMods++;
+                if (! $dry) {
+                    DB::table('selemti.modificadores_pos')
+                        ->where('codigo_pos', $modCode)
+                        ->update([
+                            'nombre' => $mod->name,
+                            'precio_extra' => $mod->price ?? 0,
+                        ]);
+                }
+            } else {
+                $unlinkedMods++;
             }
         }
 
-        $this->info("Modificadores registrados: {$createdMods}");
-        $this->info("Recetas placeholder para modificadores: {$createdModRecipes}");
-
-        $this->info('Sincronización de modificadores completada (placeholders creados; pendientes vínculos de ingredientes reales).');
+        $this->info("Modificadores vinculados actualizados: {$updatedMods}");
+        $this->comment("Modificadores POS ignorados/sin vínculo: {$unlinkedMods}");
     }
 
     protected function resolvePosConnection()

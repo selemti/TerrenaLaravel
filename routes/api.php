@@ -46,8 +46,7 @@ use Illuminate\Http\Request;
 */
 use Illuminate\Support\Facades\Route;
 
-
-Route::prefix('reports')->group(function () {
+Route::prefix('reports')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/kpis/sucursal', [ReportsController::class, 'kpisSucursalDia']);
     Route::get('/kpis/terminal', [ReportsController::class, 'kpisTerminalDia']);
     Route::get('/ventas/familia', [ReportsController::class, 'ventasFamilia']);
@@ -66,17 +65,14 @@ Route::prefix('reports')->group(function () {
     Route::get('/purchasing/late-po', [\App\Http\Controllers\Reports\ReportsController::class, 'purchasingLatePO']);
     Route::get('/inventory/over-tolerance', [\App\Http\Controllers\Reports\ReportsController::class, 'inventoryOverTolerance']);
     Route::get('/inventory/top-urgent', [\App\Http\Controllers\Reports\ReportsController::class, 'inventoryTopUrgent']);
-});
 
-// API: reportes Jasper equivalentes (solo lectura)
-Route::prefix('reports')->group(function () {
+    // Jasper-equivalent reports (lectura)
     Route::get('/sales/detail', [SalesDetailController::class, 'index']);
     Route::get('/sales/summary', [SalesSummaryController::class, 'index']);
     Route::get('/sales/balance', [SalesBalanceController::class, 'index']);
     Route::get('/sales/exceptions', [SalesExceptionsController::class, 'index']);
     Route::get('/menu/usage', [MenuUsageController::class, 'index']);
     Route::get('/sales/journal', [SalesJournalController::class, 'index']);
-    // Alias canónico sin prefijo /sales
     Route::get('/journal', [SalesJournalController::class, 'index']);
 });
 
@@ -103,7 +99,7 @@ Route::prefix('auth')->group(function () {
 | MÓDULO: CAJA
 |--------------------------------------------------------------------------
 */
-Route::prefix('caja')->group(function () {
+Route::prefix('caja')->middleware(['auth:sanctum'])->group(function () {
 
     // === Cajas ===
     Route::get('/cajas', [CajasController::class, 'index']);
@@ -169,7 +165,7 @@ Route::prefix('caja')->group(function () {
 | MÓDULO: UNIDADES
 |--------------------------------------------------------------------------
 */
-Route::prefix('unidades')->group(function () {
+Route::prefix('unidades')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/', [UnidadController::class, 'index']);
     Route::get('/{id}', [UnidadController::class, 'show']);
     Route::post('/', [UnidadController::class, 'store']);
@@ -190,7 +186,7 @@ Route::prefix('unidades')->group(function () {
 | MÓDULO: INVENTORY
 |--------------------------------------------------------------------------
 */
-Route::prefix('inventory')->group(function () {
+Route::prefix('inventory')->middleware(['auth:sanctum'])->group(function () {
     // KPIs Dashboard
     Route::get('/kpis', [StockController::class, 'kpis']);
 
@@ -292,7 +288,7 @@ Route::prefix('inventory/transfers')->middleware(['auth:sanctum'])->group(functi
 | MÓDULO: PRODUCCIÓN INTERNA
 |--------------------------------------------------------------------------
 */
-Route::prefix('production')->group(function () {
+Route::prefix('production')->middleware(['auth:sanctum'])->group(function () {
     Route::post('/batch/plan', [ProductionController::class, 'plan']);
     Route::post('/batch/{batch_id}/consume', [ProductionController::class, 'consume']);
     Route::post('/batch/{batch_id}/complete', [ProductionController::class, 'complete']);
@@ -307,19 +303,19 @@ Route::prefix('production')->group(function () {
 Route::prefix('purchasing/replenishment')->middleware(['auth:sanctum'])->group(function () {
     // Listar sugerencias con filtros
     Route::get('/suggestions', [ReplenishmentController::class, 'index']);
-    
+
     // Ver detalle de una sugerencia
     Route::get('/suggestions/{id}', [ReplenishmentController::class, 'show']);
-    
+
     // Calcular sugerencias manualmente
     Route::post('/calculate', [ReplenishmentController::class, 'calculate']);
-    
+
     // Aprobar sugerencia
     Route::post('/suggestions/{id}/approve', [ReplenishmentController::class, 'approve']);
-    
+
     // Rechazar sugerencia
     Route::post('/suggestions/{id}/reject', [ReplenishmentController::class, 'reject']);
-    
+
     // Convertir sugerencia a PR o PO
     Route::post('/suggestions/{id}/convert', [ReplenishmentController::class, 'convert']);
 });
@@ -333,7 +329,7 @@ Route::post('/alerts/{id}/ack', [AlertsController::class, 'acknowledge']);
 | MÓDULO: CATÁLOGOS
 |--------------------------------------------------------------------------
 */
-Route::prefix('catalogs')->group(function () {
+Route::prefix('catalogs')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/categories', [CatalogsController::class, 'categories']);
     Route::get('/almacenes', [CatalogsController::class, 'almacenes']);
     Route::get('/sucursales', [CatalogsController::class, 'sucursales']);
@@ -350,7 +346,7 @@ Route::middleware('auth:sanctum')
 | MÓDULO: PURCHASING (COMPRAS)
 |--------------------------------------------------------------------------
 */
-Route::prefix('purchasing')->group(function () {
+Route::prefix('purchasing')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/suggestions', [PurchaseSuggestionController::class, 'index']);
     Route::post('/suggestions/{id}/approve', [PurchaseSuggestionController::class, 'approve']);
     Route::post('/suggestions/{id}/convert', [PurchaseSuggestionController::class, 'convert']);
@@ -412,7 +408,7 @@ Route::prefix('legacy')->group(function () {
 | MÓDULO: CIERRE DIARIO
 |--------------------------------------------------------------------------
 */
-Route::prefix('close')->group(function () {
+Route::prefix('close')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/status', function (Request $request, \App\Services\Operations\DailyCloseService $dailyCloseService) {
         $date = $request->query('date');
         $branch = $request->query('branch');

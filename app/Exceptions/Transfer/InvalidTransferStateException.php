@@ -19,6 +19,7 @@ class InvalidTransferStateException extends TransferException
             'current_state' => $current,
             'expected_state' => $expected,
         ];
+
         return $e;
     }
 }

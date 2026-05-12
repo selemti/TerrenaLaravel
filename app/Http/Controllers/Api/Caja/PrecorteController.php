@@ -372,16 +372,12 @@ class PrecorteController extends Controller
 
             $sid = (int) $precorte->sesion_id;
 
-            // Verificar que existe el corte POS
-            if (! $this->hasPOSCutBySesion($sid)) {
-                return response()->json([
-                    'ok' => false,
-                    'error' => 'pos_cut_missing',
-                    'require_pos_cut' => true,
-                    'sesion_id' => $sid,
-                    'precorte_id' => $precorteId,
-                ], 412);
-            }
+            // Verificar si existe el Drawer Pull Report en Floreant POS.
+            // Si no existe (terminal sin DPR o corte realizado fuera de tiempo), se permite
+            // continuar usando los totales calculados desde public.transactions, pero se
+            // marca la respuesta con has_pos_cut=false para que el wizard muestre una
+            // advertencia visible al operador sin bloquear el flujo.
+            $hasPOSCut = $this->hasPOSCutBySesion($sid);
 
             // Obtener opening_float
             $sesion = DB::connection('pgsql')->selectOne('SELECT opening_float FROM selemti.sesion_cajon WHERE id = ?', [$sid]);
@@ -445,7 +441,11 @@ class PrecorteController extends Controller
                 'opening_float' => $openingFloat,
                 'precorte_id' => $precorteId,
                 'sesion_id' => $sid,
-                'has_pos_cut' => true,
+                // Indica si existe Drawer Pull Report en Floreant POS para esta sesión.
+                // false = corte realizado sin DPR (fuera de tiempo o terminal sin DPR);
+                // el wizard mostrará advertencia pero permitirá continuar.
+                'has_pos_cut' => $hasPOSCut,
+                'sin_dpr_nota' => $hasPOSCut ? null : 'Corte realizado sin Drawer Pull Report en POS. Los totales del sistema provienen de public.transactions.',
             ]);
 
         } catch (\Exception $e) {

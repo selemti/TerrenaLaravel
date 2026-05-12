@@ -19,8 +19,7 @@ class SalesExceptionsExport implements FromArray, ShouldAutoSize, WithTitle
         protected array $branches,
         protected array $terminals,
         protected Collection $discountSummary,
-    ) {
-    }
+    ) {}
 
     public function array(): array
     {

@@ -21,7 +21,7 @@ class ReceivingService
 
         $reception = $this->receptionService->createReception([
             'purchase_order_id' => $purchaseOrderId,
-            'created_by'        => $userId,
+            'created_by' => $userId,
         ]);
 
         return ['recepcion_id' => $reception->id, 'status' => $reception->status];
@@ -49,8 +49,8 @@ class ReceivingService
         $result = $this->receptionService->validateReception($recepcionId, $userId);
 
         return [
-            'recepcion_id'       => $recepcionId,
-            'status'             => 'VALIDADA',
+            'recepcion_id' => $recepcionId,
+            'status' => 'VALIDADA',
             'requiere_aprobacion' => $result['requiere_aprobacion'] ?? false,
         ];
     }

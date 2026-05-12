@@ -80,6 +80,7 @@ class SalesModsController extends BaseReportController
                 } elseif (is_array($row)) {
                     return $row['branch_key'] ?? $row['branch'] ?? $row['sucursal'] ?? null;
                 }
+
                 return null;
             }))
             ->filter()
@@ -350,7 +351,7 @@ class SalesModsController extends BaseReportController
                 ->orderBy('id')
                 ->get();
 
-            return $terminals->map(fn($t) => [
+            return $terminals->map(fn ($t) => [
                 'key' => (string) $t->id,
                 'label' => $t->name ?? "Terminal {$t->id}",
             ])->toArray();
@@ -387,6 +388,7 @@ class SalesModsController extends BaseReportController
                 } elseif (is_array($row)) {
                     return $row['sucursal'] ?? $row['branch_key'] ?? $row['branch'] ?? null;
                 }
+
                 return null;
             })->filter())
             ->filter()
@@ -401,7 +403,7 @@ class SalesModsController extends BaseReportController
             if ($branchId !== null) {
                 $candidate = $branchCandidates->firstWhere('key', $branchId);
                 // Generate color based on branchId since 'color' key doesn't exist in extractBranchesFromNewData
-                $branchColors[$branchId] = '#' . substr(md5($branchId), 0, 6);
+                $branchColors[$branchId] = '#'.substr(md5($branchId), 0, 6);
                 $branchLabels[$branchId] = $candidate ? $candidate['label'] : "Sucursal {$branchId}";
             }
         }

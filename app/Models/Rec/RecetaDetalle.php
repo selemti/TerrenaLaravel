@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class RecetaDetalle extends Model
 {
     protected $table = 'selemti.receta_det';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
 
     protected $fillable = [

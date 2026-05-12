@@ -23,6 +23,8 @@ class TransferLine extends Model
         'qty',
         'um_id',
         'batch_id',
+        'cantidad_despachada',
+        'cantidad_recibida',
     ];
 
     protected $casts = [

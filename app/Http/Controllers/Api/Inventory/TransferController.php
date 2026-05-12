@@ -12,9 +12,9 @@ use RuntimeException;
 
 /**
  * API REST para gestión de transferencias entre almacenes
- * 
+ *
  * Flujo completo: SOLICITADA → APROBADA → EN_TRANSITO → RECIBIDA → POSTEADA
- * 
+ *
  * @version 1.0 - Sprint 1 (INV-003)
  */
 class TransferController extends Controller
@@ -28,18 +28,15 @@ class TransferController extends Controller
 
     /**
      * Listar transferencias con filtros
-     * 
+     *
      * GET /api/inventory/transfers
-     * 
+     *
      * Query params:
      * - estado: string (SOLICITADA, APROBADA, EN_TRANSITO, RECIBIDA, POSTEADA, CANCELADA)
      * - origen_almacen_id: int
      * - destino_almacen_id: int
      * - fecha_desde: date (Y-m-d)
      * - fecha_hasta: date (Y-m-d)
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
@@ -59,9 +56,9 @@ class TransferController extends Controller
 
     /**
      * Crear nueva transferencia en estado SOLICITADA
-     * 
+     *
      * POST /api/inventory/transfers
-     * 
+     *
      * Body:
      * {
      *   "origen_almacen_id": 1,
@@ -76,9 +73,6 @@ class TransferController extends Controller
      *   ],
      *   "observaciones": "Transferencia urgente"
      * }
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
@@ -133,12 +127,8 @@ class TransferController extends Controller
 
     /**
      * Aprobar transferencia (SOLICITADA → APROBADA)
-     * 
+     *
      * POST /api/inventory/transfers/{id}/approve
-     * 
-     * @param int $id
-     * @param Request $request
-     * @return JsonResponse
      */
     public function approve(int $id, Request $request): JsonResponse
     {
@@ -170,17 +160,13 @@ class TransferController extends Controller
 
     /**
      * Despachar transferencia (APROBADA → EN_TRANSITO)
-     * 
+     *
      * POST /api/inventory/transfers/{id}/dispatch
-     * 
+     *
      * Body:
      * {
      *   "numero_guia": "GUIA-12345"
      * }
-     * 
-     * @param int $id
-     * @param Request $request
-     * @return JsonResponse
      */
     public function dispatch(int $id, Request $request): JsonResponse
     {
@@ -220,9 +206,9 @@ class TransferController extends Controller
 
     /**
      * Recibir transferencia (EN_TRANSITO → RECIBIDA)
-     * 
+     *
      * POST /api/inventory/transfers/{id}/receive
-     * 
+     *
      * Body:
      * {
      *   "lineas": [
@@ -234,10 +220,6 @@ class TransferController extends Controller
      *   ],
      *   "observaciones_generales": "Todo OK"
      * }
-     * 
-     * @param int $id
-     * @param Request $request
-     * @return JsonResponse
      */
     public function receive(int $id, Request $request): JsonResponse
     {
@@ -288,17 +270,13 @@ class TransferController extends Controller
 
     /**
      * Postear transferencia a inventario (RECIBIDA → POSTEADA)
-     * 
+     *
      * POST /api/inventory/transfers/{id}/post
-     * 
+     *
      * Genera:
      * - Movimiento de salida en almacén origen (TRASPASO_OUT)
      * - Movimiento de entrada en almacén destino (TRASPASO_IN)
      * - Actualiza estado a POSTEADA (irreversible)
-     * 
-     * @param int $id
-     * @param Request $request
-     * @return JsonResponse
      */
     public function post(int $id, Request $request): JsonResponse
     {

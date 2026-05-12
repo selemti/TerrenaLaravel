@@ -13,14 +13,14 @@ use Illuminate\Validation\Rule;
 
 /**
  * API REST para gestión de sugerencias de replenishment
- * 
+ *
  * Endpoints:
  * - GET /api/purchasing/replenishment/suggestions - Listar sugerencias
  * - POST /api/purchasing/replenishment/calculate - Disparar cálculo manual
  * - POST /api/purchasing/replenishment/suggestions/{id}/approve - Aprobar sugerencia
  * - POST /api/purchasing/replenishment/suggestions/{id}/reject - Rechazar sugerencia
  * - POST /api/purchasing/replenishment/suggestions/{id}/convert - Convertir a PR/PO
- * 
+ *
  * @see ReplenishmentService
  * @see CalculateReplenishmentSuggestions
  */
@@ -35,9 +35,9 @@ class ReplenishmentController extends Controller
 
     /**
      * Listar sugerencias de replenishment con filtros
-     * 
+     *
      * GET /api/purchasing/replenishment/suggestions
-     * 
+     *
      * Query params:
      * - sucursal_id: int (opcional)
      * - almacen_id: int (opcional)
@@ -47,9 +47,6 @@ class ReplenishmentController extends Controller
      * - desde: date (opcional, formato Y-m-d)
      * - hasta: date (opcional, formato Y-m-d)
      * - per_page: int (default 15)
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
@@ -106,18 +103,15 @@ class ReplenishmentController extends Controller
 
     /**
      * Disparar cálculo manual de sugerencias
-     * 
+     *
      * POST /api/purchasing/replenishment/calculate
-     * 
+     *
      * Body:
      * - sucursal_id: int (opcional)
      * - almacen_id: int (opcional)
      * - dias_analisis: int (default 7)
      * - auto_aprobar: bool (default false)
      * - async: bool (default true) - Si true, dispara job; si false, ejecuta sync
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function calculate(Request $request): JsonResponse
     {
@@ -179,16 +173,12 @@ class ReplenishmentController extends Controller
 
     /**
      * Aprobar una sugerencia
-     * 
+     *
      * POST /api/purchasing/replenishment/suggestions/{id}/approve
-     * 
+     *
      * Body:
      * - qty_aprobada: float (opcional, default = qty_sugerida)
      * - notas: string (opcional)
-     * 
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
      */
     public function approve(Request $request, int $id): JsonResponse
     {
@@ -225,15 +215,11 @@ class ReplenishmentController extends Controller
 
     /**
      * Rechazar una sugerencia
-     * 
+     *
      * POST /api/purchasing/replenishment/suggestions/{id}/reject
-     * 
+     *
      * Body:
      * - motivo: string (requerido)
-     * 
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
      */
     public function reject(Request $request, int $id): JsonResponse
     {
@@ -268,18 +254,14 @@ class ReplenishmentController extends Controller
 
     /**
      * Convertir sugerencia a Purchase Request o Production Order
-     * 
+     *
      * POST /api/purchasing/replenishment/suggestions/{id}/convert
-     * 
+     *
      * Body:
      * - tipo: string (requerido) - 'purchase_request' o 'production_order'
      * - qty: float (opcional, usa qty_aprobada o qty_sugerida)
      * - notas: string (opcional)
      * - ... otros params específicos del tipo
-     * 
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
      */
     public function convert(Request $request, int $id): JsonResponse
     {
@@ -352,18 +334,15 @@ class ReplenishmentController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al convertir sugerencia: ' . $e->getMessage(),
+                'message' => 'Error al convertir sugerencia: '.$e->getMessage(),
             ], 500);
         }
     }
 
     /**
      * Ver detalle de una sugerencia
-     * 
+     *
      * GET /api/purchasing/replenishment/suggestions/{id}
-     * 
-     * @param int $id
-     * @return JsonResponse
      */
     public function show(int $id): JsonResponse
     {

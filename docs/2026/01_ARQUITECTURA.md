@@ -39,6 +39,7 @@
 │  │         Services Layer          │                        │
 │  │  Caja | Inventory | Purchasing  │                        │
 │  │  Recetas | Reports | PosSync    │                        │
+│  │  [Motor Recursivo (Doc 24)]     │                        │
 │  └──────────────┬─────────────────┘                        │
 │                 │                                           │
 │  ┌──────────────▼─────────────────┐                        │
@@ -74,9 +75,10 @@
 
 ### Módulos de Inventario
 5. **Catálogos** — Unidades, almacenes, sucursales, proveedores, políticas de stock
-6. **Items / Insumos** — Maestro de artículos con categorías, presentaciones, unidades
-7. **Stock** — Nivel actual por almacén/lote, valorizado (WAC)
-8. **Movimientos** — Entradas, salidas, ajustes, mermas
+6. **Items / Insumos** — Maestro de artículos genéricos (sin marcas) con familias y UOM base
+7. **Presentaciones de Compra** — Vínculo entre ítems genéricos y productos específicos por proveedor (marcas)
+8. **Stock** — Nivel actual por almacén/lote, valorizado (WAC)
+9. **Movimientos** — Entradas, salidas, ajustes, mermas
 9. **Conteos Físicos** — Inventario cíclico/completo con aprobación
 10. **Lotes** — Trazabilidad FEFO, caducidad, APPCC
 11. **Transferencias** — Inter-almacén con aprobación y despacho
@@ -114,7 +116,8 @@ SesionCajon (apertura)
         └─► PosConsumptionService (consumo teórico batch)
               └─► Precorte (totales por forma de pago)
                     └─► Postcorte (declarado vs sistema)
-                          └─► Conciliación (diferencias, alertas)
+                    └─► Postcorte (declarado vs sistema)
+                          └─► Conciliación (ver [Doc 07 - SSOT Ventas](file:///C:/xampp3/htdocs/TerrenaLaravel/docs/2026/07_SSOT_VENTAS_Y_DESCUENTOS.md) y [Doc 17 - Cierre F1](file:///C:/xampp3/htdocs/TerrenaLaravel/docs/2026/17_CIERRE_FORMAL_FASE_1.md))
 ```
 
 ### Flujo de Inventario
@@ -124,7 +127,7 @@ OC (PurchaseOrder)
         └─► Stock (InventoryMovement → lotes)
               ├─► Transferencia (TransferService)
               ├─► Producción (ProductionService → consume insumos)
-              │     └─► Consumo POS (PosConsumptionService)
+              │     └─► Consumo POS (Recursive Engine v2.5)
               └─► Conteo Físico (InventoryCountService → ajustes)
 ```
 
@@ -144,10 +147,11 @@ AlertEngine (nivel < punto de reorden)
 |----------|---------|--------|
 | Costeo de inventario | WAC (Costo Promedio Ponderado) | Estándar en restaurantes MX |
 | Lotes/caducidad | FEFO recomendado, PEPS configurable | APPCC compliance |
-| Consumo POS | Batch cada 60s (job) | Sin latencia en POS |
+| Consumo POS | Recursivo / Stock-Aware (v2.5) | Prioriza mermar stock producido. |
 | Schema dual | public (Floreant) + selemti (ERP) | Evitar modificar Floreant |
 | Auth | Sanctum para web, JWT para API móvil | Multi-cliente |
 | Unidades | Canónica única por ítem + conversiones | Evitar inconsistencias |
+| Desacoplamiento | Insumo (Genérico) vs Presentación (Compra) | Posibilita WAC multimarca y limpieza de BOM |
 | Motor de alertas | AlertEngine genérico con reglas | Extensible a cualquier módulo |
 
 ---

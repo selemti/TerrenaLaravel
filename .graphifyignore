@@ -1,0 +1,12 @@
+vendor/
+node_modules/
+public/build/
+storage/logs/
+storage/framework/
+bootstrap/cache/
+.git/
+.phpunit.result.cache
+*.log
+*.zip
+*.bak
+*.sqlite

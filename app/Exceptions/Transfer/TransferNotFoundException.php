@@ -13,6 +13,7 @@ class TransferNotFoundException extends TransferException
     {
         $e = new static("Transfer '{$transferId}' not found.");
         $e->context = ['transfer_id' => $transferId];
+
         return $e;
     }
 }

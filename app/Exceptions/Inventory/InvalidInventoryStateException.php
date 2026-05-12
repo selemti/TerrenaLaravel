@@ -19,6 +19,7 @@ class InvalidInventoryStateException extends InventoryException
             'current_state' => $current,
             'expected_state' => $expected,
         ];
+
         return $e;
     }
 }

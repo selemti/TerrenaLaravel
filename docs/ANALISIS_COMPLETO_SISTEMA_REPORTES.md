@@ -1,3 +1,8 @@
+> [!CAUTION]
+> **ESTADO HISTÓRICO / CONTAMINADO**
+> Esta documentación fue generada por un agente IA previo (Diciembre 2025) asumiendo una deducción falaz: Creó algoritmos, funciones y un dictamen alarmista (Error del 264%) sobre métricas que jamás existieron en el repositorio base de datos (`total_ventas_brutas`, `calidad_reporte`).
+> **El modelo de postcorte fue homologado posteriormente al DDL original de Producción en Abril 2026. Esta documentación se deja estrictamente como antecedente forense y no debe guiar el desarrollo actual.**
+
 # 📊 Análisis Completo del Sistema de Reportes - Floreant POS Integration
 
 ## 📋 Overview
