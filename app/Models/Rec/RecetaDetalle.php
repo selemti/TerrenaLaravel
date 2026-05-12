@@ -2,7 +2,7 @@
 
 namespace App\Models\Rec;
 
-use App\Models\Item;
+use App\Models\Inv\Item;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 

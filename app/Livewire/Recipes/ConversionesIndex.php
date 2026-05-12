@@ -3,7 +3,7 @@
 namespace App\Livewire\Recipes;
 
 use App\Models\Inv\ConversionUnidad;
-use App\Models\Inv\Unidad;
+use App\Models\Catalogs\Unidad;
 use Livewire\Component;
 use Livewire\WithPagination;
 

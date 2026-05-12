@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Item;
+use App\Models\Inv\Item;
 use App\Models\ReplenishmentSuggestion;
 use App\Models\Sucursal;
 use Illuminate\Console\Command;

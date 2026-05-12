@@ -2,7 +2,7 @@
 
 namespace App\Livewire\InventoryCount;
 
-use App\Models\Item;
+use App\Models\Inv\Item;
 use App\Services\Inventory\InventoryCountService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

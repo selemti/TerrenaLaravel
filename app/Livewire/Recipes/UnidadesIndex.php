@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Recipes;
 
-use App\Models\Inv\Unidad;
+use App\Models\Catalogs\Unidad;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;

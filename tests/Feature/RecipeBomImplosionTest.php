@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Item;
+use App\Models\Inv\Item;
 use App\Models\Rec\Receta;
 use App\Models\Rec\RecetaDetalle;
 use Illuminate\Support\Facades\DB;

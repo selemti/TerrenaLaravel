@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Unidades;
 
 use App\Http\Controllers\Controller;
-use App\Models\Inv\Unidad;
+use App\Models\Catalogs\Unidad;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 

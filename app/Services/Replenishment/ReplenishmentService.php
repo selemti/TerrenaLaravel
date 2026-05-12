@@ -2,7 +2,7 @@
 
 namespace App\Services\Replenishment;
 
-use App\Models\Item;
+use App\Models\Inv\Item;
 use App\Models\ReplenishmentSuggestion;
 use App\Models\StockPolicy;
 use App\Services\Inventory\ProductionService;
