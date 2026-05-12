@@ -51,6 +51,13 @@ class ProductionService
                 'waste' => 0.0,
             ];
 
+            $allItemIds = collect($inputs)->pluck('item_id')
+                ->merge(collect($outputs)->pluck('item_id'))
+                ->merge(collect($wastes)->pluck('item_id'))
+                ->filter()
+                ->unique();
+            $itemsMap = Item::with(['uom', 'uomCompra'])->findMany($allItemIds)->keyBy('id');
+
             foreach ($inputs as $input) {
                 $normalized = $this->normalizeInput($input);
                 $normalized['production_order_id'] = $orderId;
@@ -59,7 +66,7 @@ class ProductionService
 
                 DB::table('production_order_inputs')->insert($normalized);
 
-                $inputItem = Item::with(['uom', 'uomCompra'])->find($normalized['item_id']);
+                $inputItem = $itemsMap->get($normalized['item_id']);
                 $inputBase = $uomSvc->resolveToBase(
                     $normalized['qty'],
                     $normalized['uom'] ?? $inputItem?->uomCompra?->clave,
@@ -93,7 +100,7 @@ class ProductionService
 
                 $totals['produced'] += $normalized['qty'];
 
-                $outputItem = Item::with(['uom', 'uomCompra'])->find($normalized['item_id']);
+                $outputItem = $itemsMap->get($normalized['item_id']);
                 $outputBase = $uomSvc->resolveToBase(
                     $normalized['qty'],
                     $normalized['uom'] ?? $outputItem?->uomCompra?->clave,
@@ -127,7 +134,7 @@ class ProductionService
 
                 $totals['waste'] += $normalized['qty'];
 
-                $wasteItem = Item::with(['uom', 'uomCompra'])->find($normalized['item_id']);
+                $wasteItem = $itemsMap->get($normalized['item_id']);
                 $wasteBase = $uomSvc->resolveToBase(
                     $normalized['qty'],
                     $normalized['uom'] ?? $wasteItem?->uomCompra?->clave,

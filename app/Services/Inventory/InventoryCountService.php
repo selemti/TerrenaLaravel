@@ -12,9 +12,15 @@ use Illuminate\Support\Str;
 
 class InventoryCountService
 {
-    protected string $connection = 'pgsql';
+    protected string $connection;
 
-    protected string $schema = 'selemti';
+    protected string $schema;
+
+    public function __construct()
+    {
+        $this->connection = config('database.default_inventory', 'pgsql');
+        $this->schema = config('database.inventory_schema', 'selemti');
+    }
 
     public function open(array $header, array $lines): int
     {
@@ -38,8 +44,11 @@ class InventoryCountService
 
             $totals = ['items' => 0.0, 'variance' => 0.0];
 
+            $itemIds = collect($lines)->pluck('item_id')->filter()->unique();
+            $itemsMap = Item::with('uom')->findMany($itemIds)->keyBy('id');
+
             foreach ($lines as $line) {
-                $payload = $this->normalizeLine($line);
+                $payload = $this->normalizeLine($line, $itemsMap);
                 $payload['inventory_count_id'] = $countId;
                 $payload['created_at'] = $now;
                 $payload['updated_at'] = $now;
@@ -72,8 +81,11 @@ class InventoryCountService
                 throw new ItemNotFoundException('Conteo de inventario no encontrado');
             }
 
+            $itemIds = collect($lines)->pluck('item_id')->filter()->unique();
+            $itemsMap = Item::with('uom')->findMany($itemIds)->keyBy('id');
+
             foreach ($lines as $line) {
-                $payload = $this->normalizeLine($line);
+                $payload = $this->normalizeLine($line, $itemsMap);
                 $payload['updated_at'] = $now;
 
                 $existing = $this->table('inventory_count_lines')
@@ -108,7 +120,8 @@ class InventoryCountService
                         $userId,
                         $now,
                         $count->sucursal_id,
-                        $count->almacen_id
+                        $count->almacen_id,
+                        $itemsMap
                     );
                 } else {
                     $payload['inventory_count_id'] = $countId;
@@ -128,7 +141,8 @@ class InventoryCountService
                         $userId,
                         $now,
                         $count->sucursal_id,
-                        $count->almacen_id
+                        $count->almacen_id,
+                        $itemsMap
                     );
                 }
             }
@@ -146,7 +160,7 @@ class InventoryCountService
         });
     }
 
-    protected function normalizeLine(array $line): array
+    protected function normalizeLine(array $line, ?\Illuminate\Support\Collection $itemsMap = null): array
     {
         $expected = (float) ($line['expected_qty'] ?? $line['qty_teorica'] ?? 0);
         $counted = (float) ($line['counted_qty'] ?? $line['qty_contada'] ?? 0);
@@ -158,8 +172,8 @@ class InventoryCountService
         $batchId = Arr::get($line, 'inventory_batch_id');
         $batchId = ($batchId === null || $batchId === '') ? null : (int) $batchId;
 
-        // Usar UOM base del item como fuente de verdad
-        $itemModel = Item::with('uom')->find(Arr::get($line, 'item_id'));
+        $itemId = Arr::get($line, 'item_id');
+        $itemModel = $itemsMap?->get($itemId) ?? Item::with('uom')->find($itemId);
         $uomBase = $itemModel?->uom?->clave ?? Arr::get($line, 'uom', 'PZ');
 
         return [
@@ -205,13 +219,14 @@ class InventoryCountService
         int $userId,
         CarbonInterface $timestamp,
         ?string $branchId = null,
-        ?string $warehouseId = null
+        ?string $warehouseId = null,
+        ?\Illuminate\Support\Collection $itemsMap = null
     ): void {
         if (abs($variance) < 0.000001) {
             return;
         }
 
-        $itemModel = Item::find($itemId);
+        $itemModel = $itemsMap?->get($itemId) ?? Item::find($itemId);
 
         $this->table('mov_inv')->insert([
             'item_id' => $itemId,

@@ -199,6 +199,9 @@ class ReceptionService
 
             $uomSvc = app(UomConversionService::class);
 
+            $itemIds = $lines->pluck('item_id')->unique();
+            $itemsMap = Item::with(['uom', 'uomCompra'])->findMany($itemIds)->keyBy('id');
+
             foreach ($lines as $line) {
                 $meta = json_decode($line->meta, true) ?? [];
                 $fechaRecepcion = $reception->fecha_recepcion
@@ -210,7 +213,7 @@ class ReceptionService
                 $ubicacion = 'UBIC-'.str_pad((string) ($reception->almacen_id ?? 1), 5, '0', STR_PAD_LEFT);
 
                 // Resolver cantidad a unidades base del item
-                $item = Item::with(['uom', 'uomCompra'])->find($line->item_id);
+                $item = $itemsMap->get($line->item_id);
                 $qtyPresentacion = (float) ($meta['qty_pack'] ?? $line->qty);
                 $uomCompra = $meta['uom_purchase'] ?? $item?->uomCompra?->clave;
 

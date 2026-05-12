@@ -69,7 +69,6 @@ class ReplenishmentService
 
         $policies = $query->get();
 
-        // Telemetría: Log de políticas encontradas
         \Log::info('[ReplenishmentService] Políticas encontradas', [
             'total' => $policies->count(),
             'sucursal_id' => $sucursalId,
@@ -77,6 +76,8 @@ class ReplenishmentService
             'algoritmo' => $algoritmo,
             'dias_analisis' => $diasAnalisis,
         ]);
+
+        $itemsMap = Item::findMany($policies->pluck('item_id')->filter()->unique())->keyBy('id');
 
         foreach ($policies as $policy) {
             try {
@@ -115,7 +116,7 @@ class ReplenishmentService
                         : null;
 
                     // Determinar tipo (COMPRA vs PRODUCCION)
-                    $item = Item::find($policy->item_id);
+                    $item = $itemsMap->get($policy->item_id);
                     $tipo = $this->determinarTipo($item);
 
                     // Calcular cantidad sugerida
