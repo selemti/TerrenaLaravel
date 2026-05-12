@@ -2,12 +2,13 @@
 
 namespace App\Services\Inventory;
 
+use App\Exceptions\Inventory\InventoryValidationException;
+use App\Exceptions\Inventory\ItemNotFoundException;
+use App\Models\Inv\Item;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
-use RuntimeException;
 
 class InventoryCountService
 {
@@ -68,7 +69,7 @@ class InventoryCountService
             $count = $this->table('inventory_counts')->lockForUpdate()->find($countId);
 
             if (! $count) {
-                throw new RuntimeException('Conteo de inventario no encontrado');
+                throw new ItemNotFoundException('Conteo de inventario no encontrado');
             }
 
             foreach ($lines as $line) {
@@ -151,11 +152,15 @@ class InventoryCountService
         $counted = (float) ($line['counted_qty'] ?? $line['qty_contada'] ?? 0);
 
         if (! Arr::has($line, 'item_id')) {
-            throw new InvalidArgumentException('inventory count line requires item_id');
+            throw new InventoryValidationException('inventory count line requires item_id');
         }
 
         $batchId = Arr::get($line, 'inventory_batch_id');
         $batchId = ($batchId === null || $batchId === '') ? null : (int) $batchId;
+
+        // Usar UOM base del item como fuente de verdad
+        $itemModel = Item::with('uom')->find(Arr::get($line, 'item_id'));
+        $uomBase = $itemModel?->uom?->clave ?? Arr::get($line, 'uom', 'PZ');
 
         return [
             'item_id' => (string) Arr::get($line, 'item_id'),
@@ -163,7 +168,7 @@ class InventoryCountService
             'qty_teorica' => $expected,
             'qty_contada' => $counted,
             'qty_variacion' => $counted - $expected,
-            'uom' => Arr::get($line, 'uom', 'UND'),
+            'uom' => $uomBase,
             'motivo' => Arr::get($line, 'reason'),
             'meta' => $this->buildMeta($line),
         ];
@@ -206,22 +211,22 @@ class InventoryCountService
             return;
         }
 
+        $itemModel = Item::find($itemId);
+
         $this->table('mov_inv')->insert([
             'item_id' => $itemId,
-            'inventory_batch_id' => $batchId,
+            'lote_id' => $batchId,
             'tipo' => 'AJUSTE',
-            'qty' => $variance,
-            'uom' => $uom,
+            'cantidad' => $variance,
+            'qty_original' => $variance,
+            'uom_original_id' => $itemModel?->unidad_medida_id,
+            'costo_unit' => 0,
             'sucursal_id' => $branchId,
-            'almacen_id' => $warehouseId,
             'ref_tipo' => 'inventory_count',
             'ref_id' => $countId,
-            'user_id' => $userId ?: null,
+            'usuario_id' => $userId ?: null,
             'ts' => $timestamp,
-            'meta' => json_encode(['origen' => 'conteo']),
-            'notas' => 'Ajuste por conteo',
             'created_at' => $timestamp,
-            'updated_at' => $timestamp,
         ]);
     }
 

@@ -2,10 +2,13 @@
 
 namespace App\Services\Inventory;
 
-use Illuminate\Support\Facades\DB;
+use App\Exceptions\Inventory\InvalidInventoryStateException;
+use App\Exceptions\Inventory\ItemNotFoundException;
+use App\Models\Inv\Item;
+use App\Services\Inventory\UomConversionService;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
 
 /**
  * Servicio para gestión de recepciones de inventario
@@ -139,13 +142,11 @@ class ReceptionService
         $reception = DB::table('selemti.recepcion_cab')->where('id', $receptionId)->first();
 
         if (!$reception) {
-            throw new InvalidArgumentException("Recepción {$receptionId} no encontrada");
+            throw ItemNotFoundException::reception($receptionId);
         }
 
         if ($reception->estado !== self::ESTADO_BORRADOR) {
-            throw new InvalidArgumentException(
-                "Solo se pueden validar recepciones en estado BORRADOR (actual: {$reception->estado})"
-            );
+            throw InvalidInventoryStateException::transition($receptionId, $reception->estado, self::ESTADO_BORRADOR);
         }
 
         DB::table('selemti.recepcion_cab')
@@ -180,13 +181,11 @@ class ReceptionService
             $reception = DB::table('selemti.recepcion_cab')->where('id', $receptionId)->first();
 
             if (!$reception) {
-                throw new InvalidArgumentException("Recepción {$receptionId} no encontrada");
+                throw ItemNotFoundException::reception($receptionId);
             }
 
             if ($reception->estado !== self::ESTADO_VALIDADA) {
-                throw new InvalidArgumentException(
-                    "Solo se pueden postear recepciones VALIDADAS (actual: {$reception->estado})"
-                );
+                throw InvalidInventoryStateException::transition($receptionId, $reception->estado, self::ESTADO_VALIDADA);
             }
 
             // Obtener líneas de detalle
@@ -195,6 +194,8 @@ class ReceptionService
                 ->get();
 
             $now = now();
+
+            $uomSvc = app(UomConversionService::class);
 
             foreach ($lines as $line) {
                 $meta = json_decode($line->meta, true) ?? [];
@@ -206,7 +207,19 @@ class ReceptionService
                     : $now->copy()->addYear()->toDateString();
                 $ubicacion = 'UBIC-' . str_pad((string) ($reception->almacen_id ?? 1), 5, '0', STR_PAD_LEFT);
 
-                // Crear lote de inventario alineado a BD real
+                // Resolver cantidad a unidades base del item
+                $item = Item::with(['uom', 'uomCompra'])->find($line->item_id);
+                $qtyPresentacion = (float) ($meta['qty_pack'] ?? $line->qty);
+                $uomCompra = $meta['uom_purchase'] ?? $item?->uomCompra?->clave;
+
+                $cantidadBase = $item
+                    ? $uomSvc->resolveToBase($qtyPresentacion, $uomCompra, $item)
+                    : $line->qty;
+
+                $uomBaseClave = $item?->uom?->clave ?? ($meta['uom_base'] ?? 'PZ');
+                $uomCompraId  = $item?->unidad_compra_id;
+
+                // Crear lote de inventario en unidades base
                 $batchId = DB::table('selemti.inventory_batch')->insertGetId([
                     'item_id' => $line->item_id,
                     'lote_proveedor' => $meta['lote_proveedor'] ?? (string) Str::uuid(),
@@ -214,8 +227,8 @@ class ReceptionService
                     'fecha_caducidad' => $fechaCaducidad,
                     'temperatura_recepcion' => $line->temperatura,
                     'documento_url' => $line->doc_url,
-                    'cantidad_original' => $line->qty,
-                    'cantidad_actual' => $line->qty,
+                    'cantidad_original' => $cantidadBase,
+                    'cantidad_actual' => $cantidadBase,
                     'estado' => 'ACTIVO',
                     'ubicacion_id' => $ubicacion,
                     'unit_cost' => $line->costo_unit ?? 0,
@@ -228,12 +241,13 @@ class ReceptionService
                     ->where('id', $line->id)
                     ->update(['batch_id' => $batchId]);
 
-                // Generar movimiento de inventario alineado a mov_inv
-                // NOTE: sucursal_id stores almacen_id (warehouse) for stock tracking at warehouse level
+                // Movimiento en unidades base; qty_original conserva la cantidad en UOM compra
                 DB::table('selemti.mov_inv')->insert([
                     'item_id' => $line->item_id,
                     'tipo' => 'ENTRADA',
-                    'cantidad' => $line->qty,
+                    'cantidad' => $cantidadBase,
+                    'qty_original' => $qtyPresentacion,
+                    'uom_original_id' => $uomCompraId,
                     'costo_unit' => $line->costo_unit ?? 0,
                     'sucursal_id' => $reception->almacen_id !== null ? (string) $reception->almacen_id : null,
                     'ref_tipo' => 'recepcion',

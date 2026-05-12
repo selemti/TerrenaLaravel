@@ -2,12 +2,15 @@
 
 namespace App\Services\Inventory;
 
+use App\Exceptions\Inventory\InventoryValidationException;
+use App\Exceptions\Transfer\InvalidTransferStateException;
+use App\Exceptions\Transfer\TransferNotFoundException;
+use App\Models\Inv\Item;
 use App\Models\Inventory\Movement;
 use App\Models\Inventory\TransferHeader;
 use App\Models\Inventory\TransferLine;
+use App\Services\Inventory\UomConversionService;
 use Illuminate\Support\Facades\DB;
-use InvalidArgumentException;
-use RuntimeException;
 
 /**
  * Servicio que gestiona transferencias internas entre almacenes.
@@ -30,11 +33,11 @@ class TransferService
         $this->guardPositiveId($userId, 'user');
 
         if ($fromAlmacenId === $toAlmacenId) {
-            throw new InvalidArgumentException('Almacén origen y destino deben ser diferentes.');
+            throw new InventoryValidationException('Almacén origen y destino deben ser diferentes.');
         }
 
         if (empty($lines)) {
-            throw new InvalidArgumentException('At least one line item is required for a transfer.');
+            throw new InventoryValidationException('At least one line item is required for a transfer.');
         }
 
         return DB::transaction(function () use ($fromAlmacenId, $toAlmacenId, $lines, $userId) {
@@ -46,11 +49,16 @@ class TransferService
             ]);
 
             foreach ($lines as $line) {
+                // Usar la UOM base del item como unidad del traspaso por defecto.
+                // Si el llamador especifica um_id (ej: UI envía PZ para cuernitos), se respeta.
+                $item = Item::with('uom')->find($line['item_id']);
+                $umId = $line['um_id'] ?? $item?->unidad_medida_id ?? null;
+
                 TransferLine::create([
                     'traspaso_id' => $header->id,
                     'item_id' => $line['item_id'],
                     'qty' => $line['qty_requested'] ?? $line['cantidad'] ?? 0,
-                    'um_id' => 2, // Default L (Litro) - TODO: obtener de item
+                    'um_id' => $umId,
                 ]);
             }
 
@@ -80,7 +88,7 @@ class TransferService
             $transfer = TransferHeader::with('lineas.item')->findOrFail($transferId);
 
             if (! $transfer->canApprove()) {
-                throw new RuntimeException("Transfer must be in SOLICITADA status to be approved. Current: {$transfer->estado}");
+                throw InvalidTransferStateException::transition($transferId, $transfer->estado, 'SOLICITADA');
             }
 
             // Optimized: Fetch all required stock data in a single query
@@ -102,9 +110,7 @@ class TransferService
                 $stock = $stocks->get($line->item_id, 0);
 
                 if ($stock < $line->qty) {
-                    throw new RuntimeException(
-                        "Stock insuficiente para item {$line->item_id}. Disponible: {$stock}, Requerido: {$line->qty}"
-                    );
+                    throw \App\Exceptions\Inventory\InsufficientStockException::forItem($line->item_id, $line->qty, $stock);
                 }
             }
 
@@ -140,13 +146,13 @@ class TransferService
             $transfer = TransferHeader::with('lineas')->findOrFail($transferId);
 
             if (! $transfer->canShip()) {
-                throw new RuntimeException("Transfer must be in APROBADA status to be shipped. Current: {$transfer->estado}");
+                throw InvalidTransferStateException::transition($transferId, $transfer->estado, 'APROBADA');
             }
 
             // Actualizar cantidades despachadas (igual a solicitadas por defecto)
             foreach ($transfer->lineas as $line) {
                 $line->update([
-                    'cantidad_despachada' => $line->cantidad,
+                    'cantidad_despachada' => $line->qty,
                 ]);
             }
 
@@ -180,14 +186,14 @@ class TransferService
         $this->guardPositiveId($userId, 'user');
 
         if (empty($receivedLines)) {
-            throw new InvalidArgumentException('Received lines data is required.');
+            throw new InventoryValidationException('Received lines data is required.');
         }
 
         return DB::transaction(function () use ($transferId, $receivedLines, $userId) {
             $transfer = TransferHeader::with('lineas')->findOrFail($transferId);
 
             if (! $transfer->canReceive()) {
-                throw new RuntimeException("Transfer must be in EN_TRANSITO status to be received. Current: {$transfer->estado}");
+                throw InvalidTransferStateException::transition($transferId, $transfer->estado, 'EN_TRANSITO');
             }
 
             // Actualizar cantidades recibidas y observaciones
@@ -195,7 +201,7 @@ class TransferService
                 $line = $transfer->lineas()->where('id', $lineData['line_id'])->first();
 
                 if (! $line) {
-                    throw new InvalidArgumentException("Line {$lineData['line_id']} not found in transfer {$transferId}");
+                    throw new InventoryValidationException("Line {$lineData['line_id']} not found in transfer {$transferId}");
                 }
 
                 $line->update([
@@ -248,35 +254,66 @@ class TransferService
         return DB::transaction(function () use ($transferId, $userId) {
             $transfer = TransferHeader::with('lineas')->findOrFail($transferId);
 
-            // Permitir postear desde APROBADA (simplificado, sin paso RECIBIDA)
-            if ($transfer->estado !== TransferHeader::STATUS_APROBADA) {
-                throw new RuntimeException("Transfer must be in APROBADA status to be posted. Current: {$transfer->estado}");
+            $postableStatuses = [TransferHeader::STATUS_APROBADA, TransferHeader::STATUS_RECIBIDA];
+            if (! in_array($transfer->estado, $postableStatuses)) {
+                throw InvalidTransferStateException::transition($transferId, $transfer->estado, 'APROBADA|RECIBIDA');
             }
 
             $movimientos = [];
+            $uomSvc = app(UomConversionService::class);
 
             foreach ($transfer->lineas as $line) {
-                // Movimiento de SALIDA en almacén origen
+                $qtyEntered = abs($line->cantidad_recibida ?? $line->qty);
+
+                // Convertir a unidades base según la UOM del traspaso (um_id de la línea)
+                $item = Item::with(['uom', 'uomCompra'])->find($line->item_id);
+                $lineUomClave = null;
+                if ($line->um_id) {
+                    $lineUomClave = DB::table('selemti.cat_unidades')->where('id', $line->um_id)->value('clave');
+                }
+                $qtyToTransfer = $item
+                    ? $uomSvc->resolveToBase($qtyEntered, $lineUomClave, $item)
+                    : $qtyEntered;
+
+                // Decrementar lote origen (FEFO: tomar el lote más antiguo disponible con stock)
+                $sourceBatch = DB::table('selemti.inventory_batch')
+                    ->where('item_id', $line->item_id)
+                    ->where('cantidad_actual', '>', 0)
+                    ->orderBy('fecha_caducidad')
+                    ->first();
+
+                if ($sourceBatch) {
+                    DB::table('selemti.inventory_batch')
+                        ->where('id', $sourceBatch->id)
+                        ->decrement('cantidad_actual', $qtyToTransfer);
+                }
+
+                // Movimiento de SALIDA en almacén origen (en unidades base)
                 $movOut = Movement::create([
                     'sucursal_id' => (string) $transfer->from_bodega_id,
                     'item_id' => $line->item_id,
+                    'lote_id' => $sourceBatch->id ?? null,
                     'tipo' => 'TRASPASO',
-                    'cantidad' => -abs($line->qty),
+                    'cantidad' => -$qtyToTransfer,
+                    'qty_original' => -$qtyEntered,
+                    'uom_original_id' => $line->um_id,
                     'ts' => now(),
                     'usuario_id' => $userId,
-                    'ref_tipo' => 'transfer',
+                    'ref_tipo' => 'traspaso',
                     'ref_id' => $transfer->id,
                 ]);
 
-                // Movimiento de ENTRADA en almacén destino
+                // Movimiento de ENTRADA en almacén destino (en unidades base)
                 $movIn = Movement::create([
                     'sucursal_id' => (string) $transfer->to_bodega_id,
                     'item_id' => $line->item_id,
                     'tipo' => 'TRASPASO',
-                    'cantidad' => abs($line->qty),
+                    'cantidad' => $qtyToTransfer,
+                    'qty_original' => $qtyEntered,
+                    'uom_original_id' => $line->um_id,
                     'ts' => now(),
                     'usuario_id' => $userId,
-                    'ref_tipo' => 'transfer',
+                    'ref_tipo' => 'traspaso',
                     'ref_id' => $transfer->id,
                 ]);
 
@@ -309,7 +346,7 @@ class TransferService
     protected function guardPositiveId(int $id, string $label): void
     {
         if ($id <= 0) {
-            throw new InvalidArgumentException(sprintf('The %s id must be greater than zero.', $label));
+            throw new InventoryValidationException(sprintf('The %s id must be greater than zero.', $label));
         }
     }
 }

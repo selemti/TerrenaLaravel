@@ -102,7 +102,7 @@ class CashFundService
         ];
 
         if (! $data['sucursal_id'] || ! $data['creado_por']) {
-            throw new \InvalidArgumentException('Sucursal y usuario creador son obligatorios.');
+            throw new \App\Exceptions\CashFund\CashFundValidationException('Sucursal y usuario creador son obligatorios.');
         }
 
         if (! $data['fecha']) {
@@ -139,7 +139,7 @@ class CashFundService
         $amount = (float) Arr::get($payload, 'monto', 0);
 
         if ($amount <= 0) {
-            throw new \InvalidArgumentException('El monto debe ser mayor a cero.');
+            throw new \App\Exceptions\CashFund\CashFundValidationException('El monto debe ser mayor a cero.');
         }
 
         return [

@@ -2,25 +2,28 @@
 
 namespace App\Services\Inventory;
 
+use App\Exceptions\Inventory\InventoryValidationException;
+use App\Models\Inv\Item;
+use App\Services\Inventory\UomConversionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
 
 class ProductionService
 {
     public function createOrder(array $header, array $inputs, array $outputs, array $wastes = []): int
     {
         if (empty($inputs)) {
-            throw new InvalidArgumentException('Debe registrar al menos un insumo a consumir.');
+            throw new InventoryValidationException('Debe registrar al menos un insumo a consumir.');
         }
 
         if (empty($outputs)) {
-            throw new InvalidArgumentException('Debe registrar al menos un producto terminado.');
+            throw new InventoryValidationException('Debe registrar al menos un producto terminado.');
         }
 
         return DB::transaction(function () use ($header, $inputs, $outputs, $wastes) {
             $now = now();
             $folio = $this->buildSequentialNumber();
+            $uomSvc = app(UomConversionService::class);
 
             $orderData = [
                 'folio' => $folio,
@@ -57,24 +60,28 @@ class ProductionService
 
                 DB::table('production_order_inputs')->insert($normalized);
 
-                $movement = [
+                $inputItem = Item::with(['uom', 'uomCompra'])->find($normalized['item_id']);
+                $inputBase = $uomSvc->resolveToBase(
+                    $normalized['qty'],
+                    $normalized['uom'] ?? $inputItem?->uomCompra?->clave,
+                    $inputItem ?? new Item
+                );
+
+                DB::table('mov_inv')->insert([
                     'item_id' => $normalized['item_id'],
-                    'inventory_batch_id' => $normalized['inventory_batch_id'],
+                    'lote_id' => $normalized['inventory_batch_id'] ?? null,
                     'tipo' => 'PROD_OUT',
-                    'qty' => $normalized['qty'],
-                    'uom' => $normalized['uom'],
+                    'cantidad' => $inputBase,
+                    'qty_original' => $normalized['qty'],
+                    'uom_original_id' => $inputItem?->unidad_medida_id,
+                    'costo_unit' => 0,
                     'sucursal_id' => $header['branch_id'] ?? null,
-                    'almacen_id' => $header['warehouse_id'] ?? null,
                     'ref_tipo' => 'production_order',
                     'ref_id' => $orderId,
-                    'user_id' => $header['user_id'] ?? null,
+                    'usuario_id' => $header['user_id'] ?? null,
                     'ts' => $now,
-                    'meta' => $normalized['meta'],
                     'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-
-                DB::table('mov_inv')->insert($movement);
+                ]);
             }
 
             foreach ($outputs as $output) {
@@ -87,21 +94,27 @@ class ProductionService
 
                 $totals['produced'] += $normalized['qty'];
 
+                $outputItem = Item::with(['uom', 'uomCompra'])->find($normalized['item_id']);
+                $outputBase = $uomSvc->resolveToBase(
+                    $normalized['qty'],
+                    $normalized['uom'] ?? $outputItem?->uomCompra?->clave,
+                    $outputItem ?? new Item
+                );
+
                 DB::table('mov_inv')->insert([
                     'item_id' => $normalized['item_id'],
-                    'inventory_batch_id' => $normalized['inventory_batch_id'],
+                    'lote_id' => $normalized['inventory_batch_id'] ?? null,
                     'tipo' => 'PROD_IN',
-                    'qty' => $normalized['qty'],
-                    'uom' => $normalized['uom'],
+                    'cantidad' => $outputBase,
+                    'qty_original' => $normalized['qty'],
+                    'uom_original_id' => $outputItem?->unidad_medida_id,
+                    'costo_unit' => 0,
                     'sucursal_id' => $header['branch_id'] ?? null,
-                    'almacen_id' => $header['warehouse_id'] ?? null,
                     'ref_tipo' => 'production_order',
                     'ref_id' => $orderId,
-                    'user_id' => $header['user_id'] ?? null,
+                    'usuario_id' => $header['user_id'] ?? null,
                     'ts' => $now,
-                    'meta' => $normalized['meta'],
                     'created_at' => $now,
-                    'updated_at' => $now,
                 ]);
             }
 
@@ -115,21 +128,27 @@ class ProductionService
 
                 $totals['waste'] += $normalized['qty'];
 
+                $wasteItem = Item::with(['uom', 'uomCompra'])->find($normalized['item_id']);
+                $wasteBase = $uomSvc->resolveToBase(
+                    $normalized['qty'],
+                    $normalized['uom'] ?? $wasteItem?->uomCompra?->clave,
+                    $wasteItem ?? new Item
+                );
+
                 DB::table('mov_inv')->insert([
                     'item_id' => $normalized['item_id'],
-                    'inventory_batch_id' => $normalized['inventory_batch_id'],
+                    'lote_id' => $normalized['inventory_batch_id'] ?? null,
                     'tipo' => 'MERMA',
-                    'qty' => $normalized['qty'],
-                    'uom' => $normalized['uom'],
+                    'cantidad' => $wasteBase,
+                    'qty_original' => $normalized['qty'],
+                    'uom_original_id' => $wasteItem?->unidad_medida_id,
+                    'costo_unit' => 0,
                     'sucursal_id' => $header['branch_id'] ?? null,
-                    'almacen_id' => $header['warehouse_id'] ?? null,
                     'ref_tipo' => 'production_order',
                     'ref_id' => $orderId,
-                    'user_id' => $header['user_id'] ?? null,
+                    'usuario_id' => $header['user_id'] ?? null,
                     'ts' => $now,
-                    'meta' => $normalized['meta'],
                     'created_at' => $now,
-                    'updated_at' => $now,
                 ]);
             }
 
@@ -161,17 +180,17 @@ class ProductionService
     private function normalizeInput(array $input): array
     {
         if (empty($input['item_id'])) {
-            throw new InvalidArgumentException('El insumo requiere item_id.');
+            throw new InventoryValidationException('El insumo requiere item_id.');
         }
 
         if (empty($input['uom'])) {
-            throw new InvalidArgumentException('El insumo requiere unidad de medida.');
+            throw new InventoryValidationException('El insumo requiere unidad de medida.');
         }
 
         $qty = (float) ($input['qty'] ?? 0);
 
         if ($qty <= 0) {
-            throw new InvalidArgumentException('La cantidad del insumo debe ser mayor a cero.');
+            throw new InventoryValidationException('La cantidad del insumo debe ser mayor a cero.');
         }
 
         return [
@@ -186,17 +205,17 @@ class ProductionService
     private function normalizeOutput(array $output, array $header, $now): array
     {
         if (empty($output['item_id'])) {
-            throw new InvalidArgumentException('El producto terminado requiere item_id.');
+            throw new InventoryValidationException('El producto terminado requiere item_id.');
         }
 
         if (empty($output['uom'])) {
-            throw new InvalidArgumentException('El producto terminado requiere unidad de medida.');
+            throw new InventoryValidationException('El producto terminado requiere unidad de medida.');
         }
 
         $qty = (float) ($output['qty'] ?? 0);
 
         if ($qty <= 0) {
-            throw new InvalidArgumentException('La cantidad producida debe ser mayor a cero.');
+            throw new InventoryValidationException('La cantidad producida debe ser mayor a cero.');
         }
 
         $batchId = $output['inventory_batch_id'] ?? null;
@@ -232,17 +251,17 @@ class ProductionService
     private function normalizeWaste(array $waste, array $header, $now): array
     {
         if (empty($waste['item_id'])) {
-            throw new InvalidArgumentException('La merma requiere item_id.');
+            throw new InventoryValidationException('La merma requiere item_id.');
         }
 
         if (empty($waste['uom'])) {
-            throw new InvalidArgumentException('La merma requiere unidad de medida.');
+            throw new InventoryValidationException('La merma requiere unidad de medida.');
         }
 
         $qty = (float) ($waste['qty'] ?? 0);
 
         if ($qty <= 0) {
-            throw new InvalidArgumentException('La merma debe ser mayor a cero.');
+            throw new InventoryValidationException('La merma debe ser mayor a cero.');
         }
 
         $batchId = $waste['inventory_batch_id'] ?? null;

@@ -2,6 +2,7 @@
 
 namespace App\Services\Inventory;
 
+use App\Exceptions\Inventory\InventoryValidationException;
 use App\Models\Catalogs\Unidad;
 use App\Models\Catalogs\UomConversion;
 use Illuminate\Support\Facades\Cache;
@@ -278,7 +279,7 @@ class UomConversionService
             'PESO' => 'KG',
             'VOLUMEN' => 'L',
             'UNIDAD' => 'PZ',
-            default => throw new \InvalidArgumentException("Invalid tipo: {$tipo}. Must be PESO, VOLUMEN, or UNIDAD."),
+            default => throw new InventoryValidationException("Invalid tipo: {$tipo}. Must be PESO, VOLUMEN, or UNIDAD."),
         };
 
         // Convert to base UOM
@@ -310,6 +311,47 @@ class UomConversionService
             'factor' => $result['factor'],
             'is_approx' => $result['is_approx'],
         ];
+    }
+
+    /**
+     * Resuelve una cantidad a su UOM base (KG, L, PZ) usando el item como fuente de verdad.
+     *
+     * Prioridad:
+     *  1. Si fromClave == UOM base del item → sin conversión
+     *  2. Si fromClave == UOM compra del item → usa item.factor_compra
+     *  3. Fallback → busca conversión genérica en cat_uom_conversion
+     *
+     * @param  float  $qty  Cantidad en unidad original
+     * @param  string|null  $fromClave  Clave de la UOM original (e.g. 'CAJA', 'ML')
+     * @param  \App\Models\Inv\Item  $item  Item con relaciones uom y uomCompra cargadas
+     * @return float Cantidad en unidades base del item
+     */
+    public function resolveToBase(float $qty, ?string $fromClave, \App\Models\Inv\Item $item): float
+    {
+        $baseClave   = $item->uom?->clave;
+        $compraClave = $item->uomCompra?->clave;
+
+        // Ya está en base
+        if (! $fromClave || strtoupper($fromClave) === strtoupper((string) $baseClave)) {
+            return $qty;
+        }
+
+        // Conversión directa vía factor_compra del item
+        if ($compraClave && strtoupper($fromClave) === strtoupper($compraClave)) {
+            return $qty * (float) $item->factor_compra;
+        }
+
+        // Conversión genérica vía cat_uom_conversion
+        if ($baseClave) {
+            $result = $this->convert($qty, $fromClave, $baseClave);
+            if ($result['success']) {
+                return $result['result'];
+            }
+        }
+
+        // No se pudo convertir — retornar cantidad sin cambio para no corromper el kardex.
+        // Solo aplicar factor_compra si fromClave es EXPLÍCITAMENTE la UOM de compra del item.
+        return $qty;
     }
 
     /**
