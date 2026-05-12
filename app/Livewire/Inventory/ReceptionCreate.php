@@ -187,7 +187,7 @@ class ReceptionCreate extends Component
             'supplier_id' => (int) $this->supplier_id,
             'branch_id' => $this->branch_id ?: null,
             'warehouse_id' => $this->warehouse_id ?: null,
-            'user_id' => auth()->id() ?? 1,
+            'user_id' => (int) auth()->id(),
         ];
 
         $id = $svc->createDraftReception($header, $lines);

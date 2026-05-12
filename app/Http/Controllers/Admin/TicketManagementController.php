@@ -778,8 +778,8 @@ class TicketManagementController extends Controller
 
             DB::connection('pgsql')->transaction(function () use ($minDaysOld, &$affectedTotal) {
                 // Crear backup antes de modificar (ambos tipos)
-                $userId = auth()->id() ?? 1;
-                $userName = str_replace("'", "''", auth()->user()->name ?? 'Sistema'); // Escapar comillas simples
+                $userId = (int) auth()->id();
+                $userName = str_replace("'", "''", auth()->user()?->name ?? 'Sistema');
                 $tableName = 'backup_tickets_cierre_masivo_'.date('Ymd_His');
 
                 DB::connection('pgsql')->statement("

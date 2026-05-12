@@ -105,7 +105,7 @@ class TransferDetail extends Component
     public function actionApprove(TransferService $service): void
     {
         try {
-            $service->approveTransfer($this->transferId, auth()->id() ?? 1);
+            $service->approveTransfer($this->transferId, (int) auth()->id());
             $this->flashMessage = 'Transferencia aprobada.';
         } catch (\Throwable $e) {
             $this->errorMessage = $e->getMessage();
@@ -117,7 +117,7 @@ class TransferDetail extends Component
     public function actionPost(TransferService $service): void
     {
         try {
-            $service->postTransferToInventory($this->transferId, auth()->id() ?? 1);
+            $service->postTransferToInventory($this->transferId, (int) auth()->id());
             $this->flashMessage = 'Transferencia posteada a inventario.';
         } catch (\Throwable $e) {
             $this->errorMessage = $e->getMessage();

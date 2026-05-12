@@ -7,8 +7,6 @@ use App\Services\Inventory\TransferService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use InvalidArgumentException;
-use RuntimeException;
 
 /**
  * API REST para gestión de transferencias entre almacenes
@@ -88,7 +86,7 @@ class TransferController extends Controller
                 'observaciones' => 'nullable|string',
             ]);
 
-            $userId = auth()->id() ?? 1; // TODO: Usar auth real
+            \$userId = (int) auth()->id();
 
             $result = $this->transferService->createTransfer(
                 $validated['origen_almacen_id'],
@@ -133,7 +131,7 @@ class TransferController extends Controller
     public function approve(int $id, Request $request): JsonResponse
     {
         try {
-            $userId = auth()->id() ?? 1; // TODO: Usar auth real
+            \$userId = (int) auth()->id();
 
             $result = $this->transferService->approveTransfer($id, $userId);
 
@@ -175,7 +173,7 @@ class TransferController extends Controller
                 'numero_guia' => 'nullable|string|max:64',
             ]);
 
-            $userId = auth()->id() ?? 1; // TODO: Usar auth real
+            \$userId = (int) auth()->id();
 
             $result = $this->transferService->markInTransit(
                 $id,
@@ -232,7 +230,7 @@ class TransferController extends Controller
                 'observaciones_generales' => 'nullable|string',
             ]);
 
-            $userId = auth()->id() ?? 1; // TODO: Usar auth real
+            \$userId = (int) auth()->id();
 
             $result = $this->transferService->receiveTransfer(
                 $id,
@@ -281,7 +279,7 @@ class TransferController extends Controller
     public function post(int $id, Request $request): JsonResponse
     {
         try {
-            $userId = auth()->id() ?? 1; // TODO: Usar auth real
+            \$userId = (int) auth()->id();
 
             $result = $this->transferService->postTransferToInventory($id, $userId);
 

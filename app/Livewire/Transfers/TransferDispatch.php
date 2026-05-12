@@ -62,7 +62,7 @@ class TransferDispatch extends Component
         $this->errorMessage = null;
 
         try {
-            $service->markInTransit($this->transferId, auth()->id() ?? 1, $this->numeroGuia ?: null);
+            $service->markInTransit($this->transferId, (int) auth()->id(), $this->numeroGuia ?: null);
             $this->flashMessage = 'Transferencia marcada EN_TRANSITO.';
             $this->estado = TransferHeader::STATUS_EN_TRANSITO;
         } catch (\Throwable $e) {

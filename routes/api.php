@@ -341,6 +341,12 @@ Route::middleware('auth:sanctum')
     ->get('/me/permissions', [MeController::class, 'permissions'])
     ->name('api.me.permissions');
 
+Route::prefix('people')->middleware(['auth:sanctum', 'permission:people.users.manage'])->group(function () {
+    Route::get('/users', [\App\Http\Controllers\Api\PeopleController::class, 'users']);
+    Route::get('/users/{id}/permissions', [\App\Http\Controllers\Api\PeopleController::class, 'userPermissions']);
+    Route::post('/users/{id}/permissions', [\App\Http\Controllers\Api\PeopleController::class, 'updateUserPermissions']);
+});
+
 /*
 |--------------------------------------------------------------------------
 | MÓDULO: PURCHASING (COMPRAS)

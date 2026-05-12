@@ -76,7 +76,7 @@ class VersionActivator extends Component
         $this->loading = true;
 
         try {
-            $userId = auth()->id() ?? 1;
+            $userId = (int) auth()->id();
             $published = $service->publishVersion((int) $this->selectedVersion, (int) $userId);
             $this->statusMessage = "Versión v{$published->version} publicada.";
 

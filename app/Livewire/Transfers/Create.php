@@ -95,7 +95,7 @@ class Create extends Component
                 fromAlmacenId: (int) $this->form['almacen_origen_id'],
                 toAlmacenId: (int) $this->form['almacen_destino_id'],
                 lines: $lines,
-                userId: auth()->id() ?? 1
+                userId: (int) auth()->id()
             );
 
             $transferId = $result['transfer_id'];

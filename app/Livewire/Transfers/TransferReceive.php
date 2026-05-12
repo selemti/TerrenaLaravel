@@ -81,7 +81,7 @@ class TransferReceive extends Component
         }
 
         try {
-            $result = $service->receiveTransfer($this->transferId, $payload, auth()->id() ?? 1);
+            $result = $service->receiveTransfer($this->transferId, $payload, (int) auth()->id());
             $this->varianzas = $result['varianzas'] ?? [];
             $this->estado = $result['status'] ?? $this->estado;
             $this->flashMessage = 'Transferencia recibida.';

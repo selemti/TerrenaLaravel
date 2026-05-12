@@ -94,7 +94,7 @@ class ReceptionDetail extends Component
     public function actionValidate(ReceptionService $service): void
     {
         try {
-            $service->validateReception($this->recepcionId, auth()->id() ?? 1);
+            $service->validateReception($this->recepcionId, (int) auth()->id());
             $this->flashMessage = 'Recepción validada.';
         } catch (\Throwable $e) {
             $this->errorMessage = $e->getMessage();
@@ -106,7 +106,7 @@ class ReceptionDetail extends Component
     public function actionPost(ReceptionService $service): void
     {
         try {
-            $service->postReception($this->recepcionId, auth()->id() ?? 1);
+            $service->postReception($this->recepcionId, (int) auth()->id());
             $this->flashMessage = 'Recepción posteada a inventario.';
         } catch (\Throwable $e) {
             $this->errorMessage = $e->getMessage();
