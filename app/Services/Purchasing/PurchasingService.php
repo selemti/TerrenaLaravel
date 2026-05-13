@@ -205,7 +205,7 @@ class PurchasingService
                     'total' => $data['total'],
                     'creado_por' => $data['creado_por'],
                     'aprobado_por' => $data['aprobado_por'] ?? null,
-                    'aprobado_en' => $data['aprobado_por'] ? CarbonImmutable::now() : null,
+                    'aprobado_en' => ($data['aprobado_por'] ?? null) ? CarbonImmutable::now() : null,
                     'notas' => $data['notas'] ?? null,
                     'meta' => $this->encodeMeta($data['meta'] ?? null),
                     'created_at' => CarbonImmutable::now(),

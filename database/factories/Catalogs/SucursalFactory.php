@@ -14,11 +14,8 @@ class SucursalFactory extends Factory
         return [
             'nombre' => $this->faker->company().' Sucursal',
             'clave' => strtoupper($this->faker->unique()->lexify('SUC-???')),
-            'direccion' => $this->faker->address(),
-            'telefono' => $this->faker->phoneNumber(),
+            'ubicacion' => $this->faker->city(),
             'activo' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
         ];
     }
 }

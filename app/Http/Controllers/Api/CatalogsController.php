@@ -136,8 +136,9 @@ class CatalogsController extends Controller
     {
         $query = Unidad::query();
 
+        // Support both 'tipo' (legacy) and 'categoria' as filter params
         if ($request->filled('tipo')) {
-            $query->where('tipo', $request->input('tipo'));
+            $query->where('categoria', $request->input('tipo'));
         }
 
         if ($request->filled('categoria')) {
@@ -159,18 +160,16 @@ class CatalogsController extends Controller
         $limit = max(1, min($limit, 500));
 
         $units = $query
-            ->orderBy('tipo')
-            ->orderBy('codigo')
+            ->orderBy('clave')
             ->limit($limit)
-            ->get([
-                'id',
-                'codigo',
-                'nombre',
-                'tipo',
-                'categoria',
-                'es_base',
-                'factor_conversion_base',
-                'decimales',
+            ->get(['id', 'clave', 'nombre', 'categoria', 'activo'])
+            ->map(fn ($u) => [
+                'id' => $u->id,
+                'codigo' => $u->clave,
+                'nombre' => $u->nombre,
+                'tipo' => $u->categoria,
+                'categoria' => $u->categoria,
+                'activo' => $u->activo,
             ]);
 
         return response()->json([

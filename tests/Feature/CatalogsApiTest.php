@@ -245,17 +245,17 @@ class CatalogsApiTest extends TestCase
     /** @test */
     public function test_can_filter_unidades_by_tipo()
     {
-        Unidad::factory()->create(['tipo' => 'PESO']);
-        Unidad::factory()->create(['tipo' => 'VOLUMEN']);
+        Unidad::factory()->create(['categoria' => 'BASE']);
+        Unidad::factory()->create(['categoria' => 'COCINA']);
 
         $response = $this->actingAs($this->user, 'sanctum')
-            ->getJson('/api/catalogs/unidades?tipo=PESO');
+            ->getJson('/api/catalogs/unidades?tipo=BASE');
 
         $response->assertStatus(200);
 
         $unidades = $response->json('data');
         foreach ($unidades as $unidad) {
-            $this->assertEquals('PESO', $unidad['tipo']);
+            $this->assertEquals('BASE', $unidad['tipo']);
         }
     }
 

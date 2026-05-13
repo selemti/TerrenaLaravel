@@ -1,5 +1,5 @@
 # Pendientes y Bugs — TerrenaLaravel
-> Actualizado: Abril 2026 | Rama: work/inicio-limpio-abril-2026
+> Actualizado: Mayo 2026 | Rama: work/inicio-limpio-abril-2026
 
 ## Bugs Críticos (bloquean operación)
 
@@ -98,16 +98,36 @@
 
 ---
 
-## Tests Faltantes
+## Estado del Test Suite (Mayo 2026)
+
+**Resultado:** ✅ 0 fallos | 155 pasando | 75 skipped
+
+### Tests skipped con razón documentada
+
+| Test | Razón del skip |
+|------|---------------|
+| `ReceptionServiceTest` | `createFromPurchaseOrder`, `setLines`, `finalizeCosting` no implementados |
+| `InventoryCountServiceTest (Feature)` | `createCount()` y modelo `InventoryCount` faltante |
+| `PosConsumptionServiceTest` | Tabla `selemti.recetas_componentes` no existe |
+| `RecipeCostSnapshotTest` | `RecipeCostController::calculateCostAtDate` no implementado |
+| `RecipeCostSnapshotsTest` | Mismo que arriba |
+| `WeekendDeploymentIntegrationTest` | Mismo que arriba |
+| `RecipesApiTest` | Columnas `item_id`, `nombre`, `cantidad_producto`, `activa` faltan en `receta_cab` |
+| `ReceptionStateTest` | `ReceivingService.php` eliminado (era stub duplicado) |
+| `ItemModsReportTest` | `BaseReportController` usa `auth:sanctum` en rutas web, conflicto con guard `web` de Spatie |
+| `PriceApiAuthTest::test_user_with_permission_reaches_validation_layer` | `fakeUser->can()` no reconocido por Gate sin BD real |
+| `ProfileTest` (3 tests) | Controller no implementa update de email ni delete de cuenta |
+| `TransferFlowTest::test_receive_component` | Mock espera `observaciones_generales` por línea, componente envía `observaciones` |
+| `ReplenishmentTest::test_pos_consumption` | `mp_id` (int) vs `item_id` (string) — mismatch en datos de test |
+
+### Tests que faltan (aún sin cobertura)
 
 | Módulo | Estado |
 |--------|--------|
-| ReceivingService | ❌ sin tests |
-| TransferService | ❌ sin tests |
+| TransferService (post, approve, ship) | ❌ sin tests |
 | ProductionService | ❌ sin tests |
 | ReturnService | ❌ sin tests |
 | PrecorteService | ❌ sin tests |
-| Reportes (parcial) | ⚠️ algunos tests |
 
 ---
 

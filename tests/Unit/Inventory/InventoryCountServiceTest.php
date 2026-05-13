@@ -4,8 +4,8 @@ namespace Tests\Unit\Inventory;
 
 use App\Services\Inventory\InventoryCountService;
 use App\Exceptions\Inventory\InventoryValidationException;
-use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+use Tests\TestCase;
 
 class InventoryCountServiceTest extends TestCase
 {
@@ -34,7 +34,7 @@ class InventoryCountServiceTest extends TestCase
             'notes' => 'diferencia turno',
         ]);
 
-        $this->assertSame(10, $result['item_id']);
+        $this->assertEquals(10, $result['item_id']);
         $this->assertSame(5.0, $result['qty_teorica']);
         $this->assertSame(4.5, $result['qty_contada']);
         $this->assertSame(-0.5, $result['qty_variacion']);

@@ -17,10 +17,8 @@ class RecetaDetalleFactory extends Factory
             'receta_id' => Receta::factory(),
             'item_id' => Item::factory(),
             'cantidad' => $this->faker->randomFloat(4, 0.1, 100),
-            'unidad' => $this->faker->randomElement(['PZ', 'KG', 'GR', 'LT', 'ML']),
-            'costo_unitario' => $this->faker->randomFloat(4, 0.5, 50),
+            'unidad_id' => null,
             'orden' => $this->faker->numberBetween(1, 20),
-            'created_at' => now(),
         ];
     }
 }
