@@ -26,8 +26,6 @@ class ItemModsReportTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->markTestSkipped('Requires live FloreantPOS database: queries public.ticket which does not exist in test env');
-
         $this->user = User::firstOrCreate(
             ['email' => 'test@terrena.test'],
             ['name' => 'Test User', 'password' => bcrypt('password')]

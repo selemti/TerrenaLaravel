@@ -2,376 +2,233 @@
 
 namespace Tests\Feature;
 
-use App\Models\Catalogs\Unidad;
 use App\Models\Inv\Item;
 use App\Models\Rec\Receta;
 use App\Models\Rec\RecetaDetalle;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
+/**
+ * Integration tests for recipe API endpoints.
+ *
+ * Two endpoints are tested here:
+ *
+ *  GET /api/recipes/{id}/cost      → RecipeCostController::show
+ *    Calls fn_recipe_cost_at(bigint, datetime) which queries selemti.recipes (bigint PKs).
+ *    selemti.recipes does not exist (schema gap). These tests are skipped until
+ *    the table is created and the function accepts the VARCHAR ids used by receta_cab.
+ *
+ *  GET /api/recipes/{id}/bom/implode → RecipeCostController::implodeBom
+ *    Uses Receta Eloquent model (selemti.receta_cab, VARCHAR PKs). Fully testable.
+ */
 class RecipesApiTest extends TestCase
 {
-    use RefreshDatabase;
-
     protected User $user;
+
+    private array $recetaIds = [];
+    private array $itemIds   = [];
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->markTestSkipped('RecipesApiTest uses receta_cab columns (item_id, nombre, activa) not in current schema');
-        $this->user = User::factory()->create();
+        $this->user = User::factory()->create([
+            'email' => 'test-recipes-' . uniqid() . '@terrena.test',
+        ]);
+
+        // Bypass Spatie permission middleware — tests cover API logic, not RBAC.
+        // auth:sanctum middleware still enforced (see auth test).
+        $this->withoutMiddleware(\Spatie\Permission\Middleware\PermissionMiddleware::class);
+
+        $this->actingAs($this->user, 'sanctum');
     }
 
-    /** @test */
-    public function test_can_get_recipe_cost()
+    protected function tearDown(): void
     {
-        // Crear item para la receta
-        $item = Item::factory()->create([
-            'nombre' => 'Producto Final',
-            'tipo' => 'PRODUCTO',
-        ]);
+        if ($this->recetaIds) {
+            DB::connection('pgsql')->table('selemti.receta_det')
+                ->whereIn('receta_id', $this->recetaIds)->delete();
+            DB::connection('pgsql')->table('selemti.receta_cab')
+                ->whereIn('id', $this->recetaIds)->delete();
+        }
+        if ($this->itemIds) {
+            DB::connection('pgsql')->table('selemti.items')
+                ->whereIn('id', $this->itemIds)->delete();
+        }
+        DB::connection('pgsql')->table('selemti.users')
+            ->where('id', $this->user->id)->delete();
+        parent::tearDown();
+    }
 
-        // Crear receta
-        $receta = Receta::factory()->create([
-            'item_id' => $item->id,
-            'nombre' => 'Receta Test',
-            'cantidad_producto' => 1,
-            'activa' => true,
-        ]);
+    // ──────────────────────────────────────────────────────
+    // Helpers
+    // ──────────────────────────────────────────────────────
 
-        // Crear insumos
-        $insumo1 = Item::factory()->create([
-            'nombre' => 'Insumo 1',
-            'tipo' => 'INSUMO',
-            'costo_promedio' => 10.00,
-        ]);
+    private function makeItem(array $overrides = []): Item
+    {
+        $item = Item::factory()->create(array_merge(['costo_promedio' => 10.00], $overrides));
+        $this->itemIds[] = $item->id;
 
-        $insumo2 = Item::factory()->create([
-            'nombre' => 'Insumo 2',
-            'tipo' => 'INSUMO',
-            'costo_promedio' => 5.00,
-        ]);
+        return $item;
+    }
 
-        // Crear detalles de receta
-        RecetaDetalle::factory()->create([
+    private function makeReceta(array $overrides = []): Receta
+    {
+        $receta = Receta::factory()->create($overrides);
+        $this->recetaIds[] = $receta->id;
+
+        return $receta;
+    }
+
+    private function makeDetalle(Receta $receta, Item $item, float $cantidad): RecetaDetalle
+    {
+        return RecetaDetalle::factory()->create([
             'receta_id' => $receta->id,
-            'item_id' => $insumo1->id,
-            'cantidad' => 2, // 2 unidades * $10 = $20
+            'item_id'   => $item->id,
+            'cantidad'  => $cantidad,
         ]);
-
-        RecetaDetalle::factory()->create([
-            'receta_id' => $receta->id,
-            'item_id' => $insumo2->id,
-            'cantidad' => 4, // 4 unidades * $5 = $20
-        ]);
-
-        $response = $this->actingAs($this->user, 'sanctum')
-            ->getJson("/api/recipes/{$receta->id}/cost");
-
-        $response->assertStatus(200)
-            ->assertJsonStructure([
-                'ok',
-                'data' => [
-                    'receta_id',
-                    'nombre',
-                    'ingredientes' => [
-                        '*' => ['item_id', 'nombre', 'cantidad', 'costo_unitario', 'costo_total'],
-                    ],
-                    'costo_total',
-                    'costo_unitario',
-                ],
-                'timestamp',
-            ])
-            ->assertJsonPath('ok', true)
-            ->assertJsonPath('data.receta_id', $receta->id);
-
-        // Verificar cálculos
-        $data = $response->json('data');
-        $this->assertEquals(40.00, $data['costo_total']); // $20 + $20
-        $this->assertEquals(40.00, $data['costo_unitario']); // $40 / 1 unidad
     }
 
-    /** @test */
-    public function test_recipe_cost_returns_404_for_nonexistent_recipe()
-    {
-        $response = $this->actingAs($this->user, 'sanctum')
-            ->getJson('/api/recipes/99999/cost');
+    // ──────────────────────────────────────────────────────
+    // /cost endpoint — SKIPPED (schema gap)
+    // fn_recipe_cost_at expects selemti.recipes (bigint PK) which does not exist.
+    // receta_cab uses VARCHAR PKs that cannot be cast to bigint.
+    // ──────────────────────────────────────────────────────
 
-        $response->assertStatus(404)
-            ->assertJsonPath('ok', false);
+    public function test_can_get_recipe_cost(): void
+    {
+        $this->markTestSkipped(
+            '/cost endpoint calls fn_recipe_cost_at(bigint) but receta_cab uses VARCHAR PKs ' .
+            'and selemti.recipes (bigint PK) does not exist. Pending schema alignment.'
+        );
     }
 
-    /** @test */
-    public function test_can_implode_bom_single_level()
+    public function test_recipe_cost_returns_404_for_nonexistent_recipe(): void
     {
-        // Crear producto final
-        $producto = Item::factory()->create(['nombre' => 'Producto Final']);
-        $receta = Receta::factory()->create([
-            'item_id' => $producto->id,
-            'cantidad_producto' => 1,
-        ]);
-
-        // Crear insumos directos
-        $insumo1 = Item::factory()->create(['nombre' => 'Insumo A']);
-        $insumo2 = Item::factory()->create(['nombre' => 'Insumo B']);
-
-        RecetaDetalle::factory()->create([
-            'receta_id' => $receta->id,
-            'item_id' => $insumo1->id,
-            'cantidad' => 2,
-        ]);
-
-        RecetaDetalle::factory()->create([
-            'receta_id' => $receta->id,
-            'item_id' => $insumo2->id,
-            'cantidad' => 3,
-        ]);
-
-        $response = $this->actingAs($this->user, 'sanctum')
-            ->getJson("/api/recipes/{$receta->id}/bom/implode");
-
-        $response->assertStatus(200)
-            ->assertJsonStructure([
-                'ok',
-                'data' => [
-                    'receta_id',
-                    'bom' => [
-                        '*' => ['item_id', 'nombre', 'cantidad', 'nivel'],
-                    ],
-                ],
-                'timestamp',
-            ])
-            ->assertJsonPath('ok', true);
-
-        $bom = $response->json('data.bom');
-        $this->assertCount(2, $bom);
+        $this->markTestSkipped(
+            '/cost endpoint calls fn_recipe_cost_at(bigint) — VARCHAR IDs cause a PG type error, ' .
+            'not a 404. Pending schema alignment.'
+        );
     }
 
-    /** @test */
-    public function test_can_implode_bom_multi_level()
+    public function test_recipe_cost_handles_recipe_without_ingredients(): void
     {
-        // Nivel 0: Producto Final
-        $productoFinal = Item::factory()->create(['nombre' => 'Hamburguesa']);
-        $recetaFinal = Receta::factory()->create([
-            'item_id' => $productoFinal->id,
-            'cantidad_producto' => 1,
-        ]);
-
-        // Nivel 1: Subproducto (Pan)
-        $pan = Item::factory()->create(['nombre' => 'Pan']);
-        $recetaPan = Receta::factory()->create([
-            'item_id' => $pan->id,
-            'cantidad_producto' => 1,
-        ]);
-
-        // Nivel 2: Insumo del Pan (Harina)
-        $harina = Item::factory()->create(['nombre' => 'Harina']);
-        RecetaDetalle::factory()->create([
-            'receta_id' => $recetaPan->id,
-            'item_id' => $harina->id,
-            'cantidad' => 0.5,
-        ]);
-
-        // Nivel 1: Insumo directo (Carne)
-        $carne = Item::factory()->create(['nombre' => 'Carne']);
-
-        // Agregar ingredientes a receta final
-        RecetaDetalle::factory()->create([
-            'receta_id' => $recetaFinal->id,
-            'item_id' => $pan->id,
-            'cantidad' => 1,
-        ]);
-
-        RecetaDetalle::factory()->create([
-            'receta_id' => $recetaFinal->id,
-            'item_id' => $carne->id,
-            'cantidad' => 0.2,
-        ]);
-
-        $response = $this->actingAs($this->user, 'sanctum')
-            ->getJson("/api/recipes/{$recetaFinal->id}/bom/implode");
-
-        $response->assertStatus(200)
-            ->assertJsonPath('ok', true);
-
-        $bom = $response->json('data.bom');
-
-        // Debe tener 3 items: Pan (nivel 1), Carne (nivel 1), Harina (nivel 2)
-        $this->assertGreaterThanOrEqual(2, count($bom));
-
-        // Verificar que hay items de diferentes niveles
-        $niveles = array_column($bom, 'nivel');
-        $this->assertContains(1, $niveles); // Pan y Carne
+        $this->markTestSkipped(
+            '/cost endpoint depends on selemti.recipes (bigint PK) which does not exist.'
+        );
     }
 
-    /** @test */
-    public function test_bom_implosion_prevents_infinite_recursion()
+    public function test_recipe_cost_calculates_correctly_for_multiple_units(): void
     {
-        // Crear ciclo A → B → A
-        $itemA = Item::factory()->create(['nombre' => 'Item A']);
-        $itemB = Item::factory()->create(['nombre' => 'Item B']);
-
-        $recetaA = Receta::factory()->create(['item_id' => $itemA->id]);
-        $recetaB = Receta::factory()->create(['item_id' => $itemB->id]);
-
-        // A depende de B
-        RecetaDetalle::factory()->create([
-            'receta_id' => $recetaA->id,
-            'item_id' => $itemB->id,
-            'cantidad' => 1,
-        ]);
-
-        // B depende de A (crear ciclo)
-        RecetaDetalle::factory()->create([
-            'receta_id' => $recetaB->id,
-            'item_id' => $itemA->id,
-            'cantidad' => 1,
-        ]);
-
-        $response = $this->actingAs($this->user, 'sanctum')
-            ->getJson("/api/recipes/{$recetaA->id}/bom/implode");
-
-        // Debe manejar el ciclo sin error (max 10 niveles)
-        $response->assertStatus(200)
-            ->assertJsonPath('ok', true);
-
-        $bom = $response->json('data.bom');
-
-        // Verificar que no hay más de 10 niveles de recursión
-        $niveles = array_column($bom, 'nivel');
-        $maxNivel = ! empty($niveles) ? max($niveles) : 0;
-        $this->assertLessThanOrEqual(10, $maxNivel);
+        $this->markTestSkipped(
+            '/cost endpoint depends on selemti.recipes (bigint PK) which does not exist.'
+        );
     }
 
-    /** @test */
-    public function test_bom_implosion_returns_404_for_nonexistent_recipe()
+    // ──────────────────────────────────────────────────────
+    // /bom/implode endpoint — fully testable
+    // ──────────────────────────────────────────────────────
+
+    public function test_can_implode_bom_single_level(): void
     {
-        $response = $this->actingAs($this->user, 'sanctum')
-            ->getJson('/api/recipes/99999/bom/implode');
+        $insumo1 = $this->makeItem();
+        $insumo2 = $this->makeItem();
+        $receta  = $this->makeReceta(['porciones_standard' => 1]);
 
-        $response->assertStatus(404)
-            ->assertJsonPath('ok', false);
-    }
+        $this->makeDetalle($receta, $insumo1, 2);
+        $this->makeDetalle($receta, $insumo2, 3);
 
-    /** @test */
-    public function test_recipe_cost_handles_recipe_without_ingredients()
-    {
-        $item = Item::factory()->create();
-        $receta = Receta::factory()->create([
-            'item_id' => $item->id,
-            'cantidad_producto' => 1,
-        ]);
-
-        // No crear detalles (receta vacía)
-
-        $response = $this->actingAs($this->user, 'sanctum')
-            ->getJson("/api/recipes/{$receta->id}/cost");
+        $response = $this->getJson("/api/recipes/{$receta->id}/bom/implode");
 
         $response->assertStatus(200)
             ->assertJsonPath('ok', true)
-            ->assertJsonPath('data.costo_total', 0)
-            ->assertJsonPath('data.costo_unitario', 0);
+            ->assertJsonStructure(['ok', 'data' => ['recipe_id', 'base_ingredients', 'total_ingredients'], 'timestamp']);
+
+        $this->assertCount(2, $response->json('data.base_ingredients'));
     }
 
-    /** @test */
-    public function test_recipe_cost_calculates_correctly_for_multiple_units()
+    public function test_can_implode_bom_multi_level(): void
     {
-        $item = Item::factory()->create();
-        $receta = Receta::factory()->create([
-            'item_id' => $item->id,
-            'cantidad_producto' => 10, // Produce 10 unidades
-        ]);
+        $harina      = $this->makeItem();
+        $carne       = $this->makeItem();
+        $pan         = $this->makeItem();
+        $recetaPan   = $this->makeReceta(['porciones_standard' => 1]);
+        $recetaFinal = $this->makeReceta(['porciones_standard' => 1]);
 
-        $insumo = Item::factory()->create(['costo_promedio' => 50.00]);
+        $this->makeDetalle($recetaPan,   $harina,  0.5);
+        $this->makeDetalle($recetaFinal, $pan,     1);
+        $this->makeDetalle($recetaFinal, $carne,   0.2);
 
-        RecetaDetalle::factory()->create([
-            'receta_id' => $receta->id,
-            'item_id' => $insumo->id,
-            'cantidad' => 5, // 5 * $50 = $250 total
-        ]);
+        $response = $this->getJson("/api/recipes/{$recetaFinal->id}/bom/implode");
 
-        $response = $this->actingAs($this->user, 'sanctum')
-            ->getJson("/api/recipes/{$receta->id}/cost");
+        $response->assertStatus(200)->assertJsonPath('ok', true);
+
+        // At least pan and carne are direct ingredients
+        $this->assertGreaterThanOrEqual(2, count($response->json('data.base_ingredients')));
+    }
+
+    public function test_bom_implosion_prevents_infinite_recursion(): void
+    {
+        $itemA  = $this->makeItem();
+        $itemB  = $this->makeItem();
+        $recetaA = $this->makeReceta(['porciones_standard' => 1]);
+        $recetaB = $this->makeReceta(['porciones_standard' => 1]);
+
+        // Cycle: A → B → A
+        $this->makeDetalle($recetaA, $itemB, 1);
+        $this->makeDetalle($recetaB, $itemA, 1);
+
+        $response = $this->getJson("/api/recipes/{$recetaA->id}/bom/implode");
+
+        // Must not crash, must return 200 or 400 (caught RuntimeException)
+        $this->assertContains($response->status(), [200, 400]);
+    }
+
+    public function test_bom_implosion_returns_404_for_nonexistent_recipe(): void
+    {
+        $response = $this->getJson('/api/recipes/REC-NONEXISTENT-99999/bom/implode');
+
+        $response->assertStatus(404)->assertJsonPath('ok', false);
+    }
+
+    public function test_recipe_endpoints_require_authentication(): void
+    {
+        $receta = $this->makeReceta();
+
+        // Fresh unauthenticated request — auth:sanctum middleware still active
+        $this->app['auth']->forgetGuards();
+        $response = $this->getJson("/api/recipes/{$receta->id}/bom/implode");
+        $response->assertStatus(401);
+    }
+
+    public function test_recipe_endpoints_return_consistent_response_structure(): void
+    {
+        $receta = $this->makeReceta();
+
+        $this->actingAs($this->user, 'sanctum')
+            ->getJson("/api/recipes/{$receta->id}/bom/implode")
+            ->assertStatus(200)
+            ->assertJsonStructure(['ok', 'data', 'timestamp'])
+            ->assertJsonPath('ok', true);
+    }
+
+    public function test_bom_implosion_aggregates_duplicate_ingredients(): void
+    {
+        $queso  = $this->makeItem();
+        $receta = $this->makeReceta(['porciones_standard' => 1]);
+
+        // Same ingredient twice in the recipe
+        $this->makeDetalle($receta, $queso, 100);
+        $this->makeDetalle($receta, $queso, 50);
+
+        $response = $this->getJson("/api/recipes/{$receta->id}/bom/implode");
 
         $response->assertStatus(200);
 
-        $data = $response->json('data');
-        $this->assertEquals(250.00, $data['costo_total']);
-        $this->assertEquals(25.00, $data['costo_unitario']); // $250 / 10 unidades
-    }
+        $ingredients = $response->json('data.base_ingredients');
+        $quesoItem   = collect($ingredients)->firstWhere('item_id', $queso->id);
 
-    /** @test */
-    public function test_recipe_endpoints_require_authentication()
-    {
-        $receta = Receta::factory()->create();
-
-        $endpoints = [
-            "/api/recipes/{$receta->id}/cost",
-            "/api/recipes/{$receta->id}/bom/implode",
-        ];
-
-        foreach ($endpoints as $endpoint) {
-            $response = $this->getJson($endpoint);
-            $response->assertStatus(401); // Unauthorized
-        }
-    }
-
-    /** @test */
-    public function test_recipe_endpoints_return_consistent_response_structure()
-    {
-        $receta = Receta::factory()->create();
-
-        $endpoints = [
-            "/api/recipes/{$receta->id}/cost",
-            "/api/recipes/{$receta->id}/bom/implode",
-        ];
-
-        foreach ($endpoints as $endpoint) {
-            $response = $this->actingAs($this->user, 'sanctum')
-                ->getJson($endpoint);
-
-            $response->assertStatus(200)
-                ->assertJsonStructure(['ok', 'data', 'timestamp'])
-                ->assertJsonPath('ok', true);
-        }
-    }
-
-    /** @test */
-    public function test_bom_implosion_aggregates_duplicate_ingredients()
-    {
-        // Producto que usa el mismo ingrediente en múltiples niveles
-        $producto = Item::factory()->create(['nombre' => 'Pizza']);
-        $receta = Receta::factory()->create([
-            'item_id' => $producto->id,
-            'cantidad_producto' => 1,
-        ]);
-
-        $queso = Item::factory()->create(['nombre' => 'Queso']);
-
-        // Usar queso 2 veces en la receta (directamente)
-        RecetaDetalle::factory()->create([
-            'receta_id' => $receta->id,
-            'item_id' => $queso->id,
-            'cantidad' => 100, // gramos
-        ]);
-
-        RecetaDetalle::factory()->create([
-            'receta_id' => $receta->id,
-            'item_id' => $queso->id,
-            'cantidad' => 50, // más gramos
-        ]);
-
-        $response = $this->actingAs($this->user, 'sanctum')
-            ->getJson("/api/recipes/{$receta->id}/bom/implode");
-
-        $response->assertStatus(200);
-
-        $bom = $response->json('data.bom');
-
-        // Debe agregar las cantidades (100 + 50 = 150)
-        $quesoItem = collect($bom)->firstWhere('nombre', 'Queso');
-        $this->assertNotNull($quesoItem);
-        $this->assertEquals(150, $quesoItem['cantidad']);
+        $this->assertNotNull($quesoItem, 'El ingrediente queso debe aparecer en el BOM');
+        $this->assertEquals(150, (float) ($quesoItem['qty'] ?? $quesoItem['total_qty'] ?? 0));
     }
 }

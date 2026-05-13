@@ -64,18 +64,17 @@ class ReceptionService
             $numero = $this->buildSequentialNumber();
 
             $cabecera = [
-                'proveedor_id' => $header['supplier_id'],
-                'sucursal_id' => $header['branch_id'] ?? null,
-                'almacen_id' => $header['warehouse_id'] ?? null,
-                'usuario_id' => $header['user_id'],
-                'numero_recepcion' => $numero,
-                'fecha_recepcion' => $now,
-                'estado' => self::ESTADO_BORRADOR,
-                'total_presentaciones' => 0,
-                'total_canonico' => 0,
-                'ts' => $now,
-                'created_at' => $now,
-                'updated_at' => $now,
+                'proveedor_id'        => $header['supplier_id'],
+                'sucursal_id'         => $header['branch_id'] ?? null,
+                'almacen_id'          => $header['warehouse_id'] ?? null,
+                'creado_por'          => $header['user_id'],
+                'numero_recepcion'    => $numero,
+                'fecha_recepcion'     => $now,
+                'estado'              => self::ESTADO_BORRADOR,
+                'total_presentaciones'=> 0,
+                'total_canonico'      => 0,
+                'created_at'          => $now,
+                'updated_at'          => $now,
             ];
 
             $receptionId = (int) DB::table('selemti.recepcion_cab')->insertGetId($cabecera);
@@ -89,25 +88,24 @@ class ReceptionService
 
                 // En BORRADOR no se crea batch ni se afecta inventario
                 DB::table('selemti.recepcion_det')->insert([
-                    'recepcion_id' => $receptionId,
-                    'item_id' => $line['item_id'],
-                    'bodega_id' => $header['warehouse_id'] ?? 1, // TODO: usar bodega correcta
-                    'qty' => $qtyCanonical,
-                    'um_id' => 1, // TODO: mapear UOM correctamente
-                    'costo_unit' => $line['costo_unit'] ?? 0,
-                    'batch_id' => null, // Se crea al postear
-                    'temperatura' => $line['temp'] ?? null,
-                    'doc_url' => $line['doc_url'] ?? null,
-                    'meta' => json_encode([
-                        'uom_purchase' => $line['uom_purchase'],
-                        'qty_pack' => $qtyPack,
+                    'recepcion_id'           => $receptionId,
+                    'item_id'                => (string) $line['item_id'],
+                    'qty_presentacion'       => $qtyPack,
+                    'qty_canonica'           => $qtyCanonical,
+                    'pack_size'              => $packSize,
+                    'uom_compra'             => strtoupper($line['uom_purchase'] ?? 'PZ'),
+                    'uom_base'               => strtoupper($line['uom_base'] ?? 'PZ'),
+                    'precio_unit'            => $line['costo_unit'] ?? 0,
+                    'lote_proveedor'         => $line['lot'] ?? null,
+                    'fecha_caducidad'        => $line['exp_date'] ?? null,
+                    'temperatura_recepcion'  => $line['temp'] ?? null,
+                    'certificado_calidad_url'=> $line['doc_url'] ?? null,
+                    'meta'                   => json_encode([
+                        'qty_pack'  => $qtyPack,
                         'pack_size' => $packSize,
-                        'uom_base' => $line['uom_base'],
-                        'lote_proveedor' => $line['lot'],
-                        'fecha_caducidad' => $line['exp_date'],
                     ]),
-                    'created_at' => $now,
-                    'updated_at' => $now,
+                    'created_at'             => $now,
+                    'updated_at'             => $now,
                 ]);
 
                 $totals['presentaciones'] += $qtyPack;
@@ -219,7 +217,7 @@ class ReceptionService
 
                 $cantidadBase = $item
                     ? $uomSvc->resolveToBase($qtyPresentacion, $uomCompra, $item)
-                    : $line->qty;
+                    : $line->qty_canonica;
 
                 $uomBaseClave = $item?->uom?->clave ?? ($meta['uom_base'] ?? 'PZ');
                 $uomCompraId = $item?->unidad_compra_id;
@@ -227,24 +225,24 @@ class ReceptionService
                 // Crear lote de inventario en unidades base
                 $batchId = DB::table('selemti.inventory_batch')->insertGetId([
                     'item_id' => $line->item_id,
-                    'lote_proveedor' => $meta['lote_proveedor'] ?? (string) Str::uuid(),
-                    'fecha_recepcion' => $fechaRecepcion,
-                    'fecha_caducidad' => $fechaCaducidad,
-                    'temperatura_recepcion' => $line->temperatura,
-                    'documento_url' => $line->doc_url,
+                    'lote_proveedor' => $line->lote_proveedor ?? (string) Str::uuid(),
+                    'caducidad' => $fechaCaducidad,
+                    'temperatura_recepcion' => $line->temperatura_recepcion,
+                    'documento_url' => $line->certificado_calidad_url,
                     'cantidad_original' => $cantidadBase,
                     'cantidad_actual' => $cantidadBase,
+                    'uom_base' => $uomBaseClave,
                     'estado' => 'ACTIVO',
-                    'ubicacion_id' => $ubicacion,
-                    'unit_cost' => $line->costo_unit ?? 0,
+                    'sucursal_id' => $reception->sucursal_id,
+                    'almacen_id' => $reception->almacen_id,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ]);
 
-                // Actualizar batch_id en recepcion_det
+                // Actualizar inventory_batch_id en recepcion_det
                 DB::table('selemti.recepcion_det')
                     ->where('id', $line->id)
-                    ->update(['batch_id' => $batchId]);
+                    ->update(['inventory_batch_id' => $batchId]);
 
                 // Movimiento en unidades base; qty_original conserva la cantidad en UOM compra
                 DB::table('selemti.mov_inv')->insert([
@@ -253,7 +251,7 @@ class ReceptionService
                     'cantidad' => $cantidadBase,
                     'qty_original' => $qtyPresentacion,
                     'uom_original_id' => $uomCompraId,
-                    'costo_unit' => $line->costo_unit ?? 0,
+                    'costo_unit' => $line->precio_unit ?? 0,
                     'sucursal_id' => $reception->almacen_id !== null ? (string) $reception->almacen_id : null,
                     'ref_tipo' => 'recepcion',
                     'ref_id' => $receptionId,

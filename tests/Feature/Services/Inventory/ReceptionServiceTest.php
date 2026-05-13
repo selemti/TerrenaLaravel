@@ -2,265 +2,142 @@
 
 namespace Tests\Feature\Services\Inventory;
 
-use App\Models\Catalogs\Almacen;
-use App\Models\Inv\Item;
-use App\Models\Purchasing\PurchaseOrder;
 use App\Models\User;
 use App\Services\Inventory\ReceptionService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
+/**
+ * Integration tests for ReceptionService against real selemti schema.
+ * Uses DB::table directly — no RefreshDatabase (selemti is persistent).
+ * All inserted rows are cleaned up in tearDown.
+ */
 class ReceptionServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    protected ReceptionService $service;
 
     protected User $user;
 
-    protected Almacen $almacen;
-
-    protected Item $item;
-
-    protected PurchaseOrder $purchaseOrder;
-
-    protected ReceptionService $service;
+    /** Reception IDs created during test, cleaned up after */
+    private array $createdReceptionIds = [];
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->markTestSkipped('ReceptionService API changed: createFromPurchaseOrder/setLines/finalizeCosting not implemented');
-
         $this->service = app(ReceptionService::class);
-
-        $this->user = User::factory()->create();
-        $this->almacen = Almacen::factory()->create([
-            'nombre' => 'Almacén Test',
-            'clave' => 'TEST',
+        // User model uses pgsql connection — create in selemti.users
+        $this->user = User::factory()->create([
+            'email' => 'test-reception-' . uniqid() . '@terrena.test',
         ]);
-
-        $this->item = Item::factory()->create([
-            'nombre' => 'Producto Test',
-            'clave' => 'TEST-001',
-        ]);
-
-        // Crear orden de compra de prueba
-        $this->purchaseOrder = PurchaseOrder::create([
-            'proveedor_id' => 1,
-            'sucursal_id' => 1,
-            'estado' => 'APROBADA',
-            'moneda' => 'MXN',
-            'condiciones_pago' => '30 días',
-            'creado_por' => $this->user->id,
-            'fecha_aprobacion' => now(),
-        ]);
-
-        // Crear línea de orden de compra
-        $this->purchaseOrder->lines()->create([
-            'item_id' => $this->item->id,
-            'cantidad_solicitada' => 100,
-            'cantidad_recibida' => 0,
-            'unidad_medida' => 'PZ',
-            'precio_unitario' => 10.00,
-            'impuestos_pct' => 16.0,
-            'orden' => 1,
-            'activo' => true,
-        ]);
+        $this->actingAs($this->user);
     }
 
-    /** @test */
-    public function test_can_create_reception_from_purchase_order()
+    protected function tearDown(): void
     {
-        $result = $this->service->createFromPurchaseOrder(
-            $this->purchaseOrder->id,
-            $this->almacen->id,
-            $this->user->id
+        // Clean up receptions created during tests
+        if ($this->createdReceptionIds) {
+            DB::connection('pgsql')
+                ->table('selemti.recepcion_det')
+                ->whereIn('recepcion_id', $this->createdReceptionIds)
+                ->delete();
+            DB::connection('pgsql')
+                ->table('selemti.recepcion_cab')
+                ->whereIn('id', $this->createdReceptionIds)
+                ->delete();
+        }
+        // Clean up test user (created in selemti.users via pgsql)
+        if (isset($this->user) && $this->user->id) {
+            DB::connection('pgsql')->table('selemti.users')->where('id', $this->user->id)->delete();
+        }
+        parent::tearDown();
+    }
+
+    private function buildHeader(array $overrides = []): array
+    {
+        return array_merge([
+            'supplier_id'  => 1,
+            'branch_id'    => null,
+            'warehouse_id' => null,
+            'user_id'      => $this->user->id,
+        ], $overrides);
+    }
+
+    private function buildLine(array $overrides = []): array
+    {
+        return array_merge([
+            'item_id'      => 1,
+            'qty_pack'     => 10,
+            'pack_size'    => 1,
+            'uom_purchase' => 'PZ',
+            'uom_base'     => 'PZ',
+            'lot'          => 'LOTE-TEST',
+            'exp_date'     => '2027-12-31',
+            'temp'         => null,
+            'doc_url'      => null,
+            'costo_unit'   => 5.00,
+        ], $overrides);
+    }
+
+    public function test_create_draft_reception_inserts_cab_and_det(): void
+    {
+        $id = $this->service->createDraftReception(
+            $this->buildHeader(),
+            [$this->buildLine()]
         );
+        $this->createdReceptionIds[] = $id;
 
-        $this->assertArrayHasKey('reception_id', $result);
-        $this->assertArrayHasKey('status', $result);
-        $this->assertEquals('PENDIENTE', $result['status']);
+        $this->assertIsInt($id);
+        $this->assertGreaterThan(0, $id);
 
-        $this->assertDatabaseHas('selemti.inv_receptions', [
-            'purchase_order_id' => $this->purchaseOrder->id,
-            'almacen_id' => $this->almacen->id,
-            'estado' => 'PENDIENTE',
-        ]);
+        $cab = DB::connection('pgsql')->table('selemti.recepcion_cab')->where('id', $id)->first();
+        $this->assertNotNull($cab);
+        $this->assertEquals('BORRADOR', $cab->estado);
+
+        $det = DB::connection('pgsql')->table('selemti.recepcion_det')->where('recepcion_id', $id)->get();
+        $this->assertCount(1, $det);
     }
 
-    /** @test */
-    public function test_can_set_reception_lines()
+    public function test_validate_reception_transitions_to_validada(): void
     {
-        $reception = DB::connection('pgsql')->table('selemti.inv_receptions')->insertGetId([
-            'purchase_order_id' => $this->purchaseOrder->id,
-            'almacen_id' => $this->almacen->id,
-            'estado' => 'PENDIENTE',
-            'creado_por' => $this->user->id,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $lines = [
-            [
-                'po_line_id' => $this->purchaseOrder->lines()->first()->id,
-                'cantidad_recepcionar' => 50,
-                'costo_unitario' => 9.50,
-                'observaciones' => 'Test reception line',
-            ],
-        ];
-
-        $result = $this->service->setLines($reception, $lines, $this->user->id);
-
-        $this->assertEquals(count($lines), $result['lines_set']);
-
-        $this->assertDatabaseHas('selemti.inv_reception_lines', [
-            'reception_id' => $reception,
-            'po_line_id' => $lines[0]['po_line_id'],
-            'cantidad_recepcionar' => $lines[0]['cantidad_recepcionar'],
-        ]);
-    }
-
-    /** @test */
-    public function test_can_validate_reception()
-    {
-        $reception = DB::connection('pgsql')->table('selemti.inv_receptions')->insertGetId([
-            'purchase_order_id' => $this->purchaseOrder->id,
-            'almacen_id' => $this->almacen->id,
-            'estado' => 'PENDIENTE',
-            'creado_por' => $this->user->id,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $poLine = $this->purchaseOrder->lines()->first();
-
-        DB::connection('pgsql')->table('selemti.inv_reception_lines')->insert([
-            'reception_id' => $reception,
-            'po_line_id' => $poLine->id,
-            'cantidad_recepcionar' => 50,
-            'costo_unitario' => 9.50,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $result = $this->service->validateReception($reception, $this->user->id);
-
-        $this->assertEquals('VALIDADA', $result['status']);
-
-        $this->assertDatabaseHas('selemti.inv_receptions', [
-            'id' => $reception,
-            'estado' => 'VALIDADA',
-        ]);
-    }
-
-    /** @test */
-    public function test_cannot_create_reception_from_non_approved_po()
-    {
-        $nonApprovedPo = PurchaseOrder::create([
-            'proveedor_id' => 1,
-            'sucursal_id' => 1,
-            'estado' => 'PENDIENTE',
-            'moneda' => 'MXN',
-            'condiciones_pago' => '30 días',
-            'creado_por' => $this->user->id,
-        ]);
-
-        $nonApprovedPo->lines()->create([
-            'item_id' => $this->item->id,
-            'cantidad_solicitada' => 100,
-            'cantidad_recibida' => 0,
-            'unidad_medida' => 'PZ',
-            'precio_unitario' => 10.00,
-            'impuestos_pct' => 16.0,
-            'orden' => 1,
-            'activo' => true,
-        ]);
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Cannot create reception for non-approved purchase order');
-
-        $this->service->createFromPurchaseOrder(
-            $nonApprovedPo->id,
-            $this->almacen->id,
-            $this->user->id
+        $id = $this->service->createDraftReception(
+            $this->buildHeader(),
+            [$this->buildLine()]
         );
+        $this->createdReceptionIds[] = $id;
+
+        $this->service->validateReception($id, $this->user->id);
+
+        $cab = DB::connection('pgsql')->table('selemti.recepcion_cab')->where('id', $id)->first();
+        $this->assertEquals('VALIDADA', $cab->estado);
     }
 
-    /** @test */
-    public function test_can_post_reception_to_inventory()
+    public function test_validate_throws_if_not_borrador(): void
     {
-        $reception = DB::connection('pgsql')->table('selemti.inv_receptions')->insertGetId([
-            'purchase_order_id' => $this->purchaseOrder->id,
-            'almacen_id' => $this->almacen->id,
-            'estado' => 'VALIDADA',
-            'creado_por' => $this->user->id,
-            'validado_por' => $this->user->id,
-            'validado_en' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $id = $this->service->createDraftReception(
+            $this->buildHeader(),
+            [$this->buildLine()]
+        );
+        $this->createdReceptionIds[] = $id;
 
-        $poLine = $this->purchaseOrder->lines()->first();
+        $this->service->validateReception($id, $this->user->id);
 
-        DB::connection('pgsql')->table('selemti.inv_reception_lines')->insert([
-            'reception_id' => $reception,
-            'po_line_id' => $poLine->id,
-            'cantidad_recepcionar' => 50,
-            'costo_unitario' => 9.50,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $result = $this->service->postReception($reception, $this->user->id);
-
-        $this->assertEquals('POSTEADA', $result['status']);
-
-        $this->assertDatabaseHas('selemti.inv_receptions', [
-            'id' => $reception,
-            'estado' => 'POSTEADA',
-        ]);
-
-        // Verificar que se crearon movimientos de inventario
-        $this->assertDatabaseHas('selemti.mov_inv', [
-            'almacen_id' => $this->almacen->id,
-            'item_id' => $this->item->id,
-            'tipo_movimiento' => 'ENTRADA',
-            'referencia_tipo' => 'RECEPTION',
-            'referencia_id' => $reception,
-        ]);
+        // Trying to validate again must throw
+        $this->expectException(\Throwable::class);
+        $this->service->validateReception($id, $this->user->id);
     }
 
-    /** @test */
-    public function test_can_finalize_reception_costing()
+    public function test_post_reception_transitions_to_posteada(): void
     {
-        $reception = DB::connection('pgsql')->table('selemti.inv_receptions')->insertGetId([
-            'purchase_order_id' => $this->purchaseOrder->id,
-            'almacen_id' => $this->almacen->id,
-            'estado' => 'POSTEADA',
-            'creado_por' => $this->user->id,
-            'posteada_por' => $this->user->id,
-            'posteada_en' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $id = $this->service->createDraftReception(
+            $this->buildHeader(),
+            [$this->buildLine(['qty_pack' => 2, 'pack_size' => 1, 'costo_unit' => 10.0])]
+        );
+        $this->createdReceptionIds[] = $id;
 
-        $poLine = $this->purchaseOrder->lines()->first();
+        $this->service->validateReception($id, $this->user->id);
+        $this->service->postReception($id, $this->user->id);
 
-        DB::connection('pgsql')->table('selemti.inv_reception_lines')->insert([
-            'reception_id' => $reception,
-            'po_line_id' => $poLine->id,
-            'cantidad_recepcionar' => 50,
-            'costo_unitario' => 9.50,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $result = $this->service->finalizeCosting($reception, $this->user->id);
-
-        $this->assertEquals('COSTEADA', $result['status']);
-
-        $this->assertDatabaseHas('selemti.inv_receptions', [
-            'id' => $reception,
-            'estado' => 'COSTEADA',
-        ]);
+        $cab = DB::connection('pgsql')->table('selemti.recepcion_cab')->where('id', $id)->first();
+        $this->assertEquals('POSTEADA', $cab->estado);
     }
 }

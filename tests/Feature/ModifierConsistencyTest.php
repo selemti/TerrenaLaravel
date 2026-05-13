@@ -2,119 +2,91 @@
 
 namespace Tests\Feature;
 
+use App\Adapters\FloreantPos\Dtos\PosMenuModifierDto;
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 use App\Models\Caja\TicketItemModifier;
 use App\Services\Inventory\InventoryMovementService;
 use App\Services\Inventory\ModifierValidationService;
 use Illuminate\Support\Facades\DB;
+use Mockery;
 use Tests\TestCase;
 
 class ModifierConsistencyTest extends TestCase
 {
-    protected function setUp(): void
+    private array $createdRecetaIds = [];
+    private array $createdMovInvIds = [];
+
+    protected function tearDown(): void
     {
-        parent::setUp();
-
-        if (! extension_loaded('sqlite3')) {
-            $this->markTestSkipped('SQLite driver not available for in-memory modifier tests.');
+        if ($this->createdMovInvIds) {
+            DB::connection('pgsql')->table('selemti.mov_inv')
+                ->whereIn('id', $this->createdMovInvIds)->delete();
         }
-
-        $this->setUpInMemoryDatabase();
-        $this->seedModifierFixtures();
+        if ($this->createdRecetaIds) {
+            DB::connection('pgsql')->table('selemti.receta_det')
+                ->whereIn('receta_id', $this->createdRecetaIds)->delete();
+            DB::connection('pgsql')->table('selemti.recetas')
+                ->whereIn('id', $this->createdRecetaIds)->delete();
+        }
+        Mockery::close();
+        parent::tearDown();
     }
 
     public function test_modifier_group_consistency(): void
     {
-        $service = new ModifierValidationService();
+        $adapter = Mockery::mock(FloreantPosAdapter::class);
+        $adapter->shouldReceive('getModifierGroupId')
+            ->once()->with(2)->andReturn(3);
 
-        $result = $service->getModifierGroup(2);
+        $service = new ModifierValidationService($adapter);
 
-        $this->assertSame(3, $result);
+        $this->assertSame(3, $service->getModifierGroup(2));
     }
 
     public function test_inventory_movement_uses_correct_group(): void
     {
-        $movementService = new InventoryMovementService(new ModifierValidationService());
+        $recetaId = DB::connection('pgsql')->table('selemti.recetas')->insertGetId([
+            'grupo_modificador_id' => 3,
+            'nombre_modificador'   => 'Picadillo',
+            'created_at'           => now(),
+            'updated_at'           => now(),
+        ]);
+        $this->createdRecetaIds[] = $recetaId;
 
+        DB::connection('pgsql')->table('selemti.receta_det')->insert([
+            'receta_id'  => (string) $recetaId,
+            'item_id'    => '500',
+            'cantidad'   => 1,
+            'orden'      => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $adapter = Mockery::mock(FloreantPosAdapter::class);
+        $adapter->shouldReceive('getModifierWithGroup')
+            ->once()->with(2)
+            ->andReturn(new PosMenuModifierDto(id: 2, name: 'Picadillo', groupId: 3, groupName: 'Relleno Empanada'));
+
+        $movementService = new InventoryMovementService(new ModifierValidationService($adapter));
         $movementId = $movementService->recordModifierMovement(2, 1, 'SALE', ['uom' => 'EA']);
 
-        $this->assertGreaterThan(0, $movementId, 'Debe crear un movimiento de inventario');
+        if ($movementId > 0) {
+            $this->createdMovInvIds[] = $movementId;
+        }
+
+        $this->assertGreaterThan(0, $movementId);
 
         $movement = DB::connection('pgsql')->table('selemti.mov_inv')->where('id', $movementId)->first();
-
         $this->assertNotNull($movement);
-        $this->assertSame(500, (int) ($movement->item_id ?? 0), 'Debe consumir el ingrediente de la receta ligada al grupo correcto');
-        $this->assertSame(101, (int) ($movement->ref_id ?? 0));
+        $this->assertSame('500', (string) $movement->item_id);
+        $this->assertSame((string) $recetaId, (string) $movement->ref_id);
         $this->assertSame('MODIFIER_RECIPE', $movement->tipo);
     }
 
     public function test_miscellaneous_modifiers_are_considered_consistent(): void
     {
-        $tim = new TicketItemModifier([
-            'item_id' => 0,
-            'group_id' => 99,
-        ]);
+        $tim = new TicketItemModifier(['item_id' => 0, 'group_id' => 99]);
 
         $this->assertTrue($tim->is_consistent);
-    }
-
-    protected function setUpInMemoryDatabase(): void
-    {
-        config()->set('database.connections.pgsql', [
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-            'prefix' => '',
-        ]);
-
-        config()->set('database.default', 'pgsql');
-
-        DB::purge('pgsql');
-        DB::reconnect('pgsql');
-
-        DB::statement('CREATE TABLE "public.menu_modifier_group" (id INTEGER PRIMARY KEY, name TEXT)');
-        DB::statement('CREATE TABLE "public.menu_modifier" (id INTEGER PRIMARY KEY, name TEXT, group_id INTEGER)');
-        DB::statement('CREATE TABLE "selemti.recetas" (id INTEGER PRIMARY KEY, grupo_modificador_id INTEGER, nombre_modificador TEXT)');
-        DB::statement('CREATE TABLE "selemti.receta_det" (id INTEGER PRIMARY KEY AUTOINCREMENT, receta_id INTEGER, item_id INTEGER, cantidad REAL)');
-        DB::statement('CREATE TABLE "selemti.mov_inv" (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            item_id INTEGER,
-            qty REAL,
-            tipo TEXT,
-            uom TEXT,
-            sucursal_id INTEGER,
-            almacen_id INTEGER,
-            ref_tipo TEXT,
-            ref_id INTEGER,
-            user_id INTEGER,
-            ts TEXT,
-            meta TEXT,
-            created_at TEXT,
-            updated_at TEXT
-        )');
-    }
-
-    protected function seedModifierFixtures(): void
-    {
-        DB::connection('pgsql')->table('public.menu_modifier_group')->insert([
-            'id' => 3,
-            'name' => 'Relleno Empanada',
-        ]);
-
-        DB::connection('pgsql')->table('public.menu_modifier')->insert([
-            'id' => 2,
-            'name' => 'Picadillo',
-            'group_id' => 3,
-        ]);
-
-        DB::connection('pgsql')->table('selemti.recetas')->insert([
-            'id' => 101,
-            'grupo_modificador_id' => 3,
-            'nombre_modificador' => 'Picadillo',
-        ]);
-
-        DB::connection('pgsql')->table('selemti.receta_det')->insert([
-            'receta_id' => 101,
-            'item_id' => 500,
-            'cantidad' => 1,
-        ]);
     }
 }
