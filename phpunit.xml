@@ -28,7 +28,7 @@
         <env name="DB_DATABASE" value="pos"/>
         <env name="DB_USERNAME" value="postgres"/>
         <env name="DB_PASSWORD" value="T3rr3n4#p0s"/>
-        <env name="DB_SCHEMA" value="selemti,public"/>
+        <env name="DB_SCHEMA" value="selemti"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
