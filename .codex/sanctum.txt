@@ -1,0 +1,1135 @@
+
+• I'm sorting out the user's latest request to revert API route middleware back to using auth:sanctum
+  and the 'permission:' alias for permissions, reflecting their existing setup. That means undoing
+  changes that introduced auth.api and perm middleware aliases, updating docs to describe auth:sanctum
+  as the minimal guard, and reconsidering the custom AuthApi middleware and new App\Http\Kernel.php
+  file we added—possibly keeping them unused but making sure nothing breaks by missing standard
+  middleware definitions. This is tricky because the user wants to continue the rest of the
+  instructions (like docs updates) but align routes and middleware with Sanctum standards, so I’m
+  planning to revert routes, amend docs accordingly, and handle kernel aliasing carefully to avoid
+  breaking the app.
+
+  Considering removal of added Kernel file
+
+• Ran git status -sb
+  └ ## integrate/web-prs-20251023-1922...origin/integrate/web-prs-20251023-1922 [ahead 3]
+     M .claude/settings.local.json
+    … +68 lines
+    ?? resources/views/partials/inventory/
+    ?? tests/Feature/PosConsumptionServiceTest.php
+
+• Explored
+  └ Read Kernel.php
+
+• I'm analyzing how middleware is configured in this Laravel project since the traditional app/Http/
+  Kernel.php file seems missing. It looks like in Laravel 11+, middleware registration moved into
+  bootstrap/app.php using a new style with Application::configure()->withMiddleware(). I want to
+  confirm this in the repo’s bootstrap/app.php to understand how global middleware and groups are set
+  up without the Kernel.
+
+• Explored
+  └ Read app.php
+
+• Deleted app/Http/Kernel.php (+0 -24)
+     1 -<?php
+     2 -
+     3 -namespace App\Http;
+     4 -
+     5 -use Illuminate\Contracts\Foundation\Application;
+     6 -use Illuminate\Foundation\Http\Kernel as HttpKernel;
+     7 -use Illuminate\Routing\Router;
+     8 -
+     9 -class Kernel extends HttpKernel
+    10 -{
+    11 -    public function __construct(Application $app, Router $router)
+    12 -    {
+    13 -        parent::__construct($app, $router);
+    14 -
+    15 -        $this->middlewareAliases = array_merge(
+    16 -            $this->middlewareAliases,
+    17 -            [
+    18 -                'auth.api' => \App\Http\Middleware\AuthApi::class,
+    19 -                'perm' => \App\Http\Middleware\CheckPermission::class,
+    20 -                'api.response' => \App\Http\Middleware\ApiResponseMiddleware::class,
+    21 -            ],
+    22 -        );
+    23 -    }
+    24 -}
+
+• I’m sorting out reverting route middleware from 'auth.api' back to 'auth:sanctum' as per the latest
+  instructions, ensuring permission aliases are consistent and updating docs to reflect these changes;
+  I’m also deciding to keep the unused AuthApi middleware file without registering an alias to avoid
+  confusion while aligning documentation to emphasize 'auth:sanctum' as the standard guard.
+
+• Edited routes/api.php (+3 -4)
+    156  */
+    157 -Route::prefix('inventory')->middleware(['auth.api', 'perm:can_manage_purchasing'])->group(fun
+         ction () {
+    157 +Route::prefix('inventory')->middleware(['auth:sanctum', 'permission:can_manage_purchasing'])-
+         >group(function () {
+    158      // KPIs Dashboard
+        ⋮
+    197  // Costeo de recetas
+    198 -Route::get('/recipes/{id}/cost', [RecipeCostController::class, 'show'])
+    199 -    ->middleware(['auth.api', 'perm:can_view_recipe_dashboard']);
+    198 +Route::get('/recipes/{id}/cost', [RecipeCostController::class, 'show']);
+    199
+        ⋮
+    204  */
+    206 -Route::prefix('production')->middleware(['auth.api', 'perm:can_edit_production_order'])->grou
+         p(function () {
+    205 +Route::prefix('production')->middleware(['auth:sanctum', 'permission:can_edit_production_orde
+         r'])->group(function () {
+    206      Route::post('/batch/plan', [ProductionController::class, 'plan']);
+
+• Edited routes/api.php (+3 -3)
+    233  */
+    234 -Route::prefix('purchasing')->middleware(['auth.api', 'perm:can_manage_purchasing'])->group(fu
+         nction () {
+    234 +Route::prefix('purchasing')->middleware(['auth:sanctum', 'permission:can_manage_purchasing'])
+         ->group(function () {
+    235      Route::get('/suggestions', [PurchaseSuggestionController::class, 'index']);
+        ⋮
+    238
+    239 -    Route::prefix('receptions')->middleware(['auth.api', 'perm:can_manage_purchasing'])->grou
+         p(function () {
+    239 +    Route::prefix('receptions')->middleware(['auth:sanctum', 'permission:can_manage_purchasin
+         g'])->group(function () {
+    240          Route::post('/create-from-po/{purchase_order_id}', [ReceivingController::class, 'crea
+    250 +    Route::prefix('returns')->middleware(['auth:sanctum', 'permission:can_manage_purchasing']
+         )->group(function () {
+    251          Route::post('/create-from-po/{purchase_order_id}', [ReturnController::class, 'createF
+         romPO']);
+
+    267 +    Route::middleware(['auth:sanctum', 'permission:can_view_recipe_dashboard'])
+    268          ->get('/tickets/{ticketId}/diagnostics', [PosConsumptionController::class, 'diagnosti
+         cs']);
+        ⋮
+    270      // Reprocess - requiere permiso: can_reprocess_sales
+    271 -    Route::middleware(['auth.api', 'perm:can_reprocess_sales'])
+    271 +    Route::middleware(['auth:sanctum', 'permission:can_reprocess_sales'])
+    272          ->post('/tickets/{ticketId}/reprocess', [PosConsumptionController::class, 'reprocess'
+         ]);
+        ⋮
+    274      // Reverse - requiere permiso: can_reprocess_sales
+    275 -    Route::middleware(['auth.api', 'perm:can_reprocess_sales'])
+    275 +    Route::middleware(['auth:sanctum', 'permission:can_reprocess_sales'])
+    276          ->post('/tickets/{ticketId}/reverse', [PosConsumptionController::class, 'reverse']);
+        ⋮
+    278      // Dashboard - tickets con problemas de mapeo - requiere permiso: can_view_recipe_dashboa
+         rd
+    279 -    Route::middleware(['auth.api', 'perm:can_view_recipe_dashboard'])
+    279 +    Route::middleware(['auth:sanctum', 'permission:can_view_recipe_dashboard'])
+    280          ->get('/dashboard/missing-recipes', [PosConsumptionController::class, 'missingRecipes
+         ']);
+        ⋮
+    283  // Costeo de recetas (POS)
+    284 -Route::middleware(['auth.api', 'perm:can_view_recipe_dashboard'])
+    284 +Route::middleware(['auth:sanctum', 'permission:can_view_recipe_dashboard'])
+    285      ->get('/recipes/{recipeId}/cost', [PosRecipeCostController::class, 'showCost']);
+    286
+    287 -Route::middleware(['auth.api', 'perm:can_view_recipe_dashboard'])
+    287 +Route::middleware(['auth:sanctum', 'permission:can_view_recipe_dashboard'])
+    288      ->post('/recipes/{recipeId}/recalculate', [PosRecipeCostController::class, 'recalculate']
+         );
+
+
+• I'm planning to revise the SECURITY_AND_ROLES.md file to replace all references to auth.api with
+  auth:sanctum and update examples accordingly, ensuring the docs accurately reflect permission guards
+  and new authentication details. I'll carefully adjust the sections on technical permissions and
+  minimal guards while preserving unaffected parts.
+
+• Explored
+  └ Search auth\.api in SECURITY_AND_ROLES.md
+
+    185 -- Toda ruta que afecte inventario, costo, disponibilidad POS o reproceso debe incluir el midd
+         leware `auth.api`.
+    186 -- Si a futuro se habilita Sanctum, Passport o cualquier otro guard, `auth.api` sigue siendo l
+         a capa mínima obligatoria.
+    187 -- Está prohibido eliminar middleware de seguridad en rutas API simplemente porque el guard aú
+         n no está implementado. Si falta, se debe crear un guard temporal (`auth.api`) y bloquear la
+    186 +- Si más adelante se adopta Passport u otro mecanismo, debe seguir existiendo un guard autent
+         icado equivalente (por ejemplo un alias `auth.api` que delegue en Sanctum) para bloquear usua
+         rios anónimos.
+    187 +- Está prohibido eliminar middleware de seguridad en rutas API simplemente porque el guard fi
+         nal aún no está implementado; si se requiere un guard temporal, debe crearse y apuntar a un g
+         uard autenticado real.
+    188
+    189  Regla:
+    190 -Cada endpoint nuevo debe declarar explícitamente qué permiso exige  utilizando `auth.api` + `
+         perm:<permiso>`.
+    190 +Cada endpoint nuevo debe declarar explícitamente qué permiso exige utilizando `auth:sanctum`
+         + `permission:<permiso>`.
+    191
+    194      ->post('/pos/tickets/{ticketId}/reprocess', [PosConsumptionController::class, 'reprocess'
+         ]);
+
+• Explored
+  └ Search auth\.api in docs
+    Read AuthApi.php
+
+• Edited app/Http/Middleware/AuthApi.php (+2 -2)
+    12      {
+    13 -        $user = auth()->user();
+    13 +        $user = $request->user() ?? auth('sanctum')->user();
+    14
+    15 -        if (! auth()->check() || ! $user) {
+    15 +        if (! $user) {
+    16              return response()->json([
+
+• Explored
+  └ Read LIVE_AVAILABILITY.md
+
+• Updated Plan
+  └ ✔ Revisar documentación y rutas actuales para entender estado base.
+    ✔ Redactar nuevas políticas y actualizar documentación existente según requerimientos.
+    ✔ Implementar middleware y reforzar protecciones en rutas API según directrices actualizadas.
+    □ Verificar y preparar respuesta final con contenidos solicitados.
+
+• Explored
+  └ Read api.php, AUDIT_LOG_POLICY.md, FORECAST_AND_PRODUMIX_POLICY.md, ROADMAP_ENTERPRISE.md,
+         REPORTING_AND_KPIS.md, AuthApi.php
+
+• I’m sorting out how to provide the full contents of all modified or added files per the user’s
+  request, even though developer instructions suggest a brief explanation first. To best respect both,
+  I’ll offer a minimal note before presenting each file’s full content in fenced code blocks, covering
+  all relevant docs and code changes including large files like routes/api.php and the lengthy
+  security doc. This careful balancing should satisfy the priority hierarchy and the user’s explicit
+  ask.
+
+• Updated Plan
+  └ ✔ Revisar documentación y rutas actuales para entender estado base.
+    ✔ Redactar nuevas políticas y actualizar documentación existente según requerimientos.
+    ✔ Implementar middleware y reforzar protecciones en rutas API según directrices actualizadas.
+    ✔ Verificar y preparar respuesta final con contenidos solicitados.
+
+• Explored
+  └ Read SECURITY_AND_ROLES.md, api.php
+
+• I’m organizing the final message by compiling all file contents into separate code blocks,
+  preserving original content carefully while ensuring readability with blank lines between blocks.
+  I’m also verifying handling of non-ASCII characters like arrows, deciding to keep them since the
+  user’s original docs included them. This careful two-step process will produce a clear, precise, and
+  faithful combined output.
+
+─ Worked for 3m 48s ──────────────────────────────────────────────────────────────────────────────────
+
+• docs/ROADMAP_ENTERPRISE.md
+
+  # Roadmap Operativo & Estratégico
+  Versión: 2025-10-27
+  Estado: ACTIVO / OBLIGATORIO
+
+  ## Fase Operativa (Nivel 1 – ya funcional)
+  - Recetas con implosión (receta → subreceta → insumo crudo).
+  - Producción y merma (`ProductionService`).
+  - Inventario multi-almacén.
+  - Reproceso POS (`inv_consumo_pos`, `ticket_item_modifiers`, `pos_map`).
+  - Disponibilidad POS / agotados / reroute a cocina (`MenuAvailabilityService`).
+  - Compras, recepción y costeo por lote.
+  - Seguridad y roles.
+
+  ## Fase Gerencial (Nivel 2 – siguiente sprint inmediato)
+  - Produmix (plan diario de producción por sucursal).
+  - Corte de cocina/barra por turno (arqueo productivo).
+  - Consolidación diaria de ventas y KPIs en tablas de resumen en `selemti` (venta neta, costo
+  teórico, merma, margen).
+  - Auditoría centralizada con bitácora por acción.
+  - Reportes exportables a Excel.
+
+  ## Fase Estratégica (Nivel 3 – futuro)
+  - Forecast avanzado (clima, día de la semana, temporada).
+  - Control de caducidad / recall de lote.
+  - Mano de obra en costo receta (labor cost).
+  - Transferencias automáticas cocina central → sucursales.
+  - Integración contable externa.
+
+  ## Principios no negociables
+  - Ningún movimiento de inventario / costo / disponibilidad POS sin: permiso, motivo, user_id,
+  timestamp.
+  - Nada se puede vender en POS si no tiene receta que implosiona hasta insumo inventariable con
+  costo.
+
+  docs/AUDIT_LOG_POLICY.md
+
+  # Política de Auditoría y Bitácoras
+  Versión: 2025-10-27
+  Estado: ACTIVO / OBLIGATORIO
+
+  ## Acciones que SIEMPRE generan log
+  - Reprocesar POS.
+  - Reversar consumo POS.
+  - Declarar producción y merma.
+  - Ajustes de inventario.
+  - Recepciones de compra / devoluciones.
+  - Transferencias entre almacenes.
+  - Marcar un ítem como agotado en POS.
+  - Forzar que un SKU se vaya a cocina.
+  - Cambios de receta/costos.
+
+  ## Campos mínimos en bitácoras
+  - `user_id`
+  - `timestamp`
+  - `accion` (enum)
+  - `referencia` (ticket_id, batch_id, menu_item_id, etc.)
+  - `motivo`
+  - `detalles` (JSON con payload contextual)
+
+  ## Tablas de log (existentes / planeadas)
+  - `selemti.inv_consumo_pos_log`
+  - `selemti.pos_reverse_log`
+  - `selemti.menu_availability_log`
+  - `selemti.production_log`
+  - `selemti.stock_adjustment_log`
+  - `selemti.corte_cocina_log`
+
+  ## Regla de cierre de sprint
+  Ningún sprint puede cerrar endpoints que mueven inventario o disponibilidad sin generar log con los
+  campos mínimos definidos arriba.
+
+  docs/FORECAST_AND_PRODUMIX_POLICY.md
+
+  # Política de Forecast y Produmix
+  Versión: 2025-10-27
+  Estado: ACTIVO / OBLIGATORIO
+
+  ## Produmix
+  - Plan diario de producción por sucursal basado en ventas recientes POS, inventario actual de
+  producto terminado y par objetivo.
+  - Produmix genera las órdenes que luego se declaran con `ProductionService`.
+  - Cuando Produmix no se cumple:
+    - `MenuAvailabilityService` puede marcar SKU como AGOTADO.
+    - También puede reroutear el SKU a cocina/KDS.
+    - Ambas acciones son de intervención operativa Nivel 1, requieren permiso
+  `can_manage_menu_availability` y registro en `selemti.menu_availability_log`.
+
+  ## Corte operativo cocina/barra
+  - Inventario inicial + producción declarada − venta POS − merma declarada vs inventario físico
+  final.
+  - Diferencia se guarda con `user_id`, `timestamp` y `motivo` (ver `docs/AUDIT_LOG_POLICY.md`).
+  - Equivalente a arqueo de caja chica pero para operación de alimentos.
+
+  ## Permiso `can_manage_produmix`
+  - Gerente de Sucursal y Dirección pueden publicar/aprobar Produmix diario.
+  - Cocina ejecuta producción; no modifica Produmix.
+
+  ## Referencias
+  - `docs/Produccion/PRODUMIX.md`
+  - `docs/Produccion/PRODUCTION_FLOW.md`
+  - `docs/POS/LIVE_AVAILABILITY.md`
+
+  docs/REPORTING_AND_KPIS.md
+
+  # Política de Reportes y KPIs
+  Versión: 2025-10-27
+  Estado: ACTIVO / OBLIGATORIO
+
+  ## KPIs diarios por sucursal en `selemti`
+  - `venta_neta_total`
+  - `costo_teorico_total`
+  - `costo_real_total`
+  - `merma_valorada_total`
+  - `margen_bruto_pct`
+  - `top5_productos` con % margen
+  - `notas_operativas` (comentarios del gerente)
+
+  ## Persistencia
+  - Usar tablas resumen `daily_sales_summary`, `daily_kpi_summary` (plan).
+  - Generar procesos diarios (job ETL) para poblar datos.
+
+  ## Exportación
+  - Todos los KPIs deben poder exportarse a Excel/CSV.
+  - Integrar con panel gerencial (ver `docs/Produccion/PRODUMIX.md`, `docs/Produccion/
+  PRODUCTION_FLOW.md`).
+
+  ## Visibilidad
+  - Gerente de Sucursal: sólo ve su sucursal.
+  - Dirección: acceso global.
+  - Requiere permisos `can_view_recipe_dashboard` y `can_manage_produmix` según sección rol.
+
+  ## Auditoría
+  - Cada consulta/exportación debe registrar user_id, timestamp y reporte generado (futuro).
+  - Enlazar con `docs/AUDIT_LOG_POLICY.md`.
+
+  docs/SECURITY_AND_ROLES.md
+
+  # Seguridad Operativa, Roles y Permisos
+  Versión: 2025-10-27
+  Estado: ACTIVO / OBLIGATORIO
+
+  Este documento define las reglas de seguridad operativa del sistema Terrena.
+  Estas reglas aplican para inventario, producción, recetas, costos y consumo POS.
+
+  Estas políticas SON MANDATORIAS.
+  Ningún sprint puede marcarse como "Done" si viola estas reglas.
+
+  ---
+
+  ## 1. Separación de dominios (DB Policy)
+
+  - El esquema `public` pertenece al POS (Floreant).
+    - Tablas clave: `public.ticket`, `public.ticket_item`, `public.ticket_item_modifier`,
+  `public.menu_item`, etc.
+    - Política: **SOLO LECTURA** desde Laravel.
+    - Queda estrictamente prohibido agregar columnas, triggers o constraints nuevos sobre tablas de
+  `public` mediante migraciones de Laravel.
+
+  - El esquema `selemti` pertenece a Terrena (inventarios, recetas, costos, alertas, reprocesos).
+    - Aquí se guarda todo lo operativo:
+      - consumo POS expandido y confirmado,
+      - control de reproceso,
+      - producción y mermas,
+      - costos por lote,
+      - recepciones de compra,
+      - alertas.
+    - Política: Todos los cambios estructurales se hacen aquí.
+
+  Justificación:
+  - Protegemos estabilidad del POS.
+  - Aseguramos trazabilidad de inventario y costo sin tocar la venta original.
+  - Auditoría puede reconstruir cualquier ajuste.
+
+  ---
+
+  ## 2. Principio de Trazabilidad
+
+  Para cada acción que afecta inventario, costo o venta histórica:
+  - debe existir un registro con:
+    - quién lo hizo (user_id),
+    - cuándo lo hizo (timestamp),
+    - por qué lo hizo (motivo / meta JSON),
+    - qué afectó (ticket_id, lote_id, etc.).
+
+  Esto aplica a:
+  - reproceso de tickets,
+  - reversa de consumo,
+  - ajustes de inventario manuales,
+  - recepciones de mercancía,
+  - cierres de conteo físico,
+  - producción (alta de subrecetas / batches).
+
+  Ejemplos de tablas de auditoría:
+  - `selemti.inv_consumo_pos_log`
+  - `selemti.pos_reverse_log` (reversa de consumo POS)
+  - `selemti.mov_inv` (movimientos de inventario con tipo, ref_tipo, ref_id, meta jsonb)
+
+  Regla obligatoria:
+  **No debe existir flujo operativo que cambie stock o costo sin algún log.**
+
+  ---
+
+  ## 3. Roles operativos
+
+  Estos roles son funcionales (rol en el negocio), no sólo permisos técnicos.
+
+  ### 3.1 Cajero / Punto de Venta
+  - Puede vender en POS.
+  - NO puede ver costos.
+  - NO puede reprocesar tickets.
+  - NO puede ajustar inventario.
+  - Puede ver disponibilidad básica (stock bajo / no disponible).
+
+  ### 3.2 Cocina / Producción
+  - Puede reportar producción terminada (ej. "se hicieron 5 L de salsa verde").
+  - Puede reportar merma (ej. "se desperdiciaron 200g de pechuga").
+  - NO puede reprocesar tickets pasados.
+  - NO puede modificar recetas base.
+  - Puede ver ingredientes y subrecetas que le corresponden.
+
+  ### 3.3 Compras / Almacén
+  - Puede capturar recepciones de compra.
+  - Puede asignar costo unitario por lote recibido (`inventory_batch.unit_cost`).
+  - Puede registrar inventario inicial / conteos.
+  - NO puede editar recetas.
+  - NO puede reprocesar ventas POS.
+  - Puede ver alertas de stock bajo.
+
+  ### 3.4 Gerente de Sucursal
+  - Puede reprocesar tickets atrasados para cuadrar inventario (cuando un producto POS aún no tenía
+  receta asignada).
+  - Puede reversar consumo de un ticket anulado.
+  - Puede aprobar ajustes de inventario por diferencia de conteo.
+  - Puede ver costos de receta y margen.
+  - Puede generar y aprobar el plan Produmix diario.
+  - Puede ejecutar intervenciones POS nivel 1 (agotados / forzar KDS) con registro en bitácora.
+  - NO puede editar recetas maestras.
+  - NO puede editar precios de proveedores.
+
+  ### 3.5 Chef Ejecutivo / Control de Receta
+  - Puede crear/editar recetas base y subrecetas.
+  - Puede definir mapeo POS → receta (`selemti.pos_map`).
+  - Puede marcar si un ítem es:
+    - `es_producible`
+    - `es_empaque_to_go`
+    - `es_consumible_operativo`
+  - NO puede hacer ajustes contables/inventario.
+  - NO puede reprocesar tickets.
+
+  ### 3.6 Dirección / Administración Central
+  - Puede ver todo.
+  - Puede desbloquear producto caducado (recall lifting).
+  - Puede generar reportes históricos de costo real por lote.
+  - Puede supervisar Produmix y disponibilidad en vivo del POS.
+
+  ---
+
+  ## 4. Niveles de intervención sobre el POS
+
+  - **Nivel 0 (solo lectura histórica)**
+    Consultar tickets/ventas para conciliación de inventario y costo. Sin capacidad de modificar
+  disponibilidad ni rutas POS.
+  - **Nivel 1 (intervención operativa autorizada – PERMITIDO)**
+    Marcar SKU como agotado o redirigirlo a cocina/KDS. Requiere permiso
+  `can_manage_menu_availability`, genera registro en `selemti.menu_availability_log` con `user_id`,
+  `timestamp`, `motivo`. No altera tickets ya vendidos ni sus totales.
+  - **Nivel 2 (PROHIBIDO)**
+    Cambiar tickets históricos, tocar impuestos totales, meter triggers que impidan vender si Terrena
+  está caído o descontar inventario dentro del POS.
+
+  ## 5. Permisos técnicos (ACL / Laravel Permission)
+
+  Estos son los permisos que deben existir vía seeder y usarse como middleware en controladores y
+  rutas API.
+
+  ### `can_view_recipe_dashboard`
+  - Quién lo tiene: Gerente de Sucursal, Chef Ejecutivo, Dirección.
+  - Puede:
+    - ver `/pos/dashboard/missing-recipes`
+    - ver diagnóstico de ticket
+    - ver si un ticket requiere reproceso
+    - ver discrepancias inventario/venta.
+
+  ### `can_reprocess_sales`
+  - Quién lo tiene: Gerente de Sucursal, Dirección.
+  - Puede:
+    - lanzar reproceso histórico de ventas (descargar inventario de tickets viejos),
+    - confirmar consumo atrasado,
+    - ejecutar reversa de consumo en caso de ticket anulado.
+  - Debe loguearse en `selemti.pos_reverse_log` / `selemti.inv_consumo_pos_log`.
+
+  ### `can_edit_production_order`
+  - Quién lo tiene: Cocina/Producción Líder, Chef Ejecutivo.
+  - Puede:
+    - declarar producción terminada,
+    - cerrar órdenes de producción,
+    - registrar merma en etapas (limpieza, cocción, etc.).
+
+  ### `can_manage_purchasing`
+  - Quién lo tiene: Compras / Almacén / Dirección.
+  - Puede:
+    - capturar recepciones,
+    - asignar costo por lote en `inventory_batch.unit_cost`,
+    - ajustar existencias iniciales.
+
+  ### `can_modify_recipe`
+  - Quién lo tiene: Chef Ejecutivo, Dirección.
+  - Puede:
+    - modificar receta base,
+    - crear subrecetas,
+    - actualizar `pos_map`.
+
+  ### `can_manage_produmix`
+  - Quién lo tiene: Gerente de Sucursal, Dirección.
+  - Puede:
+    - generar, editar y aprobar el plan Produmix (ver `docs/Produccion/PRODUMIX.md`),
+    - emitir órdenes de producción hacia cocina,
+    - marcar el plan como “listo para producción” o “requerir ajuste”.
+  - Cocina no posee este permiso; únicamente ejecuta producción confirmada.
+
+  ### `can_manage_menu_availability`
+  - Quién lo tiene: Gerente de Sucursal, Dirección.
+  - Puede:
+    - marcar SKUs agotados en POS,
+    - forzar routing/KDS de un SKU a cocina,
+    - restablecer disponibilidad.
+  - Cada acción exige motivo y se registra en `selemti.menu_availability_log`.
+
+  ### Guard mínimo `auth:sanctum`
+  - Toda ruta que afecte inventario, costo, disponibilidad POS o reproceso debe incluir
+  `auth:sanctum`.
+  - Si más adelante se adopta Passport u otro mecanismo, debe seguir existiendo un guard autenticado
+  equivalente (por ejemplo un alias `auth.api` que delegue en Sanctum) para bloquear usuarios
+  anónimos.
+  - Está prohibido eliminar middleware de seguridad en rutas API simplemente porque el guard final
+  aún no está implementado; si se requiere un guard temporal, debe crearse y apuntar a un guard
+  autenticado real.
+
+  Regla:
+  Cada endpoint nuevo debe declarar explícitamente qué permiso exige utilizando `auth:sanctum` +
+  `permission:<permiso>`.
+
+  ```php
+  Route::middleware(['auth:sanctum', 'permission:can_reprocess_sales'])
+      ->post('/pos/tickets/{ticketId}/reprocess', [PosConsumptionController::class, 'reprocess']);
+
+  ## 6. Reglas Mandatorias de Seguridad Operativa
+
+  - public.* es solo lectura. Ninguna migración puede alterar tablas public.
+  - Ningún ajuste de inventario, reproceso de ticket o reversa puede ejecutarse sin:
+      - permiso explícito,
+      - registro en log con user_id, timestamp, motivo (ver docs/AUDIT_LOG_POLICY.md).
+  - Toda receta vendible DEBE estar mapeada en selemti.pos_map.
+      - Si no lo está, debe aparecer en el dashboard /pos/dashboard/missing-recipes en rojo.
+  - Ninguna descarga de inventario puede ocurrir “directo a mano” sin pasar por un tipo de movimiento
+    autorizado en selemti.mov_inv.
+  - Cambios a recetas (recipe_version) NO significan revaluar histórico automáticamente.
+      - Para eso existe reproceso manual, con permiso can_reprocess_sales.
+  - Producción (fabricar salsa, cocinar pechuga, etc.) siempre crea entrada a inventario terminado y
+    descarga insumos crudos. Nunca se ajusta stock directo.
+  - Intervenciones POS nivel 1 (agotado / forzar KDS) requieren can_manage_menu_availability, motivo y
+    registro en selemti.menu_availability_log. No alteran tickets históricos.
+
+  ## 7. Cláusula de Cumplimiento para todos los Sprints
+
+  Para marcar una historia de usuario / sprint como "Done", se deben cumplir TODAS las siguientes
+  condiciones:
+
+  - ¿Este cambio intentó tocar el esquema public?
+      - Si sí → RECHAZADO (no permitido).
+  - ¿Este cambio agregó o usó endpoints que afectan stock, costo o ventas históricas?
+      - Esos endpoints DEBEN:
+          - exigir un permiso de los listados arriba,
+          - registrar log (user_id, timestamp, motivo) en la tabla correspondiente.
+  - ¿El cambio agregó pantallas nuevas (dashboard, producción, compras...)?
+      - Esas pantallas deben FILTRAR la visibilidad según rol.
+  - ¿Se agregó / cambió receta, subreceta, empaques to-go o mapeo POS→receta?
+      - Debe ser visible para Chef Ejecutivo y Dirección.
+      - No debe estar disponible para Cajero / Cocina básica.
+
+  Si cualquiera de estas condiciones falla, la historia NO se puede cerrar.
+
+  ## 8. Referencias Cruzadas
+
+  Estas políticas aplican a:
+
+  - docs/Recetas/POS_CONSUMPTION_SERVICE.md
+  - docs/Produccion/PRODUMIX.md
+  - docs/Produccion/PRODUCTION_FLOW.md
+  - docs/POS/LIVE_AVAILABILITY.md
+  - docs/Replenishment/ROLES_OPERATIVOS_FASE1.md
+  - migraciones bajo database/migrations/
+  - seeders de permisos (RecetasPermissionsSeeder)
+
+  Toda nueva documentación técnica debe enlazar a este archivo.
+
+
+  `docs/POS/LIVE_AVAILABILITY.md`
+  ```markdown
+  # Live Availability POS & Menu Routing
+  Versión: 2025-10-27
+  Estado: ACTIVO / OBLIGATORIO
+
+  Este documento define cómo Terrena controla la disponibilidad en vivo de productos POS (Floreant)
+  y las intervenciones operativas autorizadas. Se integra con `docs/Produccion/PRODUMIX.md`, `docs/
+  Produccion/PRODUCTION_FLOW.md` y las políticas de seguridad en `docs/SECURITY_AND_ROLES.md`.
+
+  ---
+
+  ## 1. Objetivo
+  - Reflejar en el POS el inventario real de producto terminado y empaques.
+  - Permitir decisiones operativas rápidas (agotado, forzar a cocina) con trazabilidad completa.
+  - Garantizar que cualquier intervención se registre y esté protegida por permisos.
+
+  ---
+
+  ## 2. Entradas necesarias
+  | Fuente | Descripción |
+  |--------|-------------|
+  | Produmix | Plan aprobado vs producción ejecutada (`docs/Produccion/PRODUMIX.md`). |
+  | ProductionService | Batches posteados (producto listo) y mermas (`docs/Produccion/
+  PRODUCTION_FLOW.md`). |
+  | POS | Ventas en tiempo real (solo lectura de `public.ticket`/`public.ticket_item`). |
+  | Inventario barra | Conteos físicos rápidos (opcional) para refrescar disponibilidad. |
+
+  ---
+
+  ## 3. Intervenciones operativas nivel 1
+  *(ver sección 5 de `docs/SECURITY_AND_ROLES.md`)*
+
+  Estas acciones se disparan principalmente cuando:
+  - no se pudo producir el batch planeado por Produmix,
+  - se agotó stock en barra.
+
+  1. **Marcar SKU como agotado**
+     - Requiere permiso `can_manage_menu_availability`.
+     - Crea registro en `selemti.menu_availability_log` con user_id, timestamp, motivo, SKU.
+     - Puede originarse cuando Produmix no se completó o existió merma inesperada.
+
+  2. **Forzar SKU a cocina (cambiar routing / KDS)**
+     - Permite atender bajos inventarios en barra, enviando el armado al line cook.
+     - También requiere `can_manage_menu_availability` y queda registrado en la misma bitácora.
+
+  > Estas acciones **NO** alteran tickets históricos, precios, impuestos ni totales de venta; sólo
+  afectan la visibilidad/flujo operativo del menú.
+  > Cada intervención alimenta el corte de cocina/barra de fin de turno para cuadrar inventario vs
+  ventas.
+
+  ---
+
+  ## 4. Flujo Live Availability
+  1. **Consumo Produmix**
+     - Si la producción planificada (Produmix) no se ejecutó, el SKU entra en “riesgo”.
+     - El plan Produmix es la principal señal para disparar agotados o reroutes.
+     - Se genera alerta en dashboard (semáforo amarillo/rojo).
+  2. **Evaluar inventario barra**
+     - Datos de `inventory_batch` + ventas en tiempo real.
+     - Umbrales configurables por SKU.
+  3. **Decidir acción**
+     - `agotado` → desactivar SKU en POS.
+     - `force_kitchen` → cambiar destino KDS.
+     - `sin acción` → monitorear.
+  4. **Registrar intervención (Nivel 1)**
+     - Requiere `can_manage_menu_availability`.
+     - Tabla `selemti.menu_availability_log` campos mínimos:
+       - `sku`, `accion` (agotado/force_kitchen/restablecido),
+       - `user_id`, `ejecutado_en`,
+       - `motivo`, `meta` (JSON opcional).
+  5. **Restablecer**
+     - Cuando se produce el batch faltante y el inventario se normaliza, se reactiva el SKU y se
+  registra en la misma bitácora.
+
+  ---
+
+  ## 5. Roles y permisos
+  | Permiso | Descripción | Roles sugeridos |
+  |---------|-------------|-----------------|
+  | `can_manage_menu_availability` | Ejecutar intervenciones (agotado/forzar) y ver dashboard Live
+  Availability. | Gerente de Sucursal, Dirección |
+  | `can_manage_produmix` | Requerido para validar si la falta de stock fue por producción no
+  ejecutada. | Gerente, Dirección |
+  | `can_edit_production_order` | Permite a cocina declarar producción y mermas, alimentando
+  disponibilidad. | Cocina líder, Chef Ejecutivo |
+
+  > Ver `docs/SECURITY_AND_ROLES.md` para matriz completa de permisos.
+
+  ---
+
+  ## 6. Dashboard Live Availability
+  **Ruta sugerida:** `/pos/live-availability`
+  **Componentes clave:**
+  - Lista de SKUs con estados `OK`, `RIESGO`, `AGOTADO`.
+  - Indicadores por categoría (proteínas, salsas, postres).
+  - Botones de acción (agotado / reactivar / forzar cocina) visibles sólo con permiso
+  `can_manage_menu_availability`.
+  - Histórico de intervenciones (últimas 24h) con motivo y usuario.
+
+  ---
+
+  ## 7. Integración con Produmix y Production Flow
+  - Produmix señala la brecha entre demanda y stock; si la producción no llega, se dispara agotado/
+  reroute.
+  - ProductionFlow registra ejecución real, mermas y lotes; su información alimenta el cálculo de
+  disponibilidad.
+  - El corte operativo de cocina/barra usa estas intervenciones para justificar diferencias al cierre.
+
+  ---
+
+  ## 8. Trazabilidad y auditoría
+  - Tabla `selemti.menu_availability_log` debe contar con índice por `sku`, `ejecutado_en`.
+  - Cada entrada incluye:
+    - `accion` (`MARK_OUT`, `FORCE_KITCHEN`, `RESTORE`),
+    - `user_id`,
+    - `motivo` (texto breve),
+    - `meta` (JSON – puede guardar lote crítico, ticket que motivó el cambio, etc.).
+  - Informes se cruzan con Produmix y producción para identificar causas raíz.
+
+  ---
+
+  ## 9. Escenarios típicos
+  | Situación | Acción Live Availability | Registro |
+  |-----------|-------------------------|----------|
+  | Produmix no ejecutado a tiempo | Marcar SKU en riesgo, notificar Gerente. | Alerta dashboard + log
+  si se marca agotado. |
+  | Venta mayor a pronóstico | Forzar a cocina temporalmente, ajustar Produmix siguiente turno. | Log
+  con motivo “spike demanda”. |
+  | Merma inesperada (contaminación) | Comentario en log + agotado inmediato, registrar merma en
+  ProductionService. | Log + `mov_inv` merma. |
+
+  ---
+
+  ## 10. Referencias cruzadas
+  - `docs/Produccion/PRODUMIX.md` – Algoritmo de planificación y permisos `can_manage_produmix`.
+  - `docs/Produccion/PRODUCTION_FLOW.md` – Ejecución en cocina, merma y cierre de turno.
+  - `docs/SECURITY_AND_ROLES.md` – Políticas de intervención POS y permisos
+  `can_manage_menu_availability`.
+  - `docs/Recetas/POS_CONSUMPTION_SERVICE.md` – Implosión y consumo POS.
+
+  app/Http/Middleware/AuthApi.php
+
+  <?php
+
+  namespace App\Http\Middleware;
+
+  use Closure;
+  use Illuminate\Http\Request;
+  use Symfony\Component\HttpFoundation\Response;
+
+  class AuthApi
+  {
+      public function handle(Request $request, Closure $next): Response
+      {
+          $user = $request->user() ?? auth('sanctum')->user();
+
+          if (! $user) {
+              return response()->json([
+                  'error' => 'Unauthenticated',
+              ], 401);
+          }
+
+          return $next($request);
+      }
+  }
+
+  routes/api.php
+
+  <?php
+
+  use Illuminate\Support\Facades\Route;
+  use Illuminate\Http\Request;
+
+  // Controllers
+  use App\Http\Controllers\Api\Caja\CajasController;
+  use App\Http\Controllers\Api\Caja\PrecorteController;
+  use App\Http\Controllers\Api\Caja\PostcorteController;
+  use App\Http\Controllers\Api\Caja\SesionesController;
+  use App\Http\Controllers\Api\Caja\ConciliacionController;
+  use App\Http\Controllers\Api\Caja\FormasPagoController;
+  use App\Http\Controllers\Api\Caja\AuthController;
+  use App\Http\Controllers\Api\Caja\HealthController;
+
+  use App\Http\Controllers\Api\Unidades\UnidadController;
+  use App\Http\Controllers\Api\Unidades\ConversionController;
+
+  use App\Http\Controllers\Api\AlertsController;
+  use App\Http\Controllers\Api\Inventory\ItemController;
+  use App\Http\Controllers\Api\Inventory\PriceController;
+  use App\Http\Controllers\Api\Inventory\RecipeCostController;
+  use App\Http\Controllers\Api\Inventory\StockController;
+  use App\Http\Controllers\Api\Inventory\VendorController;
+  use App\Http\Controllers\Inventory\TransferController;
+  use App\Http\Controllers\Api\MeController;
+  use App\Http\Controllers\Api\CatalogsController;
+  use App\Http\Controllers\Production\ProductionController;
+  use App\Http\Controllers\Purchasing\PurchaseSuggestionController;
+  use App\Http\Controllers\Purchasing\ReceivingController;
+  use App\Http\Controllers\Purchasing\ReturnController;
+  use App\Http\Controllers\Pos\PosConsumptionController;
+  use App\Http\Controllers\Pos\RecipeCostController as PosRecipeCostController;
+
+  /*
+  |--------------------------------------------------------------------------
+  | MÓDULO: REPORTES (Dashboards)
+  |--------------------------------------------------------------------------
+  */
+  use App\Http\Controllers\Api\ReportsController;
+  Route::prefix('reports')->group(function () {
+      Route::get('/kpis/sucursal',        [ReportsController::class, 'kpisSucursalDia']);
+      Route::get('/kpis/terminal',        [ReportsController::class, 'kpisTerminalDia']);
+      Route::get('/ventas/familia',       [ReportsController::class, 'ventasFamilia']);
+      Route::get('/ventas/hora',          [ReportsController::class, 'ventasPorHora']);
+      Route::get('/ventas/top',           [ReportsController::class, 'ventasTopProductos']);
+      Route::get('/ventas/dia',           [ReportsController::class, 'ventasDiarias']);
+      Route::get('/ventas/items_resumen', [ReportsController::class, 'ventasItemsResumen']);
+      Route::get('/ventas/categorias',    [ReportsController::class, 'ventasCategorias']);
+      Route::get('/ventas/sucursales',    [ReportsController::class, 'ventasPorSucursal']);
+      Route::get('/ventas/ordenes_recientes', [ReportsController::class, 'ordenesRecientes']);
+      Route::get('/ventas/formas',        [ReportsController::class, 'formasPago']);
+      Route::get('/ticket/promedio',      [ReportsController::class, 'ticketPromedio']);
+      Route::get('/stock/val',            [ReportsController::class, 'stockValorizado']);
+      Route::get('/consumo/vr',           [ReportsController::class, 'consumoVsMovimientos']);
+      Route::get('/anomalias',            [ReportsController::class, 'anomalos']);
+      Route::get('/purchasing/late-po', [\App\Http\Controllers\Reports\ReportsController::class,
+  'purchasingLatePO']);
+      Route::get('/inventory/over-tolerance', [\App\Http\Controllers\Reports\ReportsController::class,
+  'inventoryOverTolerance']);
+      Route::get('/inventory/top-urgent', [\App\Http\Controllers\Reports\ReportsController::class,
+  'inventoryTopUrgent']);
+  });
+
+  /*
+  |--------------------------------------------------------------------------
+  | Health Check
+  |--------------------------------------------------------------------------
+  */
+  Route::get('/ping', fn () => response()->json(['ok' => true, 'timestamp' => now()]));
+  Route::get('/health', [HealthController::class, 'check']);
+  Route::get('/me/permissions', [MeController::class, 'permissions']);
+
+  /*
+  |--------------------------------------------------------------------------
+  | Authentication (sin middleware para desarrollo)
+  |--------------------------------------------------------------------------
+  */
+  Route::prefix('auth')->group(function () {
+      Route::post('/login', [AuthController::class, 'login']);
+      Route::get('/login', [AuthController::class, 'loginHelp']); // Para HEAD/OPTIONS
+  });
+
+  /*
+  |--------------------------------------------------------------------------
+  | MÓDULO: CAJA
+  |--------------------------------------------------------------------------
+  */
+  Route::prefix('caja')->group(function () {
+
+      // === Cajas ===
+      Route::get('/cajas', [CajasController::class, 'index']);
+
+      // === Tickets ===
+      Route::get('/ticket/{id}', [App\Http\Controllers\Api\Caja\CajaController::class,
+  'getTicketDetail']);
+
+      // === Sesiones ===
+      Route::get('/sesiones/activa', [SesionesController::class, 'getActiva']);
+
+      // === Precortes ===
+      Route::prefix('precortes')->group(function () {
+          // Preflight - verificar tickets abiertos
+          Route::match(['get', 'post'], '/preflight/{sesion_id?}', [PrecorteController::class,
+  'preflight']);
+
+          // CRUD principal
+          Route::post('/', [PrecorteController::class, 'createLegacy']);
+          Route::get('/{id}', [PrecorteController::class, 'show']);
+          Route::post('/{id}', [PrecorteController::class, 'updateLegacy']);
+
+          // Acciones específicas
+          Route::get('/{id}/totales', [PrecorteController::class, 'resumenLegacy']);
+          Route::match(['get', 'post'], '/{id}/status', [PrecorteController::class, 'statusLegacy']);
+          Route::post('/{id}/enviar', [PrecorteController::class, 'enviar']);
+
+          // Totales por sesión
+          Route::get('/sesion/{sesion_id}/totales', [PrecorteController::class, 'totalesPorSesion']);
+      });
+
+      // === Postcortes ===
+      Route::prefix('postcortes')->group(function () {
+          Route::post('/', [PostcorteController::class, 'create']);
+          Route::get('/{id}', [PostcorteController::class, 'show']);
+          Route::post('/{id}', [PostcorteController::class, 'update']);
+          Route::get('/{id}/detalle', [PostcorteController::class, 'detalle']);
+      });
+
+      // === Conciliación ===
+      Route::get('/conciliacion/{sesion_id}', [ConciliacionController::class, 'getBySesion']);
+
+      // === Formas de Pago ===
+      Route::get('/formas-pago', [FormasPagoController::class, 'index']);
+  });
+
+  /*
+  |--------------------------------------------------------------------------
+  | MÓDULO: UNIDADES
+  |--------------------------------------------------------------------------
+  */
+  Route::prefix('unidades')->group(function () {
+      Route::get('/', [UnidadController::class, 'index']);
+      Route::get('/{id}', [UnidadController::class, 'show']);
+      Route::post('/', [UnidadController::class, 'store']);
+      Route::put('/{id}', [UnidadController::class, 'update']);
+      Route::delete('/{id}', [UnidadController::class, 'destroy']);
+
+      // Conversiones
+      Route::prefix('conversiones')->group(function () {
+          Route::get('/', [ConversionController::class, 'index']);
+          Route::post('/', [ConversionController::class, 'store']);
+          Route::put('/{id}', [ConversionController::class, 'update']);
+          Route::delete('/{id}', [ConversionController::class, 'destroy']);
+      });
+  });
+
+  /*
+  |--------------------------------------------------------------------------
+  | MÓDULO: INVENTORY
+  |--------------------------------------------------------------------------
+  */
+  Route::prefix('inventory')->middleware(['auth:sanctum',
+  'permission:can_manage_purchasing'])->group(function () {
+      // KPIs Dashboard
+      Route::get('/kpis', [StockController::class, 'kpis']);
+
+      // Stock endpoints
+      Route::get('/stock', [StockController::class, 'stockByItem']);
+      Route::get('/stock/list', [StockController::class, 'stockList']);
+
+      // Movements
+      Route::post('/movements', [StockController::class, 'createMovement'])
+          ;
+
+      Route::prefix('transfers')->group(function () {
+          Route::get('/{transfer_id}', [TransferController::class,
+  'show'])->whereNumber('transfer_id');
+          Route::post('/create', [TransferController::class, 'create']);
+          Route::post('/{transfer_id}/approve', [TransferController::class, 'approve']);
+          Route::post('/{transfer_id}/ship', [TransferController::class, 'ship']);
+          Route::post('/{transfer_id}/receive', [TransferController::class, 'receive']);
+          Route::post('/{transfer_id}/post', [TransferController::class, 'post']);
+      });
+
+      // Items
+      Route::prefix('items')->group(function () {
+          Route::get('/', [ItemController::class, 'index']);
+          Route::get('/{id}', [ItemController::class, 'show']);
+          Route::post('/', [ItemController::class, 'store']);
+          Route::put('/{id}', [ItemController::class, 'update']);
+          Route::delete('/{id}', [ItemController::class, 'destroy']);
+
+          // Relacionados con items
+          Route::get('/{id}/kardex', [StockController::class, 'kardex']);
+          Route::get('/{id}/batches', [StockController::class, 'batches']);
+          Route::get('/{id}/vendors', [VendorController::class, 'byItem']);
+          Route::post('/{id}/vendors', [VendorController::class, 'attach']);
+      });
+
+      // Precios de proveedores
+      Route::post('/prices', [PriceController::class, 'store'])->middleware('throttle:30,1');
+  });
+
+  // Costeo de recetas
+  Route::get('/recipes/{id}/cost', [RecipeCostController::class, 'show']);
+
+  /*
+  |--------------------------------------------------------------------------
+  | MÓDULO: PRODUCCIÓN INTERNA
+  |--------------------------------------------------------------------------
+  */
+  Route::prefix('production')->middleware(['auth:sanctum',
+  'permission:can_edit_production_order'])->group(function () {
+      Route::post('/batch/plan', [ProductionController::class, 'plan']);
+      Route::post('/batch/{batch_id}/consume', [ProductionController::class, 'consume']);
+      Route::post('/batch/{batch_id}/complete', [ProductionController::class, 'complete']);
+      Route::post('/batch/{batch_id}/post', [ProductionController::class, 'post']);
+  });
+
+  // Alertas de costos
+  Route::get('/alerts', [AlertsController::class, 'index']);
+  Route::post('/alerts/{id}/ack', [AlertsController::class, 'acknowledge']);
+
+  /*
+  |--------------------------------------------------------------------------
+  | MÓDULO: CATÁLOGOS
+  |--------------------------------------------------------------------------
+  */
+  Route::prefix('catalogs')->group(function () {
+      Route::get('/categories', [CatalogsController::class, 'categories']);
+      Route::get('/almacenes', [CatalogsController::class, 'almacenes']);
+      Route::get('/sucursales', [CatalogsController::class, 'sucursales']);
+      Route::get('/unidades', [CatalogsController::class, 'unidades']);
+      Route::get('/movement-types', [CatalogsController::class, 'movementTypes']);
+  });
+
+  /*
+  |--------------------------------------------------------------------------
+  | MÓDULO: PURCHASING (COMPRAS)
+  |--------------------------------------------------------------------------
+  */
+  Route::prefix('purchasing')->middleware(['auth:sanctum',
+  'permission:can_manage_purchasing'])->group(function () {
+      Route::get('/suggestions', [PurchaseSuggestionController::class, 'index']);
+      Route::post('/suggestions/{id}/approve', [PurchaseSuggestionController::class, 'approve']);
+      Route::post('/suggestions/{id}/convert', [PurchaseSuggestionController::class, 'convert']);
+
+      Route::prefix('receptions')->middleware(['auth:sanctum',
+  'permission:can_manage_purchasing'])->group(function () {
+          Route::post('/create-from-po/{purchase_order_id}', [ReceivingController::class,
+  'createFromPO']);
+          Route::post('/{recepcion_id}/lines', [ReceivingController::class, 'setLines']);
+          Route::post('/{recepcion_id}/validate', [ReceivingController::class, 'validateReception']);
+          Route::post('/{recepcion_id}/approve', [ReceivingController::class, 'approve']);
+          Route::get('/{recepcion_id}', [ReceivingController::class, 'show'])
+              ->whereNumber('recepcion_id');
+          Route::post('/{recepcion_id}/post', [ReceivingController::class, 'postReception']);
+          Route::post('/{recepcion_id}/costing', [ReceivingController::class, 'finalizeCosting']);
+      });
+
+      Route::prefix('returns')->middleware(['auth:sanctum',
+  'permission:can_manage_purchasing'])->group(function () {
+          Route::post('/create-from-po/{purchase_order_id}', [ReturnController::class,
+  'createFromPO']);
+          Route::post('/{return_id}/approve', [ReturnController::class, 'approve']);
+          Route::post('/{return_id}/ship', [ReturnController::class, 'ship']);
+          Route::post('/{return_id}/confirm', [ReturnController::class, 'confirm']);
+          Route::post('/{return_id}/post', [ReturnController::class, 'post']);
+          Route::post('/{return_id}/credit-note', [ReturnController::class, 'creditNote']);
+      });
+  });
+
+  /*
+  |--------------------------------------------------------------------------
+  | MÓDULO: POS CONSUMPTION (Consumo POS ↔ Inventario)
+  |--------------------------------------------------------------------------
+  */
+  Route::prefix('pos')->group(function () {
+      // Diagnostics - requiere permiso: can_view_recipe_dashboard
+      Route::middleware(['auth:sanctum', 'permission:can_view_recipe_dashboard'])
+          ->get('/tickets/{ticketId}/diagnostics', [PosConsumptionController::class, 'diagnostics']);
+
+      // Reprocess - requiere permiso: can_reprocess_sales
+      Route::middleware(['auth:sanctum', 'permission:can_reprocess_sales'])
+          ->post('/tickets/{ticketId}/reprocess', [PosConsumptionController::class, 'reprocess']);
+
+      // Reverse - requiere permiso: can_reprocess_sales
+      Route::middleware(['auth:sanctum', 'permission:can_reprocess_sales'])
+          ->post('/tickets/{ticketId}/reverse', [PosConsumptionController::class, 'reverse']);
+
+      // Dashboard - tickets con problemas de mapeo - requiere permiso: can_view_recipe_dashboard
+      Route::middleware(['auth:sanctum', 'permission:can_view_recipe_dashboard'])
+          ->get('/dashboard/missing-recipes', [PosConsumptionController::class, 'missingRecipes']);
+  });
+
+  // Costeo de recetas (POS)
+  Route::middleware(['auth:sanctum', 'permission:can_view_recipe_dashboard'])
+      ->get('/recipes/{recipeId}/cost', [PosRecipeCostController::class, 'showCost']);
+
+  Route::middleware(['auth:sanctum', 'permission:can_view_recipe_dashboard'])
+      ->post('/recipes/{recipeId}/recalculate', [PosRecipeCostController::class, 'recalculate']);
+
+  /*
+  |--------------------------------------------------------------------------
+  | ENDPOINTS LEGACY (Compatibilidad temporal - DEPRECADOS)
+  |--------------------------------------------------------------------------
+  | Estos endpoints mantienen compatibilidad con el sistema anterior
+  | Deberían ser removidos una vez que el frontend se actualice
+  */
+  Route::prefix('legacy')->group(function () {
+
+      // Rutas estilo Slim PHP original (.php en URL)
+      Route::get('/caja/cajas.php', [CajasController::class, 'index']);
+      Route::post('/caja/precorte_create.php', [PrecorteController::class, 'createLegacy']);
+      Route::post('/caja/precorte_update.php', [PrecorteController::class, 'updateLegacy']);
+      Route::get('/caja/precorte_totales.php', [PrecorteController::class, 'resumenLegacy']);
+      Route::get('/caja/precorte_status.php', [PrecorteController::class, 'statusLegacy']);
+      Route::get('/caja/formas_pago', [FormasPagoController::class, 'listar']);
+
+      // Rutas sprecorte (compatibilidad con wizard)
+      Route::prefix('sprecorte')->group(function () {
+          Route::match(['get', 'post'], '/preflight/{sesion_id?}', [PrecorteController::class,
+  'preflight']);
+          Route::match(['get', 'post'], '/totales/{id?}', [PrecorteController::class,
+  'resumenLegacy']);
+          Route::match(['get', 'post'], '/totales/sesion/{sesion_id?}', [PrecorteController::class,
+  'totalesPorSesion']);
+          Route::match(['get', 'post'], '/create/{id?}', [PrecorteController::class, 'createLegacy']);
+          Route::match(['get', 'post'], '/update/{id?}', [PrecorteController::class, 'updateLegacy']);
+      });
+
+      // Rutas flexibles con parámetros opcionales
+      Route::post('/precortes[/{id}]', [PrecorteController::class, 'createOrUpdateLegacy'])
+          ->where('id', '[0-9]+');
+      Route::post('/postcortes[/{id}]', [PostcorteController::class, 'createOrUpdateLegacy'])
+          ->where('id', '[0-9]+');
+  });
+
+  /*
+  |--------------------------------------------------------------------------
+  | Fallback - 404 JSON
+  |--------------------------------------------------------------------------
+  */
+  Route::fallback(function () {
+      return response()->json([
+          'ok' => false,
+          'error' => 'endpoint_not_found',
+          'message' => 'El endpoint solicitado no existe',
+          'timestamp' => now()->toIso8601String()
+      ], 404);
+  });

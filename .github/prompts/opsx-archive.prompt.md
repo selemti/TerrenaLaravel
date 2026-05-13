@@ -2,6 +2,8 @@
 description: Archive a completed change in the experimental workflow
 ---
 
+<!-- ⚠️ INVARIANTE CRÍTICO: DB_SCHEMA en phpunit.xml debe ser SOLO `selemti`. Nunca incluir `public`. Si se agrega `public`, RefreshDatabase borra las 108 tablas FloreantPOS. Ocurrió 2026-05-13. public es READ ONLY. Test guardián: tests/Unit/GuardRailsTest -->
+
 Archive a completed change in the experimental workflow.
 
 **Input**: Optionally specify a change name after `/opsx:archive` (e.g., `/opsx:archive add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.

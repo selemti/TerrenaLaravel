@@ -2,6 +2,8 @@
 description: Implement tasks from an OpenSpec change (Experimental)
 ---
 
+<!-- ⚠️ INVARIANTE CRÍTICO: DB_SCHEMA en phpunit.xml debe ser SOLO `selemti`. Nunca incluir `public`. Si se agrega `public`, RefreshDatabase borra las 108 tablas FloreantPOS. Ocurrió 2026-05-13. public es READ ONLY. Test guardián: tests/Unit/GuardRailsTest -->
+
 Implement tasks from an OpenSpec change.
 
 **Input**: Optionally specify a change name (e.g., `/opsx:apply add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.

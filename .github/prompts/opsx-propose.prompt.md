@@ -2,6 +2,8 @@
 description: Propose a new change - create it and generate all artifacts in one step
 ---
 
+<!-- ⚠️ INVARIANTE CRÍTICO: DB_SCHEMA en phpunit.xml debe ser SOLO `selemti`. Nunca incluir `public`. Si se agrega `public`, RefreshDatabase borra las 108 tablas FloreantPOS. Ocurrió 2026-05-13. public es READ ONLY. Test guardián: tests/Unit/GuardRailsTest -->
+
 Propose a new change - create the change and generate all artifacts in one step.
 
 I'll create a change with artifacts:
