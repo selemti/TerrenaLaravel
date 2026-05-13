@@ -1,5 +1,25 @@
 # Repository Guidelines
 
+## ⚠️ INVARIANTE CRÍTICO — LEER ANTES DE TOCAR TESTS O MIGRACIONES
+
+### `DB_SCHEMA` en `phpunit.xml` debe contener ÚNICAMENTE `selemti`
+
+```xml
+<!-- CORRECTO -->
+<env name="DB_SCHEMA" value="selemti"/>
+
+<!-- CATASTRÓFICO — destruye 108 tablas FloreantPOS en cada ejecución de tests -->
+<env name="DB_SCHEMA" value="selemti,public"/>
+```
+
+**Por qué:** `RefreshDatabase` llama a `migrate:fresh`, que llama a `Schema::dropAllTables()`. El builder de PostgreSQL usa `DB_SCHEMA` como lista de schemas a limpiar. Si `public` está incluido, las 108 tablas de FloreantPOS (`ticket`, `terminal`, `cash_drawer`, `transactions`, etc.) se eliminan silenciosamente en cada test run. **Esto ocurrió el 2026-05-13** y requirió restore desde producción.
+
+**Protección automática:** `tests/Unit/GuardRailsTest` falla de inmediato si se viola esta regla. No elimines ese archivo ni sus tests.
+
+**Regla complementaria:** El schema `public` pertenece a FloreantPOS y es de solo lectura. Nunca ejecutes `INSERT`, `UPDATE`, `DELETE`, `DROP`, ni `ALTER` sobre tablas de `public.*`.
+
+---
+
 ## Project Structure & Module Organization
 Core Laravel code lives in `app/` (HTTP controllers, models, jobs) and is wired through `routes/web.php` for UI traffic and `routes/api.php` for programmatic clients. Blade layouts, Alpine/Bootstrap widgets, and Tailwind styles live under `resources/views` and `resources/js|css`, compiled by Vite into `public/build`. Reusable docs (flows, onboarding) are under `docs/` and root-level `.txt` briefs—review them before picking up a feature. Database assets (`database/migrations`, `seeders`, `factories`) define the domain schema; keep feature-specific SQL changes together.
 
