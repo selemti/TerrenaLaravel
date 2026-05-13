@@ -49,15 +49,15 @@ class TransferFlowTest extends TestCase
 
     public function test_receive_component_sends_lines_to_service(): void
     {
-        $this->markTestSkipped('Mock expects observaciones_generales in payload but component sends observaciones at line level');
         $service = Mockery::mock(TransferService::class);
         $service->shouldReceive('receiveTransfer')
             ->once()
             ->with(321, Mockery::on(function ($lines) {
-                return isset($lines[0]['line_id'], $lines[0]['observaciones_generales'])
+                return isset($lines[0]['line_id'], $lines[0]['observaciones'])
                     && $lines[0]['line_id'] === 1
-                    && $lines[0]['observaciones_generales'] === 'Todo bien'
-                    && $lines[1]['line_id'] === 2;
+                    && $lines[0]['observaciones'] === 'Todo bien'
+                    && $lines[1]['line_id'] === 2
+                    && $lines[1]['observaciones'] === null;
             }), 9)
             ->andReturn([
                 'status' => TransferHeader::STATUS_RECIBIDA,
@@ -73,10 +73,9 @@ class TransferFlowTest extends TestCase
 
         Livewire::test(TransferReceive::class, ['transferId' => 321])
             ->set('lines', [
-                ['id' => 1, 'item_id' => 'SKU-1', 'item_nombre' => 'Item 1', 'cantidad_despachada' => 10, 'cantidad_recibida' => 9, 'unidad_medida' => 'PZ'],
+                ['id' => 1, 'item_id' => 'SKU-1', 'item_nombre' => 'Item 1', 'cantidad_despachada' => 10, 'cantidad_recibida' => 9, 'unidad_medida' => 'PZ', 'observaciones' => 'Todo bien'],
                 ['id' => 2, 'item_id' => 'SKU-2', 'item_nombre' => 'Item 2', 'cantidad_despachada' => 5, 'cantidad_recibida' => 5, 'unidad_medida' => 'PZ'],
             ])
-            ->set('observaciones', 'Todo bien')
             ->call('receive')
             ->assertSet('estado', TransferHeader::STATUS_RECIBIDA)
             ->assertSet('varianzas.0.line_id', 1);

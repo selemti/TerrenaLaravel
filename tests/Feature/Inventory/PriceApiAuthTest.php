@@ -3,6 +3,7 @@
 namespace Tests\Feature\Inventory;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Facades\Gate;
 use Tests\TestCase;
 
 class PriceApiAuthTest extends TestCase
@@ -31,7 +32,8 @@ class PriceApiAuthTest extends TestCase
 
     public function test_user_with_permission_reaches_validation_layer(): void
     {
-        $this->markTestSkipped('can() on fakeUser not recognized by Gate when controller uses auth:sanctum');
+        Gate::define('inventory.prices.manage', fn ($user) => true);
+
         $this->actingAs($this->fakeUser(true), 'web');
 
         $response = $this->postJson('/api/inventory/prices', []);

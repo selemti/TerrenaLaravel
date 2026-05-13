@@ -5,6 +5,7 @@ namespace Tests\Feature\Reports;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
@@ -25,29 +26,14 @@ class ItemModsReportTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->markTestSkipped('BaseReportController uses auth:sanctum on web routes; permission middleware conflicts in test env');
+        $this->markTestSkipped('Requires live FloreantPOS database: queries public.ticket which does not exist in test env');
 
-        // Buscar o crear usuario de prueba
         $this->user = User::firstOrCreate(
             ['email' => 'test@terrena.test'],
-            [
-                'name' => 'Test User',
-                'password' => bcrypt('password'),
-            ]
+            ['name' => 'Test User', 'password' => bcrypt('password')]
         );
 
-        // Crear y asignar permiso de reportes
-        $permission = Permission::firstOrCreate([
-            'name' => 'reports.view',
-            'guard_name' => 'web'
-        ]);
-
-        if (!$this->user->hasPermissionTo($permission)) {
-            $this->user->givePermissionTo($permission);
-        }
-
-        // Flush Spatie permission cache so actingAs picks up the newly assigned permission
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        Gate::define('reports.view', fn ($user) => true);
     }
 
     /**
