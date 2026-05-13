@@ -2,6 +2,46 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## ⚠️ CRITICAL INVARIANTS — READ BEFORE TOUCHING ANYTHING
+
+These rules protect production data. Violating them has caused real data loss (incident 2026-05-13).
+
+### 1. NEVER add "public" to DB_SCHEMA in phpunit.xml
+
+```xml
+<!-- CORRECT -->
+<env name="DB_SCHEMA" value="selemti"/>
+
+<!-- CATASTROPHIC — wipes 108 FloreantPOS tables on every test run -->
+<env name="DB_SCHEMA" value="selemti,public"/>
+```
+
+**Why:** `RefreshDatabase` → `migrate:fresh` → `Schema::dropAllTables()` → PostgreSQL drops every table in every schema listed in `DB_SCHEMA`. The `public` schema contains 108 live FloreantPOS tables (`ticket`, `terminal`, `cash_drawer`, `transactions`, etc.). If `public` is in `DB_SCHEMA`, they are silently wiped every time tests run. Recovery requires a full restore from production. This happened once. It must not happen again.
+
+**Enforced by:** `tests/Unit/GuardRailsTest.php::test_db_schema_does_not_include_public` — this test will fail immediately if the invariant is broken.
+
+### 2. NEVER write to the public schema
+
+The `public` schema belongs to FloreantPOS (Java POS system in production). It is **READ ONLY** from this application's perspective.
+
+- Never `INSERT`, `UPDATE`, `DELETE`, or `DROP` in `public.*`
+- Never `ALTER TABLE public.*`
+- Never create migrations that modify `public.*` objects (functions, triggers, tables)
+- The only exception: `2025_09_01_000007_create_public_menu_category_table.php` exists purely to satisfy the test environment and uses a strict `IF NOT EXISTS` guard
+
+### 3. Any migration touching public.* MUST use IF NOT EXISTS guards
+
+```php
+// CORRECT
+if ($exists = DB::selectOne("SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='...'")) {
+    return; // Never overwrite FloreantPOS data
+}
+```
+
+---
+
 ## Project Overview
 
 **TerrenaLaravel** is a Laravel 12 restaurant management system (ERP) for a multi-location restaurant business. It integrates with a legacy PostgreSQL database (Floreant POS) while managing inventory, recipes, production, purchasing, and cash register operations.
