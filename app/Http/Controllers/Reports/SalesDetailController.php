@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Reports;
 
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,6 +13,11 @@ use Illuminate\View\View;
 
 class SalesDetailController extends BaseReportController
 {
+    public function __construct(private readonly FloreantPosAdapter $pos)
+    {
+        parent::__construct();
+    }
+
     /**
      * Paleta de respaldo cuando no exista color configurado para la sucursal.
      */
@@ -382,43 +388,27 @@ class SalesDetailController extends BaseReportController
             return [];
         }
 
+        $rows = $this->pos->getModifiersByTicketItemIds($ids->all());
         $result = collect();
 
-        foreach ($ids->chunk(400) as $chunk) {
-            $rows = DB::connection('pgsql')
-                ->table('public.ticket_item_modifier as tim')
-                ->selectRaw(<<<'SQL'
-                    tim.ticket_item_id,
-                    COALESCE(mm.name, tim.modifier_name, '') AS modifier_name,
-                    COALESCE(tim.item_count, 0) AS modifier_count,
-                    COALESCE(tim.total_price, 0) AS modifier_total,
-                    COALESCE(mmg_mm.name, mmg_tim.name, 'Sin grupo') AS group_name
-                SQL)
-                ->leftJoin('public.menu_modifier as mm', 'mm.id', '=', 'tim.item_id')
-                ->leftJoin('public.menu_modifier_group as mmg_mm', 'mmg_mm.id', '=', 'mm.group_id')
-                ->leftJoin('public.menu_modifier_group as mmg_tim', 'mmg_tim.id', '=', 'tim.group_id')
-                ->whereIn('tim.ticket_item_id', $chunk->all())
-                ->get();
-
-            foreach ($rows as $row) {
-                $ticketItemId = (string) ($row->ticket_item_id ?? '');
-                if ($ticketItemId === '') {
-                    continue;
-                }
-
-                $count = (float) ($row->modifier_count ?? 0);
-                if ($count <= 0) {
-                    $count = 1.0;
-                }
-
-                $result->push([
-                    'ticket_item_id' => $ticketItemId,
-                    'name' => trim((string) ($row->modifier_name ?? '')),
-                    'group_name' => trim((string) ($row->group_name ?? 'Sin grupo')) ?: 'Sin grupo',
-                    'count' => $count,
-                    'total' => (float) ($row->modifier_total ?? 0),
-                ]);
+        foreach ($rows as $row) {
+            $ticketItemId = (string) ($row->ticket_item_id ?? '');
+            if ($ticketItemId === '') {
+                continue;
             }
+
+            $count = (float) ($row->modifier_count ?? 0);
+            if ($count <= 0) {
+                $count = 1.0;
+            }
+
+            $result->push([
+                'ticket_item_id' => $ticketItemId,
+                'name' => trim((string) ($row->modifier_name ?? '')),
+                'group_name' => trim((string) ($row->group_name ?? 'Sin grupo')) ?: 'Sin grupo',
+                'count' => $count,
+                'total' => (float) ($row->modifier_total ?? 0),
+            ]);
         }
 
         return $result

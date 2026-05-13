@@ -2,9 +2,14 @@
 
 namespace App\Providers;
 
+use App\Events\Inventory\ReceptionPosted;
+use App\Events\Inventory\TransferPosted;
+use App\Listeners\Inventory\LogReceptionPosted;
+use App\Listeners\Inventory\LogTransferPosted;
 use App\Support\Permissions\NullPermissionRegistrar;
 use Illuminate\Cache\CacheManager;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -24,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Event::listen(ReceptionPosted::class, LogReceptionPosted::class);
+        Event::listen(TransferPosted::class, LogTransferPosted::class);
+
         require_once app_path('Support/features.php');
 
         // Fuerza la raíz para que route(), url(), asset() respeten /TerrenaLaravel

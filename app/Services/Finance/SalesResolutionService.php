@@ -2,10 +2,10 @@
 
 namespace App\Services\Finance;
 
-use Illuminate\Support\Facades\DB;
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 
 /**
- * Service Canónico para Resolución de Ventas y Liquidación
+ * Service Canónico para Resolución de Ventas y Liquidación.
  *
  * Implementa la Fase 1 del Roadmap 2026: Saneamiento de Ingresos (SSOT).
  * Centraliza la lógica de normalización de descuentos (BUG-04) y la validación
@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
  */
 class SalesResolutionService
 {
+    public function __construct(private readonly FloreantPosAdapter $pos) {}
+
     // Constantes de Floreant POS para tipos de descuento
     const DISCOUNT_TYPE_FIXED = 0;
 
@@ -25,29 +27,13 @@ class SalesResolutionService
      */
     public function resolveNetLiquidation(int $ticketId): array
     {
-        $ticket = DB::connection('pgsql')
-            ->table('public.ticket')
-            ->where('id', $ticketId)
-            ->select('sub_total', 'total_price', 'total_discount')
-            ->first();
+        $ticket = $this->pos->getTicketById($ticketId);
 
         if (! $ticket) {
             return ['net' => 0, 'discount' => 0, 'error' => 'Ticket not found'];
         }
 
-        // 1. Obtener suma de transacciones efectivas (SSOT Monetario)
-        // Aplicamos los mismos filtros que SalesExceptionsReportService para "Effective Payments"
-        $txSum = DB::connection('pgsql')
-            ->table('public.transactions as tx')
-            ->where('tx.ticket_id', $ticketId)
-            ->where(function ($q) {
-                $q->where('tx.voided', false)
-                    ->orWhereNull('tx.voided');
-            })
-            ->whereIn(DB::raw('UPPER(COALESCE(tx.transaction_type, \'\'))'), ['CREDIT', 'DEBIT'])
-            ->whereNotIn(DB::raw('UPPER(COALESCE(tx.payment_type, \'\'))'), ['REFUND', 'VOID_TRANS', 'REFUND_CARD'])
-            ->where('tx.amount', '>', 0)
-            ->sum('tx.amount');
+        $txSum = $this->pos->getEffectiveTransactionSum($ticketId);
 
         // 2. Resolver descuentos con Normalización (% vs $)
         $resolvedDiscount = $this->calculateNormalizedDiscounts($ticketId, (float) $ticket->sub_total);
@@ -86,23 +72,14 @@ class SalesResolutionService
         $totalResolved = 0;
 
         // A. Descuentos a nivel de Ticket
-        $ticketDiscounts = DB::connection('pgsql')
-            ->table('public.ticket_discount as td')
-            ->select('td.type', 'td.value', 'td.name')
-            ->where('td.ticket_id', $ticketId)
-            ->get();
+        $ticketDiscounts = $this->pos->getTicketDiscounts($ticketId);
 
         foreach ($ticketDiscounts as $td) {
             $totalResolved += $this->normalizeValue($td->type, $td->value, $subTotal);
         }
 
         // B. Descuentos a nivel de Item
-        $itemDiscounts = DB::connection('pgsql')
-            ->table('public.ticket_item as ti')
-            ->join('public.ticket_item_discount as tid', 'tid.ticket_itemid', '=', 'ti.id')
-            ->select('tid.type', 'tid.value', 'tid.amount', 'ti.sub_total as item_sub_total')
-            ->where('ti.ticket_id', $ticketId)
-            ->get();
+        $itemDiscounts = $this->pos->getTicketItemDiscounts($ticketId);
 
         foreach ($itemDiscounts as $tid) {
             // Floreant a veces guarda el monto ya calculado en 'amount'

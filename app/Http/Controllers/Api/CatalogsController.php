@@ -2,37 +2,21 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 use App\Http\Controllers\Controller;
 use App\Models\Catalogs\Almacen;
 use App\Models\Catalogs\Sucursal;
 use App\Models\Catalogs\Unidad;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class CatalogsController extends Controller
 {
+    public function __construct(private readonly FloreantPosAdapter $pos) {}
+
     // GET /api/catalogs/categories
     public function categories(Request $r)
     {
-        $query = DB::connection('pgsql')
-            ->table('public.menu_category')
-            ->select([
-                DB::raw("'CAT-' || id::text as id"),
-                'name',
-                'translated_name',
-                'visible',
-                'beverage',
-                'sort_order',
-            ])
-            ->orderBy('sort_order')
-            ->orderBy('name');
-
-        // Only visible categories by default
-        if (! $r->boolean('show_all')) {
-            $query->where('visible', true);
-        }
-
-        $categories = $query->get();
+        $categories = $this->pos->getMenuCategories(visibleOnly: ! $r->boolean('show_all'));
 
         return response()->json([
             'ok' => true,

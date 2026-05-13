@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands\Audit;
 
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 use App\Services\Finance\SalesResolutionService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class AuditCanonicalSales extends Command
 {
@@ -24,7 +24,7 @@ class AuditCanonicalSales extends Command
 
     private $service;
 
-    public function __construct(SalesResolutionService $service)
+    public function __construct(SalesResolutionService $service, private readonly FloreantPosAdapter $pos)
     {
         parent::__construct();
         $this->service = $service;
@@ -39,20 +39,12 @@ class AuditCanonicalSales extends Command
         $ticketId = $this->option('ticket');
         $date = $this->option('date');
 
-        $query = DB::connection('pgsql')
-            ->table('public.ticket')
-            ->where('voided', false)
-            ->orderBy('id', 'desc');
-
         if ($ticketId) {
-            $query->where('id', $ticketId);
+            $ticket = $this->pos->getTicketById((int) $ticketId);
+            $tickets = $ticket ? collect([$ticket]) : collect();
         } else {
-            $query->whereDate('folio_date', $date)
-                ->where('total_discount', '>', 0)
-                ->limit($limit);
+            $tickets = $this->pos->getTicketsWithDiscountsByDate($date, (int) $limit);
         }
-
-        $tickets = $query->get();
 
         if ($tickets->isEmpty()) {
             $this->warn("No se encontraron tickets con descuentos para la fecha: {$date}");

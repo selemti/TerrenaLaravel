@@ -2,26 +2,21 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 use App\Http\Controllers\Controller;
 use App\Services\Finance\SalesResolutionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-/**
- * Controlador para Gestión de Tickets Problemáticos
- *
- * Permite administrar tickets con problemas:
- * - Cerrados sin pago
- * - Abiertos con deuda antigua
- * - Abiertos vacíos
- * - Pagados sin cierre
- */
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Controlador para Gestión de Tickets Problemáticos.
+ */
 class TicketManagementController extends Controller
 {
     private $salesService;
 
-    public function __construct(SalesResolutionService $salesService)
+    public function __construct(SalesResolutionService $salesService, private readonly FloreantPosAdapter $pos)
     {
         $this->middleware(['auth', 'permission:admin.access']);
         $this->salesService = $salesService;
@@ -242,11 +237,7 @@ class TicketManagementController extends Controller
         $stats = $this->getTicketStats();
         $tickets = $this->getProblematicTickets($request->input('type', 'all'));
 
-        // Cargar razones de anulación desde la BD (tabla Floreant POS)
-        $voidReasons = DB::connection('pgsql')
-            ->table('public.void_reasons')
-            ->orderBy('id')
-            ->pluck('reason_text', 'id');
+        $voidReasons = $this->pos->getVoidReasons();
 
         return view('admin.tickets.management', [
             'title' => 'Gestión de Tickets Problemáticos',

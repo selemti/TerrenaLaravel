@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services\Reports;
 
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 use App\Services\Reports\SalesExceptionsReportService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -112,7 +113,7 @@ class SalesExceptionsReportServiceTest extends TestCase
 
     public function test_summarize_classifies_tickets_into_categories(): void
     {
-        $service = new SalesExceptionsReportServiceProbe();
+        $service = new SalesExceptionsReportServiceProbe;
         $tickets = collect([
             // Descuento 100%
             [
@@ -191,7 +192,7 @@ class SalesExceptionsReportServiceTest extends TestCase
 
     public function test_helper_methods_normalize_and_format(): void
     {
-        $service = new SalesExceptionsReportServiceProbe();
+        $service = new SalesExceptionsReportServiceProbe;
 
         $this->assertSame(['CDMX', 'MTY'], $service->callNormalizeBranchFilter([' cdmx ', 'mty', 'cdmx']));
         $this->assertSame(['T01', 'T02'], $service->callNormalizeFilter([' T01', 'T02', 'T01 ']));
@@ -201,7 +202,7 @@ class SalesExceptionsReportServiceTest extends TestCase
 
     public function test_ticket_can_generate_multiple_exceptions(): void
     {
-        $service = new SalesExceptionsReportServiceProbe();
+        $service = new SalesExceptionsReportServiceProbe;
 
         $ticket = [
             'ticket_id' => 10,
@@ -231,7 +232,7 @@ class SalesExceptionsReportServiceTest extends TestCase
 
     public function test_discount_summary_groups_by_name(): void
     {
-        $service = new SalesExceptionsReportServiceProbe();
+        $service = new SalesExceptionsReportServiceProbe;
 
         $discountsByTicket = collect([
             1 => collect([
@@ -268,6 +269,11 @@ class SalesExceptionsReportServiceTest extends TestCase
  */
 class SalesExceptionsReportServiceProbe extends SalesExceptionsReportService
 {
+    public function __construct()
+    {
+        parent::__construct(Mockery::mock(FloreantPosAdapter::class));
+    }
+
     public function callNormalizeBranchFilter(array $branches): array
     {
         return $this->normalizeBranchFilter($branches);

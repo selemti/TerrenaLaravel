@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Reports;
 
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 use App\Exports\Reports\SalesModsExport;
 use App\Services\Reports\ItemModsReportService;
 use Carbon\Carbon;
@@ -9,7 +10,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -17,7 +17,8 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class SalesModsController extends BaseReportController
 {
     public function __construct(
-        protected ItemModsReportService $service
+        protected ItemModsReportService $service,
+        private readonly FloreantPosAdapter $pos
     ) {
         parent::__construct();
     }
@@ -344,12 +345,7 @@ class SalesModsController extends BaseReportController
     protected function getTerminalOptions(): array
     {
         try {
-            $terminals = DB::connection('pgsql')
-                ->table('public.terminal')
-                ->select('id', 'name')
-                ->where('enabled', true)
-                ->orderBy('id')
-                ->get();
+            $terminals = $this->pos->getEnabledTerminals();
 
             return $terminals->map(fn ($t) => [
                 'key' => (string) $t->id,

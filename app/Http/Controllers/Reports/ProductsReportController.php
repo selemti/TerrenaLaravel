@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Reports;
 
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 use App\Services\Reports\ProductsReportService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -13,7 +13,7 @@ class ProductsReportController extends BaseReportController
 {
     protected ProductsReportService $service;
 
-    public function __construct(ProductsReportService $service)
+    public function __construct(ProductsReportService $service, private readonly FloreantPosAdapter $pos)
     {
         $this->service = $service;
         parent::__construct();
@@ -296,19 +296,10 @@ class ProductsReportController extends BaseReportController
             $today = now()->startOfDay();
             $tomorrow = now()->endOfDay();
 
-            $query = DB::connection('pgsql')
-                ->table('public.ticket AS t')
-                ->join('public.ticket_item AS ti', 'ti.ticket_id', '=', 't.id')
-                ->whereBetween('t.folio_date', [$today, $tomorrow])
-                ->where('t.paid', '=', true)
-                ->where('t.voided', '=', false)
-                ->selectRaw('
-                    SUM(ti.item_count) as unidades,
-                    SUM(ti.total_price) as ingresos,
-                    COUNT(DISTINCT t.id) as tickets,
-                    COUNT(DISTINCT ti.item_name) as productos_unicos
-                ')
-                ->first();
+            $query = $this->pos->getProductSalesSummaryForToday(
+                $today->toDateTimeString(),
+                $tomorrow->toDateTimeString()
+            );
 
             return [
                 'unidades' => (int) ($query->unidades ?? 0),

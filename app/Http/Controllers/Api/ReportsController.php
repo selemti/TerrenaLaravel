@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 use Carbon\Carbon;
 use Illuminate\Database\Connection;
 use Illuminate\Http\Request;
@@ -10,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 
 class ReportsController extends Controller
 {
+    public function __construct(private readonly FloreantPosAdapter $pos) {}
+
     private function materializedCoversRange(string $table, string $dateColumn, string $desde, string $hasta): bool
     {
         $stats = $this->pg()->table($table)
@@ -114,28 +117,7 @@ class ReportsController extends Controller
         $start = Carbon::parse($desde, config('app.timezone'))->startOfDay();
         $end = Carbon::parse($hasta, config('app.timezone'))->endOfDay();
 
-        $rows = $this->pg()->table('public.ticket_item as ti')
-            ->selectRaw("
-                ti.item_id AS plu,
-                COALESCE(MAX(NULLIF(ti.item_name, '')), ti.item_id::text) AS descripcion,
-                SUM(
-                    COALESCE(
-                        NULLIF(ti.item_quantity, 0),
-                        NULLIF(ti.item_count, 0),
-                        0
-                    )::numeric
-                ) AS unidades,
-                SUM(COALESCE(ti.total_price, 0)) AS venta_total
-            ")
-            ->join('public.ticket as t', 't.id', '=', 'ti.ticket_id')
-            ->whereNotNull('ti.item_id')
-            ->whereBetween('t.closing_date', [$start, $end])
-            ->where('t.paid', true)
-            ->where('t.voided', false)
-            ->groupBy('ti.item_id')
-            ->orderByDesc('venta_total')
-            ->limit($limit)
-            ->get();
+        $rows = $this->pos->getTopProductsByRevenue($start, $end, $limit);
 
         return response()->json(['ok' => true, 'data' => $rows]);
     }

@@ -2,9 +2,9 @@
 
 namespace App\Services\Reports;
 
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 class SalesExceptionsReportService
 {
@@ -64,7 +64,7 @@ class SalesExceptionsReportService
      */
     protected Collection $discountSummary;
 
-    public function __construct()
+    public function __construct(private readonly FloreantPosAdapter $pos)
     {
         $this->discountSummary = collect();
     }
@@ -214,177 +214,25 @@ class SalesExceptionsReportService
 
     protected function fetchTickets(Carbon $start, Carbon $end, array $branches, array $terminals): Collection
     {
-        $discountExpression = <<<'SQL'
-            GREATEST(
-                0,
-                LEAST(
-                    COALESCE(
-                        t.total_discount,
-                        (
-                            SELECT SUM(
-                                COALESCE(
-                                    NULLIF(to_jsonb(ti)->>'discount_amount', '')::numeric,
-                                    COALESCE(ti.discount, 0)
-                                )
-                            )
-                            FROM public.ticket_item ti
-                            WHERE ti.ticket_id = t.id
-                        ),
-                        COALESCE(t.sub_total, 0) - COALESCE(t.total_price, 0),
-                        0
-                    ),
-                    COALESCE(t.sub_total, t.total_price, 0)
-                )
-            )::numeric(14,2)
-        SQL;
-
-        $dateColumnExpr = 'COALESCE(t.folio_date, t.closing_date::date, t.create_date::date)';
-        $query = DB::connection('pgsql')
-            ->table('public.ticket as t')
-            ->selectRaw("
-                t.id AS ticket_id,
-                {$dateColumnExpr} AS folio_date,
-                UPPER(COALESCE(t.branch_key, 'SIN_SUCURSAL')) AS branch_key,
-                t.terminal_id,
-                COALESCE(t.paid, FALSE) AS paid_flag,
-                COALESCE(t.voided, FALSE) AS voided_flag,
-                COALESCE(t.settled, FALSE) AS settled_flag,
-                COALESCE(t.wasted, FALSE) AS wasted_flag,
-                COALESCE(t.refunded, FALSE) AS refunded_flag,
-                COALESCE(t.is_re_opened, FALSE) AS reopened_flag,
-                COALESCE(t.status, '') AS ticket_status,
-                COALESCE(t.ticket_type, '') AS ticket_type,
-                COALESCE(t.daily_folio, 0) AS daily_folio,
-                COALESCE(t.sub_total, 0)::numeric(14,2) AS gross_total,
-                COALESCE(t.total_price, 0)::numeric(14,2) AS net_total_raw,
-                COALESCE(t.sub_total, 0)::numeric(14,2) AS sub_total,
-                COALESCE(t.total_tax, 0)::numeric(14,2) AS total_tax,
-                COALESCE(t.service_charge, 0)::numeric(14,2) AS service_charge,
-                COALESCE(t.delivery_charge, 0)::numeric(14,2) AS delivery_charge,
-                COALESCE(t.paid_amount, 0)::numeric(14,2) AS paid_amount_flag,
-                {$discountExpression} AS discount_total
-            ")
-            ->whereRaw("{$dateColumnExpr} BETWEEN ? AND ?", [
-                $start->toDateString(),
-                $end->toDateString(),
-            ]);
-
-        if (! empty($branches)) {
-            $query->whereIn(DB::raw('UPPER(COALESCE(t.branch_key, \'\'))'), $branches);
-        }
-
-        if (! empty($terminals)) {
-            $query->whereIn('t.terminal_id', $terminals);
-        }
-
-        return collect($query->orderBy('folio_date')->orderBy('t.id')->get());
+        return $this->pos->fetchExceptionTickets($start, $end, $branches, $terminals);
     }
 
     protected function loadPaymentSummary(Collection $ticketIds): Collection
     {
-        if ($ticketIds->isEmpty()) {
-            return collect();
-        }
+        $rows = $this->pos->loadPaymentSummaryByTicketIds($ticketIds);
 
-        $payments = DB::connection('pgsql')
-            ->table('public.transactions as tx')
-            ->select('tx.ticket_id')
-            ->selectRaw("
-                SUM(
-                    CASE
-                        WHEN COALESCE(tx.voided, FALSE) = FALSE
-                         AND UPPER(COALESCE(tx.transaction_type, '')) IN ('CREDIT','DEBIT')
-                         AND UPPER(COALESCE(tx.payment_type, '')) NOT IN ('REFUND','VOID_TRANS','REFUND_CARD')
-                         AND COALESCE(tx.amount, 0) > 0
-                        THEN COALESCE(tx.amount, 0)
-                        ELSE 0
-                    END
-                )::numeric(14,2) AS payment_total
-            ")
-            ->selectRaw("
-                SUM(
-                    CASE
-                        WHEN COALESCE(tx.voided, FALSE) = FALSE
-                         AND UPPER(COALESCE(tx.transaction_type, '')) IN ('CREDIT','DEBIT')
-                         AND UPPER(COALESCE(tx.payment_type, '')) NOT IN ('REFUND','VOID_TRANS','REFUND_CARD')
-                         AND COALESCE(tx.amount, 0) < 0
-                        THEN COALESCE(tx.amount, 0)
-                        ELSE 0
-                    END
-                )::numeric(14,2) AS payment_adjustment_total
-            ")
-            ->selectRaw("
-                SUM(
-                    CASE
-                        WHEN COALESCE(tx.voided, FALSE) = FALSE
-                         AND UPPER(COALESCE(tx.payment_type, '')) IN ('REFUND','REFUND_CARD')
-                        THEN COALESCE(tx.amount, 0)
-                        ELSE 0
-                    END
-                )::numeric(14,2) AS refund_total
-            ")
-            ->selectRaw("
-                SUM(
-                    CASE
-                        WHEN COALESCE(tx.voided, FALSE) = FALSE
-                         AND UPPER(COALESCE(tx.payment_type, '')) = 'VOID_TRANS'
-                        THEN COALESCE(tx.amount, 0)
-                        ELSE 0
-                    END
-                )::numeric(14,2) AS void_total
-            ")
-            ->selectRaw('
-                SUM(
-                    CASE
-                        WHEN COALESCE(tx.voided, FALSE) = FALSE
-                        THEN COALESCE(tx.amount, 0)
-                        ELSE 0
-                    END
-                )::numeric(14,2) AS recorded_total
-            ')
-            ->selectRaw('SUM(CASE WHEN COALESCE(tx.voided, FALSE) = FALSE THEN 1 ELSE 0 END) AS tx_count')
-            ->selectRaw("
-                SUM(
-                    CASE
-                        WHEN COALESCE(tx.voided, FALSE) = FALSE
-                         AND UPPER(COALESCE(tx.transaction_type, '')) IN ('CREDIT','DEBIT')
-                         AND UPPER(COALESCE(tx.payment_type, '')) NOT IN ('REFUND','VOID_TRANS','REFUND_CARD')
-                         AND COALESCE(tx.amount, 0) > 0
-                        THEN 1
-                        ELSE 0
-                    END
-                ) AS payment_positive_count
-            ")
-            ->selectRaw("
-                SUM(
-                    CASE
-                        WHEN COALESCE(tx.voided, FALSE) = FALSE
-                         AND UPPER(COALESCE(tx.transaction_type, '')) IN ('CREDIT','DEBIT')
-                         AND UPPER(COALESCE(tx.payment_type, '')) NOT IN ('REFUND','VOID_TRANS','REFUND_CARD')
-                         AND COALESCE(tx.amount, 0) < 0
-                        THEN 1
-                        ELSE 0
-                    END
-                ) AS payment_adjustment_count
-            ")
-            ->whereIn('tx.ticket_id', $ticketIds)
-            ->groupBy('tx.ticket_id')
-            ->get()
-            ->keyBy(fn (object $row) => (int) $row->ticket_id)
-            ->map(function (object $row) {
-                return [
-                    'payment_total' => (float) ($row->payment_total ?? 0),
-                    'payment_adjustment_total' => (float) ($row->payment_adjustment_total ?? 0),
-                    'refund_total' => (float) ($row->refund_total ?? 0),
-                    'void_total' => (float) ($row->void_total ?? 0),
-                    'recorded_total' => (float) ($row->recorded_total ?? 0),
-                    'tx_count' => (int) ($row->tx_count ?? 0),
-                    'payment_positive_count' => (int) ($row->payment_positive_count ?? 0),
-                    'payment_adjustment_count' => (int) ($row->payment_adjustment_count ?? 0),
-                ];
-            });
-
-        return collect($payments);
+        return $rows->map(function (object $row) {
+            return [
+                'payment_total' => (float) ($row->payment_total ?? 0),
+                'payment_adjustment_total' => (float) ($row->payment_adjustment_total ?? 0),
+                'refund_total' => (float) ($row->refund_total ?? 0),
+                'void_total' => (float) ($row->void_total ?? 0),
+                'recorded_total' => (float) ($row->recorded_total ?? 0),
+                'tx_count' => (int) ($row->tx_count ?? 0),
+                'payment_positive_count' => (int) ($row->payment_positive_count ?? 0),
+                'payment_adjustment_count' => (int) ($row->payment_adjustment_count ?? 0),
+            ];
+        });
     }
 
     protected function loadTransactionDetails(Collection $ticketIds): Collection
@@ -393,18 +241,7 @@ class SalesExceptionsReportService
             return collect();
         }
 
-        $rows = DB::connection('pgsql')
-            ->table('public.transactions as tx')
-            ->select(
-                'tx.ticket_id',
-                'tx.payment_type',
-                'tx.transaction_type',
-                'tx.amount',
-                'tx.voided'
-            )
-            ->whereIn('tx.ticket_id', $ticketIds)
-            ->orderBy('tx.id')
-            ->get();
+        $rows = $this->pos->loadTransactionDetailsByTicketIds($ticketIds);
 
         return collect($rows)
             ->groupBy(fn (object $row) => (int) ($row->ticket_id ?? 0))
@@ -444,40 +281,13 @@ class SalesExceptionsReportService
         }
 
         try {
-            $ticketDiscounts = DB::connection('pgsql')
-                ->table('public.ticket_discount as td')
-                ->leftJoin('public.coupon_and_discount as cad', 'cad.id', '=', 'td.discount_id')
-                ->select(
-                    'td.ticket_id',
-                    DB::raw("COALESCE(NULLIF(td.name, ''), cad.name, 'SIN NOMBRE') AS discount_name"),
-                    'td.type as discount_type',
-                    DB::raw('COALESCE(td.value, 0)::numeric(14,2) AS discount_amount'),
-                    DB::raw("'ticket'::text AS scope")
-                )
-                ->whereIn('td.ticket_id', $ticketIds)
-                ->get();
-
-            $discountRows = $discountRows->merge($ticketDiscounts);
+            $discountRows = $discountRows->merge($this->pos->loadTicketDiscountsByTicketIds($ticketIds));
         } catch (\Throwable $e) {
             // Algunas instalaciones no tienen ticket_discount disponible.
         }
 
         try {
-            $itemDiscounts = DB::connection('pgsql')
-                ->table('public.ticket_item as ti')
-                ->join('public.ticket_item_discount as tid', 'tid.ticket_itemid', '=', 'ti.id')
-                ->leftJoin('public.coupon_and_discount as cad', 'cad.id', '=', 'tid.discount_id')
-                ->select(
-                    'ti.ticket_id',
-                    DB::raw("COALESCE(NULLIF(tid.name, ''), cad.name, 'SIN NOMBRE') AS discount_name"),
-                    'tid.type as discount_type',
-                    DB::raw('COALESCE(tid.amount, tid.value, 0)::numeric(14,2) AS discount_amount'),
-                    DB::raw("'item'::text AS scope")
-                )
-                ->whereIn('ti.ticket_id', $ticketIds)
-                ->get();
-
-            $discountRows = $discountRows->merge($itemDiscounts);
+            $discountRows = $discountRows->merge($this->pos->loadItemDiscountsByTicketIds($ticketIds));
         } catch (\Throwable $e) {
             // ticket_item_discount no existe en algunos entornos; continuar sin datos a nivel item.
         }
@@ -531,22 +341,7 @@ class SalesExceptionsReportService
         }
 
         try {
-            $items = DB::connection('pgsql')
-                ->table('public.ticket_item as ti')
-                ->select(
-                    'ti.ticket_id',
-                    DB::raw("COALESCE(NULLIF(ti.item_name, ''), 'SIN NOMBRE') AS item_name"),
-                    DB::raw("COALESCE(NULLIF(ti.group_name, ''), NULLIF(ti.category_name, ''), '') AS item_group"),
-                    DB::raw('COALESCE(ti.item_quantity, ti.item_count, 1)::numeric(14,2) AS quantity'),
-                    DB::raw('COALESCE(ti.item_price, ti.sub_total, 0)::numeric(14,2) AS unit_price'),
-                    DB::raw('COALESCE(ti.sub_total, 0)::numeric(14,2) AS sub_total_amount'),
-                    DB::raw('COALESCE(ti.discount, 0)::numeric(14,2) AS discount_amount'),
-                    DB::raw('COALESCE(ti.total_price, ti.sub_total - COALESCE(ti.discount, 0), 0)::numeric(14,2) AS total_amount')
-                )
-                ->whereIn('ti.ticket_id', $ticketIds)
-                ->orderBy('ti.ticket_id')
-                ->orderBy('ti.id')
-                ->get();
+            $items = $this->pos->loadItemsByTicketIds($ticketIds);
         } catch (\Throwable $e) {
             return collect();
         }

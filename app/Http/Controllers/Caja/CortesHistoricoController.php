@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Caja;
 
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 use App\Http\Controllers\Controller;
 use App\Services\Caja\AnalyticsService;
 use Illuminate\Http\Request;
@@ -11,7 +12,7 @@ class CortesHistoricoController extends Controller
 {
     protected $analyticsService;
 
-    public function __construct(AnalyticsService $analyticsService)
+    public function __construct(AnalyticsService $analyticsService, private readonly FloreantPosAdapter $pos)
     {
         $this->analyticsService = $analyticsService;
     }
@@ -105,6 +106,8 @@ class CortesHistoricoController extends Controller
         $sortOrder = strtolower($sortOrder) === 'asc' ? 'asc' : 'desc';
 
         // Query para obtener sesiones con sus cortes y datos adicionales
+        // Cross-schema join a public.users es intencional: resuelve nombre del cajero
+        // desde el maestro de usuarios de FloreantPOS. No es un acceso de escritura.
         $query = DB::connection('pgsql')
             ->table('selemti.sesion_cajon as s')
             ->leftJoin('selemti.precorte as pre', 's.id', '=', 'pre.sesion_id')
@@ -291,18 +294,19 @@ class CortesHistoricoController extends Controller
     {
         $sesion = DB::connection('pgsql')
             ->table('selemti.sesion_cajon as s')
-            ->leftJoin('public.users as u', 's.cajero_usuario_id', '=', 'u.auto_id')
             ->where('s.id', $sesionId)
-            ->select([
-                's.*',
-                DB::raw("CONCAT(u.first_name, ' ', u.last_name) as cajero_nombre"),
-                DB::raw('CAST(u.user_id as text) as cajero_user_id'),
-            ])
+            ->select('s.*')
             ->first();
 
         if (! $sesion) {
             abort(404, 'Sesión no encontrada');
         }
+
+        // Resolver nombre del cajero desde POS (cross-schema read-only)
+        $posUsers = $this->pos->getPosUsersByAutoIds([$sesion->cajero_usuario_id]);
+        $posUser = $posUsers->get($sesion->cajero_usuario_id);
+        $sesion->cajero_nombre = $posUser ? "{$posUser->first_name} {$posUser->last_name}" : '';
+        $sesion->cajero_user_id = $posUser?->user_id ?? '';
 
         // Obtener precorte con datos calculados desde vw_sesion_dpr
         $precorteBase = DB::connection('pgsql')
@@ -335,27 +339,11 @@ class CortesHistoricoController extends Controller
             ->where('sesion_id', $sesionId)
             ->first();
 
-        // Obtener tickets de la sesión
-        $tickets = DB::connection('pgsql')
-            ->table('public.ticket as t')
-            ->where('t.terminal_id', $sesion->terminal_id)
-            ->whereDate('t.create_date', '>=', $sesion->apertura_ts)
-            ->where(function ($query) use ($sesion) {
-                $query->whereNull('t.closing_date')
-                    ->orWhereDate('t.closing_date', '<=', $sesion->cierre_ts ?? now());
-            })
-            ->select([
-                't.id',
-                't.create_date',
-                't.closing_date',
-                't.total_price',
-                't.paid',
-                't.voided',
-                't.status',
-            ])
-            ->orderBy('t.create_date')
-            ->limit(100)
-            ->get();
+        $tickets = $this->pos->getTicketsByTerminalAndDateRange(
+            terminalId: (int) $sesion->terminal_id,
+            fromTs: $sesion->apertura_ts,
+            toTs: $sesion->cierre_ts,
+        );
 
         return view('caja.detalle-corte', [
             'title' => "Detalle Corte - Sesión #{$sesionId}",

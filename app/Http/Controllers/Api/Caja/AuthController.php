@@ -16,13 +16,12 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'username' => 'required|string',
+            'email' => 'required|string|email',
             'password' => 'required|string',
         ]);
 
         try {
-            // Buscar usuario en la base de datos
-            $user = User::where('username', $validated['username'])->first();
+            $user = User::where('email', $validated['email'])->first();
 
             // Verificar credenciales (ajusta según tu esquema)
             if (! $user || ! Hash::check($validated['password'], $user->password)) {
@@ -40,8 +39,8 @@ class AuthController extends Controller
                 'token' => $token,
                 'user' => [
                     'id' => $user->id,
-                    'username' => $user->username,
-                    'name' => $user->name ?? "{$user->first_name} {$user->last_name}",
+                    'email' => $user->email,
+                    'name' => $user->name,
                     'role' => $user->role ?? 'cajero',
                 ],
             ]);
@@ -64,7 +63,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'error' => 'Método no permitido',
-            'message' => 'Use POST con { "username": "string", "password": "string" } para autenticarse.',
+            'message' => 'Use POST con { "email": "string", "password": "string" } para autenticarse.',
         ], 405)->header('Allow', 'POST');
     }
 

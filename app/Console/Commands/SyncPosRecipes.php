@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Adapters\FloreantPos\FloreantPosAdapter;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -16,15 +17,12 @@ class SyncPosRecipes extends Command
         $dry = $this->option('dry-run');
         $withModifiers = $this->option('modifiers');
 
-        $conn = $this->resolvePosConnection();
+        $posConnection = $this->resolvePosConnectionName();
+        $pos = app(FloreantPosAdapter::class);
 
         $this->info(($dry ? '[DRY RUN] ' : '').'Sincronizando metadatos ERP <-> POS (Modo Estructural Asistido)...');
 
-        $items = $conn->table('public.menu_item as mi')
-            ->leftJoin('public.menu_group as mg', 'mi.group_id', '=', 'mg.id')
-            ->select('mi.id', 'mi.name', 'mi.price', 'mg.name as group_name', 'mi.visible')
-            ->orderBy('mi.id')
-            ->get();
+        $items = $pos->getMenuItemsWithGroups($posConnection);
 
         $updatedRecipes = 0;
         $unlinkedPosItems = 0;
@@ -56,21 +54,18 @@ class SyncPosRecipes extends Command
         $this->comment("Platillos POS sin receta vinculada (Bandeja Pendientes): {$unlinkedPosItems}");
 
         if ($withModifiers) {
-            $this->syncModifiers($dry, $conn);
+            $this->syncModifiers($dry, $posConnection);
         }
 
         return Command::SUCCESS;
     }
 
-    protected function syncModifiers(bool $dry, $conn): void
+    protected function syncModifiers(bool $dry, string $posConnection): void
     {
         $this->info(($dry ? '[DRY RUN] ' : '').'Actualizando metadatos de modificadores vinculados...');
 
-        $modifiers = $conn->table('public.menu_modifier as mm')
-            ->leftJoin('public.menu_modifier_group as mg', 'mm.group_id', '=', 'mg.id')
-            ->select('mm.id', 'mm.name', 'mm.price', 'mg.name as group_name')
-            ->orderBy('mm.id')
-            ->get();
+        $pos = app(FloreantPosAdapter::class);
+        $modifiers = $pos->getMenuModifiersWithGroups($posConnection);
 
         $updatedMods = 0;
         $unlinkedMods = 0;
@@ -100,7 +95,7 @@ class SyncPosRecipes extends Command
         $this->comment("Modificadores POS ignorados/sin vínculo: {$unlinkedMods}");
     }
 
-    protected function resolvePosConnection()
+    protected function resolvePosConnectionName(): string
     {
         $base = config('database.connections.pgsql');
 
@@ -115,9 +110,8 @@ class SyncPosRecipes extends Command
         $base['username'] = env('POS_DB_USERNAME', env('DB_USERNAME', 'postgres'));
         $base['password'] = env('POS_DB_PASSWORD', env('DB_PASSWORD', ''));
 
-        config(['database.connections.pgsql' => $base]);
         config(['database.connections.pos_pg' => $base]);
 
-        return DB::connection('pos_pg');
+        return 'pos_pg';
     }
 }
