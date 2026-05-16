@@ -2,6 +2,7 @@
 
 namespace App\Services\Inventory;
 
+use App\Events\Inventory\ReceptionPosted;
 use App\Exceptions\Inventory\InvalidInventoryStateException;
 use App\Exceptions\Inventory\ItemNotFoundException;
 use App\Models\Inv\Item;
@@ -406,5 +407,11 @@ class ReceptionService
                 'posteada_at' => $now,
                 'updated_at' => $now,
             ]);
+
+        event(new ReceptionPosted(
+            receptionId: (string) $reception->id,
+            almacenId: (string) ($reception->almacen_id ?? ''),
+            postedAt: new \DateTimeImmutable($now),
+        ));
     }
 }

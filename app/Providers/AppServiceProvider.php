@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Events\Inventory\ReceptionPosted;
 use App\Events\Inventory\TransferPosted;
+use App\Listeners\Inventory\InvalidateStockCache;
 use App\Listeners\Inventory\LogReceptionPosted;
 use App\Listeners\Inventory\LogTransferPosted;
 use App\Support\Permissions\NullPermissionRegistrar;
@@ -30,7 +31,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(ReceptionPosted::class, LogReceptionPosted::class);
+        Event::listen(ReceptionPosted::class, InvalidateStockCache::class);
         Event::listen(TransferPosted::class, LogTransferPosted::class);
+        Event::listen(TransferPosted::class, InvalidateStockCache::class);
 
         require_once app_path('Support/features.php');
 

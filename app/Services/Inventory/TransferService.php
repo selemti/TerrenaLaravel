@@ -2,6 +2,7 @@
 
 namespace App\Services\Inventory;
 
+use App\Events\Inventory\TransferPosted;
 use App\Exceptions\Inventory\InventoryValidationException;
 use App\Exceptions\Transfer\InvalidTransferStateException;
 use App\Models\Inv\Item;
@@ -329,6 +330,13 @@ class TransferService
                 'posteada_por' => $userId,
                 'posteada_at' => now(),
             ]);
+
+            event(new TransferPosted(
+                transferId: (string) $transfer->id,
+                fromAlmacenId: (string) $transfer->from_bodega_id,
+                toAlmacenId: (string) $transfer->to_bodega_id,
+                postedAt: new \DateTimeImmutable,
+            ));
 
             return [
                 'transfer_id' => $transfer->id,
