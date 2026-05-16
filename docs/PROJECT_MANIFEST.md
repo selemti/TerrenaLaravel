@@ -1,7 +1,7 @@
 # TerrenaLaravel — Project Manifest
 
 > **Living document.** Every AI agent (Claude, Codex, Gemini) MUST update the relevant section when completing a delegated task.  
-> Last updated: 2026-05-16 | Branch: `work/inicio-limpio-abril-2026`
+> Last updated: 2026-05-16 — 276 tests passing | Branch: `work/inicio-limpio-abril-2026`
 
 ---
 
@@ -184,8 +184,8 @@
 
 | Agent | Task | Branch | Status |
 |-------|------|--------|--------|
-| **Codex** | Stock Alerts API | `work/codex-stock-alerts` | 🔄 In progress |
-| **Codex** | Production Orders Read API | `work/codex-production-read-api` | 🔄 In progress |
+| **Codex** | Stock Alerts API | `work/codex-stock-alerts` | ✅ Done — integrated |
+| **Codex** | Production Orders Read API | `work/codex-production-read-api` | ✅ Done — integrated |
 | **Claude** | Domain Events wiring | `work/inicio-limpio-abril-2026` | ✅ Done |
 | **Claude** | Production UI review | `work/inicio-limpio-abril-2026` | 🔜 Next |
 | **Gemini** | Fix `fn_postcorte_after_insert` | — | ❌ Not assigned |
