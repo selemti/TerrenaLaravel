@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class ParametroSucursal extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'selemti.param_sucursal';
 
     protected $primaryKey = 'id';

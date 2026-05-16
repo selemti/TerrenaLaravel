@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class LoteInventario extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'selemti.inventory_batch';
 
     protected $primaryKey = 'id';

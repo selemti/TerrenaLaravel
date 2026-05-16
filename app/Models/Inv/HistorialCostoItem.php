@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class HistorialCostoItem extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'selemti.historial_costos_item';
 
     public $timestamps = false;

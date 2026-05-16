@@ -10,6 +10,8 @@ class Receta extends Model
 {
     use HasFactory;
 
+    protected $connection = 'pgsql';
+
     protected $table = 'receta_cab';
 
     protected $primaryKey = 'id';

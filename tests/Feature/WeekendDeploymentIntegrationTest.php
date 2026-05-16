@@ -21,7 +21,6 @@ class WeekendDeploymentIntegrationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->markTestSkipped('RecipeCostController::calculateCostAtDate not implemented');
 
         $this->setUpRecipeDatabase();
         $this->withoutMiddleware();
@@ -120,7 +119,7 @@ class WeekendDeploymentIntegrationTest extends TestCase
         foreach ($items as $index => $itemConfig) {
             $item = Item::factory()->create([
                 'id' => $itemConfig['id'],
-                'nombre' => 'Item ' . $index,
+                'nombre' => 'Item '.$index,
                 'costo_promedio' => $itemConfig['cost'],
             ]);
 

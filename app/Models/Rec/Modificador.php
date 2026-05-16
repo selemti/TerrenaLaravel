@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Modificador extends Model
 {
-    protected $table = 'modificadores_pos'; // Asume DB_SCHEMA=selemti
+    protected $connection = 'pgsql';
+
+    protected $table = 'modificadores_pos';
 
     protected $primaryKey = 'id';
 

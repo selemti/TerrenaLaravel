@@ -9,6 +9,8 @@ class RecetaVersion extends Model
 {
     use HasFactory;
 
+    protected $connection = 'pgsql';
+
     protected $table = 'selemti.receta_version';
 
     protected $primaryKey = 'id';

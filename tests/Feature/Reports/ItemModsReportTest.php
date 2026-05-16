@@ -169,11 +169,28 @@ class ItemModsReportTest extends TestCase
      */
     public function test_terminal_filter_works(): void
     {
+        $unfilteredResponse = $this->actingAs($this->user)->get(route('reports.sales.mods', [
+            'start_date' => Carbon::now()->subDays(7)->format('Y-m-d'),
+            'end_date' => Carbon::now()->format('Y-m-d'),
+            'view' => 'summary_item_mods',
+        ]));
+
+        $unfilteredResponse->assertStatus(200);
+
+        $terminal = $unfilteredResponse->viewData('rows')
+            ->pluck('terminal')
+            ->filter()
+            ->first();
+
+        if (! $terminal) {
+            $this->markTestSkipped('No hay datos con terminal para probar el filtro');
+        }
+
         $response = $this->actingAs($this->user)->get(route('reports.sales.mods', [
             'start_date' => Carbon::now()->subDays(7)->format('Y-m-d'),
             'end_date' => Carbon::now()->format('Y-m-d'),
             'view' => 'summary_item_mods',
-            'terminal' => [1],
+            'terminal' => [$terminal],
         ]));
 
         $response->assertStatus(200);
@@ -181,12 +198,12 @@ class ItemModsReportTest extends TestCase
         $rows = $response->viewData('rows');
 
         if ($rows->isEmpty()) {
-            $this->markTestSkipped('No hay datos para terminal 1');
+            $this->markTestSkipped("No hay datos para terminal {$terminal}");
         }
 
-        // Verificar que todas las filas tienen terminal 1
+        // Verificar que todas las filas tienen la terminal filtrada
         foreach ($rows as $row) {
-            $this->assertEquals(1, $row->terminal ?? null);
+            $this->assertEquals($terminal, $row->terminal ?? null);
         }
     }
 

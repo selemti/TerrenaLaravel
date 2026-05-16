@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class RecetaShadow extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'selemti.receta_shadow';
 
     protected $primaryKey = 'id';

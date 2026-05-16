@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class PoliticaStock extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'selemti.stock_policy';
 
     protected $primaryKey = 'id';

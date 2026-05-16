@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class ItemProveedor extends Model
 {
+    protected $connection = 'pgsql';
+
     protected $table = 'selemti.item_vendor';
 
     public $timestamps = false;

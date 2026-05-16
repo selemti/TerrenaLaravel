@@ -44,6 +44,8 @@ class RecipeCostController extends Controller
         return response()->json([
             'data' => [
                 'recipe_id' => (string) $id,
+                'cost_total' => $cost['cost_total'],
+                'cost_per_portion' => $cost['cost_per_portion'],
                 'batch_cost' => $cost['cost_total'],
                 'portion_cost' => $cost['cost_per_portion'],
                 'batch_size' => $cost['portions'],
