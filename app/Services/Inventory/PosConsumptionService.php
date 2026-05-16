@@ -10,7 +10,7 @@ class PosConsumptionService
     public function expandTicket(int $ticketId): void
     {
         $connection = DB::connection('pgsql');
-        $connection->statement('SELECT selemti.fn_expandir_consumo_ticket(?)', [$ticketId]);
+        $connection->select('SELECT * FROM selemti.fn_expandir_consumo_ticket(?)', [$ticketId]);
     }
 
     public function confirmTicket(int $ticketId): void
@@ -34,7 +34,7 @@ class PosConsumptionService
     public function normalizeLine(array $line): array
     {
         $normalized = [
-            'item_id' => (int) Arr::get($line, 'item_id'),
+            'item_id' => (string) Arr::get($line, 'item_id'),
             'uom' => Arr::get($line, 'uom'),
             'cantidad' => (float) Arr::get($line, 'cantidad', 0),
             'factor' => (float) Arr::get($line, 'factor', 1),

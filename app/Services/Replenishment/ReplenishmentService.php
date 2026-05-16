@@ -422,14 +422,12 @@ class ReplenishmentService
     {
         $fechaInicio = now()->subDays($dias)->toDateString();
 
-        // CORREGIDO: inv_consumo_pos_det usa mp_id (no item_id) y cantidad (no qty)
-        // inv_consumo_pos usa fecha_proceso (no fecha)
         $consumoExpandido = (float) DB::connection('pgsql')
             ->table('selemti.inv_consumo_pos_det as det')
             ->join('selemti.inv_consumo_pos as cab', 'det.consumo_id', '=', 'cab.id')
-            ->where('det.mp_id', (int) filter_var($itemId, FILTER_SANITIZE_NUMBER_INT)) // mp_id es integer
+            ->where('det.item_id', $itemId)
             ->when($sucursalId, fn ($q) => $q->where('cab.sucursal_id', $sucursalId))
-            ->whereDate('cab.fecha_proceso', '>=', $fechaInicio)
+            ->whereDate('cab.created_at', '>=', $fechaInicio)
             ->sum('det.cantidad');
 
         // Si no hay datos en inv_consumo_pos_det, fallback a mov_inv

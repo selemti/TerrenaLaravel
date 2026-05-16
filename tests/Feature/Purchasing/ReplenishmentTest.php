@@ -132,8 +132,12 @@ class ReplenishmentTest extends TestCase
 
         DB::statement('CREATE TABLE selemti.inv_consumo_pos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ticket_id INTEGER NULL,
+            ticket_item_id INTEGER NULL,
             sucursal_id INTEGER NULL,
-            fecha_proceso DATETIME NULL,
+            terminal_id INTEGER NULL,
+            estado TEXT DEFAULT "PENDIENTE",
+            expandido BOOLEAN DEFAULT 1,
             created_at DATETIME NULL,
             updated_at DATETIME NULL
         )');
@@ -141,13 +145,12 @@ class ReplenishmentTest extends TestCase
         DB::statement('CREATE TABLE selemti.inv_consumo_pos_det (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             consumo_id INTEGER NOT NULL,
-            mp_id INTEGER NOT NULL,
+            item_id TEXT NOT NULL,
+            uom TEXT NULL,
             cantidad NUMERIC NOT NULL,
-            factor NUMERIC NULL,
-            procesado BOOLEAN DEFAULT 1,
-            revertido BOOLEAN DEFAULT 0,
-            created_at DATETIME NULL,
-            updated_at DATETIME NULL
+            factor NUMERIC DEFAULT 1,
+            origen TEXT DEFAULT "RECETA",
+            meta TEXT NULL
         )');
 
         DB::statement('CREATE TABLE replenishment_suggestions (
@@ -222,7 +225,7 @@ class ReplenishmentTest extends TestCase
     public function test_min_max_generates_purchase_suggestion_when_below_min(): void
     {
         Carbon::setTestNow('2025-01-05 10:00:00');
-        $service = new ReplenishmentService();
+        $service = new ReplenishmentService;
 
         DB::connection('pgsql')->table('selemti.items')->insert([
             'id' => 'ITEM-1',
@@ -269,9 +272,8 @@ class ReplenishmentTest extends TestCase
 
     public function test_pos_consumption_uses_expanded_consumption_history(): void
     {
-        $this->markTestSkipped('consumo_promedio_diario calculation: mp_id (int) vs item_id (string) mismatch in test data');
         Carbon::setTestNow('2025-01-10 09:00:00');
-        $service = new ReplenishmentService();
+        $service = new ReplenishmentService;
 
         DB::connection('pgsql')->table('selemti.items')->insert([
             'id' => 'MP-100',
@@ -295,19 +297,21 @@ class ReplenishmentTest extends TestCase
 
         DB::connection('pgsql')->table('selemti.inv_consumo_pos')->insert([
             'id' => 1,
+            'ticket_id' => 5001,
             'sucursal_id' => 1,
-            'fecha_proceso' => now()->subDays(2),
+            'estado' => 'CONFIRMADO',
+            'expandido' => true,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
         DB::connection('pgsql')->table('selemti.inv_consumo_pos_det')->insert([
             'consumo_id' => 1,
-            'mp_id' => 100, // mp_id es entero en BD
+            'item_id' => 'MP-100',
+            'uom' => 'UND',
             'cantidad' => 10,
             'factor' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
+            'origen' => 'RECETA',
         ]);
 
         $result = $service->generateDailySuggestions([

@@ -4,9 +4,9 @@ namespace Tests\Feature\Reports;
 
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 /**
@@ -30,6 +30,14 @@ class ItemModsReportTest extends TestCase
             ['email' => 'test@terrena.test'],
             ['name' => 'Test User', 'password' => bcrypt('password')]
         );
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $permission = Permission::query()->firstOrCreate([
+            'name' => 'reports.view',
+            'guard_name' => 'web',
+        ]);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $this->user->givePermissionTo($permission);
 
         Gate::define('reports.view', fn ($user) => true);
     }
@@ -136,7 +144,7 @@ class ItemModsReportTest extends TestCase
         // Obtener primera sucursal de los datos
         $firstBranch = $allRows->first()->sucursal ?? null;
 
-        if (!$firstBranch) {
+        if (! $firstBranch) {
             $this->markTestSkipped('Los datos no tienen información de sucursal');
         }
 
@@ -213,7 +221,15 @@ class ItemModsReportTest extends TestCase
      */
     public function test_json_endpoint_returns_valid_response(): void
     {
-        $this->markTestSkipped('El endpoint API requiere autenticación Sanctum/JWT');
+        $response = $this->actingAs($this->user, 'sanctum')->getJson(route('api.reports.sales.mods', [
+            'start_date' => Carbon::now()->subDays(7)->format('Y-m-d'),
+            'end_date' => Carbon::now()->format('Y-m-d'),
+            'view' => 'summary_item_mods',
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure(['success', 'data', 'summary', 'filters']);
+        $response->assertJsonPath('filters.view', 'summary_item_mods');
     }
 
     /**
@@ -250,7 +266,7 @@ class ItemModsReportTest extends TestCase
         }
 
         // Calcular total manualmente
-        $manualTotal = $rows->sum(fn($row) => (float) ($row->monto_extra_modificador ?? 0));
+        $manualTotal = $rows->sum(fn ($row) => (float) ($row->monto_extra_modificador ?? 0));
         $summaryTotal = (float) ($summary['total_amount'] ?? 0);
 
         // Verificar que coinciden (con tolerancia de 0.01 por redondeos)
