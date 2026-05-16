@@ -15,23 +15,33 @@ class AuthController extends Controller
      */
     public function login(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'email' => 'required|string|email',
+        // Accept either 'email' or 'username' field — legacy POS clients send 'username'
+        $request->validate([
             'password' => 'required|string',
         ]);
 
-        try {
-            $user = User::where('email', $validated['email'])->first();
+        $credential = $request->input('email') ?? $request->input('username');
 
-            // Verificar credenciales (ajusta según tu esquema)
-            if (! $user || ! Hash::check($validated['password'], $user->password)) {
+        if (empty($credential)) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'validation_error',
+                'message' => 'Se requiere el campo email o username.',
+            ], 422);
+        }
+
+        try {
+            // Try email first, then fall back to name (for username-style logins)
+            $user = User::where('email', $credential)->first()
+                ?? User::where('name', $credential)->first();
+
+            if (! $user || ! Hash::check($request->input('password'), $user->password)) {
                 return response()->json([
                     'error' => 'Unauthorized',
                     'message' => 'Credenciales inválidas',
                 ], 401);
             }
 
-            // Generar token (usando Laravel Sanctum)
             $token = $user->createToken('pos-token')->plainTextToken;
 
             return response()->json([
@@ -63,7 +73,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'error' => 'Método no permitido',
-            'message' => 'Use POST con { "email": "string", "password": "string" } para autenticarse.',
+            'message' => 'Use POST con { "email": "string", "password": "string" } o { "username": "string", "password": "string" } para autenticarse.',
         ], 405)->header('Allow', 'POST');
     }
 
