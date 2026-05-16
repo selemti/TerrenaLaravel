@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Caja\PrecorteController;
 use App\Http\Controllers\Api\Caja\SesionesController;
 use App\Http\Controllers\Api\CatalogsController;
 use App\Http\Controllers\Api\Inventory\ItemController;
+use App\Http\Controllers\Api\Inventory\KardexController;
 use App\Http\Controllers\Api\Inventory\PriceController;
 use App\Http\Controllers\Api\Inventory\RecipeCostController;
 use App\Http\Controllers\Api\Inventory\StockController;
@@ -215,7 +216,7 @@ Route::prefix('inventory')->middleware(['auth:sanctum'])->group(function () {
         Route::delete('/{id}', [ItemController::class, 'destroy']);
 
         // Relacionados con items
-        Route::get('/{id}/kardex', [StockController::class, 'kardex']);
+        Route::get('/{itemId}/kardex', [KardexController::class, 'show']);
         Route::get('/{id}/batches', [StockController::class, 'batches']);
         Route::get('/{id}/vendors', [VendorController::class, 'byItem']);
         Route::post('/{id}/vendors', [VendorController::class, 'attach']);
