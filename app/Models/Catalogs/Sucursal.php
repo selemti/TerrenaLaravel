@@ -2,11 +2,14 @@
 
 namespace App\Models\Catalogs;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class Sucursal extends Model
 {
+    use HasFactory;
+
     protected $connection = 'pgsql';
 
     protected $table = 'selemti.cat_sucursales';

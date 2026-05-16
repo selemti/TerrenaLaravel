@@ -93,10 +93,10 @@ class TransferApiController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'origen_almacen_id' => 'required|integer|exists:selemti.almacenes,id',
-                'destino_almacen_id' => 'required|integer|exists:selemti.almacenes,id|different:origen_almacen_id',
+                'origen_almacen_id' => 'required|integer|min:1',
+                'destino_almacen_id' => 'required|integer|min:1|different:origen_almacen_id',
                 'lines' => 'required|array|min:1',
-                'lines.*.item_id' => 'required|integer|exists:selemti.items,id',
+                'lines.*.item_id' => 'required|min:1',
                 'lines.*.cantidad' => 'required|numeric|min:0.0001',
                 'lines.*.unidad_medida' => 'required|string|max:10',
                 'lines.*.observaciones' => 'nullable|string|max:500',
@@ -207,7 +207,7 @@ class TransferApiController extends Controller
             $transfer = TransferHeader::with([
                 'origenAlmacen',
                 'destinoAlmacen',
-                'aprobadaPor',
+                'validadaPor',
                 'lineas.item',
             ])->find($id);
 
@@ -265,7 +265,6 @@ class TransferApiController extends Controller
             $transfer = TransferHeader::with([
                 'origenAlmacen',
                 'destinoAlmacen',
-                'despachadaPor',
                 'lineas.item',
             ])->find($id);
 
@@ -380,7 +379,7 @@ class TransferApiController extends Controller
                 'ok' => true,
                 'message' => 'Transferencia posteada exitosamente',
                 'data' => $transfer,
-                'movimientos_generados' => $result['movimientos_generados'],
+                'movimientos_generados' => $result['movements_created'] ?? 0,
                 'timestamp' => now()->toIso8601String(),
             ]);
 

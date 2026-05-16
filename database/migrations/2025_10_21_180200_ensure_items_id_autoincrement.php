@@ -4,6 +4,13 @@ return new class extends \Illuminate\Database\Migrations\Migration
 {
     public function up(): void
     {
+        $exists = \Illuminate\Support\Facades\DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='items' LIMIT 1"
+        );
+        if (! $exists) {
+            return;
+        }
+
         \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 DO $$
 DECLARE

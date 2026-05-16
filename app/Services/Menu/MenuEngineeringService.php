@@ -89,27 +89,29 @@ class MenuEngineeringService
             return collect();
         }
 
+        // Units per menu_item from POS via adapter — replaces public.* subquery join
+        $salesUnits = $this->posAdapter->getSalesUnitsByMenuItemInRange($start, $end);
+
         $rows = DB::connection('pgsql')
             ->table('selemti.menu_items as mi')
-            ->selectRaw('mi.id, AVG(costs.cost_per_portion) as avg_cost, SUM(costs.cost_per_portion * metrics.units) as total_cost')
+            ->selectRaw('mi.id, AVG(costs.cost_per_portion) as avg_cost')
             ->leftJoin('selemti.menu_engineering_snapshots as snap', function ($join) use ($start, $end) {
                 $join->on('snap.menu_item_id', '=', 'mi.id')
                     ->whereBetween('snap.period_start', [$start->startOfDay(), $end->endOfDay()]);
             })
             ->leftJoinSub($this->recipeCostSubquery($start, $end), 'costs', 'costs.menu_item_id', '=', 'mi.id')
-            ->leftJoinSub($this->salesMetricsSubquery($start, $end), 'metrics', 'metrics.menu_item_id', '=', 'mi.id')
             ->whereIn('mi.id', $menuItemIds)
             ->groupBy('mi.id')
             ->get();
 
-        return collect($rows)->mapWithKeys(function ($row) {
-            $units = (float) ($row->units ?? 0);
-            $totalCost = (float) ($row->total_cost ?? 0);
-            $foodCost = $units > 0 ? $totalCost : (float) ($row->avg_cost ?? 0);
+        return collect($rows)->mapWithKeys(function ($row) use ($salesUnits) {
+            $avgCost = (float) ($row->avg_cost ?? 0);
+            $units = (float) ($salesUnits->get((int) $row->id)?->units ?? 0);
+            $foodCost = $units > 0 ? round($units * $avgCost, 2) : $avgCost;
 
             return [
                 (int) $row->id => [
-                    'avg_cost' => round((float) ($row->avg_cost ?? 0), 2),
+                    'avg_cost' => round($avgCost, 2),
                     'food_cost' => round($foodCost, 2),
                 ],
             ];
@@ -126,20 +128,6 @@ class MenuEngineeringService
                 $join->on('rc.recipe_id', '=', 'r.id')
                     ->whereBetween('rc.snapshot_at', [$start->startOfDay(), $end->endOfDay()]);
             })
-            ->groupBy('mi.id');
-    }
-
-    protected function salesMetricsSubquery(CarbonImmutable $start, CarbonImmutable $end)
-    {
-        return DB::connection('pgsql')
-            ->table('public.ticket_item as ti')
-            ->selectRaw('mi.id as menu_item_id, SUM(ti.item_quantity) as units')
-            ->join('selemti.menu_item_sync_map as map', 'map.pos_identifier', '=', 'ti.item_id')
-            ->join('selemti.menu_items as mi', 'mi.id', '=', 'map.menu_item_id')
-            ->join('public.ticket as t', 't.id', '=', 'ti.ticket_id')
-            ->whereBetween('t.paid_time', [$start->startOfDay(), $end->endOfDay()])
-            ->where('t.paid', true)
-            ->where('t.voided', false)
             ->groupBy('mi.id');
     }
 

@@ -12,6 +12,7 @@ DO $$
 BEGIN
     IF EXISTS (
         SELECT 1 FROM pg_trigger WHERE tgname = 'trg_ticket_inventory_consumption'
+        AND EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='ticket')
     ) THEN
         DROP TRIGGER trg_ticket_inventory_consumption ON public.ticket;
     END IF;

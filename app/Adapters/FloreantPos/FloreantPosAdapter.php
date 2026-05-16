@@ -639,4 +639,264 @@ class FloreantPosAdapter
 
         return $query->get();
     }
+
+    // -----------------------------------------------------------------------
+    // ProductsReportService queries
+    // -----------------------------------------------------------------------
+
+    /**
+     * Ventas de productos agrupadas por mes.
+     */
+    public function getProductSalesByMonth(
+        Carbon $start,
+        Carbon $end,
+        ?array $branchIds = null,
+        ?array $terminalIds = null
+    ): Collection {
+        $query = $this->buildTicketItemBaseQuery($start, $end, $branchIds, $terminalIds);
+
+        return $query
+            ->selectRaw("
+                DATE_TRUNC('month', t.folio_date) AS mes,
+                EXTRACT(YEAR FROM t.folio_date) AS anio,
+                EXTRACT(MONTH FROM t.folio_date) AS numero_mes,
+                COUNT(DISTINCT t.id) AS tickets_totales,
+                SUM(ti.item_count) AS unidades_vendidas,
+                SUM(ti.total_price) AS ingreso_total,
+                ROUND(SUM(ti.total_price)::numeric, 2) AS ingreso_total_redondeado,
+                AVG(ti.item_price) AS precio_promedio,
+                MIN(ti.item_price) AS precio_minimo,
+                MAX(ti.item_price) AS precio_maximo
+            ")
+            ->groupBy('mes', 'anio', 'numero_mes')
+            ->orderBy('anio', 'desc')
+            ->orderBy('numero_mes', 'desc')
+            ->get();
+    }
+
+    /**
+     * Ventas de productos agrupadas por categoría.
+     */
+    public function getProductSalesByCategory(
+        Carbon $start,
+        Carbon $end,
+        ?array $branchIds = null,
+        ?array $terminalIds = null
+    ): Collection {
+        return $this->buildTicketItemBaseQuery($start, $end, $branchIds, $terminalIds)
+            ->selectRaw("
+                ti.category_name AS categoria,
+                COUNT(DISTINCT t.id) AS tickets_totales,
+                SUM(ti.item_count) AS unidades_vendidas,
+                SUM(ti.total_price) AS ingreso_total,
+                ROUND(SUM(ti.total_price)::numeric, 2) AS ingreso_total_redondeado,
+                AVG(ti.item_price) AS precio_promedio,
+                COUNT(DISTINCT ti.item_name) AS productos_unicos
+            ")
+            ->groupBy('ti.category_name')
+            ->orderBy('ingreso_total', 'desc')
+            ->get();
+    }
+
+    /**
+     * Ventas de productos agrupadas por producto.
+     */
+    public function getProductSalesByProduct(
+        Carbon $start,
+        Carbon $end,
+        ?array $branchIds = null,
+        ?array $terminalIds = null
+    ): Collection {
+        return $this->buildTicketItemBaseQuery($start, $end, $branchIds, $terminalIds)
+            ->selectRaw("
+                ti.category_name AS categoria,
+                ti.group_name AS grupo_menu,
+                ti.item_name AS producto,
+                COUNT(DISTINCT t.id) AS tickets_totales,
+                SUM(ti.item_count) AS unidades_vendidas,
+                SUM(ti.total_price) AS ingreso_total,
+                ROUND(SUM(ti.total_price)::numeric, 2) AS ingreso_total_redondeado,
+                AVG(ti.item_price) AS precio_promedio,
+                MIN(ti.item_price) AS precio_minimo,
+                MAX(ti.item_price) AS precio_maximo
+            ")
+            ->groupBy('ti.category_name', 'ti.group_name', 'ti.item_name')
+            ->orderBy('ingreso_total', 'desc')
+            ->get();
+    }
+
+    /**
+     * Ventas diarias de productos (detalle por ítem).
+     */
+    public function getDailyProductSales(
+        Carbon $start,
+        Carbon $end,
+        ?array $branchIds = null,
+        ?array $terminalIds = null
+    ): Collection {
+        $query = DB::connection($this->connection)
+            ->table('public.ticket AS t')
+            ->join('public.ticket_item AS ti', 'ti.ticket_id', '=', 't.id')
+            ->whereBetween('t.folio_date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+            ->where('t.paid', true)
+            ->where('t.voided', false)
+            ->whereNotNull('ti.item_name')
+            ->where('ti.item_count', '>', 0)
+            ->select('t.folio_date', 'ti.category_name', 'ti.item_name', 'ti.item_count',
+                'ti.item_price', 'ti.total_price', 't.branch_key', 't.terminal_id')
+            ->orderBy('t.folio_date', 'desc')
+            ->orderBy('ti.item_name');
+
+        if ($branchIds) {
+            $query->whereIn('t.branch_key', $branchIds);
+        }
+
+        if ($terminalIds) {
+            $query->whereIn('t.terminal_id', $terminalIds);
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * Totales estilo JasperReports vs Canon SSOT.
+     * Devuelve las 4 métricas crudas para que el servicio calcule los KPIs.
+     */
+    public function getJasperTotals(
+        Carbon $start,
+        Carbon $end,
+        ?array $branchIds = null,
+        ?array $terminalIds = null
+    ): array {
+        $baseTicketQuery = DB::connection($this->connection)
+            ->table('public.ticket AS t')
+            ->whereBetween('t.folio_date', [$start->format('Y-m-d 00:00:00'), $end->format('Y-m-d 23:59:59')])
+            ->where('t.paid', true)
+            ->where('t.voided', false);
+
+        if ($branchIds) {
+            $baseTicketQuery->whereIn('t.branch_key', $branchIds);
+        }
+
+        if ($terminalIds) {
+            $baseTicketQuery->whereIn('t.terminal_id', $terminalIds);
+        }
+
+        $canonTotals = DB::connection($this->connection)
+            ->table('public.transactions as tx')
+            ->join('public.ticket as t', 't.id', '=', 'tx.ticket_id')
+            ->whereBetween('t.folio_date', [$start->format('Y-m-d 00:00:00'), $end->format('Y-m-d 23:59:59')])
+            ->where(function ($q) { $q->where('tx.voided', false)->orWhereNull('tx.voided'); })
+            ->whereIn(DB::raw("UPPER(COALESCE(tx.transaction_type, ''))"), ['CREDIT', 'DEBIT'])
+            ->whereNotIn(DB::raw("UPPER(COALESCE(tx.payment_type, ''))"), ['REFUND', 'VOID_TRANS', 'REFUND_CARD'])
+            ->where('tx.amount', '>', 0)
+            ->selectRaw('SUM(tx.amount) as canon_neto, COUNT(DISTINCT t.id) as canon_tickets')
+            ->first();
+
+        $menuItemsTotals = (clone $baseTicketQuery)
+            ->join('public.ticket_item AS ti', 'ti.ticket_id', '=', 't.id')
+            ->whereNotNull('ti.item_name')
+            ->selectRaw('SUM(ti.total_price) as items_neto, SUM(CASE WHEN ti.discount > 0 THEN ti.discount ELSE 0 END) as descuentos_items, COUNT(DISTINCT t.id) as total_tickets')
+            ->first();
+
+        $menuItemsExcluding100 = (clone $baseTicketQuery)
+            ->join('public.ticket_item AS ti', 'ti.ticket_id', '=', 't.id')
+            ->whereNotNull('ti.item_name')
+            ->where('t.total_price', '>', 0)
+            ->selectRaw('SUM(ti.total_price) as items_neto_excluding_100, SUM(CASE WHEN ti.discount > 0 THEN ti.discount ELSE 0 END) as descuentos_excluding_100, COUNT(DISTINCT t.id) as tickets_excluding_100')
+            ->first();
+
+        $totalModificadores = (clone $baseTicketQuery)
+            ->join('public.ticket_item AS ti', 'ti.ticket_id', '=', 't.id')
+            ->join('public.ticket_item_modifier AS tim', 'tim.ticket_item_id', '=', 'ti.id')
+            ->sum(DB::raw('COALESCE(tim.total_price, 0)'));
+
+        return [
+            'canon_neto' => (float) ($canonTotals->canon_neto ?? 0),
+            'canon_tickets' => (int) ($canonTotals->canon_tickets ?? 0),
+            'items_neto' => (float) ($menuItemsTotals->items_neto ?? 0),
+            'descuentos_items' => (float) ($menuItemsTotals->descuentos_items ?? 0),
+            'total_tickets' => (int) ($menuItemsTotals->total_tickets ?? 0),
+            'items_neto_excluding_100' => (float) ($menuItemsExcluding100->items_neto_excluding_100 ?? 0),
+            'descuentos_excluding_100' => (float) ($menuItemsExcluding100->descuentos_excluding_100 ?? 0),
+            'tickets_excluding_100' => (int) ($menuItemsExcluding100->tickets_excluding_100 ?? 0),
+            'modificadores_total' => (float) $totalModificadores,
+        ];
+    }
+
+    /**
+     * Datos de comparación mes a mes (ticket + ticket_item agregados por mes).
+     */
+    public function getMonthComparisonData(Carbon $start, Carbon $end): Collection
+    {
+        return DB::connection($this->connection)
+            ->table('public.ticket AS t')
+            ->join('public.ticket_item AS ti', 'ti.ticket_id', '=', 't.id')
+            ->whereBetween('t.folio_date', [$start->format('Y-m-d 00:00:00'), $end->format('Y-m-d 23:59:59')])
+            ->where('t.paid', true)
+            ->where('t.voided', false)
+            ->whereNotNull('ti.item_name')
+            ->where('ti.item_count', '>', 0)
+            ->selectRaw("DATE_TRUNC('month', t.folio_date) AS mes, EXTRACT(YEAR FROM t.folio_date) AS anio, SUM(ti.item_count) AS unidades, SUM(ti.total_price) AS ingresos")
+            ->groupBy('mes', 'anio')
+            ->orderBy('anio', 'desc')
+            ->orderBy('mes', 'asc')
+            ->get();
+    }
+
+    // -----------------------------------------------------------------------
+    // MenuEngineeringService queries
+    // -----------------------------------------------------------------------
+
+    /**
+     * Unidades vendidas por menu_item_id en un rango de fechas.
+     * Reemplaza salesMetricsSubquery() — devuelve Collection keyed by menu_item_id.
+     */
+    public function getSalesUnitsByMenuItemInRange(
+        \Carbon\CarbonImmutable $start,
+        \Carbon\CarbonImmutable $end
+    ): Collection {
+        return DB::connection($this->connection)
+            ->table('public.ticket_item as ti')
+            ->selectRaw('mi.id as menu_item_id, SUM(ti.item_quantity) as units')
+            ->join('selemti.menu_item_sync_map as map', 'map.pos_identifier', '=', 'ti.item_id')
+            ->join('selemti.menu_items as mi', 'mi.id', '=', 'map.menu_item_id')
+            ->join('public.ticket as t', 't.id', '=', 'ti.ticket_id')
+            ->whereBetween('t.paid_time', [$start->startOfDay(), $end->endOfDay()])
+            ->where('t.paid', true)
+            ->where('t.voided', false)
+            ->groupBy('mi.id')
+            ->get()
+            ->keyBy('menu_item_id');
+    }
+
+    // -----------------------------------------------------------------------
+    // Private helpers
+    // -----------------------------------------------------------------------
+
+    private function buildTicketItemBaseQuery(
+        Carbon $start,
+        Carbon $end,
+        ?array $branchIds,
+        ?array $terminalIds
+    ) {
+        $query = DB::connection($this->connection)
+            ->table('public.ticket AS t')
+            ->join('public.ticket_item AS ti', 'ti.ticket_id', '=', 't.id')
+            ->whereBetween('t.folio_date', [$start->format('Y-m-d 00:00:00'), $end->format('Y-m-d 23:59:59')])
+            ->where('t.paid', true)
+            ->where('t.voided', false)
+            ->whereNotNull('ti.item_name')
+            ->where('ti.item_count', '>', 0);
+
+        if ($branchIds) {
+            $query->whereIn('t.branch_key', $branchIds);
+        }
+
+        if ($terminalIds) {
+            $query->whereIn('t.terminal_id', $terminalIds);
+        }
+
+        return $query;
+    }
 }

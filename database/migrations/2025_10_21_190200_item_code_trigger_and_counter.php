@@ -4,6 +4,10 @@ return new class extends \Illuminate\Database\Migrations\Migration
 {
     public function up(): void
     {
+        $itemsExist = \Illuminate\Support\Facades\DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='items' LIMIT 1"
+        );
+
         \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 CREATE TABLE IF NOT EXISTS selemti.item_category_counters (
     category_id BIGINT PRIMARY KEY,
@@ -38,6 +42,10 @@ BEGIN
     RETURN NEW;
 END$$ LANGUAGE plpgsql;
 
+SQL);
+
+        if ($itemsExist) {
+            \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_items_assign_code') THEN
@@ -47,6 +55,7 @@ BEGIN
     END IF;
 END$$;
 SQL);
+        }
     }
 
     public function down(): void

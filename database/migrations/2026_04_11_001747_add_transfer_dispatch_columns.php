@@ -7,6 +7,13 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $exists = DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='traspaso_cab' LIMIT 1"
+        );
+        if (! $exists) {
+            return;
+        }
+
         // PG 9.5 does not support ADD COLUMN IF NOT EXISTS — use DO blocks instead
         DB::statement("
             DO \$\$

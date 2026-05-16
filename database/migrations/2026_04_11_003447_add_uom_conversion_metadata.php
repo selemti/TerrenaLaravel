@@ -8,6 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $exists = \Illuminate\Support\Facades\DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='cat_uom_conversion' LIMIT 1"
+        );
+        if (! $exists) {
+            return;
+        }
+
         // PG 9.5 no soporta ADD COLUMN IF NOT EXISTS — usar DO blocks
         \Illuminate\Support\Facades\DB::statement("
             DO \$\$

@@ -12,6 +12,13 @@ return new class extends Migration
      */
     public function up(): void
     {
+        $tableCheck = DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='recepcion_cab' LIMIT 1"
+        );
+        if (! $tableCheck) {
+            return;
+        }
+
         $schema = Schema::connection('pgsql');
 
         $needsEstado = ! $this->columnExists('estado');

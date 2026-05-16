@@ -53,15 +53,7 @@ return new class extends Migration
                 ->on('selemti.purchase_suggestions')
                 ->onDelete('cascade');
 
-            $table->foreign('item_id', 'fk_psuggline_item')
-                ->references('id')
-                ->on('selemti.items')
-                ->onDelete('restrict');
-
-            $table->foreign('proveedor_sugerido_id', 'fk_psuggline_proveedor')
-                ->references('id')
-                ->on('selemti.cat_proveedores')
-                ->onDelete('set null');
+            // FKs to pre-existing tables (selemti.items, selemti.cat_proveedores) omitted
 
             $table->unique(['suggestion_id', 'item_id'], 'uq_psuggline_suggestion_item');
 

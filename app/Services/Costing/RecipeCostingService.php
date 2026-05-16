@@ -25,7 +25,7 @@ class RecipeCostingService
 
         $yield = $mpCost['yield_portions'] ?? 0;
         $totalBatch = $mpCost['batch_cost'] + $labor['batch_cost'] + $overhead['batch_cost'];
-        $portionCost = $yield > 0 ? $totalBatch / $yield : 0;
+        $portionCost = $yield > 0 ? $totalBatch / $yield : 0.0;
 
         return [
             'recipe_id' => $recipeId,

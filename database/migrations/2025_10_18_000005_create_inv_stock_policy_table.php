@@ -24,10 +24,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['item_id', 'sucursal_id'], 'inv_stock_policy_item_store_unique');
-            $table->foreign('item_id', 'fk_inv_stock_policy_item')
-                ->references('id')
-                ->on('selemti.items')
-                ->cascadeOnDelete();
+            // FK to selemti.items omitted: pre-existing legacy table, not created by migrations
             $table->foreign('sucursal_id', 'fk_inv_stock_policy_sucursal')
                 ->references('id')
                 ->on('selemti.cat_sucursales')

@@ -9,6 +9,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! $this->tableExists()) {
+            return;
+        }
+
         if (! $this->columnExists('preferente')) {
             Schema::connection('pgsql')->table('selemti.item_vendor', function (Blueprint $table) {
                 $table->boolean('preferente')->default(false)->nullable(false);
@@ -35,6 +39,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (! $this->tableExists()) {
+            return;
+        }
+
         DB::statement("
             DO $$
             BEGIN
@@ -54,6 +62,14 @@ return new class extends Migration
                 $table->dropColumn('preferente');
             });
         }
+    }
+
+    private function tableExists(): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema = 'selemti' AND table_name = 'item_vendor' LIMIT 1"
+        );
+        return ! empty($result);
     }
 
     private function columnExists(string $column): bool

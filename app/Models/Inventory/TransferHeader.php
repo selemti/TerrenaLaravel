@@ -37,7 +37,14 @@ class TransferHeader extends Model
         'estado',
         'usuario_id',
         'validada_por',
+        'validada_at',
+        'despachada_por',
+        'despachada_at',
+        'guia',
+        'recibida_por',
+        'recibida_at',
         'posteada_por',
+        'posteada_at',
         'meta',
     ];
 
@@ -61,9 +68,29 @@ class TransferHeader extends Model
         return $this->belongsTo(User::class, 'usuario_id');
     }
 
+    public function creadaPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'usuario_id');
+    }
+
     public function validadaPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'validada_por');
+    }
+
+    public function aprobadaPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'validada_por');
+    }
+
+    public function despachadaPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'despachada_por');
+    }
+
+    public function recibidaPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'recibida_por');
     }
 
     public function posteadaPor(): BelongsTo

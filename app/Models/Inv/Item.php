@@ -6,12 +6,15 @@ use App\Models\Catalogs\StockPolicy;
 use App\Models\Catalogs\Unidad;
 use App\Models\Inventory\ItemCategory;
 use App\Models\ReplenishmentSuggestion;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Item extends Model
 {
+    use HasFactory;
+
     protected $connection = 'pgsql';
 
     protected $table = 'selemti.items';

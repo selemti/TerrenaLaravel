@@ -13,6 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
+        $exists = \Illuminate\Support\Facades\DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='recepcion_cab' LIMIT 1"
+        );
+        if (! $exists) {
+            return;
+        }
+
         Schema::table('selemti.recepcion_cab', function (Blueprint $table) {
             // Columns for state machine: BORRADOR → VALIDADA → POSTEADA
             $table->unsignedBigInteger('validada_por')->nullable();

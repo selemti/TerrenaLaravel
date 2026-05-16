@@ -11,6 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
+        $tableCheck = DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='items' LIMIT 1"
+        );
+        if (! $tableCheck) {
+            return;
+        }
+
         DB::connection('pgsql')->statement('SET search_path TO selemti');
 
         echo "Limpiando descripciones con información de presentación...\n";

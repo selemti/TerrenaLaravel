@@ -62,19 +62,17 @@ class RecipeCostController extends Controller
             // Obtener versión publicada o la última versión
             $version = $receta->publishedVersion ?? $receta->latestVersion;
 
-            if (! $version) {
-                return response()->json([
-                    'ok' => false,
-                    'message' => 'La receta no tiene versiones disponibles.',
-                    'recipe_id' => $id,
-                ], 404);
+            if ($version) {
+                $version->load(['detalles.item']);
+                $detalles = $version->detalles;
+            } else {
+                // Fallback: use recipe's direct details (no versioning)
+                $receta->load('detalles.item');
+                $detalles = $receta->detalles;
             }
 
-            // Cargar detalles con relaciones
-            $version->load(['detalles.item']);
-
             $baseIngredients = $this->implodeRecursive(
-                $version->detalles,
+                $detalles,
                 $multiplier = 1.0,
                 $depth = 0,
                 $visited = []
@@ -82,13 +80,15 @@ class RecipeCostController extends Controller
 
             return response()->json([
                 'ok' => true,
-                'recipe_id' => $id,
-                'recipe_name' => $receta->nombre_plato,
-                'version_id' => $version->id,
-                'version_number' => $version->version,
-                'base_ingredients' => array_values($baseIngredients),
-                'total_ingredients' => count($baseIngredients),
-                'aggregated' => true,
+                'data' => [
+                    'recipe_id' => $id,
+                    'recipe_name' => $receta->nombre_plato,
+                    'version_id' => $version?->id,
+                    'version_number' => $version?->version,
+                    'base_ingredients' => array_values(array_map(fn ($ing) => array_merge($ing, ['qty' => $ing['total_qty']]), $baseIngredients)),
+                    'total_ingredients' => count($baseIngredients),
+                    'aggregated' => true,
+                ],
                 'timestamp' => now()->toIso8601String(),
             ]);
 
@@ -132,83 +132,70 @@ class RecipeCostController extends Controller
         $ingredients = [];
 
         foreach ($detalles as $detalle) {
-            $itemId = $detalle->item_id;
+            // Determine if this line is a sub-recipe reference
+            $subRecipeId = $detalle->receta_id_ingrediente
+                ?? (str_starts_with((string) $detalle->item_id, 'REC-') ? $detalle->item_id : null);
 
-            // Protección contra loops infinitos
-            if (in_array($itemId, $visited)) {
-                continue; // Skip si ya visitamos este item en esta rama
-            }
+            if ($subRecipeId) {
+                // Protección contra loops infinitos
+                if (in_array($subRecipeId, $visited)) {
+                    continue;
+                }
 
-            // Verificar si el item es una receta (código inicia con 'REC-')
-            if (str_starts_with($itemId, 'REC-')) {
-                // Es una sub-receta, necesitamos implodirla
                 try {
-                    $subReceta = Receta::find($itemId);
+                    $subReceta = Receta::find($subRecipeId);
 
                     if ($subReceta) {
                         $subVersion = $subReceta->publishedVersion ?? $subReceta->latestVersion;
 
                         if ($subVersion) {
                             $subVersion->load(['detalles.item']);
+                            $subDetalles = $subVersion->detalles;
+                        } else {
+                            $subReceta->load('detalles.item');
+                            $subDetalles = $subReceta->detalles;
+                        }
 
-                            // Calcular multiplicador: cantidad de sub-receta * multiplicador acumulado
-                            $subMultiplier = $detalle->cantidad * $multiplier;
+                        $subMultiplier = $detalle->cantidad * $multiplier;
+                        $newVisited = array_merge($visited, [$subRecipeId]);
 
-                            // Recursión: agregar itemId actual a visited
-                            $newVisited = array_merge($visited, [$itemId]);
+                        $subIngredients = $this->implodeRecursive(
+                            $subDetalles,
+                            $subMultiplier,
+                            $depth + 1,
+                            $newVisited
+                        );
 
-                            $subIngredients = $this->implodeRecursive(
-                                $subVersion->detalles,
-                                $subMultiplier,
-                                $depth + 1,
-                                $newVisited
-                            );
-
-                            // Agregar ingredientes de sub-receta a nuestro array
-                            foreach ($subIngredients as $key => $subIng) {
-                                if (! isset($ingredients[$key])) {
-                                    $ingredients[$key] = $subIng;
-                                } else {
-                                    // Agregar cantidades
-                                    $ingredients[$key]['total_qty'] += $subIng['total_qty'];
-                                }
+                        foreach ($subIngredients as $key => $subIng) {
+                            if (! isset($ingredients[$key])) {
+                                $ingredients[$key] = $subIng;
+                            } else {
+                                $ingredients[$key]['total_qty'] += $subIng['total_qty'];
                             }
                         }
                     }
                 } catch (\Exception $e) {
-                    // Si falla cargar sub-receta, tratarlo como ingrediente base
-                    $key = $itemId;
-
-                    if (! isset($ingredients[$key])) {
-                        $ingredients[$key] = [
-                            'item_id' => $itemId,
-                            'item_name' => $detalle->item->nombre ?? $itemId,
-                            'total_qty' => 0,
-                            'uom' => $detalle->unidad_medida,
-                            'is_base' => true,
-                        ];
-                    }
-
-                    $qtyAdjusted = $detalle->cantidad * $multiplier;
-                    $ingredients[$key]['total_qty'] += $qtyAdjusted;
+                    // ignore unresolvable sub-recipe
                 }
             } else {
-                // Es un ingrediente base (item de inventario)
-                $key = $itemId;
+                // Ingrediente base (item de inventario)
+                $itemId = $detalle->item_id;
 
-                if (! isset($ingredients[$key])) {
-                    $ingredients[$key] = [
+                if (! $itemId || in_array($itemId, $visited)) {
+                    continue;
+                }
+
+                if (! isset($ingredients[$itemId])) {
+                    $ingredients[$itemId] = [
                         'item_id' => $itemId,
                         'item_name' => $detalle->item->nombre ?? 'Item desconocido',
                         'total_qty' => 0,
-                        'uom' => $detalle->unidad_medida,
+                        'uom' => $detalle->unidad_id ?? $detalle->unidad_medida ?? null,
                         'is_base' => true,
                     ];
                 }
 
-                // Aplicar multiplicador y agregar
-                $qtyAdjusted = $detalle->cantidad * $multiplier;
-                $ingredients[$key]['total_qty'] += $qtyAdjusted;
+                $ingredients[$itemId]['total_qty'] += $detalle->cantidad * $multiplier;
             }
         }
 

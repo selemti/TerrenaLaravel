@@ -3,11 +3,14 @@
 namespace App\Models\Rec;
 
 use App\Models\Inv\Item;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RecetaDetalle extends Model
 {
+    use HasFactory;
+
     protected $table = 'selemti.receta_det';
 
     protected $primaryKey = 'id';

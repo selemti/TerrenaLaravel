@@ -8,6 +8,13 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        $tableCheck = DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='insumo' LIMIT 1"
+        );
+        if (! $tableCheck) {
+            return;
+        }
+
         // Verificar cuáles columnas ya existen
         $needsCodigo = ! $this->columnExists('codigo');
         $needsCategoria = ! $this->columnExists('categoria_codigo');

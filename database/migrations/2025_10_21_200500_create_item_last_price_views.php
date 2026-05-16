@@ -7,6 +7,16 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $itemsExists = DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='items' LIMIT 1"
+        );
+        $vendorExists = DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='item_vendor' LIMIT 1"
+        );
+        if (! $itemsExists || ! $vendorExists) {
+            return;
+        }
+
         DB::unprepared(<<<'SQL'
 CREATE OR REPLACE VIEW selemti.vw_item_last_price AS
 WITH last_price AS (

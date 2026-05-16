@@ -44,8 +44,13 @@ BEGIN
 END$$;
 SQL);
 
-        // 2) Añadir columna category_id a items (sin IF NOT EXISTS nativo)
-        \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
+        // 2) Añadir columna category_id a items (solo si la tabla items existe)
+        $itemsExist = \Illuminate\Support\Facades\DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='items' LIMIT 1"
+        );
+
+        if ($itemsExist) {
+            \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 DO $$
 BEGIN
 IF NOT EXISTS (
@@ -57,8 +62,8 @@ END IF;
 END$$;
 SQL);
 
-        // 3) FK sólo si no existe (compatible 9.5)
-        \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
+            // 3) FK sólo si no existe (compatible 9.5)
+            \Illuminate\Support\Facades\DB::unprepared(<<<'SQL'
 DO $$
 BEGIN
 IF NOT EXISTS (
@@ -75,6 +80,7 @@ IF NOT EXISTS (
 END IF;
 END$$;
 SQL);
+        }
     }
 
     public function down(): void

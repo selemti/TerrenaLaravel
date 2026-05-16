@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if ($this->columnExists()) {
+        if (! $this->tableExists() || $this->columnExists()) {
             return;
         }
 
@@ -33,6 +33,14 @@ return new class extends Migration
         Schema::connection('pgsql')->table('selemti.recepcion_cab', function (Blueprint $table) {
             $table->dropColumn('fecha_recepcion');
         });
+    }
+
+    protected function tableExists(): bool
+    {
+        $result = DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='recepcion_cab' LIMIT 1"
+        );
+        return ! empty($result);
     }
 
     protected function columnExists(): bool

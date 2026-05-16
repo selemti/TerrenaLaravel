@@ -10,6 +10,13 @@ return new class extends Migration
      */
     public function up(): void
     {
+        $exists = DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='items' LIMIT 1"
+        );
+        if (! $exists) {
+            return;
+        }
+
         DB::connection('pgsql')->statement('SET search_path TO selemti');
 
         // 1. Backfill unidad_medida_id para items que solo tienen unidad_medida (legacy)

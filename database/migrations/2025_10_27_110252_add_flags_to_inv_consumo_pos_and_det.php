@@ -12,6 +12,13 @@ return new class extends Migration
      */
     public function up(): void
     {
+        $tableCheck = DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='inv_consumo_pos' LIMIT 1"
+        );
+        if (! $tableCheck) {
+            return;
+        }
+
         Schema::connection('pgsql')->table('selemti.inv_consumo_pos', function (Blueprint $table) {
             if (! $this->columnExists('inv_consumo_pos', 'requiere_reproceso')) {
                 $table->boolean('requiere_reproceso')

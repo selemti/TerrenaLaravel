@@ -17,6 +17,13 @@ return new class extends Migration
             throw new \Exception('Error: config/permission.php not found and defaults could not be merged.');
         }
 
+        $tableCheck = \Illuminate\Support\Facades\DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='audit_log' LIMIT 1"
+        );
+        if (! $tableCheck) {
+            return;
+        }
+
         // Verificar si la foreign key ya existe
         $fks = \Illuminate\Support\Facades\DB::connection('pgsql')->select("
             SELECT conname 

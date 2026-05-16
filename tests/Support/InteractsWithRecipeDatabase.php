@@ -20,10 +20,15 @@ trait InteractsWithRecipeDatabase
         DB::purge('pgsql');
         DB::reconnect('pgsql');
 
+        // Attach an in-memory DB as the 'selemti' schema so Laravel's schema-qualified
+        // table names (e.g. "selemti"."items") resolve correctly in SQLite.
+        DB::statement("ATTACH DATABASE ':memory:' AS \"selemti\"");
+
         $this->createUsersTable();
         $this->createItemCategoriesTable();
         $this->createItemsTable();
         $this->createRecipesTable();
+        $this->createRecipeVersionsTable();
         $this->createRecipeDetailsTable();
         $this->createSnapshotsTable();
     }
@@ -54,8 +59,9 @@ trait InteractsWithRecipeDatabase
 
     private function createItemsTable(): void
     {
-        DB::statement('DROP TABLE IF EXISTS "items"');
-        DB::statement('CREATE TABLE "items" (
+        // Uses selemti schema (attached in-memory DB) matching Item model's $table = 'selemti.items'
+        DB::statement('DROP TABLE IF EXISTS "selemti"."items"');
+        DB::statement('CREATE TABLE "selemti"."items" (
             id TEXT PRIMARY KEY,
             codigo TEXT,
             nombre TEXT,
@@ -65,6 +71,20 @@ trait InteractsWithRecipeDatabase
             costo_promedio REAL,
             factor_conversion REAL,
             factor_compra REAL,
+            created_at TEXT,
+            updated_at TEXT
+        )');
+    }
+
+    private function createRecipeVersionsTable(): void
+    {
+        DB::statement('DROP TABLE IF EXISTS "selemti"."receta_version"');
+        DB::statement('CREATE TABLE "selemti"."receta_version" (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            receta_id TEXT NOT NULL,
+            version INTEGER NOT NULL DEFAULT 1,
+            version_publicada INTEGER DEFAULT 0,
+            fecha_efectiva TEXT,
             created_at TEXT,
             updated_at TEXT
         )');
@@ -91,8 +111,8 @@ trait InteractsWithRecipeDatabase
 
     private function createRecipeDetailsTable(): void
     {
-        DB::statement('DROP TABLE IF EXISTS "selemti.receta_det"');
-        DB::statement('CREATE TABLE "selemti.receta_det" (
+        DB::statement('DROP TABLE IF EXISTS "selemti"."receta_det"');
+        DB::statement('CREATE TABLE "selemti"."receta_det" (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             receta_id TEXT NOT NULL,
             item_id TEXT,
@@ -107,15 +127,15 @@ trait InteractsWithRecipeDatabase
 
     private function createSnapshotsTable(): void
     {
-        DB::statement('DROP TABLE IF EXISTS "selemti.recipe_cost_snapshots"');
-        DB::statement('CREATE TABLE "selemti.recipe_cost_snapshots" (
+        DB::statement('DROP TABLE IF EXISTS "selemti"."recipe_cost_snapshots"');
+        DB::statement('CREATE TABLE "selemti"."recipe_cost_snapshots" (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             recipe_id TEXT NOT NULL,
             snapshot_date TEXT NOT NULL,
             cost_total REAL NOT NULL DEFAULT 0,
             cost_per_portion REAL NOT NULL DEFAULT 0,
             portions REAL NOT NULL DEFAULT 1,
-            cost_breakdown TEXT NOT NULL DEFAULT "[]",
+            cost_breakdown TEXT NOT NULL DEFAULT \'[]\',
             reason TEXT NOT NULL,
             created_by_user_id INTEGER,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP

@@ -61,20 +61,7 @@ return new class extends Migration
                 ->on('selemti.cat_almacenes')
                 ->onDelete('set null');
 
-            $table->foreign('sugerido_por_user_id', 'fk_psugg_user_sugerido')
-                ->references('id')
-                ->on('selemti.users')
-                ->onDelete('set null');
-
-            $table->foreign('revisado_por_user_id', 'fk_psugg_user_revisado')
-                ->references('id')
-                ->on('selemti.users')
-                ->onDelete('set null');
-
-            $table->foreign('convertido_a_request_id', 'fk_psugg_request')
-                ->references('id')
-                ->on('selemti.purchase_requests')
-                ->onDelete('set null');
+            // FKs to pre-existing legacy tables omitted — added post-migration via ALTER IF those tables exist
 
             $table->index('estado', 'idx_psugg_estado');
             $table->index('prioridad', 'idx_psugg_prioridad');

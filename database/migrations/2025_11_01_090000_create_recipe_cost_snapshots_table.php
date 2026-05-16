@@ -21,10 +21,6 @@ CREATE TABLE IF NOT EXISTS selemti.recipe_cost_snapshots (
     reason VARCHAR(100) NOT NULL,
     created_by_user_id BIGINT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_recipe_cost_snap_recipe
-        FOREIGN KEY (recipe_id)
-        REFERENCES selemti.receta_cab(id)
-        ON DELETE CASCADE,
     CONSTRAINT fk_recipe_cost_snap_user
         FOREIGN KEY (created_by_user_id)
         REFERENCES users(id)

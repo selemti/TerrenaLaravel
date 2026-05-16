@@ -4,6 +4,13 @@ return new class extends \Illuminate\Database\Migrations\Migration
 {
     public function up(): void
     {
+        $tableExists = \Illuminate\Support\Facades\DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='item_vendor' LIMIT 1"
+        );
+        if (! $tableExists) {
+            return;
+        }
+
         // === COLUMNS ===
         foreach ([
             ['vendor_sku', 'VARCHAR(120)'],

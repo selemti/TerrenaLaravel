@@ -2,6 +2,7 @@
 
 namespace App\Models\Catalogs;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -18,6 +19,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Unidad extends Model
 {
+    use HasFactory;
+
     /**
      * PostgreSQL connection
      */

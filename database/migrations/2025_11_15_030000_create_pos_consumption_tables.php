@@ -269,7 +269,12 @@ END;
 $$;
 SQL);
 
-        DB::connection('pgsql')->unprepared(<<<'SQL'
+        // Only install trigger on public.ticket if it exists (skip in test environments)
+        $ticketExists = DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='ticket' LIMIT 1"
+        );
+        if ($ticketExists) {
+            DB::connection('pgsql')->unprepared(<<<'SQL'
 DO $$
 BEGIN
     IF EXISTS (
@@ -285,6 +290,7 @@ AFTER UPDATE OF paid, voided ON public.ticket
 FOR EACH ROW
 EXECUTE PROCEDURE selemti.trg_ticket_inventory_consumption();
 SQL);
+        }
     }
 
     public function down(): void

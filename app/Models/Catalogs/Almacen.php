@@ -2,10 +2,12 @@
 
 namespace App\Models\Catalogs;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Almacen extends Model
 {
+    use HasFactory;
     protected $connection = 'pgsql';
 
     protected $table = 'selemti.cat_almacenes';

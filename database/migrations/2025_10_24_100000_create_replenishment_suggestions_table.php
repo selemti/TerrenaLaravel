@@ -79,7 +79,14 @@ return new class extends Migration
             DB::connection('pgsql')->statement("COMMENT ON TABLE selemti.replenishment_suggestions IS 'Sugerencias automáticas de compra basadas en stock policies'");
         }
 
-        // Vista para dashboard de gerente
+        // Vista para dashboard de gerente (solo si selemti.items existe)
+        $itemsExist = DB::connection('pgsql')->selectOne(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='selemti' AND table_name='items' LIMIT 1"
+        );
+        if (! $itemsExist) {
+            return;
+        }
+
         DB::connection('pgsql')->statement("
             CREATE OR REPLACE VIEW selemti.vw_replenishment_dashboard AS
             SELECT

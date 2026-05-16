@@ -212,6 +212,9 @@ class TransferService
                 'recibida_por' => $userId,
             ]);
 
+            // Reload lineas to get fresh data after updates
+            $transfer->load('lineas');
+
             // Calcular varianzas
             $varianzas = [];
             foreach ($transfer->lineas as $line) {
@@ -277,7 +280,7 @@ class TransferService
                 $sourceBatch = DB::table('selemti.inventory_batch')
                     ->where('item_id', $line->item_id)
                     ->where('cantidad_actual', '>', 0)
-                    ->orderBy('fecha_caducidad')
+                    ->orderBy('caducidad')
                     ->first();
 
                 if ($sourceBatch) {
