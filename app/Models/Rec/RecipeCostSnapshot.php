@@ -5,11 +5,16 @@ namespace App\Models\Rec;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RecipeCostSnapshot extends Model
 {
+    use HasFactory;
+
+    protected $connection = 'pgsql';
+
     protected $table = 'selemti.recipe_cost_snapshots';
 
     public const UPDATED_AT = null;
@@ -69,6 +74,46 @@ class RecipeCostSnapshot extends Model
                 ->from('selemti.recipe_cost_snapshots')
                 ->groupBy('recipe_id');
         });
+    }
+
+    public function getSnapshotAtAttribute()
+    {
+        return $this->snapshot_date;
+    }
+
+    public function getPortionCostAttribute(): float
+    {
+        return (float) $this->cost_per_portion;
+    }
+
+    public function getBatchCostAttribute(): float
+    {
+        return (float) $this->cost_total;
+    }
+
+    public function getYieldPortionsAttribute(): float
+    {
+        return (float) $this->portions;
+    }
+
+    public function getNotesAttribute(): ?string
+    {
+        return null;
+    }
+
+    public function getCostChangePercentageAttribute(): float
+    {
+        $previous = static::forRecipe($this->recipe_id)
+            ->where('snapshot_date', '<', $this->snapshot_date)
+            ->orderByDesc('snapshot_date')
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $previous || (float) $previous->cost_total <= 0) {
+            return 0.0;
+        }
+
+        return round((((float) $this->cost_total - (float) $previous->cost_total) / (float) $previous->cost_total) * 100, 2);
     }
 
     public static function getForRecipeAtDate(string $recipeId, Carbon $date): ?self

@@ -21,7 +21,6 @@ class RecipeCostSnapshotTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->markTestSkipped('RecipeCostSnapshotService not connected to RecipeCostController::calculateCostAtDate');
 
         $this->setUpRecipeDatabase();
         $this->service = app(RecipeCostSnapshotService::class);
@@ -196,7 +195,7 @@ class RecipeCostSnapshotTest extends TestCase
 
         foreach ($activeRecipes as $index => $recipe) {
             $item = Item::factory()->create([
-                'id' => 'ITEM-ACT-' . $index,
+                'id' => 'ITEM-ACT-'.$index,
                 'costo_promedio' => 20 + ($index * 5),
             ]);
 

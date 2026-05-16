@@ -15,9 +15,7 @@ use Tests\TestCase;
  * Two endpoints are tested here:
  *
  *  GET /api/recipes/{id}/cost      → RecipeCostController::show
- *    Calls fn_recipe_cost_at(bigint, datetime) which queries selemti.recipes (bigint PKs).
- *    selemti.recipes does not exist (schema gap). These tests are skipped until
- *    the table is created and the function accepts the VARCHAR ids used by receta_cab.
+ *    Calculates costs from selemti.receta_cab / selemti.receta_det VARCHAR recipe ids.
  *
  *  GET /api/recipes/{id}/bom/implode → RecipeCostController::implodeBom
  *    Uses Receta Eloquent model (selemti.receta_cab, VARCHAR PKs). Fully testable.
@@ -27,13 +25,14 @@ class RecipesApiTest extends TestCase
     protected User $user;
 
     private array $recetaIds = [];
-    private array $itemIds   = [];
+
+    private array $itemIds = [];
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->user = User::factory()->create([
-            'email' => 'test-recipes-' . uniqid() . '@terrena.test',
+            'email' => 'test-recipes-'.uniqid().'@terrena.test',
         ]);
 
         // Bypass Spatie permission middleware — tests cover API logic, not RBAC.
@@ -84,45 +83,64 @@ class RecipesApiTest extends TestCase
     {
         return RecetaDetalle::factory()->create([
             'receta_id' => $receta->id,
-            'item_id'   => $item->id,
-            'cantidad'  => $cantidad,
+            'item_id' => $item->id,
+            'cantidad' => $cantidad,
         ]);
     }
 
     // ──────────────────────────────────────────────────────
-    // /cost endpoint — SKIPPED (schema gap)
-    // fn_recipe_cost_at expects selemti.recipes (bigint PK) which does not exist.
-    // receta_cab uses VARCHAR PKs that cannot be cast to bigint.
+    // /cost endpoint
     // ──────────────────────────────────────────────────────
 
     public function test_can_get_recipe_cost(): void
     {
-        $this->markTestSkipped(
-            '/cost endpoint calls fn_recipe_cost_at(bigint) but receta_cab uses VARCHAR PKs ' .
-            'and selemti.recipes (bigint PK) does not exist. Pending schema alignment.'
-        );
+        $item = $this->makeItem(['costo_promedio' => 12.50]);
+        $receta = $this->makeReceta(['porciones_standard' => 5]);
+        $this->makeDetalle($receta, $item, 4);
+
+        $response = $this->getJson("/api/recipes/{$receta->id}/cost");
+
+        $response->assertOk()
+            ->assertJsonPath('data.recipe_id', $receta->id)
+            ->assertJsonPath('data.batch_cost', 50)
+            ->assertJsonPath('data.portion_cost', 10)
+            ->assertJsonPath('data.yield_portions', 5);
     }
 
     public function test_recipe_cost_returns_404_for_nonexistent_recipe(): void
     {
-        $this->markTestSkipped(
-            '/cost endpoint calls fn_recipe_cost_at(bigint) — VARCHAR IDs cause a PG type error, ' .
-            'not a 404. Pending schema alignment.'
-        );
+        $response = $this->getJson('/api/recipes/REC-NONEXISTENT-99999/cost');
+
+        $response->assertNotFound();
     }
 
     public function test_recipe_cost_handles_recipe_without_ingredients(): void
     {
-        $this->markTestSkipped(
-            '/cost endpoint depends on selemti.recipes (bigint PK) which does not exist.'
-        );
+        $receta = $this->makeReceta(['porciones_standard' => 4]);
+
+        $response = $this->getJson("/api/recipes/{$receta->id}/cost");
+
+        $response->assertOk()
+            ->assertJsonPath('data.batch_cost', 0)
+            ->assertJsonPath('data.portion_cost', 0)
+            ->assertJsonPath('data.yield_portions', 4);
     }
 
     public function test_recipe_cost_calculates_correctly_for_multiple_units(): void
     {
-        $this->markTestSkipped(
-            '/cost endpoint depends on selemti.recipes (bigint PK) which does not exist.'
-        );
+        $item1 = $this->makeItem(['costo_promedio' => 8.00]);
+        $item2 = $this->makeItem(['costo_promedio' => 3.25]);
+        $receta = $this->makeReceta(['porciones_standard' => 2]);
+
+        $this->makeDetalle($receta, $item1, 2.5);
+        $this->makeDetalle($receta, $item2, 4);
+
+        $response = $this->getJson("/api/recipes/{$receta->id}/cost?at=2026-05-15 10:00:00");
+
+        $response->assertOk()
+            ->assertJsonPath('data.batch_cost', 33)
+            ->assertJsonPath('data.portion_cost', 16.5)
+            ->assertJsonCount(2, 'data.cost_breakdown');
     }
 
     // ──────────────────────────────────────────────────────
@@ -133,7 +151,7 @@ class RecipesApiTest extends TestCase
     {
         $insumo1 = $this->makeItem();
         $insumo2 = $this->makeItem();
-        $receta  = $this->makeReceta(['porciones_standard' => 1]);
+        $receta = $this->makeReceta(['porciones_standard' => 1]);
 
         $this->makeDetalle($receta, $insumo1, 2);
         $this->makeDetalle($receta, $insumo2, 3);
@@ -149,15 +167,15 @@ class RecipesApiTest extends TestCase
 
     public function test_can_implode_bom_multi_level(): void
     {
-        $harina      = $this->makeItem();
-        $carne       = $this->makeItem();
-        $pan         = $this->makeItem();
-        $recetaPan   = $this->makeReceta(['porciones_standard' => 1]);
+        $harina = $this->makeItem();
+        $carne = $this->makeItem();
+        $pan = $this->makeItem();
+        $recetaPan = $this->makeReceta(['porciones_standard' => 1]);
         $recetaFinal = $this->makeReceta(['porciones_standard' => 1]);
 
-        $this->makeDetalle($recetaPan,   $harina,  0.5);
-        $this->makeDetalle($recetaFinal, $pan,     1);
-        $this->makeDetalle($recetaFinal, $carne,   0.2);
+        $this->makeDetalle($recetaPan, $harina, 0.5);
+        $this->makeDetalle($recetaFinal, $pan, 1);
+        $this->makeDetalle($recetaFinal, $carne, 0.2);
 
         $response = $this->getJson("/api/recipes/{$recetaFinal->id}/bom/implode");
 
@@ -169,8 +187,8 @@ class RecipesApiTest extends TestCase
 
     public function test_bom_implosion_prevents_infinite_recursion(): void
     {
-        $itemA  = $this->makeItem();
-        $itemB  = $this->makeItem();
+        $itemA = $this->makeItem();
+        $itemB = $this->makeItem();
         $recetaA = $this->makeReceta(['porciones_standard' => 1]);
         $recetaB = $this->makeReceta(['porciones_standard' => 1]);
 
@@ -214,7 +232,7 @@ class RecipesApiTest extends TestCase
 
     public function test_bom_implosion_aggregates_duplicate_ingredients(): void
     {
-        $queso  = $this->makeItem();
+        $queso = $this->makeItem();
         $receta = $this->makeReceta(['porciones_standard' => 1]);
 
         // Same ingredient twice in the recipe
@@ -226,7 +244,7 @@ class RecipesApiTest extends TestCase
         $response->assertStatus(200);
 
         $ingredients = $response->json('data.base_ingredients');
-        $quesoItem   = collect($ingredients)->firstWhere('item_id', $queso->id);
+        $quesoItem = collect($ingredients)->firstWhere('item_id', $queso->id);
 
         $this->assertNotNull($quesoItem, 'El ingrediente queso debe aparecer en el BOM');
         $this->assertEquals(150, (float) ($quesoItem['qty'] ?? $quesoItem['total_qty'] ?? 0));

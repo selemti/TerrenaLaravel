@@ -3,7 +3,6 @@
 namespace Database\Factories\Rec;
 
 use App\Models\Rec\Receta;
-use App\Models\Rec\RecetaVersion;
 use App\Models\Rec\RecipeCostSnapshot;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -15,14 +14,12 @@ class RecipeCostSnapshotFactory extends Factory
     {
         return [
             'recipe_id' => Receta::factory(),
-            'recipe_version_id' => RecetaVersion::factory(),
-            'snapshot_at' => now(),
-            'currency_code' => 'MXN',
-            'batch_cost' => $this->faker->randomFloat(6, 100, 5000),
-            'portion_cost' => $this->faker->randomFloat(6, 10, 200),
-            'batch_size' => $this->faker->randomFloat(6, 1, 50),
-            'yield_portions' => $this->faker->randomFloat(6, 1, 100),
-            'notes' => $this->faker->optional()->sentence(),
+            'snapshot_date' => now(),
+            'cost_total' => $this->faker->randomFloat(4, 100, 5000),
+            'cost_per_portion' => $this->faker->randomFloat(4, 10, 200),
+            'portions' => $this->faker->randomFloat(3, 1, 100),
+            'cost_breakdown' => [],
+            'reason' => RecipeCostSnapshot::REASON_MANUAL,
             'created_at' => now(),
         ];
     }
@@ -37,7 +34,7 @@ class RecipeCostSnapshotFactory extends Factory
     public function atDate(string $date): static
     {
         return $this->state(fn (array $attributes) => [
-            'snapshot_at' => $date,
+            'snapshot_date' => $date,
             'created_at' => $date,
         ]);
     }
@@ -45,16 +42,16 @@ class RecipeCostSnapshotFactory extends Factory
     public function withCost(float $portionCost, float $batchCost, float $yield = 10): static
     {
         return $this->state(fn (array $attributes) => [
-            'portion_cost' => $portionCost,
-            'batch_cost' => $batchCost,
-            'yield_portions' => $yield,
+            'cost_per_portion' => $portionCost,
+            'cost_total' => $batchCost,
+            'portions' => $yield,
         ]);
     }
 
     public function withNotes(string $notes): static
     {
         return $this->state(fn (array $attributes) => [
-            'notes' => $notes,
+            'cost_breakdown' => [['notes' => $notes]],
         ]);
     }
 }

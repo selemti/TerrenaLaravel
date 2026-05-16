@@ -9,7 +9,9 @@ use App\Models\Rec\RecetaVersion;
 use App\Models\Rec\RecipeCostSnapshot;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 class RecipeCostSnapshotsTest extends TestCase
@@ -25,18 +27,26 @@ class RecipeCostSnapshotsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->markTestSkipped('RecipeCostController::calculateCostAtDate not implemented');
 
-        // Get first available user or create test user
-        $this->user = User::first();
-        if (! $this->user) {
-            // Fallback: create minimal user for testing
-            $this->user = new User;
-            $this->user->id = 1;
-            $this->user->email = 'test@test.com';
-            $this->user->nombre_completo = 'Test User';
-            $this->user->exists = true;
-        }
+        $this->user = User::factory()->create([
+            'email' => 'recipe-cost-'.uniqid().'@terrena.test',
+        ]);
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $permission = Permission::query()->firstOrCreate([
+            'name' => 'can_view_recipe_dashboard',
+            'guard_name' => 'web',
+        ]);
+        $role = Role::query()->firstOrCreate([
+            'name' => 'Super Admin',
+            'guard_name' => 'web',
+        ]);
+        $role->givePermissionTo($permission);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $this->user->givePermissionTo($permission);
+        $this->user->assignRole($role);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $this->user = $this->user->fresh();
 
         // Create recipe with version and ingredients (these will be rolled back)
         $this->receta = Receta::factory()->create([
@@ -49,15 +59,18 @@ class RecipeCostSnapshotsTest extends TestCase
             ->create();
 
         // Add some ingredients
-        $item1 = Item::factory()->create();
-        $item2 = Item::factory()->create();
+        $item1 = Item::factory()->create([
+            'costo_promedio' => 45.50,
+        ]);
+        $item2 = Item::factory()->create([
+            'costo_promedio' => 120.00,
+        ]);
 
         RecetaDetalle::factory()->create([
             'receta_id' => $this->receta->id,
             'receta_version_id' => $this->version->id,
             'item_id' => $item1->id,
             'cantidad' => 2.5,
-            'costo_unitario' => 45.50,
         ]);
 
         RecetaDetalle::factory()->create([
@@ -65,24 +78,13 @@ class RecipeCostSnapshotsTest extends TestCase
             'receta_version_id' => $this->version->id,
             'item_id' => $item2->id,
             'cantidad' => 1.0,
-            'costo_unitario' => 120.00,
         ]);
     }
 
     /** @test */
     public function test_can_create_cost_snapshot()
     {
-        // Mock stored procedure call
-        DB::shouldReceive('connection')->andReturnSelf();
-        DB::shouldReceive('statement')->once()->andReturn(true);
-
-        // Create manual snapshot in DB for test
-        $snapshot = RecipeCostSnapshot::factory()
-            ->forRecipe($this->receta)
-            ->withCost(23.37, 233.75, 10)
-            ->create();
-
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user)
             ->postJson("/api/recipes/{$this->receta->id}/cost/snapshot", [
                 'notes' => 'Test snapshot',
             ]);
@@ -109,15 +111,7 @@ class RecipeCostSnapshotsTest extends TestCase
     /** @test */
     public function test_can_create_snapshot_with_custom_date()
     {
-        DB::shouldReceive('connection')->andReturnSelf();
-        DB::shouldReceive('statement')->once()->andReturn(true);
-
-        $snapshot = RecipeCostSnapshot::factory()
-            ->forRecipe($this->receta)
-            ->atDate('2025-01-15 10:00:00')
-            ->create();
-
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user)
             ->postJson("/api/recipes/{$this->receta->id}/cost/snapshot", [
                 'at' => '2025-01-15 10:00:00',
                 'notes' => 'Historical snapshot',
@@ -148,7 +142,7 @@ class RecipeCostSnapshotsTest extends TestCase
             ->withCost(25.00, 250.00, 10)
             ->create();
 
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user)
             ->getJson("/api/recipes/{$this->receta->id}/cost/history");
 
         $response->assertOk()
@@ -191,7 +185,7 @@ class RecipeCostSnapshotsTest extends TestCase
             ->atDate('2025-02-01 10:00:00')
             ->create();
 
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user)
             ->getJson("/api/recipes/{$this->receta->id}/cost/history?from=2025-01-10&to=2025-01-20");
 
         $response->assertOk()
@@ -209,7 +203,7 @@ class RecipeCostSnapshotsTest extends TestCase
                 ->create();
         }
 
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user)
             ->getJson("/api/recipes/{$this->receta->id}/cost/history?limit=3");
 
         $response->assertOk()
@@ -231,7 +225,7 @@ class RecipeCostSnapshotsTest extends TestCase
             ->withCost(25.00, 250.00, 10)
             ->create();
 
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user)
             ->getJson("/api/recipes/{$this->receta->id}/cost/compare?current_id={$snapshot2->id}&previous_id={$snapshot1->id}");
 
         $response->assertOk()
@@ -271,7 +265,7 @@ class RecipeCostSnapshotsTest extends TestCase
             ->forRecipe($otherReceta)
             ->create();
 
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user)
             ->getJson("/api/recipes/{$this->receta->id}/cost/compare?current_id={$snapshot2->id}&previous_id={$snapshot1->id}");
 
         $response->assertStatus(422)
@@ -333,7 +327,7 @@ class RecipeCostSnapshotsTest extends TestCase
             ->atDate('2025-01-15 10:00:00')
             ->create();
 
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user)
             ->getJson("/api/recipes/{$this->receta->id}/cost/history");
 
         $response->assertOk();
@@ -348,7 +342,7 @@ class RecipeCostSnapshotsTest extends TestCase
     /** @test */
     public function test_snapshot_returns_404_for_nonexistent_recipe()
     {
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user)
             ->postJson('/api/recipes/NONEXISTENT/cost/snapshot');
 
         $response->assertNotFound();
@@ -359,7 +353,7 @@ class RecipeCostSnapshotsTest extends TestCase
     {
         $newReceta = Receta::factory()->create();
 
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user)
             ->getJson("/api/recipes/{$newReceta->id}/cost/history");
 
         $response->assertOk()
