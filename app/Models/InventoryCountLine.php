@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Inv\Batch;
+use App\Models\Inv\Item;
 use Illuminate\Database\Eloquent\Model;
 
 class InventoryCountLine extends Model

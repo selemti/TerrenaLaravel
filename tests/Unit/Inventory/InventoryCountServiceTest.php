@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Inventory;
 
-use App\Services\Inventory\InventoryCountService;
 use App\Exceptions\Inventory\InventoryValidationException;
+use App\Services\Inventory\InventoryCountService;
 use ReflectionClass;
 use Tests\TestCase;
 

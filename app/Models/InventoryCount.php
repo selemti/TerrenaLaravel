@@ -7,6 +7,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InventoryCount extends Model
 {
+    public const STATUS_DRAFT = 'BORRADOR';
+
+    public const STATUS_PROGRAMADO = self::STATUS_DRAFT;
+
+    public const STATUS_ABIERTO = 'EN_PROCESO';
+
+    public const STATUS_CERRADO = 'CERRADO';
+
+    public const STATUS_AJUSTADO = 'AJUSTADO';
+
     protected $connection = 'pgsql';
 
     protected $table = 'selemti.inventory_counts';

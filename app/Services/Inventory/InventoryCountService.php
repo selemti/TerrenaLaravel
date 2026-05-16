@@ -5,6 +5,7 @@ namespace App\Services\Inventory;
 use App\Exceptions\Inventory\InventoryValidationException;
 use App\Exceptions\Inventory\ItemNotFoundException;
 use App\Models\Inv\Item;
+use App\Models\Inventory\InventoryCount;
 use App\ValueObjects\SequentialFolio;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Arr;
@@ -20,6 +21,186 @@ class InventoryCountService
     {
         $this->connection = config('database.default_inventory', 'pgsql');
         $this->schema = config('database.inventory_schema', 'selemti');
+    }
+
+    public function createCount(array $data, ?int $userId = null): InventoryCount
+    {
+        return DB::connection($this->connection)->transaction(function () use ($data, $userId) {
+            $now = now();
+            $branchId = $data['sucursal_id'] ?? $data['branch_id'] ?? null;
+            $warehouseId = $data['almacen_id'] ?? $data['warehouse_id'] ?? null;
+
+            $countId = (int) $this->table('inventory_counts')->insertGetId([
+                'folio' => $this->nextFolio($branchId ? (string) $branchId : null),
+                'sucursal_id' => $branchId,
+                'almacen_id' => $warehouseId,
+                'programado_para' => $data['programado_para'] ?? $data['scheduled_for'] ?? null,
+                'estado' => InventoryCount::STATUS_DRAFT,
+                'creado_por' => $userId ?? $data['user_id'] ?? auth()->id(),
+                'notas' => $data['observaciones'] ?? $data['notes'] ?? null,
+                'total_items' => 0,
+                'total_variacion' => 0,
+                'meta' => isset($data['meta']) ? json_encode($data['meta']) : null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            return InventoryCount::query()->with('lines')->findOrFail($countId);
+        });
+    }
+
+    public function addItemsToCount(int $countId, array $items): array
+    {
+        return DB::connection($this->connection)->transaction(function () use ($countId, $items) {
+            $count = $this->table('inventory_counts')->lockForUpdate()->find($countId);
+
+            if (! $count) {
+                throw new ItemNotFoundException('Conteo de inventario no encontrado');
+            }
+
+            if ($count->estado !== InventoryCount::STATUS_DRAFT) {
+                throw new \RuntimeException("Count must be in BORRADOR status to add items. Current: {$count->estado}");
+            }
+
+            $now = now();
+            $added = 0;
+            $itemIds = collect($items)->pluck('item_id')->filter()->unique();
+            $itemsMap = Item::with('uom')->findMany($itemIds)->keyBy('id');
+
+            foreach ($items as $item) {
+                $itemId = (string) Arr::get($item, 'item_id');
+                $existing = $this->table('inventory_count_lines')
+                    ->where('inventory_count_id', $countId)
+                    ->where('item_id', $itemId)
+                    ->exists();
+
+                if ($existing) {
+                    continue;
+                }
+
+                $expectedQty = Arr::has($item, 'expected_qty')
+                    ? (float) $item['expected_qty']
+                    : $this->currentStock($itemId, $count->sucursal_id, $count->almacen_id);
+
+                $line = $this->normalizeLine([
+                    'item_id' => $itemId,
+                    'expected_qty' => $expectedQty,
+                    'counted_qty' => 0,
+                    'uom' => $itemsMap->get($itemId)?->uom?->clave ?? Arr::get($item, 'uom', 'PZ'),
+                    'source' => 'create_count',
+                ], $itemsMap);
+                $line['inventory_count_id'] = $countId;
+                $line['created_at'] = $now;
+                $line['updated_at'] = $now;
+
+                $this->table('inventory_count_lines')->insert($line);
+                $added++;
+            }
+
+            $this->table('inventory_counts')
+                ->where('id', $countId)
+                ->update([
+                    'total_items' => DB::raw('COALESCE(total_items, 0) + '.$added),
+                    'updated_at' => $now,
+                ]);
+
+            return ['items_added' => $added];
+        });
+    }
+
+    public function startCount(int $countId, int $userId): array
+    {
+        return DB::connection($this->connection)->transaction(function () use ($countId) {
+            $count = $this->table('inventory_counts')->lockForUpdate()->find($countId);
+
+            if (! $count) {
+                throw new ItemNotFoundException('Conteo de inventario no encontrado');
+            }
+
+            if ($count->estado !== InventoryCount::STATUS_DRAFT) {
+                throw new \RuntimeException("Count must be in BORRADOR status to be started. Current: {$count->estado}");
+            }
+
+            $this->table('inventory_counts')->where('id', $countId)->update([
+                'estado' => InventoryCount::STATUS_ABIERTO,
+                'iniciado_en' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return ['count_id' => $countId, 'status' => InventoryCount::STATUS_ABIERTO];
+        });
+    }
+
+    public function captureLine(int $lineId, float $countedQty, int $userId): array
+    {
+        return DB::connection($this->connection)->transaction(function () use ($lineId, $countedQty, $userId) {
+            $line = $this->table('inventory_count_lines')->where('id', $lineId)->lockForUpdate()->first();
+
+            if (! $line) {
+                throw new ItemNotFoundException('Línea de conteo no encontrada');
+            }
+
+            $count = $this->table('inventory_counts')->lockForUpdate()->find($line->inventory_count_id);
+
+            if ($count->estado !== InventoryCount::STATUS_ABIERTO) {
+                throw new \RuntimeException("Count must be in EN_PROCESO status to capture lines. Current: {$count->estado}");
+            }
+
+            $meta = json_decode($line->meta ?? '{}', true) ?: [];
+            $meta['capturado_por'] = $userId;
+            $meta['capturado_en'] = now()->toIso8601String();
+            $variance = $countedQty - (float) $line->qty_teorica;
+
+            $this->table('inventory_count_lines')->where('id', $lineId)->update([
+                'qty_contada' => $countedQty,
+                'qty_variacion' => $variance,
+                'meta' => json_encode($meta),
+                'updated_at' => now(),
+            ]);
+
+            return ['line_id' => $lineId, 'capturado' => $countedQty, 'variance' => $variance];
+        });
+    }
+
+    public function closeCount(int $countId, int $userId): array
+    {
+        return DB::connection($this->connection)->transaction(function () use ($countId, $userId) {
+            $count = $this->table('inventory_counts')->lockForUpdate()->find($countId);
+
+            if (! $count) {
+                throw new ItemNotFoundException('Conteo de inventario no encontrado');
+            }
+
+            if ($count->estado !== InventoryCount::STATUS_ABIERTO) {
+                throw new \RuntimeException("Count must be in EN_PROCESO status to be closed. Current: {$count->estado}");
+            }
+
+            $uncaptured = $this->table('inventory_count_lines')
+                ->where('inventory_count_id', $countId)
+                ->where(function ($query) {
+                    $query->whereNull('meta')
+                        ->orWhere('meta', 'not like', '%capturado_en%');
+                })
+                ->exists();
+
+            if ($uncaptured) {
+                throw new \RuntimeException('Cannot close count with uncaptured lines');
+            }
+
+            $varianceTotal = (float) $this->table('inventory_count_lines')
+                ->where('inventory_count_id', $countId)
+                ->sum('qty_variacion');
+
+            $this->table('inventory_counts')->where('id', $countId)->update([
+                'estado' => InventoryCount::STATUS_CERRADO,
+                'cerrado_en' => now(),
+                'cerrado_por' => $userId,
+                'total_variacion' => $varianceTotal,
+                'updated_at' => now(),
+            ]);
+
+            return ['count_id' => $countId, 'status' => InventoryCount::STATUS_CERRADO];
+        });
     }
 
     public function open(array $header, array $lines): int
@@ -245,5 +426,14 @@ class InventoryCountService
     protected function table(string $name)
     {
         return DB::connection($this->connection)->table("{$this->schema}.{$name}");
+    }
+
+    protected function currentStock(string $itemId, ?string $branchId, ?string $warehouseId): float
+    {
+        return (float) $this->table('mov_inv')
+            ->where('item_id', $itemId)
+            ->when($branchId, fn ($query) => $query->where('sucursal_id', $branchId))
+            ->when($warehouseId, fn ($query) => $query->where('almacen_id', $warehouseId))
+            ->sum('cantidad');
     }
 }

@@ -29,7 +29,6 @@ class InventoryCountServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->markTestSkipped('InventoryCountService::createCount() and InventoryCount model not yet implemented');
 
         $this->service = app(InventoryCountService::class);
 
@@ -40,50 +39,55 @@ class InventoryCountServiceTest extends TestCase
         ]);
 
         $this->item1 = Item::factory()->create([
+            'id' => '10001',
             'nombre' => 'Producto Test 1',
             'clave' => 'TEST-001',
         ]);
 
         $this->item2 = Item::factory()->create([
+            'id' => '10002',
             'nombre' => 'Producto Test 2',
             'clave' => 'TEST-002',
         ]);
 
-        // Crear stock inicial
-        DB::connection('pgsql')->table('selemti.stock')->insert([
-            'almacen_id' => $this->almacen->id,
+        // Crear stock inicial desde kardex real.
+        DB::connection('pgsql')->table('selemti.mov_inv')->insert([
+            'almacen_id' => (string) $this->almacen->id,
+            'sucursal_id' => '1',
             'item_id' => $this->item1->id,
-            'cantidad_actual' => 100,
+            'tipo' => 'INICIAL',
+            'cantidad' => 100,
+            'ts' => now(),
             'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
-        DB::connection('pgsql')->table('selemti.stock')->insert([
-            'almacen_id' => $this->almacen->id,
+        DB::connection('pgsql')->table('selemti.mov_inv')->insert([
+            'almacen_id' => (string) $this->almacen->id,
+            'sucursal_id' => '1',
             'item_id' => $this->item2->id,
-            'cantidad_actual' => 50,
+            'tipo' => 'INICIAL',
+            'cantidad' => 50,
+            'ts' => now(),
             'created_at' => now(),
-            'updated_at' => now(),
         ]);
     }
 
     /** @test */
     public function test_can_create_inventory_count()
     {
-        $result = $this->service->createCount([
+        $count = $this->service->createCount([
             'almacen_id' => $this->almacen->id,
             'sucursal_id' => 1,
             'programado_para' => now()->addDay(),
             'observaciones' => 'Test count',
         ], $this->user->id);
 
-        $this->assertArrayHasKey('count_id', $result);
-        $this->assertArrayHasKey('status', $result);
-        $this->assertEquals(InventoryCount::STATUS_PROGRAMADO, $result['status']);
+        $this->assertInstanceOf(InventoryCount::class, $count);
+        $this->assertEquals(InventoryCount::STATUS_PROGRAMADO, $count->estado);
 
-        $this->assertDatabaseHas('selemti.inventario_conteos', [
-            'id' => $result['count_id'],
-            'almacen_id' => $this->almacen->id,
+        $this->assertDatabaseHas('selemti.inventory_counts', [
+            'id' => $count->id,
+            'almacen_id' => (string) $this->almacen->id,
             'estado' => InventoryCount::STATUS_PROGRAMADO,
         ]);
     }
@@ -92,8 +96,8 @@ class InventoryCountServiceTest extends TestCase
     public function test_can_add_items_to_count()
     {
         $count = InventoryCount::create([
-            'almacen_id' => $this->almacen->id,
-            'sucursal_id' => 1,
+            'almacen_id' => (string) $this->almacen->id,
+            'sucursal_id' => '1',
             'estado' => InventoryCount::STATUS_PROGRAMADO,
             'programado_para' => now()->addDay(),
             'creado_por' => $this->user->id,
@@ -109,8 +113,8 @@ class InventoryCountServiceTest extends TestCase
         $this->assertEquals(count($items), $result['items_added']);
 
         foreach ($items as $item) {
-            $this->assertDatabaseHas('selemti.inventario_conteos_lineas', [
-                'count_id' => $count->id,
+            $this->assertDatabaseHas('selemti.inventory_count_lines', [
+                'inventory_count_id' => $count->id,
                 'item_id' => $item['item_id'],
             ]);
         }
@@ -120,27 +124,29 @@ class InventoryCountServiceTest extends TestCase
     public function test_can_start_count()
     {
         $count = InventoryCount::create([
-            'almacen_id' => $this->almacen->id,
-            'sucursal_id' => 1,
+            'almacen_id' => (string) $this->almacen->id,
+            'sucursal_id' => '1',
             'estado' => InventoryCount::STATUS_PROGRAMADO,
             'programado_para' => now()->subDay(), // Para que esté en fecha
             'creado_por' => $this->user->id,
         ]);
 
         $line1 = InventoryCountLine::create([
-            'count_id' => $count->id,
+            'inventory_count_id' => $count->id,
             'item_id' => $this->item1->id,
-            'cantidad_existente' => 100,
+            'qty_teorica' => 100,
+            'qty_contada' => 0,
+            'qty_variacion' => 0,
+            'uom' => 'PZ',
         ]);
 
         $result = $this->service->startCount($count->id, $this->user->id);
 
         $this->assertEquals(InventoryCount::STATUS_ABIERTO, $result['status']);
 
-        $this->assertDatabaseHas('selemti.inventario_conteos', [
+        $this->assertDatabaseHas('selemti.inventory_counts', [
             'id' => $count->id,
             'estado' => InventoryCount::STATUS_ABIERTO,
-            'iniciado_por' => $this->user->id,
         ]);
     }
 
@@ -148,29 +154,30 @@ class InventoryCountServiceTest extends TestCase
     public function test_can_capture_count_line()
     {
         $count = InventoryCount::create([
-            'almacen_id' => $this->almacen->id,
-            'sucursal_id' => 1,
+            'almacen_id' => (string) $this->almacen->id,
+            'sucursal_id' => '1',
             'estado' => InventoryCount::STATUS_ABIERTO,
             'programado_para' => now()->subDay(),
-            'iniciado_por' => $this->user->id,
             'iniciado_en' => now(),
             'creado_por' => $this->user->id,
         ]);
 
         $line = InventoryCountLine::create([
-            'count_id' => $count->id,
+            'inventory_count_id' => $count->id,
             'item_id' => $this->item1->id,
-            'cantidad_existente' => 100,
+            'qty_teorica' => 100,
+            'qty_contada' => 0,
+            'qty_variacion' => 0,
+            'uom' => 'PZ',
         ]);
 
         $result = $this->service->captureLine($line->id, 98, $this->user->id);
 
         $this->assertEquals(98, $result['capturado']);
 
-        $this->assertDatabaseHas('selemti.inventario_conteos_lineas', [
+        $this->assertDatabaseHas('selemti.inventory_count_lines', [
             'id' => $line->id,
-            'cantidad_capturada' => 98,
-            'capturado_por' => $this->user->id,
+            'qty_contada' => 98,
         ]);
     }
 
@@ -178,29 +185,29 @@ class InventoryCountServiceTest extends TestCase
     public function test_can_close_count()
     {
         $count = InventoryCount::create([
-            'almacen_id' => $this->almacen->id,
-            'sucursal_id' => 1,
+            'almacen_id' => (string) $this->almacen->id,
+            'sucursal_id' => '1',
             'estado' => InventoryCount::STATUS_ABIERTO,
             'programado_para' => now()->subDay(),
-            'iniciado_por' => $this->user->id,
             'iniciado_en' => now(),
             'creado_por' => $this->user->id,
         ]);
 
         $line = InventoryCountLine::create([
-            'count_id' => $count->id,
+            'inventory_count_id' => $count->id,
             'item_id' => $this->item1->id,
-            'cantidad_existente' => 100,
-            'cantidad_capturada' => 98,
-            'capturado_por' => $this->user->id,
-            'capturado_en' => now(),
+            'qty_teorica' => 100,
+            'qty_contada' => 0,
+            'qty_variacion' => 0,
+            'uom' => 'PZ',
         ]);
 
+        $this->service->captureLine($line->id, 98, $this->user->id);
         $result = $this->service->closeCount($count->id, $this->user->id);
 
         $this->assertEquals(InventoryCount::STATUS_CERRADO, $result['status']);
 
-        $this->assertDatabaseHas('selemti.inventario_conteos', [
+        $this->assertDatabaseHas('selemti.inventory_counts', [
             'id' => $count->id,
             'estado' => InventoryCount::STATUS_CERRADO,
             'cerrado_por' => $this->user->id,
@@ -211,15 +218,15 @@ class InventoryCountServiceTest extends TestCase
     public function test_cannot_start_count_if_not_programmed()
     {
         $count = InventoryCount::create([
-            'almacen_id' => $this->almacen->id,
-            'sucursal_id' => 1,
+            'almacen_id' => (string) $this->almacen->id,
+            'sucursal_id' => '1',
             'estado' => InventoryCount::STATUS_CERRADO,
             'programado_para' => now()->subDay(),
             'creado_por' => $this->user->id,
         ]);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Count must be in PROGRAMADO status to be started. Current: CERRADO');
+        $this->expectExceptionMessage('Count must be in BORRADOR status to be started. Current: CERRADO');
 
         $this->service->startCount($count->id, $this->user->id);
     }
@@ -228,21 +235,24 @@ class InventoryCountServiceTest extends TestCase
     public function test_cannot_capture_line_if_count_not_open()
     {
         $count = InventoryCount::create([
-            'almacen_id' => $this->almacen->id,
-            'sucursal_id' => 1,
+            'almacen_id' => (string) $this->almacen->id,
+            'sucursal_id' => '1',
             'estado' => InventoryCount::STATUS_PROGRAMADO,
             'programado_para' => now()->subDay(),
             'creado_por' => $this->user->id,
         ]);
 
         $line = InventoryCountLine::create([
-            'count_id' => $count->id,
+            'inventory_count_id' => $count->id,
             'item_id' => $this->item1->id,
-            'cantidad_existente' => 100,
+            'qty_teorica' => 100,
+            'qty_contada' => 0,
+            'qty_variacion' => 0,
+            'uom' => 'PZ',
         ]);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Count must be in ABIERTO status to capture lines. Current: PROGRAMADO');
+        $this->expectExceptionMessage('Count must be in EN_PROCESO status to capture lines. Current: BORRADOR');
 
         $this->service->captureLine($line->id, 98, $this->user->id);
     }
@@ -251,20 +261,21 @@ class InventoryCountServiceTest extends TestCase
     public function test_cannot_close_count_with_uncaptured_lines()
     {
         $count = InventoryCount::create([
-            'almacen_id' => $this->almacen->id,
-            'sucursal_id' => 1,
+            'almacen_id' => (string) $this->almacen->id,
+            'sucursal_id' => '1',
             'estado' => InventoryCount::STATUS_ABIERTO,
             'programado_para' => now()->subDay(),
-            'iniciado_por' => $this->user->id,
             'iniciado_en' => now(),
             'creado_por' => $this->user->id,
         ]);
 
         $line = InventoryCountLine::create([
-            'count_id' => $count->id,
+            'inventory_count_id' => $count->id,
             'item_id' => $this->item1->id,
-            'cantidad_existente' => 100,
-            // Nota: no se captura la cantidad
+            'qty_teorica' => 100,
+            'qty_contada' => 0,
+            'qty_variacion' => 0,
+            'uom' => 'PZ',
         ]);
 
         $this->expectException(\RuntimeException::class);
