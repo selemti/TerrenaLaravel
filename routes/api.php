@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Inventory\ItemController;
 use App\Http\Controllers\Api\Inventory\KardexController;
 use App\Http\Controllers\Api\Inventory\PriceController;
 use App\Http\Controllers\Api\Inventory\RecipeCostController;
+use App\Http\Controllers\Api\Inventory\StockAlertController;
 use App\Http\Controllers\Api\Inventory\StockController;
 use App\Http\Controllers\Api\Inventory\TransferApiController;
 use App\Http\Controllers\Api\Inventory\VendorController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Api\ReportsController;
 use App\Http\Controllers\Api\Unidades\ConversionController;
 use App\Http\Controllers\Api\Unidades\UnidadController;
 use App\Http\Controllers\Production\ProductionController;
+use App\Http\Controllers\Production\ProductionOrderController;
 use App\Http\Controllers\Purchasing\PurchaseSuggestionController;
 use App\Http\Controllers\Purchasing\ReceivingController;
 use App\Http\Controllers\Purchasing\ReturnController;
@@ -189,6 +191,7 @@ Route::prefix('unidades')->middleware(['auth:sanctum'])->group(function () {
 Route::prefix('inventory')->middleware(['auth:sanctum'])->group(function () {
     // KPIs Dashboard
     Route::get('/kpis', [StockController::class, 'kpis']);
+    Route::get('/alerts', [StockAlertController::class, 'index']);
 
     // Stock endpoints
     Route::get('/stock', [StockController::class, 'stockByItem']);
@@ -280,6 +283,8 @@ Route::prefix('recipes')->middleware(['auth:sanctum'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('production')->middleware(['auth:sanctum'])->group(function () {
+    Route::get('/orders', [ProductionOrderController::class, 'index']);
+    Route::get('/orders/{id}', [ProductionOrderController::class, 'show']);
     Route::post('/batch/plan', [ProductionController::class, 'plan']);
     Route::post('/batch/{batch_id}/consume', [ProductionController::class, 'consume']);
     Route::post('/batch/{batch_id}/complete', [ProductionController::class, 'complete']);

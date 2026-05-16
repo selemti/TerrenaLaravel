@@ -210,9 +210,9 @@ Follow `app/Services/Inventory/KardexService.php` for the query style (DB::conne
 
 ## Definition of Done
 
-- [ ] `StockAlertService::getAlerts()` implemented
-- [ ] `StockAlertController::index()` with validation
-- [ ] Route registered under `auth:sanctum`
-- [ ] All test cases pass
-- [ ] `php artisan test` — 0 failures (currently 255 passing)
-- [ ] No N+1 queries in stock aggregation
+- [x] `StockAlertService::getAlerts()` implemented
+- [x] `StockAlertController::index()` with validation
+- [x] Route registered under `auth:sanctum`
+- [x] All test cases pass
+- [x] `php artisan test` — 0 failures (currently 276 passing)
+- [x] No N+1 queries in stock aggregation

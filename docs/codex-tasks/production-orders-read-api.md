@@ -283,9 +283,9 @@ test_estado_label_mapped_correctly
 
 ## Definition of Done
 
-- [ ] `ProductionOrderReadService::list()` and `::detail()` implemented
-- [ ] `ProductionOrderController::index()` and `::show()` with validation and 404 handling
-- [ ] Routes registered under `auth:sanctum`
-- [ ] All test cases pass
-- [ ] `php artisan test` — 0 failures (currently 255 passing)
-- [ ] No references to `op_produccion_cab` — use `production_orders`
+- [x] `ProductionOrderReadService::list()` and `::detail()` implemented
+- [x] `ProductionOrderController::index()` and `::show()` with validation and 404 handling
+- [x] Routes registered under `auth:sanctum`
+- [x] All test cases pass
+- [x] `php artisan test` — 0 failures (currently 276 passing)
+- [x] No references to `op_produccion_cab` — use `production_orders`
