@@ -74,9 +74,9 @@ class ItemModsReportService
                 ti.item_name AS menu_item,
                 ti.item_price AS precio_item,
                 SUM(COALESCE(ti.item_count, 0)) AS unidades_vendidas,
-                SUM(ti.item_price * COALESCE(ti.item_count, 0)) AS ingreso_bruto_item,
-                0 AS descuento_item,  // Descuentos se calculan en el método summarize
-                SUM(ti.item_price * COALESCE(ti.item_count, 0)) AS ingreso_neto_item
+                SUM(ti.sub_total_without_modifiers) AS ingreso_bruto_item,
+                0 AS descuento_item,
+                SUM(ti.sub_total_without_modifiers) AS ingreso_neto_item
             ')
                 ->groupBy('ti.category_name', 'ti.group_name', 'ti.item_name', 'ti.item_price')
                 ->orderBy('ti.category_name')

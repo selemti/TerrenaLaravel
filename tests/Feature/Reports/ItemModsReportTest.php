@@ -299,28 +299,26 @@ class ItemModsReportTest extends TestCase
      */
     public function test_totals_match_jasper_report_baseline(): void
     {
-        // TODO: Insertar datos de prueba conocidos en la base de datos
-        // TODO: Definir valores esperados basados en JasperReport
-
-        $this->markTestIncomplete('Requiere datos de prueba específicos y valores esperados de JasperReport');
-
-        /*
-        // Ejemplo de implementación cuando se tengan los datos:
-
-        $response = $this->actingAs($this->user)->get(route('reports.sales.mods', [
-            'start_date' => '2025-11-01',
-            'end_date' => '2025-11-30',
-            'view' => 'summary_item_mods',
+        $response = $this->actingAs($this->user, 'sanctum')->getJson(route('api.reports.sales.mods', [
+            'start_date' => '2026-05-13',
+            'end_date' => '2026-05-13',
+            'view' => 'summary_items',
+            'sales_mode' => 'floreant_conciliation',
         ]));
 
-        $summary = $response->viewData('summary');
+        $response->assertStatus(200);
 
-        // Valores esperados de JasperReport para noviembre 2025
-        $expectedTotalAmount = 12345.67;
-        $expectedTotalSelections = 450;
+        // Baseline real de FloreantPOS/Jasper:
+        // SUM(public.ticket_item.sub_total_without_modifiers) para tickets paid=true del 2026-05-13.
+        $expectedGrandTotal = 19464.00;
 
-        $this->assertEquals($expectedTotalAmount, $summary['total_amount']);
-        $this->assertEquals($expectedTotalSelections, $summary['total_selections']);
-        */
+        $this->assertEqualsWithDelta(
+            $expectedGrandTotal,
+            (float) $response->json('summary.total_gross'),
+            0.01,
+            'El total base sin modificadores debe coincidir con el baseline Jasper'
+        );
+
+        $this->assertGreaterThanOrEqual(1, count($response->json('data', [])));
     }
 }
