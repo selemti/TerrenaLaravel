@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class LogController extends Controller
 {
@@ -14,7 +15,28 @@ class LogController extends Controller
      */
     public function index()
     {
-        return view('audit.log-index');
+        $logs = DB::connection('pgsql')
+            ->table('selemti.audit_log')
+            ->orderByDesc('timestamp')
+            ->limit(100)
+            ->get()
+            ->map(function ($log) {
+                return (object) [
+                    'id' => $log->id,
+                    'timestamp' => $log->timestamp ? new \DateTime($log->timestamp) : null,
+                    'user_id' => $log->user_id,
+                    'user' => $this->getUserDetails($log->user_id),
+                    'accion' => $log->accion,
+                    'entidad' => $log->entidad,
+                    'entidad_id' => $log->entidad_id,
+                    'motivo' => $log->motivo,
+                    'evidencia_url' => $log->evidencia_url,
+                    'payload_json' => $log->payload_json,
+                    'payload_json_decoded' => ! empty($log->payload_json) ? json_decode($log->payload_json, true) : null,
+                ];
+            });
+
+        return view('audit.logs', ['logs' => $logs]);
     }
 
     /**
@@ -154,5 +176,25 @@ class LogController extends Controller
         sort($allModules);
 
         return response()->json($allModules);
+    }
+
+    /**
+     * Obtener detalles del usuario por ID
+     */
+    private function getUserDetails(?int $userId)
+    {
+        if (! $userId) {
+            return null;
+        }
+
+        try {
+            return DB::connection('pgsql')
+                ->table('selemti.users')
+                ->select('id', 'username', 'nombre_completo')
+                ->where('id', $userId)
+                ->first();
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 }

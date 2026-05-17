@@ -14,7 +14,7 @@ use Livewire\WithPagination;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
-#[Layout('layouts.terrena', ['active' => 'personal'])]
+#[Layout('layouts.terrena', ['active' => 'personal', 'title' => 'Personal'])]
 class UsersIndex extends Component
 {
     /**

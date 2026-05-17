@@ -100,6 +100,7 @@ SELECT
 FROM public.transactions t
 LEFT JOIN public.terminal term ON term.id = t.terminal_id
 WHERE t.transaction_time IS NOT NULL
+  AND t.payment_type IS NOT NULL -- guarda defensiva contra nulos en tipo de pago
 GROUP BY
     t.transaction_time::date,
     COALESCE(NULLIF(term.location::text, ''), 'Sin sucursal'),

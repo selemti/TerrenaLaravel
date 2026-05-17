@@ -206,20 +206,36 @@ class ReportsController extends Controller
     public function formasPago(Request $request)
     {
         [$desde, $hasta] = $this->range($request);
-        $query = $this->pg()->table('selemti.vw_dashboard_formas_pago')
-            ->select('codigo_fp', DB::raw('SUM(monto) AS monto'))
-            ->whereBetween('fecha', [$desde, $hasta]);
+        try {
+            $query = $this->pg()->table('selemti.vw_dashboard_formas_pago')
+                ->select(DB::raw('codigo_fp::text AS codigo_fp'), DB::raw('SUM(monto) AS monto'))
+                ->whereBetween('fecha', [$desde, $hasta])
+                ->whereNotNull('codigo_fp');
 
-        if ($request->filled('sucursal_id')) {
-            $query->where('sucursal_id', $request->query('sucursal_id'));
+            if ($request->filled('sucursal_id')) {
+                $query->where('sucursal_id', $request->query('sucursal_id'));
+            }
+
+            $rows = $query
+                ->groupBy(DB::raw('codigo_fp::text'))
+                ->orderByDesc(DB::raw('SUM(monto)'))
+                ->get();
+
+            return response()->json(['ok' => true, 'desde' => $desde, 'hasta' => $hasta, 'data' => $rows]);
+        } catch (\Throwable $e) {
+            \Log::error('Error en reports.formasPago', [
+                'desde' => $desde,
+                'hasta' => $hasta,
+                'sucursal_id' => $request->query('sucursal_id'),
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'ok' => false,
+                'error' => 'server_error',
+                'message' => config('app.debug') ? $e->getMessage() : 'No fue posible cargar las formas de pago.',
+            ], 500);
         }
-
-        $rows = $query
-            ->groupBy('codigo_fp')
-            ->orderByDesc(DB::raw('SUM(monto)'))
-            ->get();
-
-        return response()->json(['ok' => true, 'desde' => $desde, 'hasta' => $hasta, 'data' => $rows]);
     }
 
     public function ventasCategorias(Request $request)

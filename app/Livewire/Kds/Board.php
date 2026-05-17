@@ -19,6 +19,9 @@ class Board extends Component
     public function render()
     {
         return view('livewire.kds.board')
-            ->layout('layouts.terrena', ['active' => 'kds']);
+            ->layout('layouts.terrena', [
+                'active' => 'kds',
+                'title' => 'KDS · Cocina',
+            ]);
     }
 }

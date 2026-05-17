@@ -1,6 +1,19 @@
 @extends('layouts.terrena')
 
 @php($active = 'config')
+@php
+  use App\Models\Catalogs\Almacen;
+  use App\Models\Catalogs\Proveedor;
+  use App\Models\Catalogs\Sucursal;
+  use App\Models\Catalogs\Unidad;
+
+  $catalogCounts = [
+    'sucursales' => Sucursal::count(),
+    'almacenes' => Almacen::count(),
+    'unidades' => Unidad::count(),
+    'proveedores' => Proveedor::count(),
+  ];
+@endphp
 @section('title', 'Catálogos - TerrenaPOS')
 @section('page-title')
   <i class="fa-solid fa-book"></i> <span class="label">Catálogos del Sistema</span>
@@ -62,7 +75,7 @@
           <div class="d-flex justify-content-between align-items-center mb-3">
             <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
               <i class="fa-solid fa-database me-1"></i>
-              <span id="count-sucursales">--</span> registros
+              <span id="count-sucursales">{{ $catalogCounts['sucursales'] }}</span> registros
             </span>
           </div>
           <a href="{{ route('cat.sucursales') }}" class="btn btn-outline-primary btn-sm w-100">
@@ -88,7 +101,7 @@
           <div class="d-flex justify-content-between align-items-center mb-3">
             <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">
               <i class="fa-solid fa-database me-1"></i>
-              <span id="count-almacenes">--</span> registros
+              <span id="count-almacenes">{{ $catalogCounts['almacenes'] }}</span> registros
             </span>
           </div>
           <a href="{{ route('cat.almacenes') }}" class="btn btn-outline-success btn-sm w-100">
@@ -114,7 +127,7 @@
           <div class="d-flex justify-content-between align-items-center mb-3">
             <span class="badge bg-info bg-opacity-10 text-info px-3 py-2">
               <i class="fa-solid fa-database me-1"></i>
-              <span id="count-unidades">--</span> registros
+              <span id="count-unidades">{{ $catalogCounts['unidades'] }}</span> registros
             </span>
           </div>
           <a href="{{ route('cat.unidades') }}" class="btn btn-outline-info btn-sm w-100">
@@ -166,7 +179,7 @@
           <div class="d-flex justify-content-between align-items-center mb-3">
             <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2">
               <i class="fa-solid fa-database me-1"></i>
-              <span id="count-proveedores">--</span> registros
+              <span id="count-proveedores">{{ $catalogCounts['proveedores'] }}</span> registros
             </span>
           </div>
           <a href="{{ route('cat.proveedores') }}" class="btn btn-outline-danger btn-sm w-100">
@@ -249,6 +262,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     return response.json();
   };
 
+  const proveedoresCount = @json($catalogCounts['proveedores']);
+
   try {
     const [sucursales, almacenes, unidades] = await Promise.all([
       authFetch(`${apiBase}/sucursales`).catch(() => null),
@@ -268,8 +283,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('count-unidades').textContent = unidades.count ?? unidades.data?.length ?? 0;
     }
 
-    // TODO: agregar endpoint para contar proveedores
-    document.getElementById('count-proveedores').textContent = '--';
+    // Los conteos ya se renderizan server-side; el JS solo los refresca si hay API disponible.
+    if (document.getElementById('count-proveedores') && !document.getElementById('count-proveedores').textContent.trim()) {
+      document.getElementById('count-proveedores').textContent = proveedoresCount;
+    }
   } catch (err) {
     console.error('[Catalogos] Error loading counts:', err);
   }

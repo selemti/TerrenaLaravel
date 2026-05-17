@@ -40,22 +40,22 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse([] as $row)
+                        @forelse($logs ?? [] as $row)
                             <tr>
-                                <td class="small">{{ $row['timestamp'] }}</td>
+                                <td class="small">{{ $row->timestamp?->format('d/m/Y H:i:s') ?? '—' }}</td>
                                 <td>
-                                    <div class="fw-semibold">{{ $row['username'] }}</div>
-                                    <div class="small text-muted">{{ $row['user_full_name'] }}</div>
+                                    <div class="fw-semibold">{{ $row->user?->username ?? '—' }}</div>
+                                    <div class="small text-muted">{{ $row->user?->nombre_completo ?? '—' }}</div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-primary">{{ $row['action'] }}</span>
+                                    <span class="badge bg-primary">{{ $row->accion }}</span>
                                 </td>
-                                <td>{{ $row['entity'] }}</td>
-                                <td>{{ $row['entity_id'] }}</td>
-                                <td class="small">{{ $row['reason'] ?? '—' }}</td>
+                                <td>{{ $row->entidad ?? '—' }}</td>
+                                <td>{{ $row->entidad_id ?? '—' }}</td>
+                                <td class="small">{{ $row->motivo ?? '—' }}</td>
                                 <td class="text-center">
-                                    @if($row['evidence_url'])
-                                        <a href="{{ $row['evidence_url'] }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    @if($row->evidencia_url)
+                                        <a href="{{ $row->evidencia_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
                                             <i class="fa-solid fa-paperclip"></i>
                                         </a>
                                     @else
@@ -66,8 +66,7 @@
                         @empty
                             <tr>
                                 <td colspan="7" class="text-center text-muted py-4">
-                                    <i class="fa-regular fa-circle-question me-1"></i>
-                                    Cargando registros de auditoría...
+                                    <i class="fa-regular fa-circle-question me-1"></i>No se encontraron registros de auditoría.
                                 </td>
                             </tr>
                         @endforelse

@@ -105,6 +105,9 @@ class RecipesIndex extends Component
         return view('livewire.recipes.recipes-index', [
             'recipes' => $recipes,
             'categories' => $categories,
-        ])->layout('layouts.terrena', ['active' => 'recetas']);
+        ])->layout('layouts.terrena', [
+            'active' => 'recetas',
+            'title' => 'Recetas',
+        ]);
     }
 }

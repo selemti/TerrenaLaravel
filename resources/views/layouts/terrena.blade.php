@@ -9,6 +9,7 @@
   <script>
     window.__BASE__ = "{{ rtrim(parse_url(url('/'), PHP_URL_PATH), '/') }}";
     window.__API_BASE__ = window.__BASE__;  // API base is the same as app base
+    window.TerrenaCurrentUserId = @json(auth()->id());
 
     // Global variables for permissions and API token
     window.TerrenaPermissions = [];
@@ -37,11 +38,15 @@
      */
     async function TerrenaLoadApiToken() {
       // Check cache first with expiration
-      const cached = getCachedValue(STORAGE_TOKEN_KEY);
-      if (cached) {
-        window.TerrenaApiToken = cached;
+      const cached = getCachedValue(STORAGE_TOKEN_KEY, 60 * 60 * 1000);
+      if (cached && (!window.TerrenaCurrentUserId || cached.user_id === window.TerrenaCurrentUserId)) {
+        window.TerrenaApiToken = cached.token;
         console.log('[Terrena] API token loaded from cache');
         return;
+      }
+
+      if (cached && window.TerrenaCurrentUserId && cached.user_id !== window.TerrenaCurrentUserId) {
+        sessionStorage.removeItem(STORAGE_TOKEN_KEY);
       }
 
       // Fetch from server
@@ -57,7 +62,10 @@
         if (res.ok) {
           const data = await res.json();
           window.TerrenaApiToken = data.token;
-          setCachedValue(STORAGE_TOKEN_KEY, data.token);
+          setCachedValue(STORAGE_TOKEN_KEY, {
+            token: data.token,
+            user_id: data.user_id ?? window.TerrenaCurrentUserId,
+          });
           console.log('[Terrena] API token loaded from server');
         } else {
           console.warn('[Terrena] Failed to load API token, status:', res.status);
@@ -73,13 +81,17 @@
      */
     async function TerrenaLoadPermissions() {
       // Check cache first with expiration
-      const cached = getCachedValue(STORAGE_PERMS_KEY);
-      if (cached) {
-        window.TerrenaPermissions = cached;
+      const cached = getCachedValue(STORAGE_PERMS_KEY, 24 * 60 * 60 * 1000);
+      if (cached && (!window.TerrenaCurrentUserId || cached.user_id === window.TerrenaCurrentUserId)) {
+        window.TerrenaPermissions = cached.permissions || [];
         window.TerrenaPermissionsLoaded = true;
         document.dispatchEvent(new Event('terrena:perms-ready'));
         console.log('[Terrena] Loaded', window.TerrenaPermissions.length, 'permissions from cache');
         return;
+      }
+
+      if (cached && window.TerrenaCurrentUserId && cached.user_id !== window.TerrenaCurrentUserId) {
+        sessionStorage.removeItem(STORAGE_PERMS_KEY);
       }
 
       // Fetch from server
@@ -102,7 +114,10 @@
         if (res.ok) {
           const data = await res.json();
           window.TerrenaPermissions = data.permissions || [];
-          setCachedValue(STORAGE_PERMS_KEY, window.TerrenaPermissions);
+          setCachedValue(STORAGE_PERMS_KEY, {
+            permissions: window.TerrenaPermissions,
+            user_id: window.TerrenaCurrentUserId,
+          });
           window.TerrenaPermissionsLoaded = true;
           document.dispatchEvent(new Event('terrena:perms-ready'));
           console.log('[Terrena] Loaded', window.TerrenaPermissions.length, 'permissions from server');

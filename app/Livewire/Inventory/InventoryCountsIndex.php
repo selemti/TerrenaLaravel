@@ -64,6 +64,9 @@ class InventoryCountsIndex extends Component
             'counts' => $counts,
             'sucursales' => $sucursales,
             'estados' => $estados,
+        ])->layout('layouts.terrena', [
+            'active' => 'inventario',
+            'title' => 'Conteos Físicos',
         ]);
     }
 

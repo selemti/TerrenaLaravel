@@ -31,6 +31,9 @@ class LotsIndex extends Component
             ->get();
 
         return view('inventory.lots-index', compact('lots'))
-            ->layout('layouts.terrena', ['active' => 'inventario']);
+            ->layout('layouts.terrena', [
+                'active' => 'inventario',
+                'title' => 'Lotes · Inventario',
+            ]);
     }
 }

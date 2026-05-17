@@ -150,8 +150,20 @@ class PostcorteController extends Controller
     {
         try {
             $postcorte = DB::connection('pgsql')
-                ->table('selemti.postcorte')
-                ->where('id', $postId)
+                ->table('selemti.postcorte as p')
+                ->join('selemti.sesion_cajon as s', 's.id', '=', 'p.sesion_id')
+                ->leftJoin('public.terminal as t', 't.id', '=', 's.terminal_id')
+                ->leftJoin('public.users as u', 'u.auto_id', '=', 's.cajero_usuario_id')
+                ->select([
+                    'p.*',
+                    's.terminal_id',
+                    's.apertura_ts',
+                    's.cierre_ts',
+                    DB::raw('COALESCE(t.name, s.terminal_id::text) AS terminal_nombre'),
+                    DB::raw("CONCAT(COALESCE(u.first_name, ''), CASE WHEN u.last_name IS NOT NULL AND u.last_name <> '' THEN ' ' || u.last_name ELSE '' END) AS cajero_nombre"),
+                    DB::raw('p.declarado_efectivo AS total_declarado_efectivo'),
+                ])
+                ->where('p.id', $postId)
                 ->first();
 
             if (! $postcorte) {

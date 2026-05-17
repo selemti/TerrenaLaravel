@@ -73,6 +73,9 @@ class Index extends Component
             'conteos' => $conteos,
             'sucursales' => $sucursales,
             'almacenes' => $almacenes,
+        ])->layout('layouts.terrena', [
+            'active' => 'inventario',
+            'title' => 'Conteos · Inventario',
         ]);
     }
 

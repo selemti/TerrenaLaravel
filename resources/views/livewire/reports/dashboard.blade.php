@@ -70,7 +70,7 @@
                         <ul class="dropdown-menu">
                             <li>
                                 <label class="dropdown-item">
-                                    <input type="checkbox" class="me-2" wire:click="toggleAutoRefresh" :checked="$autoRefreshEnabled">
+                                    <input type="checkbox" class="me-2" wire:click="toggleAutoRefresh" @checked($autoRefreshEnabled)>
                                     Actualización automática
                                 </label>
                             </li>

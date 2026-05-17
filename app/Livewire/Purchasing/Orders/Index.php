@@ -63,6 +63,9 @@ class Index extends Component
             'orders' => $orders,
             'stats' => $stats,
             'vendors' => $vendors,
+        ])->layout('layouts.terrena', [
+            'active' => 'compras',
+            'title' => 'Órdenes · Compras',
         ]);
     }
 }
