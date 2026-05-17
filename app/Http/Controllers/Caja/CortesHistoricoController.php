@@ -22,13 +22,18 @@ class CortesHistoricoController extends Controller
      */
     public function index(Request $request)
     {
-        // Filtro de fecha rápido
-        $dateFilter = $request->input('date_filter', 'last_30_days');
+        // Filtro de fecha rápido.
+        // date_filter_radio es la fuente real cuando viene del formulario; date_filter
+        // se conserva como respaldo para links o navegación manual.
+        $dateFilter = $request->input('date_filter_radio', $request->input('date_filter', 'last_30_days'));
         $fechaInicio = $request->input('fecha_inicio');
         $fechaFin = $request->input('fecha_fin');
 
-        // Calcular fechas según filtro rápido
-        if (! $fechaInicio || ! $fechaFin || $dateFilter !== 'custom') {
+        // Si el usuario marca "custom" o ya mandó un rango explícito, respetarlo.
+        // En cualquier otro caso se calculan las fechas del preset seleccionado.
+        if ($dateFilter === 'custom' && $fechaInicio && $fechaFin) {
+            // keep user supplied range
+        } else {
             switch ($dateFilter) {
                 case 'today':
                     $fechaInicio = now()->format('Y-m-d');

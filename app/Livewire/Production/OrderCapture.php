@@ -61,7 +61,7 @@ class OrderCapture extends Component
             DB::connection('pgsql')->table('selemti.production_orders')
                 ->where('id', $this->orderId)
                 ->update([
-                    'estado' => 'COMPLETADA',
+                    'estado' => 'COMPLETADO',
                     'qty_producida' => $this->qtyProducida,
                     'qty_merma' => $this->qtyMerma,
                     'cerrado_en' => now(),

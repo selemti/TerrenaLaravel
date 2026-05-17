@@ -2,8 +2,12 @@
 
 namespace Tests\Feature\Services\Inventory;
 
+use App\Exceptions\Inventory\InventoryValidationException;
 use App\Services\Inventory\PosConsumptionService;
+use App\Services\Inventory\UomConversionService;
+use App\Services\Pos\PosModifierService;
 use Illuminate\Database\Connection;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Mockery;
 use Tests\TestCase;
@@ -35,28 +39,36 @@ class PosConsumptionServiceTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
-    public function test_confirm_ticket_delegates_inside_pgsql_transaction(): void
+    public function test_confirm_ticket_processes_inside_pgsql_transaction(): void
     {
         $connection = Mockery::mock(Connection::class);
+
         $connection->shouldReceive('transaction')
             ->once()
             ->with(Mockery::type('callable'), 5)
             ->andReturnUsing(function (callable $callback) {
                 return $callback();
             });
-        $connection->shouldReceive('statement')
-            ->once()
-            ->with('SELECT selemti.fn_confirmar_consumo_ticket(?)', [123])
-            ->andReturn(true);
 
         DB::shouldReceive('connection')
             ->once()
             ->with('pgsql')
             ->andReturn($connection);
 
-        app(PosConsumptionService::class)->confirmTicket(123);
+        $service = new class(app(PosModifierService::class), app(UomConversionService::class)) extends PosConsumptionService
+        {
+            protected function ticketItemsForProcessing(int $ticketId): Collection
+            {
+                return collect();
+            }
 
-        $this->addToAssertionCount(1);
+            protected function dispatchIngestedEvent(int $ticketId): void {}
+        };
+
+        $summary = $service->confirmTicket(123);
+
+        $this->assertSame(123, $summary['ticket_id']);
+        $this->assertSame(0, $summary['ticket_items_processed']);
     }
 
     public function test_reverse_ticket_delegates_inside_pgsql_transaction(): void
@@ -101,7 +113,7 @@ class PosConsumptionServiceTest extends TestCase
 
     public function test_normalize_line_rejects_non_positive_quantity(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InventoryValidationException::class);
         $this->expectExceptionMessage('La cantidad debe ser mayor a cero.');
 
         app(PosConsumptionService::class)->normalizeLine([

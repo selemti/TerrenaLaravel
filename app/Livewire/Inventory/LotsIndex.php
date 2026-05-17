@@ -14,18 +14,18 @@ class LotsIndex extends Component
 
     public function render()
     {
-        $lots = DB::table(DB::raw('inventory_batch as b'))
-            ->leftJoin(DB::raw('items as i'), 'i.id', '=', 'b.item_id')
+        $lots = DB::connection('pgsql')->table(DB::raw('selemti.inventory_batch as b'))
+            ->leftJoin(DB::raw('selemti.items as i'), 'i.id', '=', 'b.item_id')
             ->select([
                 'b.id',
                 'b.item_id',
                 'b.lote_proveedor as lote',
-                'b.fecha_caducidad',
+                'b.caducidad as fecha_caducidad',
                 'b.estado',
                 'b.cantidad_actual as stock',
                 DB::raw("COALESCE(i.nombre, '') as item_nombre"),
             ])
-            ->orderBy('b.fecha_caducidad')
+            ->orderBy('b.caducidad')
             ->orderByDesc('b.id')
             ->limit(100)
             ->get();

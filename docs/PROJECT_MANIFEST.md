@@ -1,7 +1,7 @@
 # TerrenaLaravel — Project Manifest
 
 > **Living document.** Every AI agent (Claude, Codex, Gemini) MUST update the relevant section when completing a delegated task.  
-> Last updated: 2026-05-16 — 276 tests passing | Branch: `work/inicio-limpio-abril-2026`
+> Last updated: 2026-05-16 — 338 tests passing | Branch: `work/inicio-limpio-abril-2026`
 
 ---
 
@@ -11,13 +11,13 @@
 |-------|------|-------------|---------|
 | Domain Models | ✅ 47 models, 8 domains | — | — |
 | Domain Exceptions | ✅ 21 exceptions, 6 domains | — | Pos/, Recetas/ still generic |
-| Value Objects | ✅ Money, BaseQuantity, Variance, SequentialFolio | — | DateRange |
-| Domain Events | ✅ Defined + dispatched from services | — | PosTicketIngested wiring |
+| Value Objects | ✅ Money, BaseQuantity, Variance, SequentialFolio, DateRange | — | — |
+| Domain Events | ✅ Defined + dispatched from services | — | — |
 | Anti-Corruption Layer | ✅ FloreantPosAdapter | — | — |
 | API Endpoints | ✅ ~180 routes, 19 groups | Codex: stock-alerts, production-read | Kardex UI |
 | Services | ✅ 48 services | — | — |
 | Livewire UI | ✅ 73 components | Claude: Domain Events done | KardexView wiring, Production UI review |
-| Tests | ✅ 255 passing | Codex tasks will add ~25 more | — |
+| Tests | ✅ 276 + 37 DDD nuevos = 313 passing | — | — |
 | Migrations | ✅ 29/29 ran | — | — |
 
 ---
@@ -76,12 +76,12 @@
 | **ProductionOrderReadService** | `Services/Production/ProductionOrderReadService.php` | ✅ | `list()`, `detail()` — Codex |
 | **ProductionController (write)** | `Controllers/Production/ProductionController.php` | ✅ | plan, consume, complete, post |
 | **ProductionOrderController (read)** | `Controllers/Production/ProductionOrderController.php` | ✅ | `GET /api/production/orders`, `GET /api/production/orders/{id}` — Codex |
-| **Livewire: OrdersIndex** | `Livewire/Production/OrdersIndex.php` | ⚠️ | Exists — needs review, may predate read API |
-| **Livewire: OrderCreate** | `Livewire/Production/OrderCreate.php` | ⚠️ | Exists — needs review |
-| **Livewire: OrderDetail** | `Livewire/Production/OrderDetail.php` | ⚠️ | Exists — needs review against `ProductionOrderReadService` |
-| **Livewire: OrderCapture** | `Livewire/Production/OrderCapture.php` | ⚠️ | Exists — needs review |
+| **Livewire: OrdersIndex** | `Livewire/Production/OrdersIndex.php` | ✅ | State names aligned (COMPLETADO/CANCELADO), filters correct |
+| **Livewire: OrderCreate** | `Livewire/Production/OrderCreate.php` | ✅ | Reviewed — correct |
+| **Livewire: OrderDetail** | `Livewire/Production/OrderDetail.php` | ✅ | State names corrected (CANCELADO), transitions OK |
+| **Livewire: OrderCapture** | `Livewire/Production/OrderCapture.php` | ✅ | COMPLETADO corrected, column names match migration |
 
-**Pending:** Claude reviews all 4 Production Livewire components against new read API.
+**Reviewed:** All 4 Production Livewire components aligned to production_orders schema and ProductionOrderReadService states.
 
 ---
 
@@ -124,9 +124,9 @@
 | **DTOs** | `Adapters/FloreantPos/Dtos/PosTicketDto`, `PosMenuModifierDto` | ✅ | |
 | **Controllers** | `Api/Caja/` — 10 controllers (auth, cajas, precorte, postcorte, sesiones, conciliación, etc.) | ✅ | |
 | **AuthController** | `Api/Caja/AuthController.php` | ✅ | Accepts `email` or `username` |
-| **`fn_postcorte_after_insert`** | PostgreSQL trigger | ❌ | Totals always NULL — Gemini task |
+| **`fn_postcorte_after_insert`** | PostgreSQL trigger | ⚠️ | Migration + backfill ready — apply on prod when tables exist |
 
-**Pending:** Fix `fn_postcorte_after_insert` trigger (assign to Gemini).
+**Pending:** Run `2026_05_16_000000_fix_postcorte_trigger_sales.php` on staging/prod + execute `database/sql/postcorte_backfill.sql` to populate existing NULL rows.
 
 ---
 
@@ -167,15 +167,15 @@
 |---------------|--------|----------|
 | Domain Exceptions | ✅ 21 exceptions, 6 domains | `app/Exceptions/` |
 | Value Objects | ✅ Money, BaseQuantity, Variance, SequentialFolio | `app/ValueObjects/` |
-| Value Object: DateRange | ❌ Missing | — |
+| Value Object: DateRange | ✅ Implemented | `app/ValueObjects/DateRange.php` |
 | Domain Events: ReceptionPosted | ✅ Defined + dispatched | `app/Events/Inventory/` |
 | Domain Events: TransferPosted | ✅ Defined + dispatched | `app/Events/Inventory/` |
-| Domain Events: PosTicketIngested | ✅ Defined, NOT dispatched yet | `app/Events/Pos/` |
+| Domain Events: PosTicketIngested | ✅ Defined + dispatched from PosConsumptionService | `app/Events/Pos/` |
 | Listeners: LogReceptionPosted | ✅ | `app/Listeners/Inventory/` |
 | Listeners: LogTransferPosted | ✅ | `app/Listeners/Inventory/` |
 | Listeners: InvalidateStockCache | ✅ | `app/Listeners/Inventory/` |
 | Anti-Corruption Layer | ✅ FloreantPosAdapter + 2 DTOs | `app/Adapters/FloreantPos/` |
-| State Machines (formal) | ❌ Still as constants in services | Pending Step 7 |
+| State Machines (formal) | ✅ ReceptionHeader with assertCanTransitionTo + can*() | — | Transfer is already formalized via can*() on model |
 | Repository Pattern (Pos) | ✅ 5 repositories | `app/Services/Pos/Repositories/` |
 
 ---
@@ -186,9 +186,15 @@
 |-------|------|--------|--------|
 | **Codex** | Stock Alerts API | `work/codex-stock-alerts` | ✅ Done — integrated |
 | **Codex** | Production Orders Read API | `work/codex-production-read-api` | ✅ Done — integrated |
+| **Codex** | Inventory Valuation API | `work/codex-inventory-valuation` | ✅ Done — integrated (338 tests) |
+| **Codex** | Batch Expiry Alerts API | `work/codex-batch-expiry` | ✅ Done — integrated (338 tests) |
 | **Claude** | Domain Events wiring | `work/inicio-limpio-abril-2026` | ✅ Done |
-| **Claude** | Production UI review | `work/inicio-limpio-abril-2026` | 🔜 Next |
-| **Gemini** | Fix `fn_postcorte_after_insert` | — | ❌ Not assigned |
+| **Claude** | DateRange Value Object | `work/inicio-limpio-abril-2026` | 🔜 Next |
+| **Claude** | auth:sanctum on /api/caja/* | `work/inicio-limpio-abril-2026` | 🔜 Next |
+| **Claude** | PosTicketIngested wiring | `work/inicio-limpio-abril-2026` | 🔜 Next |
+| **Claude** | KardexView Livewire wiring | `work/inicio-limpio-abril-2026` | 🔜 Next |
+| **Claude** | Production UI review (4 components) | `work/inicio-limpio-abril-2026` | ✅ Done |
+| **Gemini** | Fix `fn_postcorte_after_insert` | — | ⚠️ Migration ready (`2026_05_16_000000_fix_postcorte_trigger_sales.php`) + backfill SQL — pending apply on staging/prod (tables absent locally) |
 
 ---
 
@@ -216,8 +222,8 @@
 
 | # | Task | Module | Assign to |
 |---|------|--------|-----------|
-| 9 | Inventory Valuation endpoint (`GET /api/inventory/valuation`) | Inventory | Codex |
-| 10 | Batch expiry alerts (items with `fecha_caducidad` < 7 days) | Inventory | Codex |
+| 9 | Inventory Valuation endpoint (`GET /api/inventory/valuation`) | Inventory | Codex 🔜 |
+| 10 | Batch expiry alerts (items with `fecha_caducidad` < 7 days) | Inventory | Codex 🔜 |
 | 11 | KDS (Kitchen Display) — `Livewire/Kds/Board.php` review | KDS | Claude |
 | 12 | `auth:sanctum` on `/api/caja/*` routes (currently unprotected) | Auth | Claude |
 

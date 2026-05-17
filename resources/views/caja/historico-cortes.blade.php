@@ -177,8 +177,8 @@
             <strong><i class="fa-solid fa-filter me-2"></i>Filtros de Búsqueda</strong>
             <div class="d-flex align-items-center gap-2">
                 <label for="per_page" class="form-label mb-0 small">Mostrar:</label>
-                <select class="form-select form-select-sm" id="per_page" name="per_page" style="width: auto;"
-                        onchange="this.form.submit()">
+                <select class="form-select form-select-sm" id="per_page" name="per_page" style="width: auto;" form="filterForm"
+                        onchange="document.getElementById('filterForm').submit()">
                     <option value="10" {{ $filtros['per_page'] == 10 ? 'selected' : '' }}>10</option>
                     <option value="20" {{ $filtros['per_page'] == 20 ? 'selected' : '' }}>20</option>
                     <option value="50" {{ $filtros['per_page'] == 50 ? 'selected' : '' }}>50</option>

@@ -181,7 +181,7 @@ class Dashboard extends Component
                 $params['search'] = $this->search;
             }
 
-            $response = Http::get('/api/purchasing/replenishment/suggestions', $params);
+            $response = Http::get(url('/api/purchasing/replenishment/suggestions'), $params);
 
             if ($response->successful() && ($response->json('success') ?? false)) {
                 $this->suggestions = $response->json('data') ?? [];
@@ -208,7 +208,7 @@ class Dashboard extends Component
             $this->stats = ['total' => 0];
 
             foreach ($estados as $estado) {
-                $response = Http::get('/api/purchasing/replenishment/suggestions', [
+                $response = Http::get(url('/api/purchasing/replenishment/suggestions'), [
                     'estado' => $estado,
                     'per_page' => 1,
                 ]);
@@ -221,7 +221,7 @@ class Dashboard extends Component
             }
 
             // Contar urgentes (todas las prioridades URGENTE)
-            $response = Http::get('/api/purchasing/replenishment/suggestions', [
+            $response = Http::get(url('/api/purchasing/replenishment/suggestions'), [
                 'prioridad' => 'URGENTE',
                 'per_page' => 1,
             ]);

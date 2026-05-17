@@ -8,9 +8,9 @@
                     $badgeMap = [
                         'BORRADOR'   => 'secondary',
                         'EN_PROCESO' => 'warning',
-                        'COMPLETADA' => 'info',
-                        'POSTEADA'   => 'success',
-                        'CANCELADA'  => 'danger',
+                        'COMPLETADO' => 'info',
+                        'POSTEADO'   => 'success',
+                        'CANCELADO'  => 'danger',
                     ];
                     $badge = $badgeMap[$orden->estado] ?? 'secondary';
                 @endphp

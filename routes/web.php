@@ -240,6 +240,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/counts/{id}/review', InventoryCountReview::class)->name('inv.counts.review');
         Route::get('/counts/{id}/detail', InventoryCountDetail::class)->name('inv.counts.detail');
 
+        // Kardex por ítem
+        Route::get('/items/{itemId}/kardex', \App\Livewire\Inventory\KardexView::class)->name('inv.kardex');
+
         // Orquestador de Inventario
         Route::get('/orquestador', \App\Livewire\Inventory\OrquestadorPanel::class)->name('inv.orquestador');
     });

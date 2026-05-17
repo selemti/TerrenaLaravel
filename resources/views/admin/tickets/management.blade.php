@@ -48,8 +48,8 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="text-white-50 mb-1">Cerrados sin Pago</h6>
-                            <h3 class="mb-0">{{ $stats['cerrado_sin_pago']->cantidad ?? 0 }}</h3>
-                            <small>{{ $formatMoney($stats['cerrado_sin_pago']->monto_total ?? 0) }}</small>
+                            <h3 class="mb-0">{{ $stats['cerrado_sin_pago']?->cantidad ?? 0 }}</h3>
+                            <small>{{ $formatMoney($stats['cerrado_sin_pago']?->monto_total ?? 0) }}</small>
                         </div>
                         <i class="fa-solid fa-circle-xmark fa-2x opacity-50"></i>
                     </div>
@@ -62,8 +62,8 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="text-white-50 mb-1">Cerrados con Descuento 100%</h6>
-                            <h3 class="mb-0">{{ $stats['cerrado_con_descuento_100']->cantidad ?? 0 }}</h3>
-                            <small>{{ $formatMoney($stats['cerrado_con_descuento_100']->monto_total ?? 0) }}</small>
+                            <h3 class="mb-0">{{ $stats['cerrado_con_descuento_100']?->cantidad ?? 0 }}</h3>
+                            <small>{{ $formatMoney($stats['cerrado_con_descuento_100']?->monto_total ?? 0) }}</small>
                         </div>
                         <i class="fa-solid fa-percent fa-2x opacity-50"></i>
                     </div>
@@ -76,8 +76,8 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="text-dark-50 mb-1">Abiertos con Deuda</h6>
-                            <h3 class="mb-0">{{ $stats['abierto_con_deuda']->cantidad ?? 0 }}</h3>
-                            <small>{{ $formatMoney($stats['abierto_con_deuda']->monto_total ?? 0) }}</small>
+                            <h3 class="mb-0">{{ $stats['abierto_con_deuda']?->cantidad ?? 0 }}</h3>
+                            <small>{{ $formatMoney($stats['abierto_con_deuda']?->monto_total ?? 0) }}</small>
                         </div>
                         <i class="fa-solid fa-clock fa-2x opacity-50"></i>
                     </div>
@@ -90,8 +90,8 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="text-white-50 mb-1">Abiertos Vacíos</h6>
-                            <h3 class="mb-0">{{ $stats['abierto_vacio']->cantidad ?? 0 }}</h3>
-                            <small>{{ $formatMoney($stats['abierto_vacio']->monto_total ?? 0) }}</small>
+                            <h3 class="mb-0">{{ $stats['abierto_vacio']?->cantidad ?? 0 }}</h3>
+                            <small>{{ $formatMoney($stats['abierto_vacio']?->monto_total ?? 0) }}</small>
                         </div>
                         <i class="fa-solid fa-inbox fa-2x opacity-50"></i>
                     </div>
@@ -104,8 +104,8 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="text-white-50 mb-1">Pagados sin Cierre</h6>
-                            <h3 class="mb-0">{{ $stats['pagado_sin_cierre']->cantidad ?? 0 }}</h3>
-                            <small>{{ $formatMoney($stats['pagado_sin_cierre']->monto_total ?? 0) }}</small>
+                            <h3 class="mb-0">{{ $stats['pagado_sin_cierre']?->cantidad ?? 0 }}</h3>
+                            <small>{{ $formatMoney($stats['pagado_sin_cierre']?->monto_total ?? 0) }}</small>
                         </div>
                         <i class="fa-solid fa-check-circle fa-2x opacity-50"></i>
                     </div>
@@ -151,25 +151,24 @@
             <small class="text-muted">Total: {{ $stats['total'] ?? 0 }} tickets problemáticos</small>
         </div>
         <div class="card-body p-0">
-            @if(count($tickets) > 0)
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light sticky-top">
-                            <tr>
-                                <th>ID</th>
-                                <th>Tipo Problema</th>
-                                <th>Fecha Creación</th>
-                                <th>Días</th>
-                                <th>Terminal</th>
-                                <th>Sucursal</th>
-                                <th class="text-end">Monto</th>
-                                <th class="text-end">Deuda</th>
-                                <th>Items</th>
-                                <th class="text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($tickets as $ticket)
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th>ID</th>
+                            <th>Tipo Problema</th>
+                            <th>Fecha Creación</th>
+                            <th>Días</th>
+                            <th>Terminal</th>
+                            <th>Sucursal</th>
+                            <th class="text-end">Monto</th>
+                            <th class="text-end">Deuda</th>
+                            <th>Items</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                            @forelse($tickets as $ticket)
                                 <tr class="ticket-row" id="ticket-row-{{ $ticket->id }}">
                                     <td class="font-monospace fw-bold">
                                         <a href="javascript:void(0)" class="ticket-detail-link" 
@@ -306,17 +305,17 @@
                                         </div>
                                     </td>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @else
-                <div class="p-5 text-center text-muted">
-                    <i class="fa-solid fa-check-circle fa-3x mb-3 text-success opacity-50"></i>
-                    <h5 class="text-muted">No hay tickets problemáticos en este momento</h5>
-                    <p class="mb-0">Todos los tickets están correctamente gestionados</p>
-                </div>
-            @endif
+                            @empty
+                                <tr>
+                                    <td colspan="10" class="text-center text-muted py-5">
+                                        <i class="fa-regular fa-folder-open fa-2x mb-2 d-block"></i>
+                                        No hay tickets problemáticos en este momento.
+                                    </td>
+                                </tr>
+                            @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

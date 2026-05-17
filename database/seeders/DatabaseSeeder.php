@@ -24,5 +24,10 @@ class DatabaseSeeder extends Seeder
         if ($this->command?->confirm('¿Desea crear recetas demo?', true)) {
             $this->call(RecipesProductionSeeder::class);
         }
+
+        if ($this->command?->confirm('¿Ejecutar corrida E2E completa (datos maestros + flujo transaccional)?', false)) {
+            $this->call(\Database\Seeders\E2E\MasterDataSeeder::class);
+            $this->call(\Database\Seeders\E2E\TransactionalFlowSeeder::class);
+        }
     }
 }

@@ -16,6 +16,10 @@ use Illuminate\Support\Facades\DB;
  */
 class TransferService
 {
+    private const TIPO_TRASPASO_SALIDA = 'TRASPASO_SALIDA';
+
+    private const TIPO_TRASPASO_ENTRADA = 'TRASPASO_ENTRADA';
+
     /**
      * Crea una transferencia SOLICITADA entre almacenes.
      *
@@ -295,7 +299,7 @@ class TransferService
                     'sucursal_id' => (string) $transfer->from_bodega_id,
                     'item_id' => $line->item_id,
                     'lote_id' => $sourceBatch->id ?? null,
-                    'tipo' => 'TRASPASO',
+                    'tipo' => self::TIPO_TRASPASO_SALIDA,
                     'cantidad' => -$qtyToTransfer,
                     'qty_original' => -$qtyEntered,
                     'uom_original_id' => $line->um_id,
@@ -309,7 +313,7 @@ class TransferService
                 $movIn = Movement::create([
                     'sucursal_id' => (string) $transfer->to_bodega_id,
                     'item_id' => $line->item_id,
-                    'tipo' => 'TRASPASO',
+                    'tipo' => self::TIPO_TRASPASO_ENTRADA,
                     'cantidad' => $qtyToTransfer,
                     'qty_original' => $qtyEntered,
                     'uom_original_id' => $line->um_id,

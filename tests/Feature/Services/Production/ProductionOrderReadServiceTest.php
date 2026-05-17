@@ -168,18 +168,18 @@ class ProductionOrderReadServiceTest extends TestCase
 
     private function createRecipe(int $id, string $nombre, int $version): void
     {
-        DB::connection('pgsql')->table('selemti.receta_cab')->insert([
-            'id' => (string) $id,
-            'nombre_plato' => $nombre,
+        DB::connection('pgsql')->table('selemti.recipes')->insert([
+            'id' => $id,
+            'codigo' => 'REC-'.$id,
+            'nombre' => $nombre,
             'activo' => true,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        DB::connection('pgsql')->table('selemti.receta_version')->insert([
-            'receta_id' => (string) $id,
-            'version' => $version,
-            'version_publicada' => true,
+        DB::connection('pgsql')->table('selemti.recipe_versions')->insert([
+            'recipe_id' => $id,
+            'version_no' => $version,
             'created_at' => now(),
         ]);
     }

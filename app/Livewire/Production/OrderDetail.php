@@ -17,7 +17,7 @@ class OrderDetail extends Component
 
     public function cancelar(): void
     {
-        $this->cambiarEstado('BORRADOR', 'CANCELADA');
+        $this->cambiarEstado('BORRADOR', 'CANCELADO');
         session()->flash('success', 'Orden cancelada.');
     }
 

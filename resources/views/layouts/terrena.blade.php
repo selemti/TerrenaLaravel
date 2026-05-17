@@ -206,6 +206,73 @@
       // Submit the form to perform the actual logout
       document.getElementById('logout-form').submit();
     }
+
+    /**
+     * Global Fetch Interceptor — reintenta con token fresco ante cualquier 401.
+     * Normaliza siempre a (url, options) en el retry para evitar el problema
+     * con objetos Request inmutables cuyas cabeceras no se pueden modificar.
+     */
+    (function() {
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            let response = await originalFetch.apply(this, args);
+
+            // Extraer URL del primer argumento (string | URL | Request)
+            let url = '';
+            if (typeof args[0] === 'string') {
+                url = args[0];
+            } else if (args[0] instanceof URL) {
+                url = args[0].href;
+            } else if (args[0] && args[0].url) {
+                url = args[0].url;
+            }
+
+            if (response.status === 401
+                && !url.includes('/session/api-token')
+                && !url.includes('/login'))
+            {
+                const options        = args[1] || {};
+                const existingHdrs   = options.headers || {};
+                const isRetry        = existingHdrs['X-Terrena-Retry'] === '1';
+
+                if (!isRetry) {
+                    console.warn('[Terrena Global] 401 detected on ' + url + '. Refreshing token...');
+
+                    if (typeof window.TerrenaClearAuth === 'function') {
+                        window.TerrenaClearAuth();
+                    }
+                    if (typeof window.TerrenaLoadApiToken === 'function') {
+                        await window.TerrenaLoadApiToken();
+                    }
+
+                    // Construir cabeceras de retry con token nuevo
+                    const retryHeaders = Object.assign({}, existingHdrs);
+                    if (window.TerrenaApiToken) {
+                        retryHeaders['Authorization'] = 'Bearer ' + window.TerrenaApiToken;
+                    }
+                    retryHeaders['X-Terrena-Retry'] = '1';
+
+                    // Construir opciones completas del retry
+                    const retryOptions = Object.assign({}, options, { headers: retryHeaders });
+
+                    // Si args[0] era un objeto Request, preservar method/body/credentials
+                    if (args[0] instanceof Request) {
+                        retryOptions.method      = retryOptions.method      || args[0].method;
+                        retryOptions.credentials = retryOptions.credentials || args[0].credentials;
+                        retryOptions.mode        = retryOptions.mode        || args[0].mode;
+                        // body solo para métodos con body
+                        if (!retryOptions.body && args[0].method !== 'GET' && args[0].method !== 'HEAD') {
+                            retryOptions.body = args[0].body;
+                        }
+                    }
+
+                    // SIEMPRE llamar con (url, options) — nunca con objeto Request
+                    return originalFetch.call(this, url, retryOptions);
+                }
+            }
+            return response;
+        };
+    })();
   </script>
 
   {{-- CSS locales (mismo orden que legacy) --}}
@@ -298,7 +365,10 @@
             <i class="fa-solid fa-chevron-down ms-auto small"></i>
           </a>
           <div class="collapse {{ in_array($active ?? '', ['inventario','items','lots','receptions','alerts','transfers','counts']) ? 'show' : '' }} ms-3" id="menuInventario">
-            <a class="nav-link submenu-link" href="{{ route('inv.alerts') }}">
+            <a class="nav-link submenu-link"
+               href="{{ route('inv.alerts') }}"
+               x-show="permsLoaded && (window.TerrenaHasPerm('can_view_inventory') || window.TerrenaHasPerm('admin.access'))"
+               x-cloak>
               <i class="fa-solid fa-bell"></i> <span class="label">Alertas</span>
             </a>
             <a class="nav-link submenu-link" href="{{ route('inv.receptions') }}">
@@ -709,18 +779,35 @@
       return;
     }
 
+    function buildAlertHeaders() {
+      const token = window.TerrenaApiToken;
+      const headers = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      return headers;
+    }
+
     /**
      * Fetch alerts count from API
      */
-    async function fetchAlertsCount() {
+    async function fetchAlertsCount(isRetry = false) {
       try {
         const response = await fetch(basePath + '/api/caja/alertas/count', {
           method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
+          headers: buildAlertHeaders()
         });
+
+        if (response.status === 401 && !isRetry) {
+          console.warn('[Terrena Alerts] Token expired or invalid. Refreshing...');
+          if (typeof window.TerrenaClearAuth === 'function') window.TerrenaClearAuth();
+          if (typeof window.TerrenaLoadApiToken === 'function') await window.TerrenaLoadApiToken();
+          return fetchAlertsCount(true);
+        }
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
@@ -759,10 +846,7 @@
       try {
         const response = await fetch(basePath + '/api/caja/alertas?limit=10', {
           method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
+          headers: buildAlertHeaders()
         });
 
         if (!response.ok) {

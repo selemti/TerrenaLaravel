@@ -12,6 +12,7 @@ return [
         ['perm' => 'inventory.moves.manage',             'label' => 'Ajustar inventario manual',                'desc' => 'Capturar ajustes manuales de existencias.'],
         ['perm' => 'inventory.counts.manage',            'label' => 'Hacer conteos físicos',                    'desc' => 'Iniciar y validar conteos cíclicos o generales.'],
         ['perm' => 'inventory.lots.view',                'label' => 'Ver lotes y caducidades',                  'desc' => 'Consultar detalle de lotes y fechas de expiro.'],
+        ['perm' => 'can_view_inventory',                 'label' => 'Ver módulo de inventario',                 'desc' => 'Acceder a vistas operativas de inventario.'],
         ['perm' => 'inventory.transfers.approve',        'label' => 'Aprobar transferencias',                   'desc' => 'Autorizar movimientos internos antes del envío.'],
         ['perm' => 'inventory.transfers.ship',           'label' => 'Marcar transferencia como enviada',        'desc' => 'Sucursal origen confirma que ya salió.'],
         ['perm' => 'inventory.transfers.receive',        'label' => 'Marcar transferencia como recibida',       'desc' => 'Sucursal destino confirma que llegó.'],

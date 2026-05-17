@@ -356,13 +356,13 @@ class TransferServiceTest extends TestCase
         $this->assertDatabaseHas('selemti.mov_inv', [
             'sucursal_id' => (string) $this->almacenOrigen->id,
             'item_id' => $this->item->id,
-            'tipo' => 'TRASPASO',
+            'tipo' => 'TRASPASO_SALIDA',
         ]);
 
         $this->assertDatabaseHas('selemti.mov_inv', [
             'sucursal_id' => (string) $this->almacenDestino->id,
             'item_id' => $this->item->id,
-            'tipo' => 'TRASPASO',
+            'tipo' => 'TRASPASO_ENTRADA',
         ]);
     }
 

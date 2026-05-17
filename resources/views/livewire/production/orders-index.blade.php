@@ -11,7 +11,7 @@
 
     {{-- Resumen de estados --}}
     <div class="row g-2 mb-3">
-        @foreach(['BORRADOR' => 'secondary', 'EN_PROCESO' => 'warning', 'COMPLETADA' => 'info', 'POSTEADA' => 'success'] as $estado => $color)
+        @foreach(['BORRADOR' => 'secondary', 'EN_PROCESO' => 'warning', 'COMPLETADO' => 'info', 'POSTEADO' => 'success'] as $estado => $color)
         <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center py-2">
                 <div class="fs-4 fw-bold text-{{ $color }}">{{ $resumen[$estado] ?? 0 }}</div>
@@ -86,9 +86,9 @@
                                 <span class="badge {{ match($o->estado) {
                                     'BORRADOR'   => 'bg-secondary',
                                     'EN_PROCESO' => 'bg-warning text-dark',
-                                    'COMPLETADA' => 'bg-info text-dark',
-                                    'POSTEADA'   => 'bg-success',
-                                    'CANCELADA'  => 'bg-danger',
+                                    'COMPLETADO' => 'bg-info text-dark',
+                                    'POSTEADO'   => 'bg-success',
+                                    'CANCELADO'  => 'bg-danger',
                                     default      => 'bg-light text-dark'
                                 } }}">{{ $o->estado }}</span>
                             </td>

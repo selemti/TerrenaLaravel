@@ -271,7 +271,7 @@ class ReceptionServiceTest extends TestCase
             ->first();
 
         $this->assertNotNull($movement);
-        $this->assertEquals('ENTRADA', $movement->tipo);
+        $this->assertEquals('RECEPCION_COMPRA', $movement->tipo);
         $this->assertEquals(2.0, (float) $movement->cantidad);
         $this->assertNotNull($movement->inventory_batch_id);
         $this->createdBatchIds[] = $movement->inventory_batch_id;

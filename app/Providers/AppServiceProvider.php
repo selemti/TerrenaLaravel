@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Events\Inventory\ReceptionPosted;
 use App\Events\Inventory\TransferPosted;
+use App\Events\Pos\PosTicketIngested;
 use App\Listeners\Inventory\InvalidateStockCache;
 use App\Listeners\Inventory\LogReceptionPosted;
 use App\Listeners\Inventory\LogTransferPosted;
+use App\Listeners\Pos\LogPosTicketIngested;
 use App\Support\Permissions\NullPermissionRegistrar;
 use Illuminate\Cache\CacheManager;
 use Illuminate\Support\Facades\DB;
@@ -34,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(ReceptionPosted::class, InvalidateStockCache::class);
         Event::listen(TransferPosted::class, LogTransferPosted::class);
         Event::listen(TransferPosted::class, InvalidateStockCache::class);
+        Event::listen(PosTicketIngested::class, LogPosTicketIngested::class);
 
         require_once app_path('Support/features.php');
 

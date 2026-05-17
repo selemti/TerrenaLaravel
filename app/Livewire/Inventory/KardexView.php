@@ -2,102 +2,108 @@
 
 namespace App\Livewire\Inventory;
 
+use App\Services\Inventory\KardexService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 class KardexView extends Component
 {
-    use WithPagination;
-
-    public int $itemId;
-
-    public string $filterTipo = '';
+    public string $itemId;
 
     public string $filterFechaDesde = '';
 
     public string $filterFechaHasta = '';
 
-    public ?int $filterLote = null;
+    public string $filterAlmacen = '';
 
-    protected $queryString = ['filterTipo', 'filterFechaDesde', 'filterFechaHasta', 'filterLote'];
+    public int $page = 1;
 
-    public function updatingFilterTipo(): void
+    protected $queryString = [
+        'filterFechaDesde' => ['except' => ''],
+        'filterFechaHasta' => ['except' => ''],
+        'filterAlmacen' => ['except' => ''],
+        'page' => ['except' => 1],
+    ];
+
+    public function mount(string $itemId): void
     {
-        $this->resetPage();
+        $this->itemId = $itemId;
+        $this->filterFechaDesde = $this->filterFechaDesde ?: Carbon::now()->subDays(30)->toDateString();
+        $this->filterFechaHasta = $this->filterFechaHasta ?: Carbon::now()->toDateString();
     }
 
     public function updatingFilterFechaDesde(): void
     {
-        $this->resetPage();
+        $this->page = 1;
     }
 
     public function updatingFilterFechaHasta(): void
     {
-        $this->resetPage();
+        $this->page = 1;
     }
 
-    public function render()
+    public function updatingFilterAlmacen(): void
     {
-        $item = DB::connection('pgsql')
-            ->table('selemti.items as i')
-            ->leftJoin('selemti.cat_unidades as u', 'u.id', '=', 'i.unidad_medida_id')
-            ->select('i.id', 'i.nombre', 'i.codigo', 'u.clave as uom_base')
-            ->where('i.id', $this->itemId)
-            ->first();
+        $this->page = 1;
+    }
 
-        $stockActual = DB::connection('pgsql')
+    public function limpiarFiltros(): void
+    {
+        $this->filterFechaDesde = Carbon::now()->subDays(30)->toDateString();
+        $this->filterFechaHasta = Carbon::now()->toDateString();
+        $this->filterAlmacen = '';
+        $this->page = 1;
+    }
+
+    public function nextPage(int $lastPage): void
+    {
+        if ($this->page < $lastPage) {
+            $this->page++;
+        }
+    }
+
+    public function prevPage(): void
+    {
+        if ($this->page > 1) {
+            $this->page--;
+        }
+    }
+
+    public function render(KardexService $service)
+    {
+        $filters = [
+            'from' => $this->filterFechaDesde ?: null,
+            'to' => $this->filterFechaHasta ?: null,
+            'almacen_id' => $this->filterAlmacen ?: null,
+            'per_page' => 50,
+            'page' => $this->page,
+        ];
+
+        $kardex = $service->getKardex((string) $this->itemId, $filters);
+        $movements = collect($kardex['movements'])
+            ->sortBy([
+                ['ts', 'asc'],
+                ['id', 'asc'],
+            ])
+            ->values();
+
+        $stockActual = (float) DB::connection('pgsql')
             ->table('selemti.inventory_batch')
-            ->where('item_id', $this->itemId)
-            ->whereNull('deleted_at')
+            ->where('item_id', (string) $this->itemId)
             ->sum('cantidad_actual');
 
-        $query = DB::connection('pgsql')
-            ->table('selemti.mov_inv as m')
-            ->leftJoin('selemti.inventory_batch as b', 'b.id', '=', 'm.lote_id')
-            ->leftJoin('selemti.cat_unidades as uo', 'uo.id', '=', 'm.uom_original_id')
-            ->select([
-                'm.id',
-                'm.ts as fecha',
-                'm.tipo',
-                'm.cantidad',
-                'm.qty_original',
-                'm.costo_unit',
-                'm.ref_tipo',
-                'm.ref_id',
-                'm.lote_id',
-                'b.lote_proveedor as lote_codigo',
-                'uo.clave as uom_original',
-            ])
-            ->where('m.item_id', $this->itemId)
-            ->when($this->filterTipo, fn ($q) => $q->where('m.tipo', $this->filterTipo))
-            ->when($this->filterFechaDesde, fn ($q) => $q->where('m.ts', '>=', $this->filterFechaDesde))
-            ->when($this->filterFechaHasta, fn ($q) => $q->where('m.ts', '<=', $this->filterFechaHasta.' 23:59:59'))
-            ->when($this->filterLote, fn ($q) => $q->where('m.lote_id', $this->filterLote))
-            ->orderBy('m.ts')
-            ->orderBy('m.id');
+        $almacenes = DB::connection('pgsql')
+            ->table('selemti.cat_almacenes')
+            ->select('id', 'clave', 'nombre')
+            ->when(
+                DB::connection('pgsql')->getSchemaBuilder()->hasColumn('selemti.cat_almacenes', 'activo'),
+                fn ($query) => $query->where('activo', true)
+            )
+            ->orderBy('nombre')
+            ->get();
 
-        $movimientos = $query->paginate(50);
-
-        // Calcular saldo acumulado para la página actual
-        $saldoAnterior = DB::connection('pgsql')
-            ->table('selemti.mov_inv')
-            ->where('item_id', $this->itemId)
-            ->where(function ($q) use ($movimientos) {
-                $firstId = $movimientos->items() ? $movimientos->items()[0]->id ?? 0 : 0;
-                $q->where('id', '<', $firstId);
-                if ($this->filterTipo) {
-                    $q->where('tipo', $this->filterTipo);
-                }
-                if ($this->filterFechaDesde) {
-                    $q->where('ts', '>=', $this->filterFechaDesde);
-                }
-            })
-            ->sum('cantidad');
-
-        $tipos = ['COMPRA', 'TRANSFER_IN', 'TRANSFER_OUT', 'PROD_IN', 'PROD_OUT', 'MERMA', 'AJUSTE_POS', 'COUNT_ADJ'];
-
-        return view('livewire.inventory.kardex-view', compact('item', 'stockActual', 'movimientos', 'saldoAnterior', 'tipos'))
+        return view('livewire.inventory.kardex-view', compact('kardex', 'movements', 'stockActual', 'almacenes'))
             ->layout('layouts.terrena', ['active' => 'inventario']);
     }
 }

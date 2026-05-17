@@ -124,9 +124,14 @@ window.Terrena.apiGet = async function(url) {
 window.Terrena.initDashboardCharts = async function (range) {
   const baseReports = (window.__BASE__ || '') + '/api/reports';
   const baseCaja = (window.__BASE__ || '') + '/api/caja';
-  const todayIso = toISODate(new Date());
-  const desde = toISODateOnly(range?.desde || todayIso);
-  const hasta = toISODateOnly(range?.hasta || desde);
+  const defaultHasta = new Date();
+  const defaultDesde = new Date();
+  defaultDesde.setDate(defaultDesde.getDate() - 30);
+  let desde = toISODateOnly(range?.desde || defaultDesde);
+  let hasta = toISODateOnly(range?.hasta || defaultHasta);
+  if (desde > hasta) {
+    [desde, hasta] = [hasta, desde];
+  }
   const rangeParams = { desde, hasta };
   const trendDesde = toISODateOnly(subtractDays(hasta, 6));
   const trendParams = { desde: trendDesde, hasta };
@@ -790,7 +795,9 @@ function setupFilters(){
   if (!s || !e) return;
 
   const today = new Date();
-  if (!s.value) s.value = toISODate(today);
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  if (!s.value) s.value = toISODate(thirtyDaysAgo);
   if (!e.value) e.value = toISODate(today);
 
   const triggerRefresh = (ensureOrder = true) => {

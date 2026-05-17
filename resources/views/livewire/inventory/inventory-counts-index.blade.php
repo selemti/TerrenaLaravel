@@ -116,7 +116,7 @@
                                                     </button>
                                                 @endif
                                                 <a 
-                                                    href="{{ route('inventory.counts.detail', $count->id) }}" 
+                                                    href="{{ route('inv.counts.detail', $count->id) }}" 
                                                     class="btn btn-outline-primary"
                                                     title="Ver detalles"
                                                 >

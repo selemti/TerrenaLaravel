@@ -81,7 +81,7 @@ class OrdersIndex extends Component
             ->orderByDesc('po.created_at')
             ->paginate(25);
 
-        $estados = ['BORRADOR', 'EN_PROCESO', 'COMPLETADA', 'POSTEADA'];
+        $estados = ['BORRADOR', 'EN_PROCESO', 'COMPLETADO', 'POSTEADO', 'CANCELADO'];
 
         $resumen = DB::connection('pgsql')
             ->table('selemti.production_orders')

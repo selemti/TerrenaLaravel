@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\DB;
 
 class InventoryCountService
 {
+    private const TIPO_AJUSTE_ENTRADA = 'AJUSTE_ENTRADA';
+
+    private const TIPO_AJUSTE_SALIDA = 'AJUSTE_SALIDA';
+
     protected string $connection;
 
     protected string $schema;
@@ -59,7 +63,7 @@ class InventoryCountService
             }
 
             if ($count->estado !== InventoryCount::STATUS_DRAFT) {
-                throw new \RuntimeException("Count must be in BORRADOR status to add items. Current: {$count->estado}");
+                throw new InventoryValidationException("Count must be in BORRADOR status to add items. Current: {$count->estado}");
             }
 
             $now = now();
@@ -118,7 +122,7 @@ class InventoryCountService
             }
 
             if ($count->estado !== InventoryCount::STATUS_DRAFT) {
-                throw new \RuntimeException("Count must be in BORRADOR status to be started. Current: {$count->estado}");
+                throw new InventoryValidationException("Count must be in BORRADOR status to be started. Current: {$count->estado}");
             }
 
             $this->table('inventory_counts')->where('id', $countId)->update([
@@ -143,7 +147,7 @@ class InventoryCountService
             $count = $this->table('inventory_counts')->lockForUpdate()->find($line->inventory_count_id);
 
             if ($count->estado !== InventoryCount::STATUS_ABIERTO) {
-                throw new \RuntimeException("Count must be in EN_PROCESO status to capture lines. Current: {$count->estado}");
+                throw new InventoryValidationException("Count must be in EN_PROCESO status to capture lines. Current: {$count->estado}");
             }
 
             $meta = json_decode($line->meta ?? '{}', true) ?: [];
@@ -172,7 +176,7 @@ class InventoryCountService
             }
 
             if ($count->estado !== InventoryCount::STATUS_ABIERTO) {
-                throw new \RuntimeException("Count must be in EN_PROCESO status to be closed. Current: {$count->estado}");
+                throw new InventoryValidationException("Count must be in EN_PROCESO status to be closed. Current: {$count->estado}");
             }
 
             $uncaptured = $this->table('inventory_count_lines')
@@ -184,7 +188,7 @@ class InventoryCountService
                 ->exists();
 
             if ($uncaptured) {
-                throw new \RuntimeException('Cannot close count with uncaptured lines');
+                throw new InventoryValidationException('Cannot close count with uncaptured lines');
             }
 
             $varianceTotal = (float) $this->table('inventory_count_lines')
@@ -409,7 +413,7 @@ class InventoryCountService
         $this->table('mov_inv')->insert([
             'item_id' => $itemId,
             'lote_id' => $batchId,
-            'tipo' => 'AJUSTE',
+            'tipo' => $variance > 0 ? self::TIPO_AJUSTE_ENTRADA : self::TIPO_AJUSTE_SALIDA,
             'cantidad' => $variance,
             'qty_original' => $variance,
             'uom_original_id' => $itemModel?->unidad_medida_id,

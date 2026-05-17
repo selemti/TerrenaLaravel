@@ -25,6 +25,7 @@ class PermissionsSeeder extends Seeder
             'inventory.counts.manage',
             'inventory.moves.manage',
             'inventory.lots.view',
+            'can_view_inventory',
             'inventory.transfers.approve',
             'inventory.transfers.ship',
             'inventory.transfers.receive',
@@ -75,6 +76,10 @@ class PermissionsSeeder extends Seeder
         }
 
         $roles = [
+            'admin' => [
+                'admin.access',
+                'audit.view',
+            ],
             'Super Admin' => ['*'],
             'Ops Manager' => [
                 'inventory.view',
@@ -84,6 +89,7 @@ class PermissionsSeeder extends Seeder
                 'inventory.counts.manage',
                 'inventory.moves.manage',
                 'inventory.lots.view',
+                'can_view_inventory',
                 'recipes.view',
                 'recipes.manage',
                 'recipes.costs.view',
@@ -115,6 +121,7 @@ class PermissionsSeeder extends Seeder
                 'inventory.counts.manage',
                 'inventory.moves.manage',
                 'inventory.lots.view',
+                'can_view_inventory',
                 'recipes.view',
                 'recipes.costs.view',
                 'recipes.production.manage',
@@ -129,6 +136,7 @@ class PermissionsSeeder extends Seeder
                 'inventory.view',
                 'inventory.receivings.manage',
                 'inventory.prices.manage',
+                'can_view_inventory',
                 'purchasing.view',
                 'purchasing.manage',
                 'vendors.view',
@@ -138,6 +146,7 @@ class PermissionsSeeder extends Seeder
             'kitchen' => [
                 'inventory.view',
                 'inventory.lots.view',
+                'can_view_inventory',
                 'recipes.view',
                 'recipes.manage',
                 'recipes.costs.view',
@@ -149,6 +158,7 @@ class PermissionsSeeder extends Seeder
             'cashier' => [
                 'inventory.view',
                 'inventory.lots.view',
+                'can_view_inventory',
                 'reports.view',
                 'cashfund.view',
                 'people.view',
@@ -156,6 +166,7 @@ class PermissionsSeeder extends Seeder
             'viewer' => [
                 'inventory.view',
                 'inventory.lots.view',
+                'can_view_inventory',
                 'recipes.view',
                 'reports.view',
                 'alerts.view',

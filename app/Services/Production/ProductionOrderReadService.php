@@ -78,36 +78,38 @@ class ProductionOrderReadService
     {
         return DB::connection('pgsql')
             ->table('selemti.production_orders as po')
-            ->leftJoin('selemti.receta_cab as rc', DB::raw('rc.id::text'), '=', DB::raw('po.recipe_id::text'))
+            ->leftJoin('selemti.recipes as r', DB::raw('r.id::text'), '=', DB::raw('po.recipe_id::text'))
             ->leftJoin('selemti.items as i', DB::raw('i.id::text'), '=', DB::raw('po.item_id::text'))
+            ->leftJoin('selemti.cat_unidades as uom_i', 'uom_i.id', '=', 'i.unidad_medida_id')
             ->leftJoin('selemti.cat_almacenes as a', DB::raw('a.id::text'), '=', 'po.almacen_id')
-            ->leftJoin('selemti.users as creador', 'creador.id', '=', 'po.creado_por')
-            ->leftJoin('selemti.users as aprobador', 'aprobador.id', '=', 'po.aprobado_por')
+            ->leftJoin('selemti.users as u_creado', 'u_creado.id', '=', 'po.creado_por')
+            ->leftJoin('selemti.users as u_aprobado', 'u_aprobado.id', '=', 'po.aprobado_por')
             ->select([
                 'po.id',
                 'po.folio',
                 'po.estado',
                 'po.recipe_id',
+                'r.nombre as recipe_nombre',
                 'po.item_id',
+                'i.nombre as item_nombre',
+                'uom_i.clave as item_uom_base',
                 'po.qty_programada',
                 'po.qty_producida',
                 'po.qty_merma',
                 'po.uom_base',
                 'po.sucursal_id',
                 'po.almacen_id',
+                'a.clave as almacen_clave',
+                'a.nombre as almacen_nombre',
                 'po.programado_para',
                 'po.iniciado_en',
                 'po.cerrado_en',
                 'po.notas',
+                'po.aprobado_por',
+                'u_creado.name as creado_por_nombre',
+                'u_aprobado.name as aprobado_por_nombre',
                 'po.created_at',
                 'po.updated_at',
-                'rc.nombre_plato as recipe_nombre',
-                'i.nombre as item_nombre',
-                'i.unidad_medida as item_uom_base',
-                'a.clave as almacen_clave',
-                'a.nombre as almacen_nombre',
-                'creador.name as creado_por_nombre',
-                'aprobador.name as aprobado_por_nombre',
             ]);
     }
 
@@ -212,10 +214,10 @@ class ProductionOrderReadService
 
         if ($includeVersion) {
             $version = DB::connection('pgsql')
-                ->table('selemti.receta_version')
-                ->where('receta_id', (string) $row->recipe_id)
-                ->orderByDesc('version')
-                ->value('version');
+                ->table('selemti.recipe_versions')
+                ->whereRaw('recipe_id::text = ?', [(string) $row->recipe_id])
+                ->orderByDesc('version_no')
+                ->value('version_no');
 
             $recipe['version'] = $version === null ? null : (string) $version;
         }

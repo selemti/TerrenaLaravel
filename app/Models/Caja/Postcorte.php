@@ -20,6 +20,7 @@ class Postcorte extends Model
         'sistema_efectivo_esperado', 'declarado_efectivo', 'diferencia_efectivo', 'veredicto_efectivo',
         'sistema_tarjetas', 'declarado_tarjetas', 'diferencia_tarjetas', 'veredicto_tarjetas',
         'sistema_transferencias', 'declarado_transferencias', 'diferencia_transferencias', 'veredicto_transferencias',
+        'total_ventas_brutas', 'total_descuentos_reales', 'total_ventas_netas',
         'creado_en', 'creado_por',
         'notas', 'validado', 'validado_por', 'validado_en',
         'requiere_aprobacion', 'aprobado_por', 'aprobado_en',
@@ -27,6 +28,9 @@ class Postcorte extends Model
     ];
 
     protected $casts = [
+        'total_ventas_brutas' => 'decimal:2',
+        'total_descuentos_reales' => 'decimal:2',
+        'total_ventas_netas' => 'decimal:2',
         'sistema_efectivo_esperado' => 'decimal:2',
         'declarado_efectivo' => 'decimal:2',
         'diferencia_efectivo' => 'decimal:2',

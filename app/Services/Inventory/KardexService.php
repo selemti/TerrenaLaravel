@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Schema;
 
 class KardexService
 {
-    private const POSITIVE_TYPES = ['ENTRADA', 'TRASPASO_ENTRADA'];
+    /** @var array<string,int>|null Cached sign map from cat_tipo_mov_inv */
+    private ?array $signMap = null;
 
     public function getKardex(string $itemId, array $filters): array
     {
@@ -224,11 +225,78 @@ class KardexService
 
     private function signFor(?string $tipo, float $quantity): int
     {
-        if ($tipo === 'AJUSTE') {
+        $legacyTipo = strtoupper((string) $tipo);
+        if ($legacyTipo === 'ENTRADA') {
+            return 1;
+        }
+
+        if (in_array($legacyTipo, ['SALIDA', 'PRODUCCION'], true)) {
+            return -1;
+        }
+
+        if ($legacyTipo === 'AJUSTE') {
             return $quantity >= 0 ? 1 : -1;
         }
 
-        return in_array($tipo, self::POSITIVE_TYPES, true) ? 1 : -1;
+        $map = $this->loadSignMap();
+
+        if (isset($map[$tipo])) {
+            $catalogSign = $map[$tipo];
+
+            // Adjustment types: catalog sign is +1 but actual direction comes from quantity
+            return $catalogSign === 0 ? ($quantity >= 0 ? 1 : -1) : $catalogSign;
+        }
+
+        // Fallback for types not yet in catalog: derive from quantity for AJUSTE* patterns
+        if ($tipo !== null && str_starts_with(strtoupper($tipo), 'AJUSTE')) {
+            return $quantity >= 0 ? 1 : -1;
+        }
+
+        // Unknown tipo: conservative — treat as negative (salida)
+        return -1;
+    }
+
+    private function loadSignMap(): array
+    {
+        if ($this->signMap !== null) {
+            return $this->signMap;
+        }
+
+        try {
+            $hasSigno = Schema::connection('pgsql')->hasColumn('selemti.cat_tipo_mov_inv', 'signo');
+
+            if ($hasSigno) {
+                $rows = DB::connection('pgsql')
+                    ->table('selemti.cat_tipo_mov_inv')
+                    ->select('clave', 'signo')
+                    ->get();
+
+                $this->signMap = $rows->pluck('signo', 'clave')
+                    ->map(fn ($s) => (int) $s)
+                    ->all();
+            } else {
+                // Column not yet migrated — use legacy hardcoded map as fallback
+                $this->signMap = [
+                    'ENTRADA' => 1,
+                    'RECEPCION_COMPRA' => 1,
+                    'PRODUCCION_ENTRADA' => 1,
+                    'TRASPASO_ENTRADA' => 1,
+                    'AJUSTE_ENTRADA' => 1,
+                    'APERTURA' => 1,
+                    'SALIDA' => -1,
+                    'PRODUCCION_SALIDA' => -1,
+                    'VENTA_POS' => -1,
+                    'TRASPASO_SALIDA' => -1,
+                    'AJUSTE_SALIDA' => -1,
+                    'MERMA' => -1,
+                    'CONSUMO_OPERATIVO' => -1,
+                ];
+            }
+        } catch (\Throwable) {
+            $this->signMap = [];
+        }
+
+        return $this->signMap;
     }
 
     private function batchExpirySelect(): string
@@ -245,6 +313,19 @@ class KardexService
         $key = strtoupper((string) $tipo).'|'.strtoupper((string) $refTipo);
 
         return match ($key) {
+            // Canonical tipos
+            'RECEPCION_COMPRA|' => 'Recepción de compra',
+            'PRODUCCION_ENTRADA|' => 'Entrada por producción',
+            'PRODUCCION_SALIDA|' => 'Consumo en producción',
+            'TRASPASO_ENTRADA|' => 'Traspaso entrada',
+            'TRASPASO_SALIDA|' => 'Traspaso salida',
+            'AJUSTE_ENTRADA|' => 'Ajuste positivo (conteo)',
+            'AJUSTE_SALIDA|' => 'Ajuste negativo (conteo)',
+            'VENTA_POS|' => 'Venta en punto de venta',
+            'APERTURA|' => 'Carga inicial de inventario',
+            'CONSUMO_OPERATIVO|' => 'Consumo operativo',
+            'MERMA|' => 'Merma / pérdida',
+            // Legacy tipos (ref_tipo-based)
             'ENTRADA|RECEPCION' => 'Recepción de compra',
             'ENTRADA|PRODUCCION' => 'Entrada por producción',
             'SALIDA|CONSUMO_POS' => 'Consumo POS',
@@ -255,13 +336,13 @@ class KardexService
             'AJUSTE|AJUSTE_MANUAL' => 'Ajuste manual',
             default => match (strtoupper((string) $tipo)) {
                 'MERMA' => 'Merma / pérdida',
-                'ENTRADA' => 'Entrada de inventario',
-                'SALIDA' => 'Salida de inventario',
+                'ENTRADA', 'RECEPCION_COMPRA' => 'Entrada de inventario',
+                'SALIDA', 'PRODUCCION_SALIDA', 'VENTA_POS' => 'Salida de inventario',
                 'TRASPASO_SALIDA' => 'Traspaso salida',
                 'TRASPASO_ENTRADA' => 'Traspaso entrada',
-                'AJUSTE' => 'Ajuste de inventario',
-                'PRODUCCION' => 'Producción',
-                'CONSUMO' => 'Consumo',
+                'AJUSTE', 'AJUSTE_ENTRADA', 'AJUSTE_SALIDA' => 'Ajuste de inventario',
+                'PRODUCCION_ENTRADA' => 'Entrada por producción',
+                'APERTURA' => 'Carga inicial',
                 default => 'Movimiento de inventario',
             },
         };

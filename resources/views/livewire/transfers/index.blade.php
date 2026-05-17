@@ -53,12 +53,12 @@
                 <tbody>
                     @forelse($transfers as $trans)
                         <tr>
-                            <td class="font-monospace fw-semibold">{{ $trans['numero'] }}</td>
-                            <td>{{ $trans['almacen_origen'] }}</td>
-                            <td>{{ $trans['almacen_destino'] }}</td>
-                            <td>{{ \Carbon\Carbon::parse($trans['fecha_solicitada'])->format('d/m/Y') }}</td>
+                            <td class="font-monospace fw-semibold">#{{ $trans->id }}</td>
+                            <td>{{ $trans->almacen_origen }}</td>
+                            <td>{{ $trans->almacen_destino }}</td>
+                            <td>{{ \Carbon\Carbon::parse($trans->created_at)->format('d/m/Y') }}</td>
                             <td>
-                                @php $estado = strtoupper($trans['estado']); @endphp
+                                @php $estado = strtoupper($trans->estado); @endphp
                                 @if($estado === 'SOLICITADA')
                                     <span class="badge text-bg-secondary">Solicitada</span>
                                 @elseif($estado === 'APROBADA')
@@ -73,14 +73,14 @@
                                     <span class="badge text-bg-light text-dark">{{ $estado }}</span>
                                 @endif
                             </td>
-                            <td>{{ $trans['lineas_count'] }}</td>
-                            <td class="small">{{ $trans['creado_por'] }}</td>
+                            <td>{{ $trans->lineas_count }}</td>
+                            <td class="small">{{ $trans->creado_por }}</td>
                             <td class="text-end">
                                 <div class="btn-group btn-group-sm">
-                                    <a class="btn btn-outline-primary" href="{{ route('transfers.dispatch', ['id' => $trans['id']]) }}">
+                                    <a class="btn btn-outline-primary" href="{{ route('transfers.dispatch', ['id' => $trans->id]) }}">
                                         <i class="fa-solid fa-truck"></i>
                                     </a>
-                                    <a class="btn btn-outline-success" href="{{ route('transfers.receive', ['id' => $trans['id']]) }}">
+                                    <a class="btn btn-outline-success" href="{{ route('transfers.receive', ['id' => $trans->id]) }}">
                                         <i class="fa-solid fa-box-open"></i>
                                     </a>
                                 </div>

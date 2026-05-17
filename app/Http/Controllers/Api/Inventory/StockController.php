@@ -7,6 +7,7 @@ use App\Services\Audit\AuditLogService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class StockController extends Controller
 {
@@ -34,10 +35,14 @@ class StockController extends Controller
 
         // Expiring items (next 30 days)
         $expiringDate = Carbon::now()->addDays(30);
+        $expiryColumn = Schema::connection('pgsql')->hasColumn('selemti.inventory_batch', 'fecha_caducidad')
+            ? 'fecha_caducidad'
+            : 'caducidad';
+
         $expiringItems = $conn->table('selemti.inventory_batch')
             ->where('estado', 'ACTIVO')
-            ->whereNotNull('fecha_caducidad')
-            ->where('fecha_caducidad', '<=', $expiringDate)
+            ->whereNotNull($expiryColumn)
+            ->where($expiryColumn, '<=', $expiringDate)
             ->where('cantidad_actual', '>', 0)
             ->count();
 
@@ -113,14 +118,18 @@ class StockController extends Controller
         } elseif ($status === 'expiring') {
             // Items with batches expiring in next 30 days
             $expiringDate = Carbon::now()->addDays(30);
+            $expiryColumn = Schema::connection('pgsql')->hasColumn('selemti.inventory_batch', 'fecha_caducidad')
+                ? 'fecha_caducidad'
+                : 'caducidad';
+
             $query->where('i.activo', true)
-                ->whereExists(function ($q) use ($expiringDate) {
+                ->whereExists(function ($q) use ($expiringDate, $expiryColumn) {
                     $q->select(DB::raw(1))
                         ->from('selemti.inventory_batch as b')
                         ->whereColumn('b.item_id', 'i.id')
                         ->where('b.estado', 'ACTIVO')
-                        ->whereNotNull('b.fecha_caducidad')
-                        ->where('b.fecha_caducidad', '<=', $expiringDate)
+                        ->whereNotNull("b.{$expiryColumn}")
+                        ->where("b.{$expiryColumn}", '<=', $expiringDate)
                         ->where('b.cantidad_actual', '>', 0);
                 });
         }
@@ -151,7 +160,11 @@ class StockController extends Controller
             $q->where('item_id', $r->get('item_id'));
         }
         if ($r->filled('ubicacion_id')) {
-            $q->where('ubicacion_id', $r->get('ubicacion_id'));
+            $locationColumn = Schema::connection('pgsql')->hasColumn('selemti.inventory_batch', 'ubicacion_id')
+                ? 'ubicacion_id'
+                : 'almacen_id';
+
+            $q->where($locationColumn, $r->get('ubicacion_id'));
         }
 
         return response()->json($q->get());

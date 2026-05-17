@@ -460,12 +460,13 @@ class PostcorteController extends Controller
             $postcortes = DB::connection('pgsql')
                 ->table('selemti.postcorte as p')
                 ->leftJoin('selemti.sesion_cajon as s', 'p.sesion_id', '=', 's.id')
-                ->leftJoin('selemti.users as u', 's.cajero_usuario_id', '=', 'u.id')
+                // cajero_usuario_id referencia a public.users (FloreantPOS), no selemti.users
+                ->leftJoin('public.users as u', 's.cajero_usuario_id', '=', 'u.auto_id')
                 ->select([
                     'p.id',
                     'p.sesion_id',
                     's.terminal_id',
-                    'u.nombre_completo as cajero_nombre',
+                    DB::raw("CONCAT(u.first_name, ' ', u.last_name) as cajero_nombre"),
                     'p.declarado_efectivo as total_declarado_efectivo',
                     'p.diferencia_efectivo',
                     'p.motivo_irregular',

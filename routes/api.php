@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\Caja\PostcorteController;
 use App\Http\Controllers\Api\Caja\PrecorteController;
 use App\Http\Controllers\Api\Caja\SesionesController;
 use App\Http\Controllers\Api\CatalogsController;
+use App\Http\Controllers\Api\Inventory\BatchExpiryController;
+use App\Http\Controllers\Api\Inventory\InventoryValuationController;
 use App\Http\Controllers\Api\Inventory\ItemController;
 use App\Http\Controllers\Api\Inventory\KardexController;
 use App\Http\Controllers\Api\Inventory\PriceController;
@@ -192,6 +194,8 @@ Route::prefix('inventory')->middleware(['auth:sanctum'])->group(function () {
     // KPIs Dashboard
     Route::get('/kpis', [StockController::class, 'kpis']);
     Route::get('/alerts', [StockAlertController::class, 'index']);
+    Route::get('/valuation', [InventoryValuationController::class, 'index']);
+    Route::get('/batches/expiring', [BatchExpiryController::class, 'index']);
 
     // Stock endpoints
     Route::get('/stock', [StockController::class, 'stockByItem']);

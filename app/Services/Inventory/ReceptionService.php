@@ -24,14 +24,16 @@ use Illuminate\Support\Str;
  */
 class ReceptionService
 {
-    // Estados de recepción
-    const ESTADO_BORRADOR = 'BORRADOR';
+    private const TIPO_RECEPCION_COMPRA = 'RECEPCION_COMPRA';
 
-    const ESTADO_VALIDADA = 'VALIDADA';
+    // Delegate to model constants for a single source of truth
+    const ESTADO_BORRADOR = ReceptionHeader::STATUS_BORRADOR;
 
-    const ESTADO_POSTEADA = 'POSTEADA';
+    const ESTADO_VALIDADA = ReceptionHeader::STATUS_VALIDADA;
 
-    const ESTADO_CANCELADA = 'CANCELADA';
+    const ESTADO_POSTEADA = ReceptionHeader::STATUS_POSTEADA;
+
+    const ESTADO_CANCELADA = ReceptionHeader::STATUS_CANCELADA;
 
     /**
      * Crea una recepción BORRADOR desde una orden de compra aprobada/enviada.
@@ -363,7 +365,7 @@ class ReceptionService
 
             DB::table('selemti.mov_inv')->insert([
                 'item_id' => $line->item_id,
-                'tipo' => 'ENTRADA',
+                'tipo' => self::TIPO_RECEPCION_COMPRA,
                 'cantidad' => $cantidadBase,
                 'qty' => $cantidadBase,
                 'uom' => $uomBaseClave,

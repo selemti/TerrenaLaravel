@@ -9,6 +9,12 @@ use Illuminate\Support\Str;
 
 class ProductionService
 {
+    private const TIPO_PRODUCCION_SALIDA = 'PRODUCCION_SALIDA';
+
+    private const TIPO_PRODUCCION_ENTRADA = 'PRODUCCION_ENTRADA';
+
+    private const TIPO_MERMA = 'MERMA';
+
     public function createOrder(array $header, array $inputs, array $outputs, array $wastes = []): int
     {
         if (empty($inputs)) {
@@ -76,7 +82,7 @@ class ProductionService
                 DB::table('mov_inv')->insert([
                     'item_id' => $normalized['item_id'],
                     'lote_id' => $normalized['inventory_batch_id'] ?? null,
-                    'tipo' => 'PROD_OUT',
+                    'tipo' => self::TIPO_PRODUCCION_SALIDA,
                     'cantidad' => $inputBase,
                     'qty_original' => $normalized['qty'],
                     'uom_original_id' => $inputItem?->unidad_medida_id,
@@ -110,7 +116,7 @@ class ProductionService
                 DB::table('mov_inv')->insert([
                     'item_id' => $normalized['item_id'],
                     'lote_id' => $normalized['inventory_batch_id'] ?? null,
-                    'tipo' => 'PROD_IN',
+                    'tipo' => self::TIPO_PRODUCCION_ENTRADA,
                     'cantidad' => $outputBase,
                     'qty_original' => $normalized['qty'],
                     'uom_original_id' => $outputItem?->unidad_medida_id,
@@ -144,7 +150,7 @@ class ProductionService
                 DB::table('mov_inv')->insert([
                     'item_id' => $normalized['item_id'],
                     'lote_id' => $normalized['inventory_batch_id'] ?? null,
-                    'tipo' => 'MERMA',
+                    'tipo' => self::TIPO_MERMA,
                     'cantidad' => $wasteBase,
                     'qty_original' => $normalized['qty'],
                     'uom_original_id' => $wasteItem?->unidad_medida_id,
